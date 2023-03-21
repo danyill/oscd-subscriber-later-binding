@@ -13,14 +13,16 @@ import { repeat } from 'lit/directives/repeat.js';
 
 import '@material/dialog';
 import '@material/mwc-button';
+import '@material/mwc-list';
+import '@material/mwc-list/mwc-list-item';
 import '@material/mwc-list/mwc-check-list-item';
+import '@material/mwc-menu';
 import '@material/mwc-radio';
 import '@material/mwc-formfield';
 import '@material/mwc-icon-button-toggle';
 
 import { Icon } from '@material/mwc-icon';
 import { IconButtonToggle } from '@material/mwc-icon-button-toggle';
-
 import { List } from '@material/mwc-list';
 import { ListItem } from '@material/mwc-list/mwc-list-item';
 import { Menu } from '@material/mwc-menu';
@@ -1013,25 +1015,25 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-not-bound': !this.hideNotBound,
     };
 
-    if (!this.subscriberView) {
-      return html`<section>
-        ${this.renderExtRefListTitle()}
-        ${this.currentSelectedControlElement && this.currentSelectedFcdaElement
-          ? html`<filtered-list>
-              ${this.renderSubscribedExtRefs()} ${this.renderAvailableExtRefs()}
-            </filtered-list>`
-          : html`<h3>
-              ${msg('subscription.laterBinding.extRefList.noSelection')}
-            </h3>`}
-      </section>`;
-    }
-    console.log('hi');
-    return html`<section>
-      ${this.renderExtRefSubscriberListTitle()}
-      <filtered-list class="${classMap(filteredListClasses)}" activatable
-        >${this.renderExtRefsByIED()}</filtered-list
-      >
-    </section>`;
+    return !this.subscriberView
+      ? html`<section>
+          ${this.renderExtRefListTitle()}
+          ${this.currentSelectedControlElement &&
+          this.currentSelectedFcdaElement
+            ? html`<filtered-list>
+                ${this.renderSubscribedExtRefs()}
+                ${this.renderAvailableExtRefs()}
+              </filtered-list>`
+            : html`<h3>
+                ${msg('subscription.laterBinding.extRefList.noSelection')}
+              </h3>`}
+        </section>`
+      : html` <section>
+          ${this.renderExtRefSubscriberListTitle()}
+          <filtered-list class="${classMap(filteredListClasses)}" activatable
+            >${this.renderExtRefsByIED()}</filtered-list
+          >
+        </section>`;
   }
 
   render(): TemplateResult {
