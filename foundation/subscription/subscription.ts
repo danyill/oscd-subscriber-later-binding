@@ -1,4 +1,4 @@
-import { SCL_NAMESPACE } from '../schemas/schemas.js';
+import { Insert, newEditEvent, Remove, Update } from '@openscd/open-scd-core';
 
 import {
   compareNames,
@@ -7,9 +7,9 @@ import {
   isPublic,
   minAvailableLogicalNodeInstance,
   serviceTypes,
-} from '../foundation';
-import { Insert, newEditEvent, Remove, Update } from '@openscd/open-scd-core';
-import { newSubscriptionChangedEvent } from '../events/events.js';
+} from '../foundation.js';
+
+export const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
 
 export function getFcdaTitleValue(fcdaElement: Element): string {
   return `${fcdaElement.getAttribute('doName')}${
@@ -43,9 +43,9 @@ function dataAttributeSpecification(
 
   const doNames = doName.split('.');
   let leaf: Element | null | undefined = lNodeType;
-  for (const doName of doNames) {
+  for (const doN of doNames) {
     const dO: Element | null | undefined = leaf?.querySelector(
-      `DO[name="${doName}"], SDO[name="${doName}"]`
+      `DO[name="${doN}"], SDO[name="${doN}"]`
     );
     leaf = doc.querySelector(`DOType[id="${dO?.getAttribute('type')}"]`);
   }
@@ -54,12 +54,12 @@ function dataAttributeSpecification(
   const cdc = leaf.getAttribute('cdc')!;
 
   const daNames = daName.split('.');
-  for (const daName of daNames) {
+  for (const daN of daNames) {
     const dA: Element | null | undefined = leaf?.querySelector(
-      `DA[name="${daName}"], BDA[name="${daName}"]`
+      `DA[name="${daN}"], BDA[name="${daN}"]`
     );
     leaf =
-      daNames.indexOf(daName) < daNames.length - 1
+      daNames.indexOf(daN) < daNames.length - 1
         ? doc.querySelector(`DAType[id="${dA?.getAttribute('type')}"]`)
         : dA;
   }
@@ -98,6 +98,40 @@ export function inputRestriction(extRef: Element): {
   }
 
   return { cdc: null, bType: null };
+}
+
+/**
+ * @param fcda - Data attribute reference in a data set
+ * @returns Data objects `CDC` and data attributes `bType`
+ */
+export function fcdaSpecification(fcda: Element): {
+  cdc: string | null;
+  bType: string | null;
+} {
+  const [doName, daName] = ['doName', 'daName'].map(attr =>
+    fcda.getAttribute(attr)
+  );
+  if (!doName || !daName) return { cdc: null, bType: null };
+
+  const ied = fcda.closest('IED');
+
+  const anyLn = Array.from(
+    ied?.querySelectorAll(
+      `LDevice[inst="${fcda.getAttribute(
+        'ldInst'
+      )}"] > LN, LDevice[inst="${fcda.getAttribute('inst')}"] LN0`
+    ) ?? []
+  ).find(
+    aLn =>
+      (aLn.getAttribute('prefix') ?? '') ===
+        (fcda.getAttribute('prefix') ?? '') &&
+      (aLn.getAttribute('lnClass') ?? '') ===
+        (fcda.getAttribute('lnClass') ?? '') &&
+      (aLn.getAttribute('inst') ?? '') === (fcda.getAttribute('lnInst') ?? '')
+  );
+  if (!anyLn) return { cdc: null, bType: null };
+
+  return dataAttributeSpecification(anyLn, doName, daName);
 }
 
 /**
@@ -142,41 +176,6 @@ export function unsupportedExtRefElement(
     return true;
 
   return fcda.cdc !== input.cdc || fcda.bType !== input.bType;
-}
-
-/**
- * @param fcda - Data attribute reference in a data set
- * @returns Data objects `CDC` and data attributes `bType`
- */
-export function fcdaSpecification(fcda: Element): {
-  cdc: string | null;
-  bType: string | null;
-} {
-  const [doName, daName] = ['doName', 'daName'].map(attr =>
-    fcda.getAttribute(attr)
-  );
-  if (!doName || !daName) return { cdc: null, bType: null };
-
-  const ied = fcda.closest('IED');
-
-  const anyLn = Array.from(
-    ied?.querySelectorAll(
-      `LDevice[inst="${fcda.getAttribute(
-        'ldInst'
-      )}"] > LN, LDevice[inst="${fcda.getAttribute('inst')}"] LN0`
-    ) ?? []
-  ).find(anyLn => {
-    return (
-      (anyLn.getAttribute('prefix') ?? '') ===
-        (fcda.getAttribute('prefix') ?? '') &&
-      (anyLn.getAttribute('lnClass') ?? '') ===
-        (fcda.getAttribute('lnClass') ?? '') &&
-      (anyLn.getAttribute('inst') ?? '') === (fcda.getAttribute('lnInst') ?? '')
-    );
-  });
-  if (!anyLn) return { cdc: null, bType: null };
-
-  return dataAttributeSpecification(anyLn, doName, daName);
 }
 
 export function getExtRefElements(
@@ -494,7 +493,7 @@ function isSupervisionAllowed(
     return false;
   if (
     getSupervisionCbRefs(subscriberIED, controlBlock.tagName).find(
-      val => val.textContent == controlBlockReference(controlBlock)
+      val => val.textContent === controlBlockReference(controlBlock)
     )
   )
     return false;
@@ -671,7 +670,7 @@ export function instantiateSubscriptionSupervision(
     if (parent) {
       // use Insert edit for supervision LN
       edits.push({
-        parent: parent,
+        parent,
         node: availableLN,
         reference:
           parent!.querySelector(`LN[lnClass="${supervisionType}"]:last-child`)
@@ -793,7 +792,7 @@ export function updateExtRefElement(
   }
 
   if (!controlElement || !serviceTypes[controlElement.tagName]) {
-    //for invalid control block tag name assume polling
+    // for invalid control block tag name assume polling
     return createUpdateEdit(extRefElement, {
       intAddr,
       desc,
@@ -974,7 +973,7 @@ export function getFcdaSrcControlBlockDescription(
   ].map(name => extRefElement.getAttribute(name));
   // QUESTION: Maybe we don't need srcLNClass ?
   return `${
-    srcPrefix ? srcPrefix + ' ' : ''
+    srcPrefix ? `${srcPrefix} ` : ''
   }${srcLDInst} / ${srcLNClass} ${srcCBName}`;
 }
 
@@ -1143,7 +1142,6 @@ export function unsubscribe(extRef: Element, eventElement: HTMLElement): void {
 
   const removeSubscriptionEdits: Remove[] = [];
   const controlBlock = findControlBlock(extRef);
-  const fcdaElement = findFCDA(extRef, controlBlock);
 
   if (canRemoveSubscriptionSupervision(extRef))
     removeSubscriptionEdits.push(
@@ -1152,9 +1150,5 @@ export function unsubscribe(extRef: Element, eventElement: HTMLElement): void {
 
   eventElement.dispatchEvent(
     newEditEvent([updateAction, ...removeSubscriptionEdits])
-  );
-
-  eventElement.dispatchEvent(
-    newSubscriptionChangedEvent(controlBlock, fcdaElement ?? undefined)
   );
 }

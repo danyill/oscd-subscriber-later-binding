@@ -23,7 +23,7 @@ export const serviceTypes: Partial<Record<string, string>> = {
  */
 export function getNameAttribute(element: Element): string | undefined {
   const name = element.getAttribute('name');
-  return name ? name : undefined;
+  return name ?? undefined;
 }
 
 /**
@@ -33,7 +33,7 @@ export function getNameAttribute(element: Element): string | undefined {
  */
 export function getDescriptionAttribute(element: Element): string | undefined {
   const name = element.getAttribute('desc');
-  return name ? name : undefined;
+  return name ?? undefined;
 }
 
 export function isPublic(element: Element): boolean {
@@ -58,7 +58,7 @@ export function minAvailableLogicalNodeInstance(
   return lnInstRange.find(lnInst => !lnInsts.has(lnInst));
 }
 
-//** return `Update` action for `element` adding `oldAttributes` */
+//* * return `Update` action for `element` adding `oldAttributes` */
 // export function createUpdateAction(
 //   element: Element,
 //   newAttributes: Record<string, string | null>
@@ -71,7 +71,7 @@ export function minAvailableLogicalNodeInstance(
 //   return { element, oldAttributes, newAttributes };
 // }
 
-//** return `Update` action for `element` adding `oldAttributes` */
+//* * return `Update` action for `element` adding `oldAttributes` */
 export function createUpdateEdit(
   element: Element,
   attributes: Record<string, string | null>
