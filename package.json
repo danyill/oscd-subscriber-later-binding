@@ -1,0 +1,104 @@
+{
+  "name": "oscd-subscriber-later-binding",
+  "description": "Webcomponent for later-binding GOOSE and SMV subscriptions of IEC 61850 SCL files",
+  "license": "Apache-2.0",
+  "author": "Daniel Mulholland, Christian Dinkel",
+  "version": "0.0.0",
+  "main": "dist/oscd-subscriber-later-binding.js",
+  "module": "dist/oscd-subscriber-later-binding.js",
+  "exports": {
+    ".": "./dist/oscd-subscriber-later-binding.js"
+  },
+  "scripts": {
+    "analyze": "cem analyze --litelement",
+    "start": "tsc && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"wds\"",
+    "build": "rimraf dist && rollup -c rollup.config.js",
+    "deploy": "npm run build && gh-pages --dist 'dist'",
+    "prepublish": "tsc && npm run analyze -- --exclude dist",
+    "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
+    "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
+    "test": "tsc && wtr --coverage",
+    "test:watch": "tsc && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"wtr --watch\""
+  },
+  "dependencies": {
+    "@lit/localize": "^0.11.4",
+    "@material/dialog": "^14.0.0",
+    "@material/mwc-button": "^0.27.0",
+    "@material/mwc-checkbox": "^0.27.0",
+    "@material/mwc-dialog": "^0.27.0",
+    "@material/mwc-formfield": "^0.27.0",
+    "@material/mwc-icon-button": "^0.27.0",
+    "@material/mwc-list": "^0.27.0",
+    "@material/mwc-menu": "^0.27.0",
+    "@material/mwc-radio": "^0.27.0",
+    "@material/mwc-select": "^0.27.0",
+    "@material/mwc-switch": "^0.27.0",
+    "@material/mwc-textfield": "^0.27.0",
+    "@openscd/open-scd-core": "^0.0.1-rc2.8",
+    "lit": "^2.4.0"
+  },
+  "devDependencies": {
+    "@custom-elements-manifest/analyzer": "^0.6.6",
+    "@open-wc/building-rollup": "^2.0.2",
+    "@open-wc/eslint-config": "^8.0.2",
+    "@open-wc/testing": "^3.1.6",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^9.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "@typescript-eslint/parser": "^5.41.0",
+    "@web/dev-server": "^0.1.35",
+    "@web/test-runner": "^0.15.0",
+    "concurrently": "^7.5.0",
+    "deepmerge": "^4.2.2",
+    "eslint": "^8.26.0",
+    "eslint-config-prettier": "^8.5.0",
+    "gh-pages": "^4.0.0",
+    "husky": "^4.3.8",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.79.1",
+    "tslib": "^2.4.1",
+    "typescript": "^4.8.4"
+  },
+  "customElements": "custom-elements.json",
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "@open-wc",
+      "prettier"
+    ],
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error"
+      ],
+      "import/no-unresolved": "off",
+      "import/extensions": [
+        "error",
+        "always",
+        {
+          "ignorePackages": true
+        }
+      ]
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "avoid"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
