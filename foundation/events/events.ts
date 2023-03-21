@@ -36,8 +36,27 @@ export function newExtRefSelectionChangedEvent(
   );
 }
 
+export interface FcdaSelectDetail {
+  control: Element | undefined;
+  fcda: Element | undefined;
+}
+export type FcdaSelectEvent = CustomEvent<FcdaSelectDetail>;
+export function newFcdaSelectEvent(
+  control: Element | undefined,
+  fcda: Element | undefined,
+  eventInitDict?: CustomEventInit<FcdaSelectDetail>
+): FcdaSelectEvent {
+  return new CustomEvent<FcdaSelectDetail>('fcda-select', {
+    bubbles: true,
+    composed: true,
+    ...eventInitDict,
+    detail: { control, fcda, ...eventInitDict?.detail },
+  });
+}
+
 declare global {
   interface ElementEventMap {
+    ['fcda-select']: FcdaSelectEvent;
     ['subscription-changed']: SubscriptionChangedEvent;
     ['extref-selection-changed']: ExtRefSelectionChangedEvent;
   }

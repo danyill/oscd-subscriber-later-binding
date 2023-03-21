@@ -20,20 +20,30 @@ import { Icon } from '@material/mwc-icon';
 import { styles } from './foundation/styles/styles';
 import { identity } from './foundation/identities/identity';
 import {
+  canRemoveSubscriptionSupervision,
+  getExistingSupervision,
+  getExtRefElements,
   getFcdaSubtitleValue,
   getFcdaTitleValue,
   getSubscribedExtRefElements,
+  instantiateSubscriptionSupervision,
+  isSubscribed,
+  removeSubscriptionSupervision,
   unsupportedExtRefElement,
+  updateExtRefElement,
 } from './foundation/subscription/subscription';
 import {
+  createUpdateEdit,
   getDescriptionAttribute,
   getNameAttribute,
 } from './foundation/foundation';
 import { gooseIcon, smvIcon } from './foundation/icons';
 import {
   ExtRefSelectionChangedEvent,
+  FcdaSelectEvent,
   SubscriptionChangedEvent,
 } from './foundation/events/events';
+import { Remove } from '@openscd/open-scd-core';
 
 const controlTag = 'GSEControl';
 
@@ -116,23 +126,40 @@ export default class SubscriberLaterBinding extends LitElement {
     GSEControl: gooseIcon,
   };
 
+  @state()
+  currentSelectedControlElement: Element | undefined;
+  @state()
+  currentSelectedFcdaElement: Element | undefined;
+  @state()
+  currentIedElement: Element | undefined;
+
+  serviceTypeLookup = {
+    GSEControl: 'GOOSE',
+    SampledValueControl: 'SMV',
+  };
+
   constructor() {
     super();
 
     this.resetSelection = this.resetSelection.bind(this);
     parent.addEventListener('open-doc', this.resetSelection);
 
-    const parentDiv = this.closest('.container');
-    if (parentDiv) {
-      this.resetExtRefCount = this.resetExtRefCount.bind(this);
-      parentDiv.addEventListener('subscription-changed', this.resetExtRefCount);
+    // const parentDiv = this.closest('.container');
+    // if (parentDiv) {
+    //   this.resetExtRefCount = this.resetExtRefCount.bind(this);
+    //   parentDiv.addEventListener('subscription-changed', this.resetExtRefCount);
 
-      this.updateExtRefSelection = this.updateExtRefSelection.bind(this);
-      parentDiv.addEventListener(
-        'extref-selection-changed',
-        this.updateExtRefSelection
-      );
-    }
+    //   this.updateExtRefSelection = this.updateExtRefSelection.bind(this);
+    //   parentDiv.addEventListener(
+    //     'extref-selection-changed',
+    //     this.updateExtRefSelection
+    //   );
+    // }
+    // const parentDiv = this.closest('.container');
+    // if (parentDiv) {
+    //   this.onFcdaSelectEvent = this.onFcdaSelectEvent.bind(this);
+    //   parentDiv.addEventListener('fcda-select', this.onFcdaSelectEvent);
+    // }
   }
 
   private getControlElements(): Element[] {
@@ -274,7 +301,7 @@ export default class SubscriberLaterBinding extends LitElement {
     this.updateBaseFilterState();
   }
 
-  renderTitle(): TemplateResult {
+  renderFCDAListTitle(): TemplateResult {
     const menuClasses = {
       'filter-off': this.hideSubscribed || this.hideNotSubscribed,
     };
@@ -394,18 +421,332 @@ export default class SubscriberLaterBinding extends LitElement {
     </filtered-list>`;
   }
 
+  private async onFcdaSelectEvent(event: FcdaSelectEvent) {
+    this.currentSelectedControlElement = event.detail.control;
+    this.currentSelectedFcdaElement = event.detail.fcda;
+
+    // Retrieve the IED Element to which the FCDA belongs.
+    // These ExtRef Elements will be excluded.
+    this.currentIedElement = this.currentSelectedFcdaElement
+      ? this.currentSelectedFcdaElement.closest('IED') ?? undefined
+      : undefined;
+  }
+
+  /**
+   * Unsubscribing means removing a list of attributes from the ExtRef Element.
+   *
+   * @param extRef - The Ext Ref Element to clean from attributes.
+   */
+  private unsubscribe(extRef: Element): void {
+    const updateAction = createUpdateEdit(extRef, {
+      intAddr: extRef.getAttribute('intAddr'),
+      desc: extRef.getAttribute('desc'),
+      iedName: null,
+      ldInst: null,
+      prefix: null,
+      lnClass: null,
+      lnInst: null,
+      doName: null,
+      daName: null,
+      serviceType: null,
+      srcLDInst: null,
+      srcPrefix: null,
+      srcLNClass: null,
+      srcLNInst: null,
+      srcCBName: null,
+    });
+
+    const subscriberIed = extRef.closest('IED') || undefined;
+    // const removeSubscriptionActions: Delete[] = [];
+    const removeSubscriptionEdits: Remove[] = [];
+
+    if (canRemoveSubscriptionSupervision(extRef))
+      // removeSubscriptionActions.push(
+      //   ...removeSubscriptionSupervision(
+      //     this.currentSelectedControlElement,
+      //     subscriberIed
+      //   )
+      // );
+      removeSubscriptionEdits.push(
+        ...removeSubscriptionSupervision(
+          this.currentSelectedControlElement,
+          subscriberIed
+        )
+      );
+
+    // this.dispatchEvent(
+    //   newActionEvent({
+    //     title: get(`subscription.disconnect`),
+    //     actions: [updateAction, ...removeSubscriptionActions],
+    //   })
+    // );
+
+    // this.dispatchEvent(
+    //   newSubscriptionChangedEvent(
+    //     this.currentSelectedControlElement,
+    //     this.currentSelectedFcdaElement
+    //   )
+    // );
+  }
+
+  /**
+   * Subscribing means copying a list of attributes from the FCDA Element (and others) to the ExtRef Element.
+   *
+   * @param extRef - The Ext Ref Element to add the attributes to.
+   */
+  private subscribe(extRef: Element): void {
+    if (
+      !this.currentIedElement ||
+      !this.currentSelectedFcdaElement ||
+      !this.currentSelectedControlElement!
+    ) {
+      return;
+    }
+
+    const updateAction = updateExtRefElement(
+      extRef,
+      this.currentSelectedControlElement,
+      this.currentSelectedFcdaElement
+    );
+
+    const subscriberIed = extRef.closest('IED') || undefined;
+
+    const supervisionActions = instantiateSubscriptionSupervision(
+      this.currentSelectedControlElement,
+      subscriberIed
+    );
+
+    // this.dispatchEvent(
+    //   newActionEvent({
+    //     title: get(`subscription.connect`),
+    //     actions: [updateAction, ...supervisionActions],
+    //   })
+    // );
+    // this.dispatchEvent(
+    //   newSubscriptionChangedEvent(
+    //     this.currentSelectedControlElement,
+    //     this.currentSelectedFcdaElement
+    //   )
+    // );
+  }
+
+  private getSubscribedExtRefElements(): Element[] {
+    return getSubscribedExtRefElements(
+      <Element>this.doc.getRootNode(),
+      this.controlTag,
+      this.currentSelectedFcdaElement,
+      this.currentSelectedControlElement,
+      true
+    );
+  }
+
+  private getAvailableExtRefElements(): Element[] {
+    return getExtRefElements(
+      <Element>this.doc.getRootNode(),
+      this.currentSelectedFcdaElement,
+      true
+    ).filter(
+      extRefElement =>
+        !isSubscribed(extRefElement) &&
+        (!extRefElement.hasAttribute('serviceType') ||
+          extRefElement.getAttribute('serviceType') ===
+            this.serviceTypeLookup[this.controlTag])
+    );
+  }
+
+  private renderExtRefListTitle(): TemplateResult {
+    return html`<h1>
+      ${translate(`subscription.laterBinding.extRefList.title`)}
+    </h1>`;
+  }
+
+  private renderExtRefElement(extRefElement: Element): TemplateResult {
+    const supervisionNode = getExistingSupervision(extRefElement);
+    return html` <mwc-list-item
+      graphic="large"
+      ?hasMeta=${supervisionNode !== null}
+      twoline
+      @click=${() => this.unsubscribe(extRefElement)}
+      value="${identity(extRefElement)}"
+    >
+      <span>
+        ${extRefElement.getAttribute('intAddr')}
+        ${getDescriptionAttribute(extRefElement)
+          ? html` (${getDescriptionAttribute(extRefElement)})`
+          : nothing}
+      </span>
+      <span slot="secondary"
+        >${identity(extRefElement.parentElement)}${supervisionNode !== null
+          ? ` (${identity(supervisionNode)})`
+          : ''}</span
+      >
+      <mwc-icon slot="graphic">link</mwc-icon>
+      ${supervisionNode !== null
+        ? html`<mwc-icon title="${identity(supervisionNode)}" slot="meta"
+            >monitor_heart</mwc-icon
+          >`
+        : nothing}
+    </mwc-list-item>`;
+  }
+
+  private renderSubscribedExtRefs(): TemplateResult {
+    const subscribedExtRefs = this.getSubscribedExtRefElements();
+    return html`
+      <mwc-list-item
+        noninteractive
+        value="${subscribedExtRefs
+          .map(
+            extRefElement =>
+              getDescriptionAttribute(extRefElement) +
+              ' ' +
+              identity(extRefElement)
+          )
+          .join(' ')}"
+      >
+        <span>${translate('subscription.subscriber.subscribed')}</span>
+      </mwc-list-item>
+      <li divider role="separator"></li>
+      ${subscribedExtRefs.length > 0
+        ? html`${subscribedExtRefs.map(extRefElement =>
+            this.renderExtRefElement(extRefElement)
+          )}`
+        : html`<mwc-list-item graphic="large" noninteractive>
+            ${translate(
+              'subscription.laterBinding.extRefList.noSubscribedExtRefs'
+            )}
+          </mwc-list-item>`}
+    `;
+  }
+
+  private renderAvailableExtRefs(): TemplateResult {
+    const availableExtRefs = this.getAvailableExtRefElements();
+    return html`
+      <mwc-list-item
+        noninteractive
+        value="${availableExtRefs
+          .map(
+            extRefElement =>
+              getDescriptionAttribute(extRefElement) +
+              ' ' +
+              identity(extRefElement)
+          )
+          .join(' ')}"
+      >
+        <span>
+          ${translate('subscription.subscriber.availableToSubscribe')}
+        </span>
+      </mwc-list-item>
+      <li divider role="separator"></li>
+      ${availableExtRefs.length > 0
+        ? html`${availableExtRefs.map(
+            extRefElement => html` <mwc-list-item
+              graphic="large"
+              ?disabled=${unsupportedExtRefElement(
+                extRefElement,
+                this.currentSelectedFcdaElement,
+                this.currentSelectedControlElement
+              )}
+              twoline
+              @click=${() => this.subscribe(extRefElement)}
+              value="${identity(extRefElement)}"
+            >
+              <span>
+                ${extRefElement.getAttribute('intAddr')}
+                ${getDescriptionAttribute(extRefElement)
+                  ? html` (${getDescriptionAttribute(extRefElement)})`
+                  : nothing}
+              </span>
+              <span slot="secondary"
+                >${identity(extRefElement.parentElement)}</span
+              >
+              <mwc-icon slot="graphic">link_off</mwc-icon>
+            </mwc-list-item>`
+          )}`
+        : html`<mwc-list-item graphic="large" noninteractive>
+            ${translate(
+              'subscription.laterBinding.extRefList.noAvailableExtRefs'
+            )}
+          </mwc-list-item>`}
+    `;
+  }
+
   render(): TemplateResult {
     const controlElements = this.getControlElements();
-    return html`<section tabindex="0">
-      ${this.renderTitle()}
-      ${controlElements
-        ? this.renderControls(controlElements)
-        : html`<h3>${translate('subscription.subscriber.notSubscribed')}</h3> `}
-    </section>`;
+    return html`<div class="container">
+      <section tabindex="0">
+        ${this.renderFCDAListTitle()}
+        ${controlElements
+          ? this.renderControls(controlElements)
+          : html`<h3>
+              ${translate('subscription.subscriber.notSubscribed')}
+            </h3> `}
+      </section>
+      <section tabindex="0">
+        ${this.renderExtRefListTitle()}
+        ${this.currentSelectedControlElement && this.currentSelectedFcdaElement
+          ? html`<filtered-list>
+              ${this.renderSubscribedExtRefs()} ${this.renderAvailableExtRefs()}
+            </filtered-list>`
+          : html`<h3>
+              ${translate('subscription.laterBinding.extRefList.noSelection')}
+            </h3>`}
+      </section>
+    </div>`;
   }
 
   static styles = css`
     ${styles}
+
+    :host {
+      width: 100vw;
+      display: flex;
+    }
+
+    .container {
+      width: 100%;
+      display: flex;
+      padding: 8px 6px 16px;
+      height: calc(100vh - 136px);
+    }
+
+    .container:not(subscriberview) {
+      flex-direction: row;
+    }
+
+    .container[subscriberview] {
+      width: 100%;
+      flex-direction: row-reverse;
+    }
+
+    .container[subscriberview] fcda-binding-list.column {
+      flex: 1;
+      width: 25%;
+    }
+
+    .column {
+      flex: 50%;
+      margin: 0px 6px 0px;
+      min-width: 300px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    @media (min-width: 700px) {
+      .container[subscriberview] {
+        width: calc(100vw - 20px);
+        flex: auto;
+      }
+
+      .container[subscriberview] extref-later-binding-list-subscriber.column {
+        resize: horizontal;
+        width: 65%;
+        flex: none;
+      }
+
+      .container[subscriberview] fcda-binding-list.column {
+        width: auto;
+      }
+    }
 
     h3 {
       margin: 4px 8px 16px;
