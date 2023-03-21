@@ -7,33 +7,43 @@ import {
   SVGTemplateResult,
   TemplateResult,
 } from 'lit';
-import { classMap } from 'lit/directives/class-map.js';
 import { property, query, queryAll, state } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
+import { repeat } from 'lit/directives/repeat.js';
 
 import '@material/dialog';
 import '@material/mwc-button';
 import '@material/mwc-list/mwc-check-list-item';
-import { Menu } from '@material/mwc-menu';
-import { List } from '@material/mwc-list';
+import '@material/mwc-radio';
+import '@material/mwc-formfield';
 import { Icon } from '@material/mwc-icon';
+import { List } from '@material/mwc-list';
+import { ListItem } from '@material/mwc-list/mwc-list-item';
+import { Menu } from '@material/mwc-menu';
 
 import { styles } from './foundation/styles/styles';
 import { identity } from './foundation/identities/identity';
 import {
   canRemoveSubscriptionSupervision,
+  getCbReference,
   getExistingSupervision,
   getExtRefElements,
+  getFcdaSrcControlBlockDescription,
   getFcdaSubtitleValue,
   getFcdaTitleValue,
+  getOrderedIeds,
   getSubscribedExtRefElements,
+  getUsedSupervisionInstances,
   instantiateSubscriptionSupervision,
   isSubscribed,
   removeSubscriptionSupervision,
+  unsubscribe,
   unsupportedExtRefElement,
   updateExtRefElement,
 } from './foundation/subscription/subscription';
 import {
   createUpdateEdit,
+  findFCDAs,
   getDescriptionAttribute,
   getNameAttribute,
 } from './foundation/foundation';
@@ -45,11 +55,11 @@ import {
 } from './foundation/events/events';
 import { Remove } from '@openscd/open-scd-core';
 
-const controlTag = 'GSEControl';
+// const controlTag = 'GSEControl';
 
-type controlTag = 'SampledValueControl' | 'GSEControl';
+type controlTagType = 'SampledValueControl' | 'GSEControl';
 
-type iconLookup = Record<controlTag, SVGTemplateResult>;
+type iconLookup = Record<controlTagType, SVGTemplateResult>;
 
 function translate(name: string): string {
   return name;
@@ -60,7 +70,7 @@ export default class SubscriberLaterBinding extends LitElement {
   doc!: XMLDocument;
 
   @property()
-  controlTag: typeof controlTag = 'GSEControl'; // eventually parameterise
+  controlTag: controlTagType = 'GSEControl'; // eventually parameterise
   @property()
   includeLaterBinding!: boolean;
   @property({ attribute: true })
@@ -113,6 +123,75 @@ export default class SubscriberLaterBinding extends LitElement {
     this.requestUpdate('hideNotSubscribed', oldValue);
   }
 
+  @property({ type: Boolean })
+  get notAutoIncrement(): boolean {
+    return (
+      localStorage.getItem(
+        `extref-list-${this.controlTag}$notAutoIncrement`
+      ) === 'true' ?? false
+    );
+  }
+
+  set notAutoIncrement(value: boolean) {
+    const oldValue = this.hideBound;
+    localStorage.setItem(
+      `extref-list-${this.controlTag}$notAutoIncrement`,
+      `${value}`
+    );
+    this.requestUpdate('notAutoIncrement', oldValue);
+  }
+
+  @property({ type: Boolean })
+  get hideBound(): boolean {
+    return (
+      localStorage.getItem(`extref-list-${this.controlTag}$hideBound`) ===
+        'true' ?? false
+    );
+  }
+
+  set hideBound(value: boolean) {
+    const oldValue = this.hideBound;
+    localStorage.setItem(
+      `extref-list-${this.controlTag}$hideBound`,
+      `${value}`
+    );
+    this.requestUpdate('hideBound', oldValue);
+  }
+
+  @property({ type: Boolean })
+  get hideNotBound(): boolean {
+    return (
+      localStorage.getItem(`extref-list-${this.controlTag}$hideNotBound`) ===
+        'true' ?? false
+    );
+  }
+
+  set hideNotBound(value: boolean) {
+    const oldValue = this.hideNotBound;
+    localStorage.setItem(
+      `extref-list-${this.controlTag}$hideNotBound`,
+      `${value}`
+    );
+    this.requestUpdate('hideNotBound', oldValue);
+  }
+
+  @query('.filter-menu')
+  filterMenu!: Menu;
+
+  @query('.settings-menu')
+  settingsMenu!: Menu;
+
+  @query('.filter-action-menu-icon')
+  filterMenuIcon!: Icon;
+
+  @query('.settings-action-menu-icon')
+  settingsMenuIcon!: Icon;
+
+  @query('.extref-list') extRefList!: List;
+
+  @query('mwc-list-item.activated')
+  currentActivatedExtRefItem!: ListItem;
+
   @query('.actions-menu') actionsMenu!: Menu;
   @query('.actions-menu-icon') actionsMenuIcon!: Icon;
   @query('.control-block-list') controlBlockList!: List;
@@ -121,10 +200,17 @@ export default class SubscriberLaterBinding extends LitElement {
   private selectedFcdaElement: Element | undefined;
   private selectedExtRefElement: Element | undefined;
 
+  selectedPublisherControlElement: Element | undefined;
+  selectedPublisherFcdaElement: Element | undefined;
+  selectedPublisherIedElement: Element | undefined;
+  currentSelectedExtRefElement: Element | undefined;
+
   private iconControlLookup: iconLookup = {
     SampledValueControl: smvIcon,
     GSEControl: gooseIcon,
   };
+
+  private supervisionData = new Map();
 
   @state()
   currentSelectedControlElement: Element | undefined;
@@ -162,9 +248,9 @@ export default class SubscriberLaterBinding extends LitElement {
     // }
   }
 
-  private getControlElements(): Element[] {
+  private getControlElements(controlTag: controlTagType): Element[] {
     if (this.doc) {
-      return Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`));
+      return Array.from(this.doc.querySelectorAll(`LN0 > ${controlTag}`));
     }
     return [];
   }
@@ -457,16 +543,9 @@ export default class SubscriberLaterBinding extends LitElement {
     });
 
     const subscriberIed = extRef.closest('IED') || undefined;
-    // const removeSubscriptionActions: Delete[] = [];
     const removeSubscriptionEdits: Remove[] = [];
 
     if (canRemoveSubscriptionSupervision(extRef))
-      // removeSubscriptionActions.push(
-      //   ...removeSubscriptionSupervision(
-      //     this.currentSelectedControlElement,
-      //     subscriberIed
-      //   )
-      // );
       removeSubscriptionEdits.push(
         ...removeSubscriptionSupervision(
           this.currentSelectedControlElement,
@@ -670,28 +749,330 @@ export default class SubscriberLaterBinding extends LitElement {
     `;
   }
 
-  render(): TemplateResult {
-    const controlElements = this.getControlElements();
-    return html`<div class="container">
-      <section tabindex="0">
-        ${this.renderFCDAListTitle()}
-        ${controlElements
-          ? this.renderControls(controlElements)
-          : html`<h3>
-              ${translate('subscription.subscriber.notSubscribed')}
-            </h3> `}
-      </section>
-      <section tabindex="0">
-        ${this.renderExtRefListTitle()}
-        ${this.currentSelectedControlElement && this.currentSelectedFcdaElement
-          ? html`<filtered-list>
-              ${this.renderSubscribedExtRefs()} ${this.renderAvailableExtRefs()}
-            </filtered-list>`
-          : html`<h3>
-              ${translate('subscription.laterBinding.extRefList.noSelection')}
-            </h3>`}
-      </section>
+  private renderExtRefSubscriberListTitle(): TemplateResult {
+    const menuClasses = {
+      'filter-off': this.hideBound || this.hideNotBound,
+    };
+    return html`<h1>
+      ${translate(`subscription.laterBinding.extRefList.title`)}
+      <mwc-icon-button
+        class="switch-view"
+        icon="alt_route"
+        title="${translate(`subscription.laterBinding.extRefList.switchView`)}"
+        @click=${() =>
+          this.dispatchEvent(
+            new Event('change-view', { bubbles: true, composed: true })
+          )}
+      ></mwc-icon-button>
+      <mwc-icon-button
+        class="filter-action-menu-icon ${classMap(menuClasses)}"
+        title="${translate(`subscription.laterBinding.extRefList.filter`)}"
+        icon="filter_list"
+        @click=${() => {
+          if (!this.filterMenu.open) this.filterMenu.show();
+          else this.filterMenu.close();
+        }}
+      ></mwc-icon-button>
+      <mwc-menu
+        multi
+        class="filter-menu"
+        corner="BOTTOM_RIGHT"
+        menuCorner="END"
+      >
+        <mwc-check-list-item
+          class="show-bound"
+          left
+          ?selected=${!this.hideBound}
+        >
+          <span
+            >${translate('subscription.laterBinding.extRefList.bound')}</span
+          >
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="show-not-bound"
+          left
+          ?selected=${!this.hideNotBound}
+        >
+          <span
+            >${translate('subscription.laterBinding.extRefList.unBound')}</span
+          >
+        </mwc-check-list-item>
+      </mwc-menu>
+      <mwc-icon-button
+        class="settings-action-menu-icon"
+        title="${translate(`subscription.laterBinding.extRefList.settings`)}"
+        icon="settings"
+        @click=${() => {
+          if (!this.settingsMenu.open) this.settingsMenu.show();
+          else this.settingsMenu.close();
+        }}
+      ></mwc-icon-button>
+      <mwc-menu
+        multi
+        class="settings-menu"
+        corner="BOTTOM_RIGHT"
+        menuCorner="END"
+      >
+        <mwc-check-list-item
+          class="auto-increment"
+          left
+          ?selected=${!this.notAutoIncrement}
+        >
+          <span
+            >${translate(
+              'subscription.laterBinding.extRefList.autoIncrement'
+            )}</span
+          >
+        </mwc-check-list-item>
+      </mwc-menu>
+    </h1>`;
+  }
+
+  private reCreateSupervisionCache() {
+    this.supervisionData = new Map();
+    const supervisionType =
+      this.serviceTypeLookup[this.controlTag] === 'GOOSE' ? 'LGOS' : 'LSVS';
+    const refSelector =
+      supervisionType === 'LGOS'
+        ? 'DOI[name="GoCBRef"]'
+        : 'DOI[name="SvCBRef"]';
+
+    getUsedSupervisionInstances(
+      this.doc,
+      this.serviceTypeLookup[this.controlTag]
+    ).forEach(supervisionLN => {
+      const cbRef = supervisionLN!.querySelector(
+        `LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
+      )?.textContent;
+      if (cbRef) this.supervisionData.set(cbRef, supervisionLN);
+    });
+  }
+
+  private getExtRefElementsByIED(
+    ied: Element,
+    controlTag: controlTagType
+  ): Element[] {
+    return Array.from(
+      ied.querySelectorAll(
+        ':scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+      )
+    ).filter(
+      extRefElement =>
+        (extRefElement.hasAttribute('intAddr') &&
+          !extRefElement.hasAttribute('serviceType') &&
+          !extRefElement.hasAttribute('pServT')) ||
+        extRefElement.getAttribute('serviceType') ===
+          this.serviceTypeLookup[controlTag] ||
+        extRefElement.getAttribute('pServT') ===
+          this.serviceTypeLookup[controlTag]
+    );
+  }
+
+  private getCachedSupervision(extRefElement: Element): Element | undefined {
+    const cbRefKey = getCbReference(extRefElement);
+    return this.supervisionData.get(cbRefKey);
+  }
+
+  private renderCompleteExtRefElement(extRefElement: Element): TemplateResult {
+    let subscriberFCDA: Element | undefined;
+    let supervisionNode: Element | undefined;
+    let controlBlockDescription: string | undefined;
+    let supervisionDescription: string | undefined;
+
+    const subscribed = isSubscribed(extRefElement);
+
+    const filterClasses = {
+      extref: true,
+      'show-bound': subscribed,
+      'show-not-bound': !subscribed,
+    };
+
+    if (subscribed) {
+      subscriberFCDA = findFCDAs(extRefElement).find(x => x !== undefined);
+      supervisionNode = this.getCachedSupervision(extRefElement);
+      controlBlockDescription =
+        getFcdaSrcControlBlockDescription(extRefElement);
+    }
+
+    if (supervisionNode) {
+      supervisionDescription = (<string>identity(supervisionNode))
+        .split('>')
+        .slice(1)
+        .join('>')
+        .trim()
+        .slice(1);
+    }
+
+    return html`<mwc-list-item
+      twoline
+      class="${classMap(filterClasses)}"
+      graphic="large"
+      ?hasMeta=${supervisionNode !== undefined}
+      @click=${() => {
+        this.currentSelectedExtRefElement = extRefElement;
+
+        if (!subscribed) {
+          // this.dispatchEvent(
+          //   newExtRefSelectionChangedEvent(this.currentSelectedExtRefElement)
+          // );
+        } else {
+          unsubscribe(extRefElement, this);
+          this.reCreateSupervisionCache();
+        }
+      }}
+      @request-selected=${() => {
+        this.currentSelectedExtRefElement = extRefElement;
+        (<ListItem>(
+          this.shadowRoot!.querySelector('mwc-list-item[activated].extref')!
+        ))?.requestUpdate();
+      }}
+      value="${identity(extRefElement)}${supervisionNode
+        ? ` ${identity(supervisionNode)}`
+        : ''}"
+    >
+      <span>
+        ${(<string>identity(extRefElement.parentElement))
+          .split('>')
+          .slice(1)
+          .join('>')
+          .trim()
+          .slice(1)}:
+        ${extRefElement.getAttribute('intAddr')}
+        ${subscribed && subscriberFCDA
+          ? `⬌ ${identity(subscriberFCDA) ?? 'Unknown'}`
+          : ''}
+      </span>
+      <span slot="secondary"
+        >${getDescriptionAttribute(extRefElement)
+          ? html` ${getDescriptionAttribute(extRefElement)}`
+          : nothing}
+        ${supervisionDescription || controlBlockDescription
+          ? html`(${[controlBlockDescription, supervisionDescription]
+              .filter(desc => desc !== undefined)
+              .join(', ')})`
+          : nothing}
+      </span>
+      <mwc-icon slot="graphic">${subscribed ? 'link' : 'link_off'}</mwc-icon>
+      ${subscribed && supervisionNode !== undefined
+        ? html`<mwc-icon title="${identity(supervisionNode!)}" slot="meta"
+            >monitor_heart</mwc-icon
+          >`
+        : nothing}
+    </mwc-list-item>`;
+  }
+
+  private renderExtRefsByIED(): TemplateResult {
+    if (this.supervisionData.size === 0) this.reCreateSupervisionCache();
+    return html`${repeat(
+      getOrderedIeds(this.doc),
+      i => `${identity(i)}`,
+      ied => {
+        const extRefs = Array.from(
+          this.getExtRefElementsByIED(ied, this.controlTag)
+        );
+        const showSubscribed = extRefs.some(extRef => isSubscribed(extRef));
+        const showNotSubscribed = extRefs.some(extRef => !isSubscribed(extRef));
+        const filterClasses = {
+          ied: true,
+          'show-bound': showSubscribed,
+          'show-not-bound': showNotSubscribed,
+        };
+        if (!extRefs.length) return html``;
+        return html`
+      <mwc-list-item
+        class="${classMap(filterClasses)}"
+        noninteractive
+        graphic="icon"
+        value="${Array.from(ied.querySelectorAll('Inputs > ExtRef'))
+          .map(extRef => {
+            const extRefid = identity(extRef) as string;
+            const supervisionId =
+              this.getCachedSupervision(extRef) !== undefined
+                ? identity(this.getCachedSupervision(extRef)!)
+                : '';
+            return `${
+              typeof extRefid === 'string' ? extRefid : ''
+            }${supervisionId}`;
+          })
+          .join(' ')}"
+      >
+        <span>${getNameAttribute(ied)}</span>
+        <mwc-icon slot="graphic">developer_board</mwc-icon>
+      </mwc-list-item>
+      <li divider role="separator"></li>
+          ${repeat(
+            Array.from(this.getExtRefElementsByIED(ied, this.controlTag)),
+            exId => `${identity(exId)}`,
+            extRef => this.renderCompleteExtRefElement(extRef)
+          )} 
+          </mwc-list-item>`;
+      }
+    )}`;
+  }
+
+  renderControlTypeSelector(): TemplateResult {
+    return html`<div>
+      <mwc-formfield label="${translate('subscription.select.goose')}">
+        <mwc-radio
+          class="goose-view"
+          name="view"
+          value="goose"
+          ?checked=${this.controlTag === 'GSEControl'}
+          @click=${() => (this.controlTag = 'GSEControl')}
+        ></mwc-radio>
+      </mwc-formfield>
+      <mwc-formfield label="${translate('subscription.select.sampledValue')}">
+        <mwc-radio
+          class="sv-view"
+          name="view"
+          value="sampled-value"
+          ?checked=${this.controlTag === 'SampledValueControl'}
+          @click=${() => (this.controlTag = 'SampledValueControl')}
+        ></mwc-radio>
+      </mwc-formfield>
     </div>`;
+  }
+
+  renderFCDAs(): TemplateResult {
+    const controlElements = this.getControlElements(this.controlTag);
+    return html`<section tabindex="0">
+      ${this.renderFCDAListTitle()}
+      ${controlElements
+        ? this.renderControls(controlElements)
+        : html`<h3>${translate('subscription.subscriber.notSubscribed')}</h3> `}
+    </section>`;
+  }
+
+  render(): TemplateResult {
+    const filteredListClasses = {
+      'extref-list': true,
+      'show-bound': !this.hideBound,
+      'show-not-bound': !this.hideNotBound,
+    };
+
+    return html`${this.renderControlTypeSelector()}
+      <div class="container">
+        ${this.renderFCDAs()}
+        <section tabindex="0">
+          ${this.renderExtRefListTitle()}
+          ${this.currentSelectedControlElement &&
+          this.currentSelectedFcdaElement
+            ? html`<filtered-list>
+                ${this.renderSubscribedExtRefs()}
+                ${this.renderAvailableExtRefs()}
+              </filtered-list>`
+            : html`<h3>
+                ${translate('subscription.laterBinding.extRefList.noSelection')}
+              </h3>`}
+        </section>
+        <section tabindex="0">
+          ${this.renderExtRefSubscriberListTitle()}
+          <filtered-list class="${classMap(filteredListClasses)}" activatable
+            >${this.renderExtRefsByIED()}</filtered-list
+          >
+        </section>
+        ;
+      </div>`;
   }
 
   static styles = css`

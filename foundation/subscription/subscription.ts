@@ -1,13 +1,15 @@
 import { SCL_NAMESPACE } from '../schemas/schemas.js';
 
 import {
+  compareNames,
   createUpdateEdit,
   getSclSchemaVersion,
   isPublic,
   minAvailableLogicalNodeInstance,
   serviceTypes,
 } from '../foundation';
-import { Insert, Remove, Update } from '@openscd/open-scd-core';
+import { Insert, newEditEvent, Remove, Update } from '@openscd/open-scd-core';
+import { newSubscriptionChangedEvent } from '../events/events.js';
 
 export function getFcdaTitleValue(fcdaElement: Element): string {
   return `${fcdaElement.getAttribute('doName')}${
@@ -925,4 +927,234 @@ export function removeSubscriptionSupervision(
           node: valElement.closest('DOI')!,
         },
       ];
+}
+
+export function getOrderedIeds(doc: XMLDocument): Element[] {
+  return doc
+    ? Array.from(doc.querySelectorAll(':root > IED')).sort((a, b) =>
+        compareNames(a, b)
+      )
+    : [];
+}
+
+/**
+ * Returns the used supervision LN instances for a given service type.
+ *
+ * @param doc - SCL document.
+ * @param serviceType - either GOOSE or SMV.
+ * @returns - array of Elements of supervision LN instances.
+ */
+export function getUsedSupervisionInstances(
+  doc: Document,
+  serviceType: string
+): Element[] {
+  const supervisionType = serviceType === 'GOOSE' ? 'LGOS' : 'LSVS';
+  const refSelector =
+    supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
+
+  const supervisionInstances = Array.from(
+    doc!.querySelectorAll(
+      `IED LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
+    )
+  )
+    .filter(val => val.textContent !== '')
+    .map(val => val.closest('LN')!);
+
+  return supervisionInstances;
+}
+
+export function getFcdaSrcControlBlockDescription(
+  extRefElement: Element
+): string {
+  const [srcPrefix, srcLDInst, srcLNClass, srcCBName] = [
+    'srcPrefix',
+    'srcLDInst',
+    'srcLNClass',
+    'srcCBName',
+  ].map(name => extRefElement.getAttribute(name));
+  // QUESTION: Maybe we don't need srcLNClass ?
+  return `${
+    srcPrefix ? srcPrefix + ' ' : ''
+  }${srcLDInst} / ${srcLNClass} ${srcCBName}`;
+}
+
+export function findFCDAs(extRef: Element): Element[] {
+  if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) return [];
+
+  const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
+    'iedName',
+    'ldInst',
+    'prefix',
+    'lnClass',
+    'lnInst',
+    'doName',
+    'daName',
+  ].map(name => extRef.getAttribute(name));
+  const ied = Array.from(extRef.ownerDocument.getElementsByTagName('IED')).find(
+    element =>
+      element.getAttribute('name') === iedName && !element.closest('Private')
+  );
+  if (!ied) return [];
+
+  return Array.from(ied.getElementsByTagName('FCDA'))
+    .filter(item => !item.closest('Private'))
+    .filter(
+      fcda =>
+        (fcda.getAttribute('ldInst') ?? '') === (ldInst ?? '') &&
+        (fcda.getAttribute('prefix') ?? '') === (prefix ?? '') &&
+        (fcda.getAttribute('lnClass') ?? '') === (lnClass ?? '') &&
+        (fcda.getAttribute('lnInst') ?? '') === (lnInst ?? '') &&
+        (fcda.getAttribute('doName') ?? '') === (doName ?? '') &&
+        (fcda.getAttribute('daName') ?? '') === (daName ?? '')
+    );
+}
+
+const serviceTypeControlBlockTags: Partial<Record<string, string[]>> = {
+  GOOSE: ['GSEControl'],
+  SMV: ['SampledValueControl'],
+  Report: ['ReportControl'],
+  NONE: ['LogControl', 'GSEControl', 'SampledValueControl', 'ReportControl'],
+};
+
+/**
+ * Locates the control block associated with an ExtRef.
+ *
+ * @param extRef - SCL ExtRef element
+ * @returns - either a GSEControl or SampledValueControl block
+ */
+export function findControlBlock(extRef: Element): Element {
+  const fcdas = findFCDAs(extRef);
+  const cbTags =
+    serviceTypeControlBlockTags[extRef.getAttribute('serviceType') ?? 'NONE'] ??
+    [];
+  const controlBlocks = new Set(
+    fcdas.flatMap(fcda => {
+      const dataSet = fcda.parentElement!;
+      const dsName = dataSet.getAttribute('name') ?? '';
+      const anyLN = dataSet.parentElement!;
+      return cbTags
+        .flatMap(tag => Array.from(anyLN.getElementsByTagName(tag)))
+        .filter(cb => {
+          if (extRef.getAttribute('srcCBName')) {
+            const ln = cb.closest('LN0')!;
+            const lnClass = ln.getAttribute('lnClass');
+            const lnPrefix = ln.getAttribute('prefix') ?? '';
+            const lnInst = ln.getAttribute('inst');
+
+            const ld = ln.closest('LDevice')!;
+            const ldInst = ld.getAttribute('inst');
+            const cbName = cb.getAttribute('name');
+
+            return (
+              extRef.getAttribute('srcCBName') === cbName &&
+              (extRef.getAttribute('srcLNInst') ?? '') === lnInst &&
+              (extRef.getAttribute('srcLNClass') ?? 'LLN0') === lnClass &&
+              (extRef.getAttribute('srcPrefix') ?? '') === lnPrefix &&
+              (extRef.getAttribute('srcLDInst') ??
+                extRef.getAttribute('ldInst')) === ldInst
+            );
+          }
+          return cb.getAttribute('datSet') === dsName;
+        });
+    })
+  );
+  return controlBlocks.values().next().value;
+}
+
+/**
+ * Given an ExtRef SCL element, will locate the FCDA within the correct dataset the subscription comes from.
+ * @param extRef  - SCL ExtRef Element.
+ * @param controlBlock  - SCL GSEControl or SampledValueControl associated with the ExtRef.
+ * @returns - SCL FCDA element
+ */
+export function findFCDA(
+  extRef: Element,
+  controlBlock: Element
+): Element | null {
+  if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) return null;
+
+  const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
+    'iedName',
+    'ldInst',
+    'prefix',
+    'lnClass',
+    'lnInst',
+    'doName',
+    'daName',
+  ].map(name => extRef.getAttribute(name));
+  const ied = Array.from(extRef.ownerDocument.getElementsByTagName('IED')).find(
+    element =>
+      element.getAttribute('name') === iedName && !element.closest('Private')
+  );
+  if (!ied) return null;
+
+  const dataSetRef = controlBlock.getAttribute('datSet');
+
+  const candidateFCDAs = Array.from(ied.getElementsByTagName('FCDA'))
+    .filter(item => !item.closest('Private'))
+    .filter(
+      fcda =>
+        (fcda.getAttribute('ldInst') ?? '') === (ldInst ?? '') &&
+        (fcda.getAttribute('prefix') ?? '') === (prefix ?? '') &&
+        (fcda.getAttribute('lnClass') ?? '') === (lnClass ?? '') &&
+        (fcda.getAttribute('lnInst') ?? '') === (lnInst ?? '') &&
+        (fcda.getAttribute('doName') ?? '') === (doName ?? '') &&
+        (fcda.getAttribute('daName') ?? '') === (daName ?? '') &&
+        fcda.parentElement?.getAttribute('name') === dataSetRef
+    );
+
+  return candidateFCDAs[0] ?? null;
+}
+
+/**
+ * Unsubscribing means removing a list of attributes from the ExtRef Element.
+ *
+ * @param extRef - The Ext Ref Element to clean from attributes.
+ * @param eventElement - The element from which to initiate events.
+ */
+export function unsubscribe(extRef: Element, eventElement: HTMLElement): void {
+  const [pLN, pDO, pDA, pServT] = ['pLN', 'pDO', 'pDA', 'pServT'].map(attr =>
+    extRef.getAttribute(attr)
+  );
+
+  const updateAction = createUpdateEdit(extRef, {
+    intAddr: extRef.getAttribute('intAddr'),
+    desc: extRef.getAttribute('desc'),
+    iedName: null,
+    ldInst: null,
+    prefix: null,
+    lnClass: null,
+    lnInst: null,
+    doName: null,
+    daName: null,
+    serviceType: null,
+    srcLDInst: null,
+    srcPrefix: null,
+    srcLNClass: null,
+    srcLNInst: null,
+    srcCBName: null,
+    ...(pLN && { pLN }),
+    ...(pDO && { pDO }),
+    ...(pDA && { pDA }),
+    ...(pServT && { pServT }),
+  });
+
+  const subscriberIed = extRef.closest('IED') || undefined;
+
+  const removeSubscriptionEdits: Remove[] = [];
+  const controlBlock = findControlBlock(extRef);
+  const fcdaElement = findFCDA(extRef, controlBlock);
+
+  if (canRemoveSubscriptionSupervision(extRef))
+    removeSubscriptionEdits.push(
+      ...removeSubscriptionSupervision(controlBlock, subscriberIed)
+    );
+
+  eventElement.dispatchEvent(
+    newEditEvent([updateAction, ...removeSubscriptionEdits])
+  );
+
+  eventElement.dispatchEvent(
+    newSubscriptionChangedEvent(controlBlock, fcdaElement ?? undefined)
+  );
 }
