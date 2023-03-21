@@ -16,7 +16,11 @@ import '@material/mwc-button';
 import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-radio';
 import '@material/mwc-formfield';
+import '@material/mwc-icon-button-toggle';
+
 import { Icon } from '@material/mwc-icon';
+import { IconButtonToggle } from '@material/mwc-icon-button-toggle';
+
 import { List } from '@material/mwc-list';
 import { ListItem } from '@material/mwc-list/mwc-list-item';
 import { Menu } from '@material/mwc-menu';
@@ -54,6 +58,8 @@ import {
   SubscriptionChangedEvent,
 } from './foundation/events/events';
 import { Remove } from '@openscd/open-scd-core';
+import { msg } from '@lit/localize';
+import { IconButton } from '@material/mwc-icon-button';
 
 // const controlTag = 'GSEControl';
 
@@ -61,31 +67,26 @@ type controlTagType = 'SampledValueControl' | 'GSEControl';
 
 type iconLookup = Record<controlTagType, SVGTemplateResult>;
 
-function translate(name: string): string {
-  return name;
-}
-
 export default class SubscriberLaterBinding extends LitElement {
   @property({ attribute: false })
   doc!: XMLDocument;
 
   @property()
   controlTag: controlTagType = 'GSEControl'; // eventually parameterise
-  @property()
-  includeLaterBinding!: boolean;
-  @property({ attribute: true })
-  subscriberview!: boolean;
 
   @state()
   private extRefCounters = new Map();
 
   @property({ type: Boolean })
+  get subscriberView(): boolean {
+    return this.switchViewUI?.on ?? false;
+  }
+
+  @property({ type: Boolean })
   get hideSubscribed(): boolean {
     return (
       localStorage.getItem(
-        `fcda-binding-list-${
-          this.includeLaterBinding ? 'later-binding' : 'data-binding'
-        }-${this.controlTag}$hideSubscribed`
+        `fcda-binding-list-${this.controlTag}$hideSubscribed`
       ) === 'true' ?? false
     );
   }
@@ -93,9 +94,7 @@ export default class SubscriberLaterBinding extends LitElement {
   set hideSubscribed(value: boolean) {
     const oldValue = this.hideSubscribed;
     localStorage.setItem(
-      `fcda-binding-list-${
-        this.includeLaterBinding ? 'later-binding' : 'data-binding'
-      }-${this.controlTag}$hideSubscribed`,
+      `fcda-binding-list-${this.controlTag}$hideSubscribed`,
       `${value}`
     );
     this.requestUpdate('hideSubscribed', oldValue);
@@ -105,9 +104,7 @@ export default class SubscriberLaterBinding extends LitElement {
   get hideNotSubscribed(): boolean {
     return (
       localStorage.getItem(
-        `fcda-binding-list-${
-          this.includeLaterBinding ? 'later-binding' : 'data-binding'
-        }-${this.controlTag}$hideNotSubscribed`
+        `fcda-binding-list-${this.controlTag}$hideNotSubscribed`
       ) === 'true' ?? false
     );
   }
@@ -115,9 +112,7 @@ export default class SubscriberLaterBinding extends LitElement {
   set hideNotSubscribed(value: boolean) {
     const oldValue = this.hideNotSubscribed;
     localStorage.setItem(
-      `fcda-binding-list-${
-        this.includeLaterBinding ? 'later-binding' : 'data-binding'
-      }-${this.controlTag}$hideNotSubscribed`,
+      `fcda-binding-list-${this.controlTag}$hideNotSubscribed`,
       `${value}`
     );
     this.requestUpdate('hideNotSubscribed', oldValue);
@@ -195,6 +190,10 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('.actions-menu') actionsMenu!: Menu;
   @query('.actions-menu-icon') actionsMenuIcon!: Icon;
   @query('.control-block-list') controlBlockList!: List;
+
+  @query('#switchView')
+  switchViewUI?: IconButtonToggle;
+
   // The selected elements when a FCDA Line is clicked.
   private selectedControlElement: Element | undefined;
   private selectedFcdaElement: Element | undefined;
@@ -270,7 +269,7 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   private resetExtRefCount(event: SubscriptionChangedEvent): void {
-    //   if (!this.subscriberview) {
+    //   if (!this.subscriberView) {
     //     this.resetSelection();
     //   }
     //   if (event.detail.control && event.detail.fcda) {
@@ -301,7 +300,7 @@ export default class SubscriberLaterBinding extends LitElement {
         this.controlTag,
         fcdaElement,
         controlElement!,
-        this.includeLaterBinding
+        true // TODO: do we need this?
       ).length;
       this.extRefCounters.set(controlBlockFcdaId, extRefCount);
     }
@@ -347,7 +346,7 @@ export default class SubscriberLaterBinding extends LitElement {
     return html`<mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
-      ?disabled=${this.subscriberview &&
+      ?disabled=${this.subscriberView &&
       unsupportedExtRefElement(
         this.selectedExtRefElement,
         fcdaElement,
@@ -392,20 +391,7 @@ export default class SubscriberLaterBinding extends LitElement {
       'filter-off': this.hideSubscribed || this.hideNotSubscribed,
     };
     return html`<h1>
-      ${translate(`subscription.${this.controlTag}.controlBlockList.title`)}
-      ${!this.subscriberview && this.includeLaterBinding
-        ? html`<mwc-icon-button
-            class="switch-view"
-            icon="alt_route"
-            title="${translate(
-              `subscription.laterBinding.switchControlBlockView`
-            )}"
-            @click=${() =>
-              this.dispatchEvent(
-                new Event('change-view', { bubbles: true, composed: true })
-              )}
-          ></mwc-icon-button>`
-        : nothing}
+      ${msg(`subscription.${this.controlTag}.controlBlockList.title`)}
       <mwc-icon-button
         class="actions-menu-icon ${classMap(menuClasses)}"
         icon="filter_list"
@@ -425,14 +411,14 @@ export default class SubscriberLaterBinding extends LitElement {
           left
           ?selected=${!this.hideSubscribed}
         >
-          <span>${translate('subscription.subscriber.subscribed')}</span>
+          <span>${msg('subscription.subscriber.subscribed')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="filter-not-subscribed"
           left
           ?selected=${!this.hideNotSubscribed}
         >
-          <span>${translate('subscription.subscriber.notSubscribed')}</span>
+          <span>${msg('subscription.subscriber.notSubscribed')}</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1> `;
@@ -634,9 +620,7 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   private renderExtRefListTitle(): TemplateResult {
-    return html`<h1>
-      ${translate(`subscription.laterBinding.extRefList.title`)}
-    </h1>`;
+    return html`<h1>${msg(`subscription.laterBinding.extRefList.title`)}</h1>`;
   }
 
   private renderExtRefElement(extRefElement: Element): TemplateResult {
@@ -682,7 +666,7 @@ export default class SubscriberLaterBinding extends LitElement {
           )
           .join(' ')}"
       >
-        <span>${translate('subscription.subscriber.subscribed')}</span>
+        <span>${msg('subscription.subscriber.subscribed')}</span>
       </mwc-list-item>
       <li divider role="separator"></li>
       ${subscribedExtRefs.length > 0
@@ -690,9 +674,7 @@ export default class SubscriberLaterBinding extends LitElement {
             this.renderExtRefElement(extRefElement)
           )}`
         : html`<mwc-list-item graphic="large" noninteractive>
-            ${translate(
-              'subscription.laterBinding.extRefList.noSubscribedExtRefs'
-            )}
+            ${msg('subscription.laterBinding.extRefList.noSubscribedExtRefs')}
           </mwc-list-item>`}
     `;
   }
@@ -711,9 +693,7 @@ export default class SubscriberLaterBinding extends LitElement {
           )
           .join(' ')}"
       >
-        <span>
-          ${translate('subscription.subscriber.availableToSubscribe')}
-        </span>
+        <span> ${msg('subscription.subscriber.availableToSubscribe')} </span>
       </mwc-list-item>
       <li divider role="separator"></li>
       ${availableExtRefs.length > 0
@@ -742,9 +722,7 @@ export default class SubscriberLaterBinding extends LitElement {
             </mwc-list-item>`
           )}`
         : html`<mwc-list-item graphic="large" noninteractive>
-            ${translate(
-              'subscription.laterBinding.extRefList.noAvailableExtRefs'
-            )}
+            ${msg('subscription.laterBinding.extRefList.noAvailableExtRefs')}
           </mwc-list-item>`}
     `;
   }
@@ -754,19 +732,10 @@ export default class SubscriberLaterBinding extends LitElement {
       'filter-off': this.hideBound || this.hideNotBound,
     };
     return html`<h1>
-      ${translate(`subscription.laterBinding.extRefList.title`)}
-      <mwc-icon-button
-        class="switch-view"
-        icon="alt_route"
-        title="${translate(`subscription.laterBinding.extRefList.switchView`)}"
-        @click=${() =>
-          this.dispatchEvent(
-            new Event('change-view', { bubbles: true, composed: true })
-          )}
-      ></mwc-icon-button>
+      ${msg(`subscription.laterBinding.extRefList.title`)}
       <mwc-icon-button
         class="filter-action-menu-icon ${classMap(menuClasses)}"
-        title="${translate(`subscription.laterBinding.extRefList.filter`)}"
+        title="${msg(`subscription.laterBinding.extRefList.filter`)}"
         icon="filter_list"
         @click=${() => {
           if (!this.filterMenu.open) this.filterMenu.show();
@@ -784,23 +753,19 @@ export default class SubscriberLaterBinding extends LitElement {
           left
           ?selected=${!this.hideBound}
         >
-          <span
-            >${translate('subscription.laterBinding.extRefList.bound')}</span
-          >
+          <span>${msg('subscription.laterBinding.extRefList.bound')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="show-not-bound"
           left
           ?selected=${!this.hideNotBound}
         >
-          <span
-            >${translate('subscription.laterBinding.extRefList.unBound')}</span
-          >
+          <span>${msg('subscription.laterBinding.extRefList.unBound')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
         class="settings-action-menu-icon"
-        title="${translate(`subscription.laterBinding.extRefList.settings`)}"
+        title="${msg(`subscription.laterBinding.extRefList.settings`)}"
         icon="settings"
         @click=${() => {
           if (!this.settingsMenu.open) this.settingsMenu.show();
@@ -819,9 +784,7 @@ export default class SubscriberLaterBinding extends LitElement {
           ?selected=${!this.notAutoIncrement}
         >
           <span
-            >${translate(
-              'subscription.laterBinding.extRefList.autoIncrement'
-            )}</span
+            >${msg('subscription.laterBinding.extRefList.autoIncrement')}</span
           >
         </mwc-check-list-item>
       </mwc-menu>
@@ -1012,7 +975,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
   renderControlTypeSelector(): TemplateResult {
     return html`<div>
-      <mwc-formfield label="${translate('subscription.select.goose')}">
+      <mwc-formfield label="${msg('subscription.select.goose')}">
         <mwc-radio
           class="goose-view"
           name="view"
@@ -1021,7 +984,7 @@ export default class SubscriberLaterBinding extends LitElement {
           @click=${() => (this.controlTag = 'GSEControl')}
         ></mwc-radio>
       </mwc-formfield>
-      <mwc-formfield label="${translate('subscription.select.sampledValue')}">
+      <mwc-formfield label="${msg('subscription.select.sampledValue')}">
         <mwc-radio
           class="sv-view"
           name="view"
@@ -1039,39 +1002,49 @@ export default class SubscriberLaterBinding extends LitElement {
       ${this.renderFCDAListTitle()}
       ${controlElements
         ? this.renderControls(controlElements)
-        : html`<h3>${translate('subscription.subscriber.notSubscribed')}</h3> `}
+        : html`<h3>${msg('subscription.subscriber.notSubscribed')}</h3> `}
     </section>`;
   }
 
-  render(): TemplateResult {
+  renderExtRefs(): TemplateResult {
     const filteredListClasses = {
       'extref-list': true,
       'show-bound': !this.hideBound,
       'show-not-bound': !this.hideNotBound,
     };
 
-    return html`${this.renderControlTypeSelector()}
+    if (!this.subscriberView) {
+      return html`<section>
+        ${this.renderExtRefListTitle()}
+        ${this.currentSelectedControlElement && this.currentSelectedFcdaElement
+          ? html`<filtered-list>
+              ${this.renderSubscribedExtRefs()} ${this.renderAvailableExtRefs()}
+            </filtered-list>`
+          : html`<h3>
+              ${msg('subscription.laterBinding.extRefList.noSelection')}
+            </h3>`}
+      </section>`;
+    }
+    console.log('hi');
+    return html`<section>
+      ${this.renderExtRefSubscriberListTitle()}
+      <filtered-list class="${classMap(filteredListClasses)}" activatable
+        >${this.renderExtRefsByIED()}</filtered-list
+      >
+    </section>`;
+  }
+
+  render(): TemplateResult {
+    return html`<mwc-icon-button-toggle
+        id="switchView"
+        onIcon="alt_route"
+        offIcon="alt_route"
+        title="${msg(`subscription.laterBinding.switchControlBlockView`)}"
+        @click=${() => this.requestUpdate()}
+      ></mwc-icon-button-toggle>
+      ${this.renderControlTypeSelector()}
       <div class="container">
-        ${this.renderFCDAs()}
-        <section tabindex="0">
-          ${this.renderExtRefListTitle()}
-          ${this.currentSelectedControlElement &&
-          this.currentSelectedFcdaElement
-            ? html`<filtered-list>
-                ${this.renderSubscribedExtRefs()}
-                ${this.renderAvailableExtRefs()}
-              </filtered-list>`
-            : html`<h3>
-                ${translate('subscription.laterBinding.extRefList.noSelection')}
-              </h3>`}
-        </section>
-        <section tabindex="0">
-          ${this.renderExtRefSubscriberListTitle()}
-          <filtered-list class="${classMap(filteredListClasses)}" activatable
-            >${this.renderExtRefsByIED()}</filtered-list
-          >
-        </section>
-        ;
+        ${this.renderFCDAs()}${this.renderExtRefs()}
       </div>`;
   }
 
@@ -1090,16 +1063,16 @@ export default class SubscriberLaterBinding extends LitElement {
       height: calc(100vh - 136px);
     }
 
-    .container:not(subscriberview) {
+    .container:not(subscriberView) {
       flex-direction: row;
     }
 
-    .container[subscriberview] {
+    .container[subscriberView] {
       width: 100%;
       flex-direction: row-reverse;
     }
 
-    .container[subscriberview] fcda-binding-list.column {
+    .container[subscriberView] fcda-binding-list.column {
       flex: 1;
       width: 25%;
     }
@@ -1113,18 +1086,18 @@ export default class SubscriberLaterBinding extends LitElement {
     }
 
     @media (min-width: 700px) {
-      .container[subscriberview] {
+      .container[subscriberView] {
         width: calc(100vw - 20px);
         flex: auto;
       }
 
-      .container[subscriberview] extref-later-binding-list-subscriber.column {
+      .container[subscriberView] extref-later-binding-list-subscriber.column {
         resize: horizontal;
         width: 65%;
         flex: none;
       }
 
-      .container[subscriberview] fcda-binding-list.column {
+      .container[subscriberView] fcda-binding-list.column {
         width: auto;
       }
     }
