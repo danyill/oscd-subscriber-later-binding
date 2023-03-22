@@ -21,7 +21,7 @@ import '@material/mwc-icon-button-toggle';
 import { newEditEvent, Remove } from '@openscd/open-scd-core';
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
-import type { List } from '@material/mwc-list';
+import type { List, SingleSelectedEvent } from '@material/mwc-list';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import type { Menu } from '@material/mwc-menu';
 
@@ -40,7 +40,7 @@ import {
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
   instantiateSubscriptionSupervision,
-  isSubscribed,
+  isBound,
   removeSubscriptionSupervision,
   unsubscribe,
   unsupportedExtRefElement,
@@ -53,14 +53,15 @@ import {
   getNameAttribute,
 } from './foundation/foundation.js';
 import {
-  getFilterIcon,
+  // getFilterIcon,
   gooseIcon,
-  // gooseIconString,
   smvIcon,
-  // smvIconString,
 } from './foundation/icons.js';
 
 import './foundation/components/oscd-filtered-list.js';
+import { selector } from './foundation/identities/selector.js';
+
+import type { OscdFilteredList } from './foundation/components/oscd-filtered-list.js';
 
 type controlTagType = 'SampledValueControl' | 'GSEControl';
 
@@ -82,7 +83,11 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   set subscriberView(val) {
+    // TODO: Discuss with Christian the use of requestUpdate
+    // https://lit.dev/docs/v1/components/properties/#accessors
+    const oldValue = this.switchViewUI!.on === true;
     this.switchViewUI!.on = val;
+    this.requestUpdate('subscriberview', oldValue);
   }
 
   @property({ type: Boolean })
@@ -95,10 +100,12 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   set hideSubscribed(value: boolean) {
+    const oldValue = value;
     localStorage.setItem(
       `fcda-binding-list-${this.controlTag}$hideSubscribed`,
       `${value}`
     );
+    this.requestUpdate('hideSubscribed', oldValue);
   }
 
   @property({ type: Boolean })
@@ -111,10 +118,12 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   set hideNotSubscribed(value: boolean) {
+    const oldValue = value;
     localStorage.setItem(
       `fcda-binding-list-${this.controlTag}$hideNotSubscribed`,
       `${value}`
     );
+    this.requestUpdate('hideNotSubscribed', oldValue);
   }
 
   @property({ type: Boolean })
@@ -127,10 +136,12 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   set notAutoIncrement(value: boolean) {
+    const oldValue = value;
     localStorage.setItem(
       `extref-list-${this.controlTag}$notAutoIncrement`,
       `${value}`
     );
+    this.requestUpdate('notAutoIncrement', oldValue);
   }
 
   @property({ type: Boolean })
@@ -142,10 +153,12 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   set hideBound(value: boolean) {
+    const oldValue = value;
     localStorage.setItem(
       `extref-list-${this.controlTag}$hideBound`,
       `${value}`
     );
+    this.requestUpdate('hideBound', oldValue);
   }
 
   @property({ type: Boolean })
@@ -193,6 +206,10 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @query('.control-block-list')
   controlBlockList!: List;
+
+  // TODO: Do we actually use this?
+  @query('#subscriberExtRefList')
+  extRefListSubscriber?: OscdFilteredList;
 
   // The selected elements when a FCDA Line is clicked.
   private selectedControlElement: Element | undefined;
@@ -252,6 +269,13 @@ export default class SubscriberLaterBinding extends LitElement {
     //   this.onFcdaSelectEvent = this.onFcdaSelectEvent.bind(this);
     //   parentDiv.addEventListener('fcda-select', this.onFcdaSelectEvent);
     // }
+
+    this.switchViewUI?.addEventListener(
+      'icon-button-toggle-change',
+      (ev: Event) => {
+        console.log(ev);
+      }
+    );
   }
 
   private getControlElements(controlTag: controlTagType): Element[] {
@@ -327,11 +351,13 @@ export default class SubscriberLaterBinding extends LitElement {
     }
 
     if (_changedProperties.has('subscriberView')) {
+      // TODO: These anchors don't seem to work because
+      // subscriberView is never changed.
       this.settingsMenuExtRefUI.anchor = <HTMLElement>(
         this.settingsMenuExtRefButtonUI
       );
-      this.settingsMenuExtRefUI.anchor = <HTMLElement>(
-        this.settingsMenuExtRefButtonUI
+      this.filterMenuExtRefUI.anchor = <HTMLElement>(
+        this.filterMenuExtRefButtonUI
       );
 
       this.settingsMenuExtRefUI.addEventListener('closed', () => {
@@ -339,51 +365,14 @@ export default class SubscriberLaterBinding extends LitElement {
           this.settingsMenuExtRefUI.index
         )).has(0);
       });
-    }
-  }
 
-  renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult {
-    const fcdaCount = this.getExtRefCount(fcdaElement, controlElement);
-
-    const filterClasses = {
-      subitem: true,
-      'show-subscribed': fcdaCount !== 0,
-      'show-not-subscribed': fcdaCount === 0,
-    };
-
-    return html`<mwc-list-item
-      graphic="large"
-      ?hasMeta=${fcdaCount !== 0}
-      ?disabled=${this.subscriberView &&
-      unsupportedExtRefElement(
-        this.selectedExtRefElement,
-        fcdaElement,
-        controlElement
-      )}
-      twoline
-      class="${classMap(filterClasses)}"
-      @click=${() => this.onFcdaSelect(controlElement, fcdaElement)}
-      value="${identity(controlElement)}
-             ${identity(fcdaElement)}"
-    >
-      <span>${getFcdaTitleValue(fcdaElement)}</span>
-      <span slot="secondary">${getFcdaSubtitleValue(fcdaElement)}</span>
-      <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
-      ${fcdaCount !== 0 ? html`<span slot="meta">${fcdaCount}</span>` : nothing}
-    </mwc-list-item>`;
-  }
-
-  updateBaseFilterState(): void {
-    if (!this.hideSubscribed) {
-      this.controlBlockList!.classList.add('show-subscribed');
-    } else {
-      this.controlBlockList!.classList.remove('show-subscribed');
-    }
-
-    if (!this.hideNotSubscribed) {
-      this.controlBlockList!.classList.add('show-not-subscribed');
-    } else {
-      this.controlBlockList!.classList.remove('show-not-subscribed');
+      this.filterMenuExtRefUI.addEventListener('closed', () => {
+        this.hideBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(0);
+        this.hideNotBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(
+          1
+        );
+        this.requestUpdate();
+      });
     }
   }
 
@@ -396,9 +385,37 @@ export default class SubscriberLaterBinding extends LitElement {
       this.hideNotSubscribed = !(<Set<number>>this.filterMenuFcdaUI.index).has(
         1
       );
-      this.updateBaseFilterState();
+      this.requestUpdate();
     });
-    this.updateBaseFilterState();
+  }
+
+  renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult {
+    const fcdaCount = this.getExtRefCount(fcdaElement, controlElement);
+
+    return html`<mwc-list-item
+      graphic="large"
+      ?hasMeta=${fcdaCount !== 0}
+      ?disabled=${this.subscriberView &&
+      unsupportedExtRefElement(
+        this.selectedExtRefElement,
+        fcdaElement,
+        controlElement
+      )}
+      twoline
+      class="${(!this.hideSubscribed && fcdaCount !== 0) ||
+      (!this.hideNotSubscribed && fcdaCount === 0)
+        ? ''
+        : 'hidden-element'}"
+      data-control="${identity(controlElement)}"
+      data-fcda="${identity(fcdaElement)}"
+      value="${identity(controlElement)}
+             ${identity(fcdaElement)}"
+    >
+      <span>${getFcdaTitleValue(fcdaElement)}</span>
+      <span slot="secondary">${getFcdaSubtitleValue(fcdaElement)}</span>
+      <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
+      ${fcdaCount !== 0 ? html`<span slot="meta">${fcdaCount}</span>` : nothing}
+    </mwc-list-item>`;
   }
 
   renderFCDAListTitle(): TemplateResult {
@@ -442,32 +459,38 @@ export default class SubscriberLaterBinding extends LitElement {
     </h1> `;
   }
 
-  renderControls(controlElements: Element[]): TemplateResult {
+  renderControlList(controlElements: Element[]): TemplateResult {
     const filteredListClasses = {
       'control-block-list': true,
       'show-subscribed': !this.hideSubscribed,
       'show-not-subscribed': !this.hideNotSubscribed,
     };
     return html`<oscd-filtered-list
+      ?activatable=${!this.subscriberView}
       class="${classMap(filteredListClasses)}"
-      activatable
+      @selected=${(ev: SingleSelectedEvent) => {
+        const selectedListItem = (<OscdFilteredList>ev.target).selected;
+        if (!selectedListItem) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { control, fcda } = (<any>selectedListItem).dataset;
+        const controlElement = this.doc.querySelector(
+          selector(this.controlTag, control)
+        );
+        const fcdaElement = this.doc.querySelector(selector('FCDA', fcda));
+        if (controlElement && fcdaElement)
+          this.onFcdaSelect(controlElement, fcdaElement);
+      }}
     >
       ${controlElements
         .filter(controlElement => getFcdaElements(controlElement).length)
         .map(controlElement => {
           const fcdaElements = getFcdaElements(controlElement);
-          const showSubscribed = fcdaElements.some(
+          const someSubscribed = fcdaElements.some(
             fcda => this.getExtRefCount(fcda, controlElement) !== 0
           );
-          const showNotSubscribed = fcdaElements.some(
+          const someNotSubscribed = fcdaElements.some(
             fcda => this.getExtRefCount(fcda, controlElement) === 0
           );
-
-          const filterClasses = {
-            control: true,
-            'show-subscribed': showSubscribed,
-            'show-not-subscribed': showNotSubscribed,
-          };
 
           // <!-- TODO: Restore Have removed wizard connection for now @click=${() =>
           //   this.openEditWizard(controlElement)} -->
@@ -480,7 +503,10 @@ export default class SubscriberLaterBinding extends LitElement {
           return html`
             <mwc-list-item
               noninteractive
-              class="${classMap(filterClasses)}"
+              class="control ${(!this.hideSubscribed && someSubscribed) ||
+              (!this.hideNotSubscribed && someNotSubscribed)
+                ? ''
+                : 'hidden-element'}"
               graphic="icon"
               twoline
               hasMeta
@@ -623,7 +649,7 @@ export default class SubscriberLaterBinding extends LitElement {
       true
     ).filter(
       extRefElement =>
-        !isSubscribed(extRefElement) &&
+        !isBound(extRefElement) &&
         (!extRefElement.hasAttribute('serviceType') ||
           extRefElement.getAttribute('serviceType') ===
             this.serviceTypeLookup[this.controlTag])
@@ -849,15 +875,9 @@ export default class SubscriberLaterBinding extends LitElement {
     let controlBlockDescription: string | undefined;
     let supervisionDescription: string | undefined;
 
-    const subscribed = isSubscribed(extRefElement);
+    const bound = isBound(extRefElement);
 
-    const filterClasses = {
-      extref: true,
-      'show-bound': subscribed,
-      'show-not-bound': !subscribed,
-    };
-
-    if (subscribed) {
+    if (bound) {
       subscriberFCDA = findFCDAs(extRefElement).find(x => x !== undefined);
       supervisionNode = this.getCachedSupervision(extRefElement);
       controlBlockDescription =
@@ -875,13 +895,16 @@ export default class SubscriberLaterBinding extends LitElement {
 
     return html`<mwc-list-item
       twoline
-      class="${classMap(filterClasses)}"
+      class="control ${(!this.hideBound && bound) ||
+      (!this.hideNotBound && !bound)
+        ? ''
+        : 'hidden-element'}"
       graphic="large"
       ?hasMeta=${supervisionNode !== undefined}
       @click=${() => {
         this.currentSelectedExtRefElement = extRefElement;
 
-        if (!subscribed) {
+        if (!bound) {
           // this.dispatchEvent(
           //   newExtRefSelectionChangedEvent(this.currentSelectedExtRefElement)
           // );
@@ -908,7 +931,7 @@ export default class SubscriberLaterBinding extends LitElement {
           .trim()
           .slice(1)}:
         ${extRefElement.getAttribute('intAddr')}
-        ${subscribed && subscriberFCDA
+        ${bound && subscriberFCDA
           ? `⬌ ${identity(subscriberFCDA) ?? 'Unknown'}`
           : ''}
       </span>
@@ -922,8 +945,8 @@ export default class SubscriberLaterBinding extends LitElement {
               .join(', ')})`
           : nothing}
       </span>
-      <mwc-icon slot="graphic">${subscribed ? 'link' : 'link_off'}</mwc-icon>
-      ${subscribed && supervisionNode !== undefined
+      <mwc-icon slot="graphic">${bound ? 'link' : 'link_off'}</mwc-icon>
+      ${bound && supervisionNode !== undefined
         ? html`<mwc-icon title="${identity(supervisionNode!)}" slot="meta"
             >monitor_heart</mwc-icon
           >`
@@ -940,17 +963,17 @@ export default class SubscriberLaterBinding extends LitElement {
         const extRefs = Array.from(
           this.getExtRefElementsByIED(ied, this.controlTag)
         );
-        const showSubscribed = extRefs.some(extRef => isSubscribed(extRef));
-        const showNotSubscribed = extRefs.some(extRef => !isSubscribed(extRef));
-        const filterClasses = {
-          ied: true,
-          'show-bound': showSubscribed,
-          'show-not-bound': showNotSubscribed,
-        };
+        const someBound = extRefs.some(extRef => isBound(extRef));
+        const someNotBound = extRefs.some(extRef => !isBound(extRef));
+
         if (!extRefs.length) return html``;
         return html`
       <mwc-list-item
-        class="${classMap(filterClasses)}"
+      class="ied ${
+        (!this.hideBound && someBound) || (!this.hideNotBound && someNotBound)
+          ? ''
+          : 'hidden-element'
+      }"
         noninteractive
         graphic="icon"
         value="${Array.from(ied.querySelectorAll('Inputs > ExtRef'))
@@ -1009,14 +1032,13 @@ export default class SubscriberLaterBinding extends LitElement {
     return html`<section class="column">
       ${this.renderFCDAListTitle()}
       ${controlElements
-        ? this.renderControls(controlElements)
+        ? this.renderControlList(controlElements)
         : html`<h3>${msg('Not Subscribed')}</h3> `}
     </section>`;
   }
 
   renderExtRefs(): TemplateResult {
     const filteredListClasses = {
-      'extref-list': true,
       'show-bound': !this.hideBound,
       'show-not-bound': !this.hideNotBound,
     };
@@ -1035,6 +1057,7 @@ export default class SubscriberLaterBinding extends LitElement {
       : html` <section class="column">
           ${this.renderExtRefSubscriberListTitle()}
           <oscd-filtered-list
+            id="subscriberExtRefList"
             class="${classMap(filteredListClasses)}"
             activatable
             >${this.renderExtRefsByIED()}</oscd-filtered-list
@@ -1048,7 +1071,9 @@ export default class SubscriberLaterBinding extends LitElement {
         onIcon="alt_route"
         offIcon="alt_route"
         title="${msg('Alternate between Publisher and Subscriber view')}"
-        @click=${() => this.requestUpdate()}
+        @click=${() => {
+          this.requestUpdate();
+        }}
       ></mwc-icon-button-toggle>
       ${this.renderControlTypeSelector()}
       <div class="container">
@@ -1126,34 +1151,6 @@ export default class SubscriberLaterBinding extends LitElement {
       position: relative;
     }
 
-    /* remove all control blocks if no filters */
-    oscd-filtered-list.control-block-list:not(.show-subscribed, .show-not-subscribed)
-      mwc-list-item {
-      display: none;
-    }
-
-    /* remove control blocks taking care to respect multiple conditions */
-    oscd-filtered-list.control-block-list.show-not-subscribed:not(.show-subscribed)
-      mwc-list-item.control.show-subscribed:not(.show-not-subscribed) {
-      display: none;
-    }
-
-    oscd-filtered-list.control-block-list.show-subscribed:not(.show-not-subscribed)
-      mwc-list-item.control.show-not-subscribed:not(.show-subscribed) {
-      display: none;
-    }
-
-    /* remove fcdas if not part of filter */
-    oscd-filtered-list.control-block-list:not(.show-not-subscribed)
-      mwc-list-item.subitem.show-not-subscribed {
-      display: none;
-    }
-
-    oscd-filtered-list.control-block-list:not(.show-subscribed)
-      mwc-list-item.subitem.show-subscribed {
-      display: none;
-    }
-
     .interactive {
       pointer-events: all;
     }
@@ -1170,32 +1167,12 @@ export default class SubscriberLaterBinding extends LitElement {
 
     #filterFcdaIcon.filter-off,
     #filterExtRefIcon.filter-off {
-      color: var(--secondary);
+      /* TODO: MDC theme secondary is not defined in open-scd core? */
+      color: var(--mdc-theme-secondary);
       background-color: var(--mdc-theme-background);
     }
 
-    /* remove all IEDs and ExtRefs if no filters */
-    .extref-list:not(.show-bound, .show-not-bound) mwc-list-item {
-      display: none;
-    }
-
-    /* remove IEDs taking care to respect multiple conditions */
-    .extref-list.show-not-bound:not(.show-bound)
-      mwc-list-item.ied.show-bound:not(.show-not-bound) {
-      display: none;
-    }
-
-    .extref-list.show-bound:not(.show-not-bound)
-      mwc-list-item.ied.show-not-bound:not(.show-bound) {
-      display: none;
-    }
-
-    /* remove ExtRefs if not part of filter */
-    .extref-list:not(.show-not-bound) mwc-list-item.extref.show-not-bound {
-      display: none;
-    }
-
-    .extref-list:not(.show-bound) mwc-list-item.extref.show-bound {
+    .hidden-element {
       display: none;
     }
 

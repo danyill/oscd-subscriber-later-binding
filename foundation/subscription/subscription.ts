@@ -373,7 +373,7 @@ export function getExistingSupervision(extRef: Element | null): Element | null {
  *
  * @param extRefElement - The Ext Ref Element to check.
  */
-export function isSubscribed(extRefElement: Element): boolean {
+export function isBound(extRefElement: Element): boolean {
   return (
     extRefElement.hasAttribute('iedName') &&
     extRefElement.hasAttribute('ldInst') &&
@@ -947,6 +947,7 @@ export function getUsedSupervisionInstances(
   doc: Document,
   serviceType: string
 ): Element[] {
+  if (!doc) return [];
   const supervisionType = serviceType === 'GOOSE' ? 'LGOS' : 'LSVS';
   const refSelector =
     supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
