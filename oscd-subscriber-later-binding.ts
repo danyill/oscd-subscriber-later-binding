@@ -7,7 +7,8 @@ import {
   SVGTemplateResult,
   TemplateResult,
 } from 'lit';
-import { property, query, queryAll, state } from 'lit/decorators.js';
+import { msg } from '@lit/localize';
+import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
 
@@ -21,19 +22,21 @@ import '@material/mwc-radio';
 import '@material/mwc-formfield';
 import '@material/mwc-icon-button-toggle';
 
-import { Icon } from '@material/mwc-icon';
-import { IconButtonToggle } from '@material/mwc-icon-button-toggle';
-import { List } from '@material/mwc-list';
-import { ListItem } from '@material/mwc-list/mwc-list-item';
-import { Menu } from '@material/mwc-menu';
+import { newEditEvent, Remove } from '@openscd/open-scd-core';
+import type { Icon } from '@material/mwc-icon';
+import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
+import type { List } from '@material/mwc-list';
+import type { ListItem } from '@material/mwc-list/mwc-list-item';
+import type { Menu } from '@material/mwc-menu';
 
-import { styles } from './foundation/styles/styles';
-import { identity } from './foundation/identities/identity';
+import { styles } from './foundation/styles/styles.js';
+import { identity } from './foundation/identities/identity.js';
 import {
   canRemoveSubscriptionSupervision,
   getCbReference,
   getExistingSupervision,
   getExtRefElements,
+  getFcdaElements,
   getFcdaSrcControlBlockDescription,
   getFcdaSubtitleValue,
   getFcdaTitleValue,
@@ -46,22 +49,14 @@ import {
   unsubscribe,
   unsupportedExtRefElement,
   updateExtRefElement,
-} from './foundation/subscription/subscription';
+} from './foundation/subscription/subscription.js';
 import {
   createUpdateEdit,
   findFCDAs,
   getDescriptionAttribute,
   getNameAttribute,
-} from './foundation/foundation';
-import { gooseIcon, smvIcon } from './foundation/icons';
-import {
-  ExtRefSelectionChangedEvent,
-  FcdaSelectEvent,
-  SubscriptionChangedEvent,
-} from './foundation/events/events';
-import { Remove } from '@openscd/open-scd-core';
-import { msg } from '@lit/localize';
-import { IconButton } from '@material/mwc-icon-button';
+} from './foundation/foundation.js';
+import { gooseIcon, smvIcon } from './foundation/icons.js';
 
 // const controlTag = 'GSEControl';
 
@@ -190,7 +185,9 @@ export default class SubscriberLaterBinding extends LitElement {
   currentActivatedExtRefItem!: ListItem;
 
   @query('.actions-menu') actionsMenu!: Menu;
+
   @query('.actions-menu-icon') actionsMenuIcon!: Icon;
+
   @query('.control-block-list') controlBlockList!: List;
 
   @query('#switchView')
@@ -198,12 +195,17 @@ export default class SubscriberLaterBinding extends LitElement {
 
   // The selected elements when a FCDA Line is clicked.
   private selectedControlElement: Element | undefined;
+
   private selectedFcdaElement: Element | undefined;
+
   private selectedExtRefElement: Element | undefined;
 
   selectedPublisherControlElement: Element | undefined;
+
   selectedPublisherFcdaElement: Element | undefined;
+
   selectedPublisherIedElement: Element | undefined;
+
   currentSelectedExtRefElement: Element | undefined;
 
   private iconControlLookup: iconLookup = {
@@ -215,8 +217,10 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @state()
   currentSelectedControlElement: Element | undefined;
+
   @state()
   currentSelectedFcdaElement: Element | undefined;
+
   @state()
   currentIedElement: Element | undefined;
 
@@ -229,7 +233,7 @@ export default class SubscriberLaterBinding extends LitElement {
     super();
 
     this.resetSelection = this.resetSelection.bind(this);
-    parent.addEventListener('open-doc', this.resetSelection);
+    // parent.addEventListener('open-doc', this.resetSelection);
 
     // const parentDiv = this.closest('.container');
     // if (parentDiv) {
@@ -256,38 +260,24 @@ export default class SubscriberLaterBinding extends LitElement {
     return [];
   }
 
-  private getFcdaElements(controlElement: Element): Element[] {
-    const lnElement = controlElement.parentElement;
-    if (lnElement) {
-      return Array.from(
-        lnElement.querySelectorAll(
-          `:scope > DataSet[name=${controlElement.getAttribute(
-            'datSet'
-          )}] > FCDA`
-        )
-      );
-    }
-    return [];
-  }
+  // private resetExtRefCount(event: SubscriptionChangedEvent): void {
+  //   //   if (!this.subscriberView) {
+  //   //     this.resetSelection();
+  //   //   }
+  //   //   if (event.detail.control && event.detail.fcda) {
+  //   //     const controlBlockFcdaId = `${identity(event.detail.control)} ${identity(
+  //   //       event.detail.fcda
+  //   //     )}`;
+  //   //     this.extRefCounters.delete(controlBlockFcdaId);
+  //   //   }
+  // }
 
-  private resetExtRefCount(event: SubscriptionChangedEvent): void {
-    //   if (!this.subscriberView) {
-    //     this.resetSelection();
-    //   }
-    //   if (event.detail.control && event.detail.fcda) {
-    //     const controlBlockFcdaId = `${identity(event.detail.control)} ${identity(
-    //       event.detail.fcda
-    //     )}`;
-    //     this.extRefCounters.delete(controlBlockFcdaId);
-    //   }
-  }
-
-  private updateExtRefSelection(event: ExtRefSelectionChangedEvent): void {
-    //   if (event.detail.extRefElement) {
-    //     this.selectedExtRefElement = event.detail.extRefElement;
-    //     this.requestUpdate();
-    //   }
-  }
+  // private updateExtRefSelection(event: ExtRefSelectionChangedEvent): void {
+  //   //   if (event.detail.extRefElement) {
+  //   //     this.selectedExtRefElement = event.detail.extRefElement;
+  //   //     this.requestUpdate();
+  //   //   }
+  // }
 
   private getExtRefCount(
     fcdaElement: Element,
@@ -309,10 +299,10 @@ export default class SubscriberLaterBinding extends LitElement {
     return this.extRefCounters.get(controlBlockFcdaId);
   }
 
-  private openEditWizard(controlElement: Element): void {
-    // const wizard = wizards[this.controlTag].edit(controlElement);
-    // if (wizard) this.dispatchEvent(newWizardEvent(wizard));
-  }
+  // private openEditWizard(controlElement: Element): void {
+  //   // const wizard = wizards[this.controlTag].edit(controlElement);
+  //   // if (wizard) this.dispatchEvent(newWizardEvent(wizard));
+  // }
 
   private resetSelection(): void {
     this.selectedControlElement = undefined;
@@ -368,12 +358,17 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   updateBaseFilterState(): void {
-    !this.hideSubscribed
-      ? this.controlBlockList!.classList.add('show-subscribed')
-      : this.controlBlockList!.classList.remove('show-subscribed');
-    !this.hideNotSubscribed
-      ? this.controlBlockList!.classList.add('show-not-subscribed')
-      : this.controlBlockList!.classList.remove('show-not-subscribed');
+    if (!this.hideSubscribed) {
+      this.controlBlockList!.classList.add('show-subscribed');
+    } else {
+      this.controlBlockList!.classList.remove('show-subscribed');
+    }
+
+    if (!this.hideNotSubscribed) {
+      this.controlBlockList!.classList.add('show-not-subscribed');
+    } else {
+      this.controlBlockList!.classList.remove('show-not-subscribed');
+    }
   }
 
   protected firstUpdated(): void {
@@ -437,9 +432,9 @@ export default class SubscriberLaterBinding extends LitElement {
       activatable
     >
       ${controlElements
-        .filter(controlElement => this.getFcdaElements(controlElement).length)
+        .filter(controlElement => getFcdaElements(controlElement).length)
         .map(controlElement => {
-          const fcdaElements = this.getFcdaElements(controlElement);
+          const fcdaElements = getFcdaElements(controlElement);
           const showSubscribed = fcdaElements.some(
             fcda => this.getExtRefCount(fcda, controlElement) !== 0
           );
@@ -452,6 +447,14 @@ export default class SubscriberLaterBinding extends LitElement {
             'show-subscribed': showSubscribed,
             'show-not-subscribed': showNotSubscribed,
           };
+
+          // <!-- TODO: Restore Have removed wizard connection for now @click=${() =>
+          //   this.openEditWizard(controlElement)} -->
+          // <mwc-icon-button
+          //   slot="meta"
+          //   icon="edit"
+          //   class="interactive"
+          // ></mwc-icon-button>
 
           return html`
             <mwc-list-item
@@ -469,12 +472,6 @@ export default class SubscriberLaterBinding extends LitElement {
                 )
                 .join('')}"
             >
-              <mwc-icon-button
-                slot="meta"
-                icon="edit"
-                class="interactive"
-                @click=${() => this.openEditWizard(controlElement)}
-              ></mwc-icon-button>
               <span
                 >${getNameAttribute(controlElement)}
                 ${getDescriptionAttribute(controlElement)
@@ -495,16 +492,16 @@ export default class SubscriberLaterBinding extends LitElement {
     </filtered-list>`;
   }
 
-  private async onFcdaSelectEvent(event: FcdaSelectEvent) {
-    this.currentSelectedControlElement = event.detail.control;
-    this.currentSelectedFcdaElement = event.detail.fcda;
+  // private async onFcdaSelectEvent(event: FcdaSelectEvent) {
+  //   this.currentSelectedControlElement = event.detail.control;
+  //   this.currentSelectedFcdaElement = event.detail.fcda;
 
-    // Retrieve the IED Element to which the FCDA belongs.
-    // These ExtRef Elements will be excluded.
-    this.currentIedElement = this.currentSelectedFcdaElement
-      ? this.currentSelectedFcdaElement.closest('IED') ?? undefined
-      : undefined;
-  }
+  //   // Retrieve the IED Element to which the FCDA belongs.
+  //   // These ExtRef Elements will be excluded.
+  //   this.currentIedElement = this.currentSelectedFcdaElement
+  //     ? this.currentSelectedFcdaElement.closest('IED') ?? undefined
+  //     : undefined;
+  // }
 
   /**
    * Unsubscribing means removing a list of attributes from the ExtRef Element.
@@ -512,7 +509,7 @@ export default class SubscriberLaterBinding extends LitElement {
    * @param extRef - The Ext Ref Element to clean from attributes.
    */
   private unsubscribe(extRef: Element): void {
-    const updateAction = createUpdateEdit(extRef, {
+    const updateEdit = createUpdateEdit(extRef, {
       intAddr: extRef.getAttribute('intAddr'),
       desc: extRef.getAttribute('desc'),
       iedName: null,
@@ -541,12 +538,7 @@ export default class SubscriberLaterBinding extends LitElement {
         )
       );
 
-    // this.dispatchEvent(
-    //   newActionEvent({
-    //     title: get(`subscription.disconnect`),
-    //     actions: [updateAction, ...removeSubscriptionActions],
-    //   })
-    // );
+    this.dispatchEvent(newEditEvent(updateEdit));
 
     // this.dispatchEvent(
     //   newSubscriptionChangedEvent(
@@ -570,7 +562,7 @@ export default class SubscriberLaterBinding extends LitElement {
       return;
     }
 
-    const updateAction = updateExtRefElement(
+    const updateEdit = updateExtRefElement(
       extRef,
       this.currentSelectedControlElement,
       this.currentSelectedFcdaElement
@@ -583,12 +575,8 @@ export default class SubscriberLaterBinding extends LitElement {
       subscriberIed
     );
 
-    // this.dispatchEvent(
-    //   newActionEvent({
-    //     title: get(`subscription.connect`),
-    //     actions: [updateAction, ...supervisionActions],
-    //   })
-    // );
+    this.dispatchEvent(newEditEvent([updateEdit, ...supervisionActions]));
+
     // this.dispatchEvent(
     //   newSubscriptionChangedEvent(
     //     this.currentSelectedControlElement,
@@ -619,10 +607,6 @@ export default class SubscriberLaterBinding extends LitElement {
           extRefElement.getAttribute('serviceType') ===
             this.serviceTypeLookup[this.controlTag])
     );
-  }
-
-  private renderExtRefListTitle(): TemplateResult {
-    return html`<h1>${msg(`subscription.laterBinding.extRefList.title`)}</h1>`;
   }
 
   private renderExtRefElement(extRefElement: Element): TemplateResult {
@@ -662,9 +646,9 @@ export default class SubscriberLaterBinding extends LitElement {
         value="${subscribedExtRefs
           .map(
             extRefElement =>
-              getDescriptionAttribute(extRefElement) +
-              ' ' +
-              identity(extRefElement)
+              `${getDescriptionAttribute(extRefElement)} ${identity(
+                extRefElement
+              )}`
           )
           .join(' ')}"
       >
@@ -689,9 +673,9 @@ export default class SubscriberLaterBinding extends LitElement {
         value="${availableExtRefs
           .map(
             extRefElement =>
-              getDescriptionAttribute(extRefElement) +
-              ' ' +
-              identity(extRefElement)
+              `${getDescriptionAttribute(extRefElement)} ${identity(
+                extRefElement
+              )}`
           )
           .join(' ')}"
       >
@@ -983,7 +967,9 @@ export default class SubscriberLaterBinding extends LitElement {
           name="view"
           value="goose"
           ?checked=${this.controlTag === 'GSEControl'}
-          @click=${() => (this.controlTag = 'GSEControl')}
+          @click=${() => {
+            this.controlTag = 'GSEControl';
+          }}
         ></mwc-radio>
       </mwc-formfield>
       <mwc-formfield label="${msg('subscription.select.sampledValue')}">
@@ -992,7 +978,9 @@ export default class SubscriberLaterBinding extends LitElement {
           name="view"
           value="sampled-value"
           ?checked=${this.controlTag === 'SampledValueControl'}
-          @click=${() => (this.controlTag = 'SampledValueControl')}
+          @click=${() => {
+            this.controlTag = 'SampledValueControl';
+          }}
         ></mwc-radio>
       </mwc-formfield>
     </div>`;
@@ -1017,7 +1005,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
     return !this.subscriberView
       ? html`<section>
-          ${this.renderExtRefListTitle()}
+          <h1>${msg(`subscription.laterBinding.extRefList.title`)}</h1>
           ${this.currentSelectedControlElement &&
           this.currentSelectedFcdaElement
             ? html`<filtered-list>

@@ -471,7 +471,7 @@ export function maxSupervisions(
       ?.getAttribute(maxAttr) ?? '0',
     10
   );
-  return isNaN(maxValues) ? 0 : maxValues;
+  return Number.isNaN(maxValues) ? 0 : maxValues;
 }
 
 /**
@@ -907,7 +907,7 @@ export function removeSubscriptionSupervision(
   const valElement = getSupervisionCbRefs(
     subscriberIED,
     controlBlock.tagName
-  ).find(val => val.textContent == controlBlockReference(controlBlock));
+  ).find(val => val.textContent === controlBlockReference(controlBlock));
   if (!valElement) return [];
   const lnElement = valElement.closest('LN0, LN');
   if (!lnElement || !lnElement.parentElement) return [];
@@ -1151,4 +1151,16 @@ export function unsubscribe(extRef: Element, eventElement: HTMLElement): void {
   eventElement.dispatchEvent(
     newEditEvent([updateAction, ...removeSubscriptionEdits])
   );
+}
+
+export function getFcdaElements(controlElement: Element): Element[] {
+  const lnElement = controlElement.parentElement;
+  if (lnElement) {
+    return Array.from(
+      lnElement.querySelectorAll(
+        `:scope > DataSet[name=${controlElement.getAttribute('datSet')}] > FCDA`
+      )
+    );
+  }
+  return [];
 }
