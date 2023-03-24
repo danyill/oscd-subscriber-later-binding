@@ -94,7 +94,7 @@ export function extRefIdentity(e: Element): string | number {
   const intAddrIndex = Array.from(
     e.parentElement.querySelectorAll(`ExtRef[intAddr="${intAddr}"]`)
   ).indexOf(e);
-  if (!iedName) return `${parentIdentity}>${intAddr}[${intAddrIndex}]`;
+  if (intAddr) return `${parentIdentity}>${intAddr}[${intAddrIndex}]`;
   const [
     ldInst,
     prefix,
@@ -132,8 +132,7 @@ export function extRefIdentity(e: Element): string | number {
     lnInst ?? ''
   } ${doName} ${daName || ''}`;
   return `${parentIdentity}>${cbPath ? `${cbPath} ` : ''}${dataPath}${
-    // eslint-disable-next-line no-useless-concat
-    intAddr ? '@' + `${intAddr}` : ''
+    intAddr ? `@${intAddr}` : ''
   }`;
 }
 

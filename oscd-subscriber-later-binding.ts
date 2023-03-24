@@ -198,6 +198,9 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#filterExtRefIcon')
   filterMenuExtRefButtonUI!: Icon;
 
+  @query('#listContainer')
+  listContainer!: HTMLDivElement;
+
   @query('#settingsExtRefMenu')
   settingsMenuExtRefUI!: Menu;
 
@@ -210,21 +213,6 @@ export default class SubscriberLaterBinding extends LitElement {
   // TODO: Do we actually use this?
   @query('#subscriberExtRefList')
   extRefListSubscriber?: OscdFilteredList;
-
-  // The selected elements when a FCDA Line is clicked.
-  private selectedControlElement: Element | undefined;
-
-  private selectedFcdaElement: Element | undefined;
-
-  private selectedExtRefElement: Element | undefined;
-
-  selectedPublisherControlElement: Element | undefined;
-
-  selectedPublisherFcdaElement: Element | undefined;
-
-  selectedPublisherIedElement: Element | undefined;
-
-  currentSelectedExtRefElement: Element | undefined;
 
   private iconControlLookup: iconLookup = {
     SampledValueControl: smvIcon,
@@ -241,6 +229,9 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @state()
   currentIedElement: Element | undefined;
+
+  @state()
+  currentSelectedExtRefElement: Element | undefined;
 
   serviceTypeLookup = {
     GSEControl: 'GOOSE',
@@ -269,10 +260,6 @@ export default class SubscriberLaterBinding extends LitElement {
     //   this.onFcdaSelectEvent = this.onFcdaSelectEvent.bind(this);
     //   parentDiv.addEventListener('fcda-select', this.onFcdaSelectEvent);
     // }
-
-    this.controlBlockList?.addEventListener('selected', (ev: Event) => {
-      console.log(ev);
-    });
   }
 
   private getControlElements(controlTag: controlTagType): Element[] {
@@ -296,7 +283,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
   // private updateExtRefSelection(event: ExtRefSelectionChangedEvent): void {
   //   //   if (event.detail.extRefElement) {
-  //   //     this.selectedExtRefElement = event.detail.extRefElement;
+  //   //     this.currentSelectedExtRefElement = event.detail.extRefElement;
   //   //     this.requestUpdate();
   //   //   }
   // }
@@ -327,15 +314,15 @@ export default class SubscriberLaterBinding extends LitElement {
   // }
 
   private resetSelection(): void {
-    this.selectedControlElement = undefined;
-    this.selectedFcdaElement = undefined;
+    this.currentSelectedControlElement = undefined;
+    this.currentSelectedFcdaElement = undefined;
   }
 
   // private onFcdaSelect(controlElement: Element, fcdaElement: Element) {
-  //   this.selectedControlElement = controlElement;
-  //   this.selectedFcdaElement = fcdaElement;
+  //   this.currentSelectedControlElement = controlElement;
+  //   this.currentSelectedFcdaElement = fcdaElement;
   //   // this.dispatchEvent(
-  //   //   newFcdaSelectEvent(this.selectedControlElement, this.selectedFcdaElement)
+  //   //   newFcdaSelectEvent(this.currentSelectedControlElement, this.currentSelectedFcdaElement)
   //   // );
   // }
 
@@ -490,13 +477,13 @@ export default class SubscriberLaterBinding extends LitElement {
       )
     ).filter(
       extRefElement =>
-        (extRefElement.hasAttribute('intAddr') &&
-          !extRefElement.hasAttribute('serviceType') &&
+        extRefElement.hasAttribute('intAddr') &&
+        ((!extRefElement.hasAttribute('serviceType') &&
           !extRefElement.hasAttribute('pServT')) ||
-        extRefElement.getAttribute('serviceType') ===
-          this.serviceTypeLookup[controlTag] ||
-        extRefElement.getAttribute('pServT') ===
-          this.serviceTypeLookup[controlTag]
+          extRefElement.getAttribute('serviceType') ===
+            this.serviceTypeLookup[controlTag] ||
+          extRefElement.getAttribute('pServT') ===
+            this.serviceTypeLookup[controlTag])
     );
   }
 
@@ -507,6 +494,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
   updateView(): void {
     if (this.subscriberView) {
+      this.listContainer.classList.add('subscriberView');
       this.filterMenuExtRefUI.anchor = <HTMLElement>(
         this.filterMenuExtRefButtonUI
       );
@@ -528,6 +516,8 @@ export default class SubscriberLaterBinding extends LitElement {
         );
         this.requestUpdate();
       });
+    } else {
+      this.listContainer.classList.remove('subscriberView');
     }
   }
 
@@ -556,14 +546,17 @@ export default class SubscriberLaterBinding extends LitElement {
   //     : undefined;
   // }
 
-  private renderExtRefElement(extRefElement: Element): TemplateResult {
+  // eslint-disable-next-line class-methods-use-this
+  private renderSubscribedExtRefElement(
+    extRefElement: Element
+  ): TemplateResult {
     const supervisionNode = getExistingSupervision(extRefElement);
     return html` <mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
       twoline
-      @click=${() => this.unsubscribe(extRefElement)}
       value="${identity(extRefElement)}"
+      data-extref="${identity(extRefElement)}"
     >
       <span>
         ${extRefElement.getAttribute('intAddr')}
@@ -593,12 +586,12 @@ export default class SubscriberLaterBinding extends LitElement {
       ?hasMeta=${fcdaCount !== 0}
       ?disabled=${this.subscriberView &&
       unsupportedExtRefElement(
-        this.selectedExtRefElement,
+        this.currentSelectedExtRefElement,
         fcdaElement,
         controlElement
       )}
       twoline
-      class="${(!this.hideSubscribed && fcdaCount !== 0) ||
+      class="fcda ${(!this.hideSubscribed && fcdaCount !== 0) ||
       (!this.hideNotSubscribed && fcdaCount === 0)
         ? ''
         : 'hidden-element'}"
@@ -674,8 +667,8 @@ export default class SubscriberLaterBinding extends LitElement {
         );
         const fcdaElement = this.doc.querySelector(selector('FCDA', fcda));
         if (controlElement && fcdaElement) {
-          this.selectedControlElement = controlElement;
-          this.selectedFcdaElement = fcdaElement;
+          this.currentSelectedControlElement = controlElement;
+          this.currentSelectedFcdaElement = fcdaElement;
         }
       }}
     >
@@ -756,7 +749,7 @@ export default class SubscriberLaterBinding extends LitElement {
       <li divider role="separator"></li>
       ${subscribedExtRefs.length > 0
         ? html`${subscribedExtRefs.map(extRefElement =>
-            this.renderExtRefElement(extRefElement)
+            this.renderSubscribedExtRefElement(extRefElement)
           )}`
         : html`<mwc-list-item graphic="large" noninteractive>
             ${msg('No subscribed inputs')}
@@ -764,6 +757,7 @@ export default class SubscriberLaterBinding extends LitElement {
     `;
   }
 
+  // @click=${() => this.subscribe(extRefElement)}
   private renderAvailableExtRefs(): TemplateResult {
     const availableExtRefs = this.getAvailableExtRefElements();
     return html`
@@ -791,7 +785,7 @@ export default class SubscriberLaterBinding extends LitElement {
                 this.currentSelectedControlElement
               )}
               twoline
-              @click=${() => this.subscribe(extRefElement)}
+              data-extref="${identity(extRefElement)}"
               value="${identity(extRefElement)}"
             >
               <span>
@@ -1036,7 +1030,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
   renderFCDAs(): TemplateResult {
     const controlElements = this.getControlElements(this.controlTag);
-    return html`<section class="column">
+    return html`<section class="column fcda">
       ${this.renderFCDAListTitle()}
       ${controlElements
         ? this.renderControlList(controlElements)
@@ -1051,11 +1045,30 @@ export default class SubscriberLaterBinding extends LitElement {
     };
 
     return !this.subscriberView
-      ? html`<section class="column">
+      ? html`<section class="column extref">
           <h1>${msg('Subscriber Inputs')}</h1>
           ${this.currentSelectedControlElement &&
           this.currentSelectedFcdaElement
-            ? html`<oscd-filtered-list>
+            ? html`<oscd-filtered-list
+                @selected=${(ev: SingleSelectedEvent) => {
+                  const selectedListItem = (<OscdFilteredList>ev.target)
+                    .selected;
+                  if (!selectedListItem) return;
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const { extref } = (<any>selectedListItem).dataset;
+                  const selectedExtRefElement = this.doc.querySelector(
+                    selector('ExtRef', extref)
+                  );
+                  if (selectedExtRefElement && isBound(selectedExtRefElement)) {
+                    this.unsubscribe(selectedExtRefElement);
+                  } else {
+                    this.subscribe(selectedExtRefElement!);
+                    // can be subscribed if the right conditions are there
+                  }
+                  // TODO: Should this be scoped more tightly?
+                  this.requestUpdate();
+                }}
+              >
                 ${this.renderSubscribedExtRefs()}
                 ${this.renderAvailableExtRefs()}
               </oscd-filtered-list>`
@@ -1085,7 +1098,7 @@ export default class SubscriberLaterBinding extends LitElement {
         }}
       ></mwc-icon-button-toggle>
       ${this.renderControlTypeSelector()}
-      <div class="container">
+      <div id="listContainer">
         ${this.renderFCDAs()}${this.renderExtRefs()}
       </div>`;
   }
@@ -1098,23 +1111,23 @@ export default class SubscriberLaterBinding extends LitElement {
       display: flex;
     }
 
-    .container {
+    #listContainer {
       width: 100%;
       display: flex;
       padding: 8px 6px 16px;
       height: calc(100vh - 136px);
     }
 
-    .container:not(subscriberView) {
+    #listContainer:not(.subscriberView) {
       flex-direction: row;
     }
 
-    .container[subscriberView] {
+    #listContainer.subscriberView {
       width: 100%;
       flex-direction: row-reverse;
     }
 
-    .container[subscriberView] fcda-binding-list.column {
+    #listContainer.subscriberView .column.fcda {
       flex: 1;
       width: 25%;
     }
@@ -1128,18 +1141,18 @@ export default class SubscriberLaterBinding extends LitElement {
     }
 
     @media (min-width: 700px) {
-      .container[subscriberView] {
-        width: calc(100vw - 20px);
+      #listContainer.subscriberView {
+        /* width: calc(100vw - 20px); */
         flex: auto;
       }
 
-      .container[subscriberView] extref-later-binding-list-subscriber.column {
+      #listContainer.subscriberView .column {
         resize: horizontal;
         width: 65%;
         flex: none;
       }
 
-      .container[subscriberView] fcda-binding-list.column {
+      #listContainer.subscriberView .column.fcda {
         width: auto;
       }
     }
@@ -1148,23 +1161,7 @@ export default class SubscriberLaterBinding extends LitElement {
       margin: 4px 8px 16px;
     }
 
-    mwc-list-item.hidden[noninteractive] + li[divider] {
-      display: none;
-    }
-
-    mwc-list-item {
-      --mdc-list-item-meta-size: 48px;
-    }
-
-    section {
-      position: relative;
-    }
-
-    .interactive {
-      pointer-events: all;
-    }
-
-    .subitem {
+    .fcda {
       padding-left: var(--mdc-list-side-padding, 16px);
     }
 
@@ -1181,16 +1178,25 @@ export default class SubscriberLaterBinding extends LitElement {
       background-color: var(--mdc-theme-background);
     }
 
+    .interactive {
+      pointer-events: all;
+    }
+
     .hidden-element {
       display: none;
     }
 
-    h3 {
-      margin: 4px 8px 16px;
-    }
-
     mwc-list-item.hidden[noninteractive] + li[divider] {
       display: none;
+    }
+
+    mwc-list-item {
+      --mdc-list-item-meta-size: 48px;
+    }
+
+    /* required for anchors */
+    section {
+      position: relative;
     }
 
     #switchView {
