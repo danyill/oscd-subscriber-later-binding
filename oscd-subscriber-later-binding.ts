@@ -201,7 +201,7 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#settingsExtRefMenu')
   settingsMenuExtRefUI!: Menu;
 
-  @query('#settingsExtRefMenuIcon')
+  @query('#settingsExtRefIcon')
   settingsMenuExtRefButtonUI!: Icon;
 
   @query('.control-block-list')
@@ -270,12 +270,9 @@ export default class SubscriberLaterBinding extends LitElement {
     //   parentDiv.addEventListener('fcda-select', this.onFcdaSelectEvent);
     // }
 
-    this.switchViewUI?.addEventListener(
-      'icon-button-toggle-change',
-      (ev: Event) => {
-        console.log(ev);
-      }
-    );
+    this.controlBlockList?.addEventListener('selected', (ev: Event) => {
+      console.log(ev);
+    });
   }
 
   private getControlElements(controlTag: controlTagType): Element[] {
@@ -334,13 +331,13 @@ export default class SubscriberLaterBinding extends LitElement {
     this.selectedFcdaElement = undefined;
   }
 
-  private onFcdaSelect(controlElement: Element, fcdaElement: Element) {
-    this.selectedControlElement = controlElement;
-    this.selectedFcdaElement = fcdaElement;
-    // this.dispatchEvent(
-    //   newFcdaSelectEvent(this.selectedControlElement, this.selectedFcdaElement)
-    // );
-  }
+  // private onFcdaSelect(controlElement: Element, fcdaElement: Element) {
+  //   this.selectedControlElement = controlElement;
+  //   this.selectedFcdaElement = fcdaElement;
+  //   // this.dispatchEvent(
+  //   //   newFcdaSelectEvent(this.selectedControlElement, this.selectedFcdaElement)
+  //   // );
+  // }
 
   protected updated(_changedProperties: PropertyValues): void {
     super.updated(_changedProperties);
@@ -350,205 +347,12 @@ export default class SubscriberLaterBinding extends LitElement {
       this.extRefCounters = new Map();
     }
 
-    if (_changedProperties.has('subscriberView')) {
-      // TODO: These anchors don't seem to work because
-      // subscriberView is never changed.
-      this.settingsMenuExtRefUI.anchor = <HTMLElement>(
-        this.settingsMenuExtRefButtonUI
-      );
-      this.filterMenuExtRefUI.anchor = <HTMLElement>(
-        this.filterMenuExtRefButtonUI
-      );
+    // if (_changedProperties.has('subscriberView')) {
+    //   // TODO: These anchors don't seem to work because
+    //   // subscriberView is never changed.
 
-      this.settingsMenuExtRefUI.addEventListener('closed', () => {
-        this.notAutoIncrement = !(<Set<number>>(
-          this.settingsMenuExtRefUI.index
-        )).has(0);
-      });
-
-      this.filterMenuExtRefUI.addEventListener('closed', () => {
-        this.hideBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(0);
-        this.hideNotBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(
-          1
-        );
-        this.requestUpdate();
-      });
-    }
+    // }
   }
-
-  protected firstUpdated(): void {
-    // anchor drop-down menus to their icons
-    this.filterMenuFcdaUI.anchor = <HTMLElement>this.filterMenuFcdaButtonUI;
-
-    this.filterMenuFcdaUI.addEventListener('closed', () => {
-      this.hideSubscribed = !(<Set<number>>this.filterMenuFcdaUI.index).has(0);
-      this.hideNotSubscribed = !(<Set<number>>this.filterMenuFcdaUI.index).has(
-        1
-      );
-      this.requestUpdate();
-    });
-  }
-
-  renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult {
-    const fcdaCount = this.getExtRefCount(fcdaElement, controlElement);
-
-    return html`<mwc-list-item
-      graphic="large"
-      ?hasMeta=${fcdaCount !== 0}
-      ?disabled=${this.subscriberView &&
-      unsupportedExtRefElement(
-        this.selectedExtRefElement,
-        fcdaElement,
-        controlElement
-      )}
-      twoline
-      class="${(!this.hideSubscribed && fcdaCount !== 0) ||
-      (!this.hideNotSubscribed && fcdaCount === 0)
-        ? ''
-        : 'hidden-element'}"
-      data-control="${identity(controlElement)}"
-      data-fcda="${identity(fcdaElement)}"
-      value="${identity(controlElement)}
-             ${identity(fcdaElement)}"
-    >
-      <span>${getFcdaTitleValue(fcdaElement)}</span>
-      <span slot="secondary">${getFcdaSubtitleValue(fcdaElement)}</span>
-      <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
-      ${fcdaCount !== 0 ? html`<span slot="meta">${fcdaCount}</span>` : nothing}
-    </mwc-list-item>`;
-  }
-
-  renderFCDAListTitle(): TemplateResult {
-    const menuClasses = {
-      'filter-off': this.hideSubscribed || this.hideNotSubscribed,
-    };
-    return html`<h1>
-      ${this.controlTag === 'SampledValueControl'
-        ? msg('Publisher Sampled Value Messages')
-        : msg('Publisher GOOSE Messages')}
-      <mwc-icon-button
-        id="filterFcdaIcon"
-        class="${classMap(menuClasses)}"
-        icon="filter_list"
-        @click=${() => {
-          if (!this.filterMenuFcdaUI.open) this.filterMenuFcdaUI.show();
-          else this.filterMenuFcdaUI.close();
-        }}
-      ></mwc-icon-button>
-      <mwc-menu
-        id="filterFcdaMenu"
-        multi
-        corner="BOTTOM_RIGHT"
-        menuCorner="END"
-      >
-        <mwc-check-list-item
-          class="filter-subscribed"
-          left
-          ?selected=${!this.hideSubscribed}
-        >
-          <span>${msg('Subscribed')}</span>
-        </mwc-check-list-item>
-        <mwc-check-list-item
-          class="filter-not-subscribed"
-          left
-          ?selected=${!this.hideNotSubscribed}
-        >
-          <span>${msg('Not Subscribed')}</span>
-        </mwc-check-list-item>
-      </mwc-menu>
-    </h1> `;
-  }
-
-  renderControlList(controlElements: Element[]): TemplateResult {
-    const filteredListClasses = {
-      'control-block-list': true,
-      'show-subscribed': !this.hideSubscribed,
-      'show-not-subscribed': !this.hideNotSubscribed,
-    };
-    return html`<oscd-filtered-list
-      ?activatable=${!this.subscriberView}
-      class="${classMap(filteredListClasses)}"
-      @selected=${(ev: SingleSelectedEvent) => {
-        const selectedListItem = (<OscdFilteredList>ev.target).selected;
-        if (!selectedListItem) return;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { control, fcda } = (<any>selectedListItem).dataset;
-        const controlElement = this.doc.querySelector(
-          selector(this.controlTag, control)
-        );
-        const fcdaElement = this.doc.querySelector(selector('FCDA', fcda));
-        if (controlElement && fcdaElement)
-          this.onFcdaSelect(controlElement, fcdaElement);
-      }}
-    >
-      ${controlElements
-        .filter(controlElement => getFcdaElements(controlElement).length)
-        .map(controlElement => {
-          const fcdaElements = getFcdaElements(controlElement);
-          const someSubscribed = fcdaElements.some(
-            fcda => this.getExtRefCount(fcda, controlElement) !== 0
-          );
-          const someNotSubscribed = fcdaElements.some(
-            fcda => this.getExtRefCount(fcda, controlElement) === 0
-          );
-
-          // <!-- TODO: Restore Have removed wizard connection for now @click=${() =>
-          //   this.openEditWizard(controlElement)} -->
-          // <mwc-icon-button
-          //   slot="meta"
-          //   icon="edit"
-          //   class="interactive"
-          // ></mwc-icon-button>
-
-          return html`
-            <mwc-list-item
-              noninteractive
-              class="control ${(!this.hideSubscribed && someSubscribed) ||
-              (!this.hideNotSubscribed && someNotSubscribed)
-                ? ''
-                : 'hidden-element'}"
-              graphic="icon"
-              twoline
-              hasMeta
-              value="${identity(controlElement)}${fcdaElements
-                .map(
-                  fcdaElement => `
-                        ${getFcdaTitleValue(fcdaElement)}
-                        ${getFcdaSubtitleValue(fcdaElement)}
-                        ${identity(fcdaElement)}`
-                )
-                .join('')}"
-            >
-              <span
-                >${getNameAttribute(controlElement)}
-                ${getDescriptionAttribute(controlElement)
-                  ? html`${getDescriptionAttribute(controlElement)}`
-                  : nothing}</span
-              >
-              <span slot="secondary">${identity(controlElement)}</span>
-              <mwc-icon slot="graphic"
-                >${this.iconControlLookup[this.controlTag]}</mwc-icon
-              >
-            </mwc-list-item>
-            <li divider role="separator"></li>
-            ${fcdaElements.map(fcdaElement =>
-              this.renderFCDA(controlElement, fcdaElement)
-            )}
-          `;
-        })}
-    </oscd-filtered-list>`;
-  }
-
-  // private async onFcdaSelectEvent(event: FcdaSelectEvent) {
-  //   this.currentSelectedControlElement = event.detail.control;
-  //   this.currentSelectedFcdaElement = event.detail.fcda;
-
-  //   // Retrieve the IED Element to which the FCDA belongs.
-  //   // These ExtRef Elements will be excluded.
-  //   this.currentIedElement = this.currentSelectedFcdaElement
-  //     ? this.currentSelectedFcdaElement.closest('IED') ?? undefined
-  //     : undefined;
-  // }
 
   /**
    * Unsubscribing means removing a list of attributes from the ExtRef Element.
@@ -656,6 +460,102 @@ export default class SubscriberLaterBinding extends LitElement {
     );
   }
 
+  private reCreateSupervisionCache() {
+    this.supervisionData = new Map();
+    const supervisionType =
+      this.serviceTypeLookup[this.controlTag] === 'GOOSE' ? 'LGOS' : 'LSVS';
+    const refSelector =
+      supervisionType === 'LGOS'
+        ? 'DOI[name="GoCBRef"]'
+        : 'DOI[name="SvCBRef"]';
+
+    getUsedSupervisionInstances(
+      this.doc,
+      this.serviceTypeLookup[this.controlTag]
+    ).forEach(supervisionLN => {
+      const cbRef = supervisionLN!.querySelector(
+        `LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
+      )?.textContent;
+      if (cbRef) this.supervisionData.set(cbRef, supervisionLN);
+    });
+  }
+
+  private getExtRefElementsByIED(
+    ied: Element,
+    controlTag: controlTagType
+  ): Element[] {
+    return Array.from(
+      ied.querySelectorAll(
+        ':scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+      )
+    ).filter(
+      extRefElement =>
+        (extRefElement.hasAttribute('intAddr') &&
+          !extRefElement.hasAttribute('serviceType') &&
+          !extRefElement.hasAttribute('pServT')) ||
+        extRefElement.getAttribute('serviceType') ===
+          this.serviceTypeLookup[controlTag] ||
+        extRefElement.getAttribute('pServT') ===
+          this.serviceTypeLookup[controlTag]
+    );
+  }
+
+  private getCachedSupervision(extRefElement: Element): Element | undefined {
+    const cbRefKey = getCbReference(extRefElement);
+    return this.supervisionData.get(cbRefKey);
+  }
+
+  updateView(): void {
+    if (this.subscriberView) {
+      this.filterMenuExtRefUI.anchor = <HTMLElement>(
+        this.filterMenuExtRefButtonUI
+      );
+
+      this.settingsMenuExtRefUI.anchor = <HTMLElement>(
+        this.settingsMenuExtRefButtonUI
+      );
+
+      this.settingsMenuExtRefUI.addEventListener('closed', () => {
+        this.notAutoIncrement = !(<Set<number>>(
+          this.settingsMenuExtRefUI.index
+        )).has(0);
+      });
+
+      this.filterMenuExtRefUI.addEventListener('closed', () => {
+        this.hideBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(0);
+        this.hideNotBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(
+          1
+        );
+        this.requestUpdate();
+      });
+    }
+  }
+
+  protected firstUpdated(): void {
+    this.filterMenuFcdaUI.anchor = <HTMLElement>this.filterMenuFcdaButtonUI;
+
+    this.filterMenuFcdaUI.addEventListener('closed', () => {
+      this.hideSubscribed = !(<Set<number>>this.filterMenuFcdaUI.index).has(0);
+      this.hideNotSubscribed = !(<Set<number>>this.filterMenuFcdaUI.index).has(
+        1
+      );
+      this.requestUpdate();
+    });
+
+    this.updateView();
+  }
+
+  // private async onFcdaSelectEvent(event: FcdaSelectEvent) {
+  //   this.currentSelectedControlElement = event.detail.control;
+  //   this.currentSelectedFcdaElement = event.detail.fcda;
+
+  //   // Retrieve the IED Element to which the FCDA belongs.
+  //   // These ExtRef Elements will be excluded.
+  //   this.currentIedElement = this.currentSelectedFcdaElement
+  //     ? this.currentSelectedFcdaElement.closest('IED') ?? undefined
+  //     : undefined;
+  // }
+
   private renderExtRefElement(extRefElement: Element): TemplateResult {
     const supervisionNode = getExistingSupervision(extRefElement);
     return html` <mwc-list-item
@@ -683,6 +583,158 @@ export default class SubscriberLaterBinding extends LitElement {
           >`
         : nothing}
     </mwc-list-item>`;
+  }
+
+  renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult {
+    const fcdaCount = this.getExtRefCount(fcdaElement, controlElement);
+
+    return html`<mwc-list-item
+      graphic="large"
+      ?hasMeta=${fcdaCount !== 0}
+      ?disabled=${this.subscriberView &&
+      unsupportedExtRefElement(
+        this.selectedExtRefElement,
+        fcdaElement,
+        controlElement
+      )}
+      twoline
+      class="${(!this.hideSubscribed && fcdaCount !== 0) ||
+      (!this.hideNotSubscribed && fcdaCount === 0)
+        ? ''
+        : 'hidden-element'}"
+      data-control="${identity(controlElement)}"
+      data-fcda="${identity(fcdaElement)}"
+      value="${identity(controlElement)}
+             ${identity(fcdaElement)}"
+    >
+      <span>${getFcdaTitleValue(fcdaElement)}</span>
+      <span slot="secondary">${getFcdaSubtitleValue(fcdaElement)}</span>
+      <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
+      ${fcdaCount !== 0 ? html`<span slot="meta">${fcdaCount}</span>` : nothing}
+    </mwc-list-item>`;
+  }
+
+  renderFCDAListTitle(): TemplateResult {
+    const menuClasses = {
+      'filter-off': this.hideSubscribed || this.hideNotSubscribed,
+    };
+    return html`<h1>
+      ${this.controlTag === 'SampledValueControl'
+        ? msg('Publisher Sampled Value Messages')
+        : msg('Publisher GOOSE Messages')}
+      <mwc-icon-button
+        id="filterFcdaIcon"
+        class="${classMap(menuClasses)}"
+        icon="filter_list"
+        @click=${() => {
+          if (!this.filterMenuFcdaUI.open) this.filterMenuFcdaUI.show();
+          else this.filterMenuFcdaUI.close();
+        }}
+      ></mwc-icon-button>
+      <mwc-menu
+        id="filterFcdaMenu"
+        multi
+        corner="BOTTOM_RIGHT"
+        menuCorner="END"
+      >
+        <mwc-check-list-item
+          class="filter-subscribed"
+          left
+          ?selected=${!this.hideSubscribed}
+        >
+          <span>${msg('Subscribed')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="filter-not-subscribed"
+          left
+          ?selected=${!this.hideNotSubscribed}
+        >
+          <span>${msg('Not Subscribed')}</span>
+        </mwc-check-list-item>
+      </mwc-menu>
+    </h1> `;
+  }
+
+  renderControlList(controlElements: Element[]): TemplateResult {
+    const filteredListClasses = {
+      'show-subscribed': !this.hideSubscribed,
+      'show-not-subscribed': !this.hideNotSubscribed,
+    };
+    return html`<oscd-filtered-list
+      id="control-block-list"
+      ?activatable=${!this.subscriberView}
+      class="${classMap(filteredListClasses)}"
+      @selected=${(ev: SingleSelectedEvent) => {
+        const selectedListItem = (<OscdFilteredList>ev.target).selected;
+        if (!selectedListItem) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { control, fcda } = (<any>selectedListItem).dataset;
+        const controlElement = this.doc.querySelector(
+          selector(this.controlTag, control)
+        );
+        const fcdaElement = this.doc.querySelector(selector('FCDA', fcda));
+        if (controlElement && fcdaElement) {
+          this.selectedControlElement = controlElement;
+          this.selectedFcdaElement = fcdaElement;
+        }
+      }}
+    >
+      ${controlElements
+        .filter(controlElement => getFcdaElements(controlElement).length)
+        .map(controlElement => {
+          const fcdaElements = getFcdaElements(controlElement);
+          const someSubscribed = fcdaElements.some(
+            fcda => this.getExtRefCount(fcda, controlElement) !== 0
+          );
+          const someNotSubscribed = fcdaElements.some(
+            fcda => this.getExtRefCount(fcda, controlElement) === 0
+          );
+
+          // <!-- TODO: Restore Have removed wizard connection for now @click=${() =>
+          //   this.openEditWizard(controlElement)} -->
+          // <mwc-icon-button
+          //   slot="meta"
+          //   icon="edit"
+          //   class="interactive"
+          // ></mwc-icon-button>
+
+          return html`
+            <mwc-list-item
+              noninteractive
+              class="control ${(!this.hideSubscribed && someSubscribed) ||
+              (!this.hideNotSubscribed && someNotSubscribed)
+                ? ''
+                : 'hidden-element'}"
+              graphic="icon"
+              twoline
+              hasMeta
+              value="${identity(controlElement)}${fcdaElements
+                .map(
+                  fcdaElement => `
+                        ${getFcdaTitleValue(fcdaElement)}
+                        ${getFcdaSubtitleValue(fcdaElement)}
+                        ${identity(fcdaElement)}`
+                )
+                .join('')}"
+            >
+              <span
+                >${getNameAttribute(controlElement)}
+                ${getDescriptionAttribute(controlElement)
+                  ? html`${getDescriptionAttribute(controlElement)}`
+                  : nothing}</span
+              >
+              <span slot="secondary">${identity(controlElement)}</span>
+              <mwc-icon slot="graphic"
+                >${this.iconControlLookup[this.controlTag]}</mwc-icon
+              >
+            </mwc-list-item>
+            <li divider role="separator"></li>
+            ${fcdaElements.map(fcdaElement =>
+              this.renderFCDA(controlElement, fcdaElement)
+            )}
+          `;
+        })}
+    </oscd-filtered-list>`;
   }
 
   private renderSubscribedExtRefs(): TemplateResult {
@@ -822,51 +874,6 @@ export default class SubscriberLaterBinding extends LitElement {
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
-  }
-
-  private reCreateSupervisionCache() {
-    this.supervisionData = new Map();
-    const supervisionType =
-      this.serviceTypeLookup[this.controlTag] === 'GOOSE' ? 'LGOS' : 'LSVS';
-    const refSelector =
-      supervisionType === 'LGOS'
-        ? 'DOI[name="GoCBRef"]'
-        : 'DOI[name="SvCBRef"]';
-
-    getUsedSupervisionInstances(
-      this.doc,
-      this.serviceTypeLookup[this.controlTag]
-    ).forEach(supervisionLN => {
-      const cbRef = supervisionLN!.querySelector(
-        `LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
-      )?.textContent;
-      if (cbRef) this.supervisionData.set(cbRef, supervisionLN);
-    });
-  }
-
-  private getExtRefElementsByIED(
-    ied: Element,
-    controlTag: controlTagType
-  ): Element[] {
-    return Array.from(
-      ied.querySelectorAll(
-        ':scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
-      )
-    ).filter(
-      extRefElement =>
-        (extRefElement.hasAttribute('intAddr') &&
-          !extRefElement.hasAttribute('serviceType') &&
-          !extRefElement.hasAttribute('pServT')) ||
-        extRefElement.getAttribute('serviceType') ===
-          this.serviceTypeLookup[controlTag] ||
-        extRefElement.getAttribute('pServT') ===
-          this.serviceTypeLookup[controlTag]
-    );
-  }
-
-  private getCachedSupervision(extRefElement: Element): Element | undefined {
-    const cbRefKey = getCbReference(extRefElement);
-    return this.supervisionData.get(cbRefKey);
   }
 
   private renderCompleteExtRefElement(extRefElement: Element): TemplateResult {
@@ -1071,8 +1078,10 @@ export default class SubscriberLaterBinding extends LitElement {
         onIcon="alt_route"
         offIcon="alt_route"
         title="${msg('Alternate between Publisher and Subscriber view')}"
-        @click=${() => {
+        @click=${async () => {
           this.requestUpdate();
+          await this.updateComplete;
+          this.updateView();
         }}
       ></mwc-icon-button-toggle>
       ${this.renderControlTypeSelector()}
