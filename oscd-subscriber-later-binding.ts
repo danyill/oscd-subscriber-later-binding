@@ -1,3 +1,4 @@
+// TODO: This file is rather long... and doesn't feel modular or well-abstracted. But how best to fix?
 import {
   css,
   html,
@@ -292,6 +293,9 @@ export default class SubscriberLaterBinding extends LitElement {
     // When a new document is loaded we will reset the Map to clear old entries.
     if (_changedProperties.has('doc')) {
       this.extRefCounters = new Map();
+      this.currentSelectedControlElement = undefined;
+      this.currentSelectedFcdaElement = undefined;
+      this.currentSelectedExtRefElement = undefined;
     }
 
     // TODO: If the same document is opened how do I force a change in core?
@@ -455,6 +459,36 @@ export default class SubscriberLaterBinding extends LitElement {
     return this.supervisionData.get(cbRefKey);
   }
 
+  private updateExtRefFilter(): void {
+    const filterClassList = this.extRefListSubscriberUI!.classList;
+    // Update filter CSS rules
+    // TODO: Should I disable the following rule -- compare each filter implementation
+    // eslint-disable-next-line no-unused-expressions
+    !this.hideBound
+      ? filterClassList.add('show-bound')
+      : filterClassList.remove('show-bound');
+
+    // eslint-disable-next-line no-unused-expressions
+    !this.hideNotBound
+      ? filterClassList.add('show-not-bound')
+      : filterClassList.remove('show-not-bound');
+  }
+
+  private updateFcdaFilter(): void {
+    // Update filter CSS rules
+    if (!this.hideSubscribed) {
+      this.controlBlockListUI!.classList.add('show-subscribed');
+    } else {
+      this.controlBlockListUI!.classList.remove('show-subscribed');
+    }
+
+    if (!this.hideNotSubscribed) {
+      this.controlBlockListUI!.classList.add('show-not-subscribed');
+    } else {
+      this.controlBlockListUI!.classList.remove('show-not-subscribed');
+    }
+  }
+
   private updateView(): void {
     if (this.subscriberView) {
       this.listContainerUI.classList.add('subscriber-view');
@@ -477,7 +511,10 @@ export default class SubscriberLaterBinding extends LitElement {
         this.hideNotBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(
           1
         );
-        this.requestUpdate();
+        this.updateExtRefFilter();
+        // TODO: Filtering is still calling render for the ExtRefs -- Likely
+        // because of the changing in CSS styling. Very like should use a
+        // mwc-icon-button-toggle
       });
     } else {
       this.listContainerUI.classList.remove('subscriber-view');
@@ -492,12 +529,13 @@ export default class SubscriberLaterBinding extends LitElement {
       this.hideNotSubscribed = !(<Set<number>>this.filterMenuFcdaUI.index).has(
         1
       );
-      this.requestUpdate();
+      this.updateFcdaFilter();
     });
 
     this.updateView();
   }
 
+  // TODO: Ask Christian if this is a great crime?
   // eslint-disable-next-line class-methods-use-this
   private renderSubscribedExtRefElement(
     extRefElement: Element
@@ -534,6 +572,11 @@ export default class SubscriberLaterBinding extends LitElement {
   renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult {
     const fcdaCount = this.getExtRefCount(fcdaElement, controlElement);
 
+    const filterClasses = {
+      'show-subscribed': fcdaCount !== 0,
+      'show-not-subscribed': fcdaCount === 0,
+    };
+
     return html`<mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
@@ -544,10 +587,7 @@ export default class SubscriberLaterBinding extends LitElement {
         controlElement
       )}
       twoline
-      class="fcda ${(!this.hideSubscribed && fcdaCount !== 0) ||
-      (!this.hideNotSubscribed && fcdaCount === 0)
-        ? ''
-        : 'hidden-element'}"
+      class="fcda ${classMap(filterClasses)}"
       data-control="${identity(controlElement)}"
       data-fcda="${identity(fcdaElement)}"
       value="${identity(controlElement)}
@@ -606,6 +646,7 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-subscribed': !this.hideSubscribed,
       'show-not-subscribed': !this.hideNotSubscribed,
     };
+
     return html`<oscd-filtered-list
       id="control-block-list"
       ?activatable=${!this.subscriberView}
@@ -693,13 +734,15 @@ export default class SubscriberLaterBinding extends LitElement {
           //   class="interactive"
           // ></mwc-icon-button>
 
+          const filterClasses = {
+            'show-subscribed': someSubscribed,
+            'show-not-subscribed': someNotSubscribed,
+          };
+
           return html`
             <mwc-list-item
               noninteractive
-              class="control ${(!this.hideSubscribed && someSubscribed) ||
-              (!this.hideNotSubscribed && someNotSubscribed)
-                ? ''
-                : 'hidden-element'}"
+              class="control ${classMap(filterClasses)}"
               graphic="icon"
               twoline
               hasMeta
@@ -896,12 +939,14 @@ export default class SubscriberLaterBinding extends LitElement {
         .slice(1);
     }
 
+    const filterClasses = {
+      'show-bound': bound,
+      'show-not-bound': !bound,
+    };
+
     return html`<mwc-list-item
       twoline
-      class="extref ${(!this.hideBound && bound) ||
-      (!this.hideNotBound && !bound)
-        ? ''
-        : 'hidden-element'}"
+      class="extref ${classMap(filterClasses)}"
       graphic="large"
       ?hasMeta=${supervisionNode !== undefined}
       data-extref="${identity(extRefElement)}"
@@ -953,13 +998,16 @@ export default class SubscriberLaterBinding extends LitElement {
         const someNotBound = extRefs.some(extRef => !isBound(extRef));
 
         if (!extRefs.length) return html``;
+
+        const filterClasses = {
+          control: true,
+          'show-bound': someBound,
+          'show-not-bound': someNotBound,
+        };
+
         return html`
       <mwc-list-item
-      class="ied ${
-        (!this.hideBound && someBound) || (!this.hideNotBound && someNotBound)
-          ? ''
-          : 'hidden-element'
-      }"
+      class="ied ${classMap(filterClasses)}"
         noninteractive
         graphic="icon"
         value="${Array.from(ied.querySelectorAll('Inputs > ExtRef'))
@@ -1215,7 +1263,67 @@ export default class SubscriberLaterBinding extends LitElement {
       pointer-events: all;
     }
 
-    .hidden-element {
+    /* Filtering rules for control blocks end up implementing logic to allow
+    very fast CSS response. The following rules appear to be minimal but can be
+    hard to understand intuitively for the multiple conditions. If modifying,
+    it is suggested to create a truth-table to check for side-effects */
+
+    /* remove all control blocks if no filters */
+    #control-block-list:not(.show-subscribed, .show-not-subscribed)
+      mwc-list-item {
+      display: none;
+    }
+
+    /* remove control blocks taking care to respect multiple conditions */
+    #control-block-list.show-not-subscribed:not(.show-subscribed)
+      mwc-list-item.control.show-subscribed:not(.show-not-subscribed) {
+      display: none;
+    }
+
+    #control-block-list.show-subscribed:not(.show-not-subscribed)
+      mwc-list-item.control.show-not-subscribed:not(.show-subscribed) {
+      display: none;
+    }
+
+    /* remove fcdas if not part of filter */
+    #control-block-list:not(.show-not-subscribed)
+      mwc-list-item.fcda.show-not-subscribed {
+      display: none;
+    }
+
+    #control-block-list:not(.show-subscribed)
+      mwc-list-item.fcda.show-subscribed {
+      display: none;
+    }
+
+    /* Filtering rules for ExtRefs end up implementing logic to allow
+    very fast CSS response. The following rules appear to be minimal but can be
+    hard to understand intuitively for the multiple conditions. If modifying,
+    it is suggested to create a truth-table to check for side-effects */
+
+    /* remove all ExtRefs if no filters */
+    #subscriberExtRefList:not(.show-bound, .show-not-bound) mwc-list-item {
+      display: none;
+    }
+
+    /* remove ExtRefs taking care to respect multiple conditions */
+    #subscriberExtRefList.show-not-bound:not(.show-bound)
+      mwc-list-item.ied.show-bound:not(.show-not-bound) {
+      display: none;
+    }
+
+    #subscriberExtRefList.show-bound:not(.show-not-bound)
+      mwc-list-item.ied.show-not-bound:not(.show-bound) {
+      display: none;
+    }
+
+    /* remove ExtRefs if not part of filter */
+    #subscriberExtRefList:not(.show-not-bound)
+      mwc-list-item.extref.show-not-bound {
+      display: none;
+    }
+
+    #subscriberExtRefList:not(.show-bound) mwc-list-item.extref.show-bound {
       display: none;
     }
 
