@@ -1,4 +1,4 @@
-import { Insert, newEditEvent, Remove, Update } from '@openscd/open-scd-core';
+import { Insert, Remove, Update } from '@openscd/open-scd-core';
 
 import {
   compareNames,
@@ -77,7 +77,7 @@ function dataAttributeSpecification(
  * @param extRef - A later binding type input in the sink IED
  * @returns data objects `CDC` and data attribute basic type `bType` or `null`
  */
-export function inputRestriction(extRef: Element): {
+function inputRestriction(extRef: Element): {
   cdc: string | null;
   bType: string | null;
 } {
@@ -104,7 +104,7 @@ export function inputRestriction(extRef: Element): {
  * @param fcda - Data attribute reference in a data set
  * @returns Data objects `CDC` and data attributes `bType`
  */
-export function fcdaSpecification(fcda: Element): {
+function fcdaSpecification(fcda: Element): {
   cdc: string | null;
   bType: string | null;
 } {
@@ -199,7 +199,7 @@ export function getExtRefElements(
  * @param rightElement  - The Right Element to check.
  * @param attributeName - The name of the attribute to check.
  */
-export function sameAttributeValue(
+function sameAttributeValue(
   leftElement: Element | undefined,
   rightElement: Element | undefined,
   attributeName: string
@@ -292,7 +292,7 @@ function checkEditionSpecificRequirements(
  * @param fcdaElement    - The FCDA Element to check against.
  * @param extRefElement  - The Ext Ref Element to check.
  */
-export function isSubscribedTo(
+function isSubscribedTo(
   controlTag: 'SampledValueControl' | 'GSEControl',
   controlElement: Element | undefined,
   fcdaElement: Element | undefined,
@@ -388,29 +388,13 @@ export function isBound(extRefElement: Element): boolean {
  * Return Val elements within an LGOS/LSVS instance for a particular IED and control block type.
  * @param ied - IED SCL element.
  * @param cbTagName - Either GSEControl or (defaults to) SampledValueControl.
- * @param firstOnly - If true, return the first element found
  * @returns an Element array of Val SCL elements within an LGOS/LSVS node.
  */
-export function getSupervisionCbRefs(
-  ied: Element,
-  cbTagName: string
-): Element[];
-export function getSupervisionCbRefs(
-  ied: Element,
-  cbTagName: string,
-  firstOnly: boolean
-): Element | null;
-export function getSupervisionCbRefs(
-  ied: Element,
-  cbTagName: string,
-  firstOnly?: boolean
-): Element[] | Element | null {
+function getSupervisionCbRefs(ied: Element, cbTagName: string): Element[] {
   const supervisionType = cbTagName === 'GSEControl' ? 'LGOS' : 'LSVS';
   const supervisionName = supervisionType === 'LGOS' ? 'GoCBRef' : 'SvCBRef';
   const selectorString = `LN[lnClass="${supervisionType}"]>DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]>Val,LN0[lnClass="${supervisionType}"]>DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]>Val`;
-  return firstOnly
-    ? ied.querySelector(selectorString)
-    : Array.from(ied.querySelectorAll(selectorString));
+  return Array.from(ied.querySelectorAll(selectorString));
 }
 
 /**
@@ -419,7 +403,7 @@ export function getSupervisionCbRefs(
  * @param controlBlock The GOOSE or SMV message element
  * @returns null if the control block is undefined or a string pointer to the control block element
  */
-export function controlBlockReference(
+function controlBlockReference(
   controlBlock: Element | undefined
 ): string | null {
   if (!controlBlock) return null;
@@ -441,7 +425,7 @@ export function controlBlockReference(
  * @param controlBlock - The GOOSE or SMV message element.
  * @returns The number of LN instances with a supervision set up.
  */
-export function instantiatedSupervisionsCount(
+function instantiatedSupervisionsCount(
   subscriberIED: Element,
   controlBlock: Element
 ): number {
@@ -544,9 +528,8 @@ export function findOrCreateAvailableLNInst(
     availableLN.setAttribute('lnClass', supervisionType);
     const instantiatedSiblings = getSupervisionCbRefs(
       subscriberIED,
-      controlBlock.tagName,
-      true
-    )?.closest('LN');
+      controlBlock.tagName
+    )[0]?.closest('LN');
 
     if (!instantiatedSiblings) return null;
     availableLN.setAttribute(
@@ -740,6 +723,8 @@ export function instantiateSubscriptionSupervision(
 
   return edits;
 }
+
+// TODO: Discuss with ca-d about changes to OpenSCD core for this
 
 /**
  * Update the passed ExtRefElement and set the required attributes on the cloned element
@@ -1009,6 +994,18 @@ export function findFCDAs(extRef: Element): Element[] {
     );
 }
 
+export function getFcdaElements(controlElement: Element): Element[] {
+  const lnElement = controlElement.parentElement;
+  if (lnElement) {
+    return Array.from(
+      lnElement.querySelectorAll(
+        `:scope > DataSet[name=${controlElement.getAttribute('datSet')}] > FCDA`
+      )
+    );
+  }
+  return [];
+}
+
 const serviceTypeControlBlockTags: Partial<Record<string, string[]>> = {
   GOOSE: ['GSEControl'],
   SMV: ['SampledValueControl'],
@@ -1104,64 +1101,4 @@ export function findFCDA(
     );
 
   return candidateFCDAs[0] ?? null;
-}
-
-/**
- * Unsubscribing means removing a list of attributes from the ExtRef Element.
- *
- * @param extRef - The Ext Ref Element to clean from attributes.
- * @param eventElement - The element from which to initiate events.
- */
-export function unsubscribe(extRef: Element, eventElement: HTMLElement): void {
-  const [pLN, pDO, pDA, pServT] = ['pLN', 'pDO', 'pDA', 'pServT'].map(attr =>
-    extRef.getAttribute(attr)
-  );
-
-  const updateAction = createUpdateEdit(extRef, {
-    intAddr: extRef.getAttribute('intAddr'),
-    desc: extRef.getAttribute('desc'),
-    iedName: null,
-    ldInst: null,
-    prefix: null,
-    lnClass: null,
-    lnInst: null,
-    doName: null,
-    daName: null,
-    serviceType: null,
-    srcLDInst: null,
-    srcPrefix: null,
-    srcLNClass: null,
-    srcLNInst: null,
-    srcCBName: null,
-    ...(pLN && { pLN }),
-    ...(pDO && { pDO }),
-    ...(pDA && { pDA }),
-    ...(pServT && { pServT }),
-  });
-
-  const subscriberIed = extRef.closest('IED') || undefined;
-
-  const removeSubscriptionEdits: Remove[] = [];
-  const controlBlock = findControlBlock(extRef);
-
-  if (canRemoveSubscriptionSupervision(extRef))
-    removeSubscriptionEdits.push(
-      ...removeSubscriptionSupervision(controlBlock, subscriberIed)
-    );
-
-  eventElement.dispatchEvent(
-    newEditEvent([updateAction, ...removeSubscriptionEdits])
-  );
-}
-
-export function getFcdaElements(controlElement: Element): Element[] {
-  const lnElement = controlElement.parentElement;
-  if (lnElement) {
-    return Array.from(
-      lnElement.querySelectorAll(
-        `:scope > DataSet[name=${controlElement.getAttribute('datSet')}] > FCDA`
-      )
-    );
-  }
-  return [];
 }

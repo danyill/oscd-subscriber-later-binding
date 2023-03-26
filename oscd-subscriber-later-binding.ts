@@ -22,14 +22,21 @@ import { newEditEvent, Remove } from '@openscd/open-scd-core';
 
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
-import type { List, SingleSelectedEvent } from '@material/mwc-list';
+import type {
+  List,
+  SelectedDetail,
+  SingleSelectedEvent,
+} from '@material/mwc-list';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
+import { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
 import type { Menu } from '@material/mwc-menu';
 
 import { styles } from './foundation/styles/styles.js';
 import { identity } from './foundation/identities/identity.js';
 import {
   canRemoveSubscriptionSupervision,
+  findControlBlock,
+  findFCDA,
   getCbReference,
   getExistingSupervision,
   getExtRefElements,
@@ -194,7 +201,7 @@ export default class SubscriberLaterBinding extends LitElement {
   filterMenuExtRefButtonUI!: Icon;
 
   @query('#listContainer')
-  listContainer!: HTMLDivElement;
+  listContainerUI!: HTMLDivElement;
 
   @query('#settingsExtRefMenu')
   settingsMenuExtRefUI!: Menu;
@@ -202,18 +209,21 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#settingsExtRefIcon')
   settingsMenuExtRefButtonUI!: Icon;
 
-  @query('.control-block-list')
-  controlBlockList!: List;
+  @query('#control-block-list')
+  controlBlockListUI!: List;
 
   @query('#publisherExtRefList')
-  extRefListPublisher?: OscdFilteredList;
+  extRefListPublisherUI?: OscdFilteredList;
 
   @query('#publisherExtRefSection')
-  publisherExtRefSection?: HTMLElement;
+  publisherExtRefSectionUI?: HTMLElement;
 
   // TODO: Do we actually use this?
   @query('#subscriberExtRefList')
-  extRefListSubscriber?: OscdFilteredList;
+  extRefListSubscriberUI?: OscdFilteredList;
+
+  @query('#subscriberExtRefList mwc-list-item[selected]')
+  extRefListSubscriberSelectedUI?: ListItem;
 
   private iconControlLookup: iconLookup = {
     SampledValueControl: smvIcon,
@@ -222,10 +232,10 @@ export default class SubscriberLaterBinding extends LitElement {
 
   private supervisionData = new Map();
 
-  // @state()
+  @state()
   currentSelectedControlElement: Element | undefined;
 
-  // @state()
+  @state()
   currentSelectedFcdaElement: Element | undefined;
 
   @state()
@@ -245,25 +255,6 @@ export default class SubscriberLaterBinding extends LitElement {
     }
     return [];
   }
-
-  // private resetExtRefCount(event: SubscriptionChangedEvent): void {
-  //   //   if (!this.subscriberView) {
-  //   //     this.resetSelection();
-  //   //   }
-  //   //   if (event.detail.control && event.detail.fcda) {
-  //   //     const controlBlockFcdaId = `${identity(event.detail.control)} ${identity(
-  //   //       event.detail.fcda
-  //   //     )}`;
-  //   //     this.extRefCounters.delete(controlBlockFcdaId);
-  //   //   }
-  // }
-
-  // private updateExtRefSelection(event: ExtRefSelectionChangedEvent): void {
-  //   //   if (event.detail.extRefElement) {
-  //   //     this.currentSelectedExtRefElement = event.detail.extRefElement;
-  //   //     this.requestUpdate();
-  //   //   }
-  // }
 
   private getExtRefCount(
     fcdaElement: Element,
@@ -302,6 +293,8 @@ export default class SubscriberLaterBinding extends LitElement {
     if (_changedProperties.has('doc')) {
       this.extRefCounters = new Map();
     }
+
+    // TODO: If the same document is opened how do I force a change in core?
   }
 
   /**
@@ -339,12 +332,24 @@ export default class SubscriberLaterBinding extends LitElement {
         )
       );
 
-    this.dispatchEvent(newEditEvent(updateEdit));
+    let controlBlockElement;
+    let fcdaElement;
+    if (this.subscriberView) {
+      controlBlockElement = findControlBlock(extRef);
+      fcdaElement = findFCDA(extRef, controlBlockElement);
+    } else {
+      controlBlockElement = this.currentSelectedControlElement;
+      fcdaElement = this.currentSelectedFcdaElement!;
+    }
 
-    const controlBlockFcdaId = `${identity(
-      this.currentSelectedControlElement!
-    )} ${identity(this.currentSelectedFcdaElement!)}`;
-    this.extRefCounters.delete(controlBlockFcdaId);
+    if (controlBlockElement && fcdaElement) {
+      const controlBlockFcdaId = `${identity(controlBlockElement!)} ${identity(
+        fcdaElement
+      )}`;
+      this.extRefCounters.delete(controlBlockFcdaId);
+    }
+
+    this.dispatchEvent(newEditEvent(updateEdit));
   }
 
   /**
@@ -452,7 +457,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
   private updateView(): void {
     if (this.subscriberView) {
-      this.listContainer.classList.add('subscriberView');
+      this.listContainerUI.classList.add('subscriber-view');
       this.filterMenuExtRefUI.anchor = <HTMLElement>(
         this.filterMenuExtRefButtonUI
       );
@@ -475,7 +480,7 @@ export default class SubscriberLaterBinding extends LitElement {
         this.requestUpdate();
       });
     } else {
-      this.listContainer.classList.remove('subscriberView');
+      this.listContainerUI.classList.remove('subscriber-view');
     }
   }
 
@@ -502,6 +507,7 @@ export default class SubscriberLaterBinding extends LitElement {
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
       twoline
+      class="extref"
       value="${identity(extRefElement)}"
       data-extref="${identity(extRefElement)}"
     >
@@ -604,25 +610,69 @@ export default class SubscriberLaterBinding extends LitElement {
       id="control-block-list"
       ?activatable=${!this.subscriberView}
       class="${classMap(filteredListClasses)}"
-      @selected=${(ev: SingleSelectedEvent) => {
+      @selected="${(ev: SingleSelectedEvent) => {
         console.log('fcda selected');
-        const selectedListItem = (<OscdFilteredList>ev.target).selected;
+        const selectedListItem = (<ListItemBase>(
+          (<OscdFilteredList>ev.target).selected
+        ))!;
         if (!selectedListItem) return;
+
         const { control, fcda } = (<ListItem>selectedListItem).dataset;
-        const controlElement = this.doc.querySelector(
-          selector(this.controlTag, control ?? 'Unknown')
-        );
-        const fcdaElement = this.doc.querySelector(
-          selector('FCDA', fcda ?? 'Unknown')
-        );
-        if (controlElement && fcdaElement) {
-          this.currentSelectedControlElement = controlElement;
-          this.currentSelectedFcdaElement = fcdaElement;
-          // Recreate extref list as required
-          // TODO: Consider options for speed-up
+        this.currentSelectedControlElement =
+          this.doc.querySelector(
+            selector(this.controlTag, control ?? 'Unknown')
+          ) ?? undefined;
+        this.currentSelectedFcdaElement =
+          this.doc.querySelector(selector('FCDA', fcda ?? 'Unknown')) ??
+          undefined;
+
+        if (
+          this.subscriberView &&
+          this.currentSelectedControlElement &&
+          this.currentSelectedFcdaElement &&
+          this.currentSelectedExtRefElement
+        ) {
+          this.subscribe(this.currentSelectedExtRefElement);
+          this.currentSelectedExtRefElement = undefined;
+
+          // if incrementing, click on next ExtRef list item
+          if (this.extRefListSubscriberSelectedUI && !this.notAutoIncrement) {
+            const nextActivatableItem = <ListItem>(
+              this.extRefListSubscriberUI!.querySelector(
+                'mwc-list-item[activated].extref ~ mwc-list-item.extref'
+              )
+            );
+            const { extref } = (<ListItem>nextActivatableItem).dataset;
+            const nextExtRef =
+              this.doc.querySelector(selector('ExtRef', extref ?? 'Unknown')) ??
+              undefined;
+
+            if (nextActivatableItem && nextExtRef && !isBound(nextExtRef)) {
+              nextActivatableItem.click();
+            } else {
+              // next ExtRef is already bound, deselect
+              this.extRefListSubscriberSelectedUI.selected = false;
+              this.extRefListSubscriberSelectedUI.activated = false;
+            }
+          }
+
+          // deselect
+          if (this.extRefListSubscriberSelectedUI && this.notAutoIncrement) {
+            this.extRefListSubscriberSelectedUI.selected = false;
+            this.extRefListSubscriberSelectedUI.activated = false;
+          }
+
+          // deselect FCDA
+          selectedListItem!.selected = false;
+          selectedListItem!.activated = false;
+
+          // remove state
+          this.currentSelectedControlElement = undefined;
+          this.currentSelectedFcdaElement = undefined;
+
           this.requestUpdate();
         }
-      }}
+      }}"
     >
       ${controlElements
         .filter(controlElement => getFcdaElements(controlElement).length)
@@ -736,6 +786,7 @@ export default class SubscriberLaterBinding extends LitElement {
                 this.currentSelectedControlElement
               )}
               twoline
+              class="extref"
               data-extref="${identity(extRefElement)}"
               value="${identity(extRefElement)}"
             >
@@ -761,7 +812,7 @@ export default class SubscriberLaterBinding extends LitElement {
     const menuClasses = {
       'filter-off': this.hideBound || this.hideNotBound,
     };
-    return html`<h1>
+    return html`<h1 class="subscriber-title">
       ${msg('Subscriber Inputs')}
       <mwc-icon-button
         id="filterExtRefIcon"
@@ -945,7 +996,7 @@ export default class SubscriberLaterBinding extends LitElement {
     };
 
     return !this.subscriberView
-      ? html`<section class="column extref">
+      ? html`<section class="column">
           <h1>${msg('Subscriber Inputs')}</h1>
           ${this.currentSelectedControlElement &&
           this.currentSelectedFcdaElement
@@ -958,6 +1009,8 @@ export default class SubscriberLaterBinding extends LitElement {
                   if (!selectedListItem) return;
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const { extref } = (<any>selectedListItem).dataset;
+                  // TODO: The selector function does not work correctly when there are multiple ExtRefs with the
+                  // same desc and intAddr. Alas. It should index them correctly.
                   const selectedExtRefElement = this.doc.querySelector(
                     selector('ExtRef', extref)
                   );
@@ -986,18 +1039,28 @@ export default class SubscriberLaterBinding extends LitElement {
             activatable
             @selected=${(ev: SingleSelectedEvent) => {
               console.log('extref subscriber view selected');
-              const selectedListItem = (<OscdFilteredList>ev.target).selected;
+              const selectedListItem = (<ListItemBase>(
+                (<OscdFilteredList>ev.target).selected
+              ))!;
               if (!selectedListItem) return;
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const { extref } = (<any>selectedListItem).dataset;
-              const selectedExtRefElement = this.doc.querySelector(
-                selector('ExtRef', extref)
+              const { extref } = selectedListItem.dataset;
+              const selectedExtRefElement = <Element>(
+                this.doc.querySelector(selector('ExtRef', extref ?? 'Unknown'))
               );
               if (!selectedExtRefElement) return;
               if (isBound(selectedExtRefElement)) {
                 this.unsubscribe(selectedExtRefElement);
+                // this.currentSelectedExtRefElement = undefined;
+                // TODO: Type definitions appear a bit broken??
+                const index = <number>(<SelectedDetail>ev.detail).index;
+
+                selectedListItem!.selected = false;
+                selectedListItem!.activated = false;
+                this.extRefListSubscriberUI?.toggle(index, false);
+                this.extRefListSubscriberUI?.layout(true);
               } else {
-                this.subscribe(selectedExtRefElement!);
+                this.currentSelectedExtRefElement = selectedExtRefElement;
               }
               // TODO: Should this be scoped more tightly?
               this.requestUpdate();
@@ -1037,6 +1100,7 @@ export default class SubscriberLaterBinding extends LitElement {
     </div>`;
   }
 
+  // TODO: SwitchView shouldn't be fixed but should the header be sticky?
   render(): TemplateResult {
     console.log('render called');
     return html`<mwc-icon-button-toggle
@@ -1045,6 +1109,15 @@ export default class SubscriberLaterBinding extends LitElement {
         offIcon="alt_route"
         title="${msg('Alternate between Publisher and Subscriber view')}"
         @click=${async () => {
+          this.controlBlockListUI.items.forEach(item => {
+            // TODO: Should this rule be generally disabled, ask ca-d
+            // eslint-disable-next-line no-param-reassign
+            item.activated = false;
+            // eslint-disable-next-line no-param-reassign
+            item.selected = false;
+          });
+          this.currentSelectedControlElement = undefined;
+          this.currentSelectedFcdaElement = undefined;
           this.requestUpdate();
           await this.updateComplete;
           this.updateView();
@@ -1071,16 +1144,16 @@ export default class SubscriberLaterBinding extends LitElement {
       height: calc(100vh - 136px);
     }
 
-    #listContainer:not(.subscriberView) {
+    #listContainer:not(.subscriber-view) {
       flex-direction: row;
     }
 
-    #listContainer.subscriberView {
+    #listContainer.subscriber-view {
       width: 100%;
       flex-direction: row-reverse;
     }
 
-    #listContainer.subscriberView .column.fcda {
+    #listContainer.subscriber-view .column.fcda {
       flex: 1;
       width: 25%;
     }
@@ -1094,27 +1167,34 @@ export default class SubscriberLaterBinding extends LitElement {
     }
 
     @media (min-width: 700px) {
-      #listContainer.subscriberView {
+      #listContainer.subscriber-view {
         /* width: calc(100vw - 20px); */
         flex: auto;
       }
 
-      #listContainer.subscriberView .column {
+      #listContainer.subscriber-view .column {
         resize: horizontal;
         width: 65%;
         flex: none;
       }
 
-      #listContainer.subscriberView .column.fcda {
+      #listContainer.subscriber-view .column.fcda {
         width: auto;
       }
+    }
+
+    /* TODO: Need to properly apply rule to h1 for publisher, but how best to do this? */
+    #listContainer section.fcda h1,
+    .subscriber-title {
+      padding-left: 48px;
     }
 
     h3 {
       margin: 4px 8px 16px;
     }
 
-    .fcda {
+    .fcda,
+    .extref {
       padding-left: var(--mdc-list-side-padding, 16px);
     }
 
@@ -1154,8 +1234,11 @@ export default class SubscriberLaterBinding extends LitElement {
 
     #switchView {
       position: fixed;
-      left: 100;
-      top: 70;
+      left: 24px;
+      top: 120px;
+      /* TODO: How best to fix, pointer-events is not sufficient here? */
+      pointer-events: all;
+      z-index: 1000;
     }
 
     #switchControlType {
