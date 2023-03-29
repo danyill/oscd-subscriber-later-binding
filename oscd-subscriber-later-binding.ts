@@ -23,11 +23,7 @@ import { newEditEvent, Remove } from '@openscd/open-scd-core';
 
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
-import type {
-  List,
-  SelectedDetail,
-  SingleSelectedEvent,
-} from '@material/mwc-list';
+import type { SelectedDetail, SingleSelectedEvent } from '@material/mwc-list';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
 import type { Menu } from '@material/mwc-menu';
@@ -210,8 +206,8 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#settingsExtRefIcon')
   settingsMenuExtRefButtonUI!: Icon;
 
-  @query('#control-block-list')
-  controlBlockListUI!: List;
+  @query('#fcda-list')
+  fcdaListUI!: OscdFilteredList;
 
   @query('#publisherExtRefList')
   extRefListPublisherUI?: OscdFilteredList;
@@ -390,7 +386,7 @@ export default class SubscriberLaterBinding extends LitElement {
     this.extRefCounters.delete(controlBlockFcdaId);
   }
 
-  private getSubscribedExtRefElements(): Element[] {
+  public getSubscribedExtRefElements(): Element[] {
     return getSubscribedExtRefElements(
       <Element>this.doc.getRootNode(),
       this.controlTag,
@@ -400,7 +396,7 @@ export default class SubscriberLaterBinding extends LitElement {
     );
   }
 
-  private getAvailableExtRefElements(): Element[] {
+  public getAvailableExtRefElements(): Element[] {
     return getExtRefElements(
       <Element>this.doc.getRootNode(),
       this.currentSelectedFcdaElement,
@@ -477,15 +473,15 @@ export default class SubscriberLaterBinding extends LitElement {
   private updateFcdaFilter(): void {
     // Update filter CSS rules
     if (!this.hideSubscribed) {
-      this.controlBlockListUI!.classList.add('show-subscribed');
+      this.fcdaListUI!.classList.add('show-subscribed');
     } else {
-      this.controlBlockListUI!.classList.remove('show-subscribed');
+      this.fcdaListUI!.classList.remove('show-subscribed');
     }
 
     if (!this.hideNotSubscribed) {
-      this.controlBlockListUI!.classList.add('show-not-subscribed');
+      this.fcdaListUI!.classList.add('show-not-subscribed');
     } else {
-      this.controlBlockListUI!.classList.remove('show-not-subscribed');
+      this.fcdaListUI!.classList.remove('show-not-subscribed');
     }
   }
 
@@ -648,7 +644,7 @@ export default class SubscriberLaterBinding extends LitElement {
     };
 
     return html`<oscd-filtered-list
-      id="control-block-list"
+      id="fcda-list"
       ?activatable=${!this.subscriberView}
       class="${classMap(filteredListClasses)}"
       @selected="${(ev: SingleSelectedEvent) => {
@@ -1157,7 +1153,7 @@ export default class SubscriberLaterBinding extends LitElement {
         offIcon="alt_route"
         title="${msg('Alternate between Publisher and Subscriber view')}"
         @click=${async () => {
-          this.controlBlockListUI.items.forEach(item => {
+          this.fcdaListUI.items.forEach(item => {
             // TODO: Should this rule be generally disabled, ask ca-d
             // eslint-disable-next-line no-param-reassign
             item.activated = false;
