@@ -14,7 +14,7 @@
     "sourceMap": true,
     "inlineSources": true,
     "rootDir": "./",
-    "tsBuildInfoFile": ".tsbuildinfo",
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
     "declaration": true,
     "incremental": true,
     "skipLibCheck": true
