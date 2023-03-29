@@ -1,3 +1,5 @@
+import { visualDiff } from '@web/test-runner-visual-regression';
+
 import { expect, fixture, html } from '@open-wc/testing';
 
 import SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
@@ -8,6 +10,16 @@ import {
   getFcdaItemCount,
 } from './test-support.js';
 
+const factor = window.process && process.env.CI ? 4 : 2;
+
+function timeout(ms: number) {
+  return new Promise(res => {
+    setTimeout(res, ms * factor);
+  });
+}
+
+mocha.timeout(2000 * factor);
+
 describe('oscd-subscription-later-binding', () => {
   if (customElements.get('oscd-plugin') === undefined)
     customElements.define('oscd-plugin', SubscriberLaterBinding);
@@ -16,6 +28,8 @@ describe('oscd-subscription-later-binding', () => {
   let doc: XMLDocument;
 
   describe('When opened for GOOSE', () => {
+    const controlTag = 'GSEControl';
+
     describe('in the Subscriber View', () => {
       beforeEach(async () => {
         doc = await fetch('/test/fixtures/GOOSE-2007B4.scd')
@@ -23,7 +37,10 @@ describe('oscd-subscription-later-binding', () => {
           .then(str => new DOMParser().parseFromString(str, 'application/xml'));
 
         plugin = await fixture(
-          html`<oscd-plugin .controlTag="GSEControl" .doc=${doc}></oscd-plugin>`
+          html`<oscd-plugin
+            .controlTag="${controlTag}"
+            .doc=${doc}
+          ></oscd-plugin>`
         );
       });
 
@@ -36,7 +53,9 @@ describe('oscd-subscription-later-binding', () => {
         )?.click();
         await plugin.updateComplete;
 
-        expect(plugin).shadowDom.to.equalSnapshot();
+        // expect(plugin).shadowDom.to.equalSnapshot();
+        await timeout(20);
+        await visualDiff(plugin, `goose-fcda-with-subscriptions`);
       });
 
       it('when subscribing an available ExtRef then the lists are changed', async () => {

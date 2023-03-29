@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file target-language="de" source-language="en" original="lit-localize-inputs" datatype="plaintext">
+    <body>
+      <trans-unit id="s7b172c6f7ac1cb0c">
+        <source>Publisher Sampled Value Messages</source>
+        <target>Verlegerabgetastete Wertnachrichten</target>
+      </trans-unit>
+      <trans-unit id="s337459c5378dc0dc">
+        <source>Publisher GOOSE Messages</source>
+        <target>Verleger GOOSE Nachrichten</target>
+      </trans-unit>
+      <trans-unit id="s54431d00a8030125">
+        <source>Subscribed</source>
+        <target>Abonniert</target>
+      </trans-unit>
+      <trans-unit id="s4d958711afb20742">
+        <source>Not Subscribed</source>
+        <target>Nicht abonniert</target>
+      </trans-unit>
+      <trans-unit id="s392d68658d0c0a7b">
+        <source>No subscribed inputs</source>
+        <target>Keine abonnierten Eingänge</target>
+      </trans-unit>
+      <trans-unit id="sd099c72448b745ed">
+        <source>Available to subscribe</source>
+        <target>Verfügbar zum Abonnieren</target>
+      </trans-unit>
+      <trans-unit id="s94915263ea5e8caf">
+        <source>No available inputs to subscribe</source>
+        <target>Keine verfügbaren Eingänge zum Abonnieren</target>
+      </trans-unit>
+      <trans-unit id="s182ac4e81ae15024">
+        <source>Subscriber Inputs</source>
+        <target>Abonnenteneingänge</target>
+      </trans-unit>
+      <trans-unit id="s7c95876637f6a9d7">
+        <source>Filter</source>
+        <target>Filter</target>
+      </trans-unit>
+      <trans-unit id="se275ef18f06cf8eb">
+        <source>Bound</source>
+        <target>Gebunden</target>
+      </trans-unit>
+      <trans-unit id="se7a38a6492965c7a">
+        <source>Unbound</source>
+        <target>Ungebunden</target>
+      </trans-unit>
+      <trans-unit id="s9d8b8aa2b404c2c8">
+        <source>Settings</source>
+        <target>Einstellungen</target>
+      </trans-unit>
+      <trans-unit id="s1cff131b3b4aa852">
+        <source>Auto-increment</source>
+        <target>Auto-Inkrement</target>
+      </trans-unit>
+      <trans-unit id="sea5933c70ba5a518">
+        <source>No published item selected</source>
+        <target>Kein veröffentlichtes Element ausgewählt</target>
+      </trans-unit>
+      <trans-unit id="sf5bd9968dcf60b09">
+        <source>Change between GOOSE and Sampled Value publishers</source>
+        <target>Zwischen GOOSE- und Sampled-Value-Publishern wechseln</target>
+      </trans-unit>
+      <trans-unit id="s8593cda43a906b03">
+        <source>Alternate between Publisher and Subscriber view</source>
+        <target>Zwischen Publisher- und Subscriber-Ansicht wechseln</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

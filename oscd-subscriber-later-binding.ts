@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+// TODO: Remove this no-console
 // TODO: This file is rather long... and doesn't feel modular or well-abstracted. But how best to fix?
 import {
   css,
