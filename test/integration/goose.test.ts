@@ -56,6 +56,7 @@ describe('oscd-subscription-later-binding', () => {
         // expect(plugin).shadowDom.to.equalSnapshot();
         await timeout(20);
         await visualDiff(plugin, `goose-fcda-with-subscriptions`);
+        // TODO: How do I get the material icons shown correctly in the test runner?
       });
 
       it('when subscribing an available ExtRef then the lists are changed', async () => {
