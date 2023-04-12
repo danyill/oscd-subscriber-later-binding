@@ -15,16 +15,6 @@ export const styles = css`
     opacity: 1;
   }
 
-  section:focus {
-    box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14),
-      0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
-  }
-
-  section:focus-within {
-    outline-width: 2px;
-    transition: all 250ms linear;
-  }
-
   h1,
   h2,
   h3 {
@@ -38,14 +28,6 @@ export const styles = css`
     line-height: 48px;
     padding-left: 0.3em;
     transition: background-color 150ms linear;
-  }
-
-  section:focus-within > h1,
-  section:focus-within > h2,
-  section:focus-within > h3 {
-    color: var(--mdc-theme-surface);
-    background-color: var(--mdc-theme-primary);
-    transition: background-color 200ms linear;
   }
 
   h1 > nav,

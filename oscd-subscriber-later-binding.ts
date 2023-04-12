@@ -85,17 +85,18 @@ export default class SubscriberLaterBinding extends LitElement {
   @state()
   private extRefCounters = new Map();
 
+  // getters and setters are onelines and firstUpdated reads from
+  //  localstorage and updates all the UI elements.
+  // in the setter we change the state and write back to local storage.
   @property({ type: Boolean })
   get subscriberView(): boolean {
     return this.switchViewUI?.on ?? false;
   }
 
   set subscriberView(val) {
-    // TODO: Discuss with Christian the use of requestUpdate
-    // https://lit.dev/docs/v1/components/properties/#accessors
     const oldValue = this.switchViewUI!.on === true;
     this.switchViewUI!.on = val;
-    this.requestUpdate('subscriberview', oldValue);
+    this.requestUpdate('subscriberView', oldValue);
   }
 
   @property({ type: Boolean })
@@ -152,7 +153,7 @@ export default class SubscriberLaterBinding extends LitElement {
     this.requestUpdate('notAutoIncrement', oldValue);
   }
 
-  @property({ type: Boolean })
+  // @property({ type: Boolean })
   get hideBound(): boolean {
     return (
       localStorage.getItem(`extref-list-${this.controlTag}$hideBound`) ===
@@ -169,7 +170,7 @@ export default class SubscriberLaterBinding extends LitElement {
     this.requestUpdate('hideBound', oldValue);
   }
 
-  @property({ type: Boolean })
+  // @property({ type: Boolean })
   get hideNotBound(): boolean {
     return (
       localStorage.getItem(`extref-list-${this.controlTag}$hideNotBound`) ===
@@ -515,9 +516,6 @@ export default class SubscriberLaterBinding extends LitElement {
           1
         );
         this.updateExtRefFilter();
-        // TODO: Filtering is still calling render for the ExtRefs -- Likely
-        // because of the changing in CSS styling. Very like should use a
-        // mwc-icon-button-toggle
       });
     } else {
       this.listContainerUI.classList.remove('subscriber-view');
@@ -607,41 +605,44 @@ export default class SubscriberLaterBinding extends LitElement {
     const menuClasses = {
       'filter-off': this.hideSubscribed || this.hideNotSubscribed,
     };
-    return html`<h1>
-      ${this.controlTag === 'SampledValueControl'
-        ? msg('Publisher Sampled Value Messages')
-        : msg('Publisher GOOSE Messages')}
-      <mwc-icon-button
-        id="filterFcdaIcon"
-        class="${classMap(menuClasses)}"
-        icon="filter_list"
-        @click=${() => {
-          if (!this.filterMenuFcdaUI.open) this.filterMenuFcdaUI.show();
-          else this.filterMenuFcdaUI.close();
-        }}
-      ></mwc-icon-button>
-      <mwc-menu
-        id="filterFcdaMenu"
-        multi
-        corner="BOTTOM_RIGHT"
-        menuCorner="END"
-      >
-        <mwc-check-list-item
-          class="filter-subscribed"
-          left
-          ?selected=${!this.hideSubscribed}
+    return html`
+      <h1>
+        ${this.renderControlTypeSelector()}
+        ${this.controlTag === 'SampledValueControl'
+          ? msg('Publisher Sampled Value Messages')
+          : msg('Publisher GOOSE Messages')}
+        <mwc-icon-button
+          id="filterFcdaIcon"
+          class="${classMap(menuClasses)}"
+          icon="filter_list"
+          @click=${() => {
+            if (!this.filterMenuFcdaUI.open) this.filterMenuFcdaUI.show();
+            else this.filterMenuFcdaUI.close();
+          }}
+        ></mwc-icon-button>
+        <mwc-menu
+          id="filterFcdaMenu"
+          multi
+          corner="BOTTOM_RIGHT"
+          menuCorner="END"
         >
-          <span>${msg('Subscribed')}</span>
-        </mwc-check-list-item>
-        <mwc-check-list-item
-          class="filter-not-subscribed"
-          left
-          ?selected=${!this.hideNotSubscribed}
-        >
-          <span>${msg('Not Subscribed')}</span>
-        </mwc-check-list-item>
-      </mwc-menu>
-    </h1> `;
+          <mwc-check-list-item
+            class="filter-subscribed"
+            left
+            ?selected=${!this.hideSubscribed}
+          >
+            <span>${msg('Subscribed')}</span>
+          </mwc-check-list-item>
+          <mwc-check-list-item
+            class="filter-not-subscribed"
+            left
+            ?selected=${!this.hideNotSubscribed}
+          >
+            <span>${msg('Not Subscribed')}</span>
+          </mwc-check-list-item>
+        </mwc-menu>
+      </h1>
+    `;
   }
 
   renderControlList(controlElements: Element[]): TemplateResult {
@@ -773,7 +774,7 @@ export default class SubscriberLaterBinding extends LitElement {
                 >${this.iconControlLookup[this.controlTag]}</mwc-icon
               >
             </mwc-list-item>
-            <li divider role="separator"></li>
+            <!-- <li divider role="separator"></li> -->
             ${fcdaElements.map(fcdaElement =>
               this.renderFCDA(controlElement, fcdaElement)
             )}
@@ -996,7 +997,7 @@ export default class SubscriberLaterBinding extends LitElement {
     if (this.supervisionData.size === 0) this.reCreateSupervisionCache();
     return html`${repeat(
       getOrderedIeds(this.doc),
-      i => `${identity(i)}`,
+      i => `${identity(i)} ${this.controlTag}`,
       ied => {
         const extRefs = Array.from(
           this.getExtRefElementsByIED(ied, this.controlTag)
@@ -1036,7 +1037,7 @@ export default class SubscriberLaterBinding extends LitElement {
       <li divider role="separator"></li>
           ${repeat(
             Array.from(this.getExtRefElementsByIED(ied, this.controlTag)),
-            exId => `${identity(exId)}`,
+            exId => `${identity(exId)} ${this.controlTag}`,
             extRef => this.renderSubscriberViewExtRef(extRef)
           )} 
           </mwc-list-item>`;
@@ -1049,6 +1050,8 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-bound': !this.hideBound,
       'show-not-bound': !this.hideNotBound,
     };
+
+    console.log('rendering extrefs');
 
     return !this.subscriberView
       ? html`<section class="column">
@@ -1077,8 +1080,6 @@ export default class SubscriberLaterBinding extends LitElement {
                     // can be subscribed if the right conditions are there
                   }
                   (<ListItem>selectedListItem).selected = false;
-                  // TODO: Should this be scoped more tightly?
-                  this.requestUpdate();
                 }}
               >
                 ${this.renderPublisherViewSubscribedExtRefs()}
@@ -1106,9 +1107,8 @@ export default class SubscriberLaterBinding extends LitElement {
               if (!selectedExtRefElement) return;
               if (isSubscribed(selectedExtRefElement)) {
                 this.unsubscribe(selectedExtRefElement);
-                // this.currentSelectedExtRefElement = undefined;
-                // TODO: Type definitions appear a bit broken??
-                const index = <number>(<SelectedDetail>ev.detail).index;
+
+                const { index } = <SelectedDetail<number>>ev.detail;
 
                 selectedListItem!.selected = false;
                 selectedListItem!.activated = false;
@@ -1117,7 +1117,6 @@ export default class SubscriberLaterBinding extends LitElement {
               } else {
                 this.currentSelectedExtRefElement = selectedExtRefElement;
               }
-              // TODO: Should this be scoped more tightly?
               this.requestUpdate();
             }}
             >${this.renderSubscriberViewExtRefs()}</oscd-filtered-list
@@ -1132,35 +1131,10 @@ export default class SubscriberLaterBinding extends LitElement {
       ${controlElements
         ? this.renderControlList(controlElements)
         : html`<h3>${msg('Not Subscribed')}</h3> `}
-    </section>`;
-  }
-
-  renderControlTypeSelector(): TemplateResult {
-    return html`<div>
       <mwc-icon-button-toggle
-        id="switchControlType"
-        title="${msg('Change between GOOSE and Sampled Value publishers')}"
-        @click=${() => {
-          if (this.controlTag === 'GSEControl') {
-            this.controlTag = 'SampledValueControl';
-          } else {
-            this.controlTag = 'GSEControl';
-          }
-          this.requestUpdate();
-        }}
-      >
-        ${gooseActionIcon} ${smvActionIcon}
-      </mwc-icon-button-toggle>
-    </div>`;
-  }
-
-  // TODO: SwitchView shouldn't be fixed but should the header be sticky?
-  render(): TemplateResult {
-    console.log('render called');
-    return html`<mwc-icon-button-toggle
         id="switchView"
-        onIcon="alt_route"
-        offIcon="alt_route"
+        onIcon="swap_horiz"
+        offIcon="swap_horiz"
         title="${msg('Alternate between Publisher and Subscriber view')}"
         @click=${async () => {
           this.fcdaListUI.items.forEach(item => {
@@ -1177,10 +1151,34 @@ export default class SubscriberLaterBinding extends LitElement {
           this.updateView();
         }}
       ></mwc-icon-button-toggle>
-      ${this.renderControlTypeSelector()}
-      <div id="listContainer">
-        ${this.renderPublisherFCDAs()}${this.renderExtRefs()}
-      </div>`;
+    </section> `;
+  }
+
+  renderControlTypeSelector(): TemplateResult {
+    return html`
+      <mwc-icon-button-toggle
+        id="switchControlType"
+        title="${msg('Change between GOOSE and Sampled Value publishers')}"
+        @click=${() => {
+          if (this.controlTag === 'GSEControl') {
+            this.controlTag = 'SampledValueControl';
+          } else {
+            this.controlTag = 'GSEControl';
+          }
+          this.requestUpdate();
+        }}
+      >
+        ${gooseActionIcon} ${smvActionIcon}
+      </mwc-icon-button-toggle>
+    `;
+  }
+
+  // TODO: SwitchView shouldn't be fixed but should the header be sticky?
+  render(): TemplateResult {
+    console.log('render called');
+    return html` <div id="listContainer">
+      ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
+    </div>`;
   }
 
   static styles = css`
@@ -1210,6 +1208,7 @@ export default class SubscriberLaterBinding extends LitElement {
     #listContainer.subscriber-view .column.fcda {
       flex: 1;
       width: 25%;
+      position: relative;
     }
 
     .column {
@@ -1235,12 +1234,6 @@ export default class SubscriberLaterBinding extends LitElement {
       #listContainer.subscriber-view .column.fcda {
         width: auto;
       }
-    }
-
-    /* TODO: Need to properly apply rule to h1 for publisher, but how best to do this? */
-    #listContainer section.fcda h1,
-    .subscriber-title {
-      padding-left: 48px;
     }
 
     h3 {
@@ -1346,19 +1339,15 @@ export default class SubscriberLaterBinding extends LitElement {
       position: relative;
     }
 
-    #switchView {
-      position: fixed;
-      left: 24px;
-      top: 120px;
-      /* TODO: How best to fix, pointer-events is not sufficient here? */
-      pointer-events: all;
-      z-index: 1000;
-    }
+    /* #fcda-list {
+      max-height: 90vh;
+      overflow: auto;
+    } */
 
-    #switchControlType {
-      position: fixed;
-      left: 300;
-      top: 70;
+    #switchView {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
     }
   `;
 }
