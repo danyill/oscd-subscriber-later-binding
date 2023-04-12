@@ -21,7 +21,7 @@ import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
 import '@material/mwc-icon-button-toggle';
 
-import { newEditEvent, Remove } from '@openscd/open-scd-core';
+import { Edit, newEditEvent } from '@openscd/open-scd-core';
 
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
@@ -47,7 +47,7 @@ import {
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
   instantiateSubscriptionSupervision,
-  isBound,
+  isSubscribed,
   removeSubscriptionSupervision,
   unsupportedExtRefElement,
   updateExtRefElement,
@@ -62,6 +62,8 @@ import {
   // getFilterIcon,
   gooseIcon,
   smvIcon,
+  gooseActionIcon,
+  smvActionIcon,
 } from './foundation/icons.js';
 
 import './foundation/components/oscd-filtered-list.js';
@@ -305,29 +307,32 @@ export default class SubscriberLaterBinding extends LitElement {
    * @param extRef - The Ext Ref Element to clean from attributes.
    */
   private unsubscribe(extRef: Element): void {
-    const updateEdit = createUpdateEdit(extRef, {
-      intAddr: extRef.getAttribute('intAddr'),
-      desc: extRef.getAttribute('desc'),
-      iedName: null,
-      ldInst: null,
-      prefix: null,
-      lnClass: null,
-      lnInst: null,
-      doName: null,
-      daName: null,
-      serviceType: null, // TODO: Should this be retained on unsubscribe?
-      srcLDInst: null,
-      srcPrefix: null,
-      srcLNClass: null,
-      srcLNInst: null,
-      srcCBName: null,
-    });
+    const editActions: Edit[] = [];
+
+    editActions.push(
+      createUpdateEdit(extRef, {
+        intAddr: extRef.getAttribute('intAddr'),
+        desc: extRef.getAttribute('desc'),
+        iedName: null,
+        ldInst: null,
+        prefix: null,
+        lnClass: null,
+        lnInst: null,
+        doName: null,
+        daName: null,
+        serviceType: null, // TODO: Should this be retained on unsubscribe?
+        srcLDInst: null,
+        srcPrefix: null,
+        srcLNClass: null,
+        srcLNInst: null,
+        srcCBName: null,
+      })
+    );
 
     const subscriberIed = extRef.closest('IED') || undefined;
-    const removeSubscriptionEdits: Remove[] = [];
 
     if (canRemoveSubscriptionSupervision(extRef))
-      removeSubscriptionEdits.push(
+      editActions.push(
         ...removeSubscriptionSupervision(
           this.currentSelectedControlElement,
           subscriberIed
@@ -351,7 +356,7 @@ export default class SubscriberLaterBinding extends LitElement {
       this.extRefCounters.delete(controlBlockFcdaId);
     }
 
-    this.dispatchEvent(newEditEvent(updateEdit));
+    this.dispatchEvent(newEditEvent(editActions));
   }
 
   /**
@@ -405,7 +410,7 @@ export default class SubscriberLaterBinding extends LitElement {
       true
     ).filter(
       extRefElement =>
-        !isBound(extRefElement) &&
+        !isSubscribed(extRefElement) &&
         (!extRefElement.hasAttribute('serviceType') ||
           extRefElement.getAttribute('serviceType') ===
             this.serviceTypeLookup[this.controlTag])
@@ -686,7 +691,11 @@ export default class SubscriberLaterBinding extends LitElement {
               this.doc.querySelector(selector('ExtRef', extref ?? 'Unknown')) ??
               undefined;
 
-            if (nextActivatableItem && nextExtRef && !isBound(nextExtRef)) {
+            if (
+              nextActivatableItem &&
+              nextExtRef &&
+              !isSubscribed(nextExtRef)
+            ) {
               nextActivatableItem.click();
             } else {
               // next ExtRef is already bound, deselect
@@ -919,7 +928,7 @@ export default class SubscriberLaterBinding extends LitElement {
     let controlBlockDescription: string | undefined;
     let supervisionDescription: string | undefined;
 
-    const bound = isBound(extRefElement);
+    const bound = isSubscribed(extRefElement);
 
     if (bound) {
       subscriberFCDA = findFCDAs(extRefElement).find(x => x !== undefined);
@@ -992,8 +1001,8 @@ export default class SubscriberLaterBinding extends LitElement {
         const extRefs = Array.from(
           this.getExtRefElementsByIED(ied, this.controlTag)
         );
-        const someBound = extRefs.some(extRef => isBound(extRef));
-        const someNotBound = extRefs.some(extRef => !isBound(extRef));
+        const someBound = extRefs.some(extRef => isSubscribed(extRef));
+        const someNotBound = extRefs.some(extRef => !isSubscribed(extRef));
 
         if (!extRefs.length) return html``;
 
@@ -1061,7 +1070,7 @@ export default class SubscriberLaterBinding extends LitElement {
                     selector('ExtRef', extref)
                   );
                   if (!selectedExtRefElement) return;
-                  if (isBound(selectedExtRefElement)) {
+                  if (isSubscribed(selectedExtRefElement)) {
                     this.unsubscribe(selectedExtRefElement);
                   } else {
                     this.subscribe(selectedExtRefElement!);
@@ -1095,7 +1104,7 @@ export default class SubscriberLaterBinding extends LitElement {
                 this.doc.querySelector(selector('ExtRef', extref ?? 'Unknown'))
               );
               if (!selectedExtRefElement) return;
-              if (isBound(selectedExtRefElement)) {
+              if (isSubscribed(selectedExtRefElement)) {
                 this.unsubscribe(selectedExtRefElement);
                 // this.currentSelectedExtRefElement = undefined;
                 // TODO: Type definitions appear a bit broken??
@@ -1131,8 +1140,6 @@ export default class SubscriberLaterBinding extends LitElement {
       <mwc-icon-button-toggle
         id="switchControlType"
         title="${msg('Change between GOOSE and Sampled Value publishers')}"
-        offIcon="link_off"
-        onIcon="coronavirus"
         @click=${() => {
           if (this.controlTag === 'GSEControl') {
             this.controlTag = 'SampledValueControl';
@@ -1142,6 +1149,7 @@ export default class SubscriberLaterBinding extends LitElement {
           this.requestUpdate();
         }}
       >
+        ${gooseActionIcon} ${smvActionIcon}
       </mwc-icon-button-toggle>
     </div>`;
   }

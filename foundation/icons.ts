@@ -8,6 +8,9 @@ const pathsSVG = {
 export const gooseIcon = svg`<svg style="width:24px;height:24px" viewBox="0 0 24 24">${pathsSVG.gooseIcon}</svg>`;
 export const smvIcon = svg`<svg style="width:24px;height:24px" viewBox="0 0 24 24">${pathsSVG.smvIcon}</svg>`;
 
+export const gooseActionIcon = svg`<svg slot="offIcon" style="width:24px;height:24px" viewBox="0 0 24 24">${pathsSVG.gooseIcon}</svg>`;
+export const smvActionIcon = svg`<svg slot="onIcon" style="width:24px;height:24px" viewBox="0 0 24 24">${pathsSVG.smvIcon}</svg>`;
+
 export type iconType = 'smvIcon' | 'gooseIcon';
 
 export function getFilterIcon(type: iconType, state: boolean): TemplateResult {

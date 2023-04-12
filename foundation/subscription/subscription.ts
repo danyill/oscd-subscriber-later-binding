@@ -262,7 +262,7 @@ function checkEditionSpecificRequirements(
     ) &&
     sameAttributeValueDiffName(
       extRefElement,
-      'scrPrefix',
+      'srcPrefix',
       lnElement,
       'prefix'
     ) &&
@@ -373,7 +373,7 @@ export function getExistingSupervision(extRef: Element | null): Element | null {
  *
  * @param extRefElement - The Ext Ref Element to check.
  */
-export function isBound(extRefElement: Element): boolean {
+export function isSubscribed(extRefElement: Element): boolean {
   return (
     extRefElement.hasAttribute('iedName') &&
     extRefElement.hasAttribute('ldInst') &&
@@ -724,7 +724,7 @@ export function instantiateSubscriptionSupervision(
   return edits;
 }
 
-// TODO: Discuss with ca-d about changes to OpenSCD core for this
+// TODO: Discuss with ca-d about changes to OpenSCD core for this with changes to update actions
 
 /**
  * Update the passed ExtRefElement and set the required attributes on the cloned element
@@ -875,7 +875,7 @@ export function canRemoveSubscriptionSupervision(
 }
 
 /**
- * Return an array with a single Delete action to delete the supervision element
+ * Return an array with a single Remove action to delete the supervision element
  * for the given GOOSE/SMV message and subscriber IED.
  *
  * @param controlBlock The GOOSE or SMV message element
