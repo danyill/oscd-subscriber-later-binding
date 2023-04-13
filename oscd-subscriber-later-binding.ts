@@ -30,7 +30,6 @@ import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
 import type { Menu } from '@material/mwc-menu';
 
-import { styles } from './foundation/styles/styles.js';
 import { identity } from './foundation/identities/identity.js';
 import {
   canRemoveSubscriptionSupervision,
@@ -465,17 +464,18 @@ export default class SubscriberLaterBinding extends LitElement {
 
   private updateExtRefFilter(): void {
     const filterClassList = this.extRefListSubscriberUI!.classList;
-    // Update filter CSS rules
-    // TODO: Should I disable the following rule -- compare each filter implementation
-    // eslint-disable-next-line no-unused-expressions
-    !this.hideBound
-      ? filterClassList.add('show-bound')
-      : filterClassList.remove('show-bound');
 
-    // eslint-disable-next-line no-unused-expressions
-    !this.hideNotBound
-      ? filterClassList.add('show-not-bound')
-      : filterClassList.remove('show-not-bound');
+    if (!this.hideBound) {
+      filterClassList.add('show-bound');
+    } else {
+      filterClassList.remove('show-bound');
+    }
+
+    if (!this.hideNotBound) {
+      filterClassList.add('show-not-bound');
+    } else {
+      filterClassList.remove('show-not-bound');
+    }
   }
 
   private updateFcdaFilter(): void {
@@ -654,7 +654,7 @@ export default class SubscriberLaterBinding extends LitElement {
     return html`<oscd-filtered-list
       id="fcda-list"
       ?activatable=${!this.subscriberView}
-      class="${classMap(filteredListClasses)}"
+      class="styled-scrollbars ${classMap(filteredListClasses)}"
       @selected="${(ev: SingleSelectedEvent) => {
         console.log('fcda selected');
         const selectedListItem = (<ListItemBase>(
@@ -1060,6 +1060,7 @@ export default class SubscriberLaterBinding extends LitElement {
           this.currentSelectedFcdaElement
             ? html`<oscd-filtered-list
                 id="publisherExtRefList"
+                class="styled-scrollbars"
                 @selected=${(ev: SingleSelectedEvent) => {
                   console.log('extref publisher view selected');
                   const selectedListItem = (<OscdFilteredList>ev.target)
@@ -1091,7 +1092,7 @@ export default class SubscriberLaterBinding extends LitElement {
           ${this.renderSubscriberViewExtRefListTitle()}
           <oscd-filtered-list
             id="subscriberExtRefList"
-            class="${classMap(filteredListClasses)}"
+            class="styled-scrollbars ${classMap(filteredListClasses)}"
             activatable
             @selected=${(ev: SingleSelectedEvent) => {
               console.log('extref subscriber view selected');
@@ -1182,11 +1183,28 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   static styles = css`
-    ${styles}
-
     :host {
       width: 100vw;
       display: flex;
+
+      /* TODO: How to apply alpha to theme colors */
+      --scrollbarBG: var(--mdc-theme-background, #cfcfcf00);
+      --thumbBG: var(--mdc-theme-primary, #996cd8cc);
+    }
+
+    h1,
+    h2,
+    h3 {
+      color: var(--mdc-theme-on-surface);
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      margin: 0px;
+      line-height: 48px;
+      padding-left: 0.3em;
+      transition: background-color 150ms linear;
     }
 
     #listContainer {
@@ -1268,30 +1286,28 @@ export default class SubscriberLaterBinding extends LitElement {
     it is suggested to create a truth-table to check for side-effects */
 
     /* remove all control blocks if no filters */
-    #control-block-list:not(.show-subscribed, .show-not-subscribed)
-      mwc-list-item {
+    #fcda-list:not(.show-subscribed, .show-not-subscribed) mwc-list-item {
       display: none;
     }
 
     /* remove control blocks taking care to respect multiple conditions */
-    #control-block-list.show-not-subscribed:not(.show-subscribed)
+    #fcda-list.show-not-subscribed:not(.show-subscribed)
       mwc-list-item.control.show-subscribed:not(.show-not-subscribed) {
       display: none;
     }
 
-    #control-block-list.show-subscribed:not(.show-not-subscribed)
+    #fcda-list.show-subscribed:not(.show-not-subscribed)
       mwc-list-item.control.show-not-subscribed:not(.show-subscribed) {
       display: none;
     }
 
     /* remove fcdas if not part of filter */
-    #control-block-list:not(.show-not-subscribed)
+    #fcda-list:not(.show-not-subscribed)
       mwc-list-item.fcda.show-not-subscribed {
       display: none;
     }
 
-    #control-block-list:not(.show-subscribed)
-      mwc-list-item.fcda.show-subscribed {
+    #fcda-list:not(.show-subscribed) mwc-list-item.fcda.show-subscribed {
       display: none;
     }
 
@@ -1337,17 +1353,41 @@ export default class SubscriberLaterBinding extends LitElement {
     /* required for anchors */
     section {
       position: relative;
+      max-height: 100%;
     }
 
-    /* #fcda-list {
-      max-height: 90vh;
+    .styled-scrollbars {
+      max-height: 78vh;
       overflow: auto;
-    } */
+    }
+
+    .styled-scrollbars {
+      /* Foreground, Background */
+      scrollbar-width: thin;
+      scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+    }
+
+    .styled-scrollbars::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .styled-scrollbars::-webkit-scrollbar-track {
+      background: var(--scrollbarBG);
+    }
+
+    .styled-scrollbars::-webkit-scrollbar-thumb {
+      background: var(--thumbBG);
+      border-radius: 6px;
+      border: 3px solid var(--scrollbarBG);
+    }
 
     #switchView {
       position: absolute;
       bottom: 8px;
       right: 8px;
     }
+
+    /* TODO Button moving */
+    /* TODO: Improve vertical scrollbars */
   `;
 }
