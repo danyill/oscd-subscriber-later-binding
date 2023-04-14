@@ -16,7 +16,7 @@ export function getFcdaTitleValue(fcdaElement: Element): string {
     fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
       ? `.`
       : ``
-  }${fcdaElement.getAttribute('daName')}`;
+  }${fcdaElement.getAttribute('daName') ?? ''}`;
 }
 
 export function getFcdaSubtitleValue(fcdaElement: Element): string {

@@ -578,15 +578,19 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-not-subscribed': fcdaCount === 0,
     };
 
+    // If daName is missing, we have an FCDO which is not currently supported
+    const isFcdo = !fcdaElement.getAttribute('daName');
+
     return html`<mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
-      ?disabled=${this.subscriberView &&
-      unsupportedExtRefElement(
-        this.currentSelectedExtRefElement,
-        fcdaElement,
-        controlElement
-      )}
+      ?disabled=${(this.subscriberView &&
+        unsupportedExtRefElement(
+          this.currentSelectedExtRefElement,
+          fcdaElement,
+          controlElement
+        )) ||
+      isFcdo}
       twoline
       class="fcda ${classMap(filterClasses)}"
       data-control="${identity(controlElement)}"
@@ -1193,60 +1197,15 @@ export default class SubscriberLaterBinding extends LitElement {
       width: 100vw;
       display: flex;
 
-      /* TODO: How to apply alpha to theme colors */
+      /* TODO: How to apply alpha to theme colors -- 
+      do we need in OpenSCD special theme colours for scrollbars 
+      that can be used here? */
       --scrollbarBG: var(--mdc-theme-background, #cfcfcf00);
       --thumbBG: var(--mdc-theme-primary, #996cd8cc);
     }
 
-    h1,
-    h2,
-    h3 {
-      color: var(--mdc-theme-on-surface);
-      font-family: 'Roboto', sans-serif;
-      font-weight: 300;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      margin: 0px;
-      line-height: 48px;
-      padding-left: 0.3em;
-      transition: background-color 150ms linear;
-    }
-
-    #listContainer {
-      width: 100%;
-      display: flex;
-      padding: 8px 6px 16px;
-      height: calc(100vh - 136px);
-    }
-
-    #listContainer:not(.subscriber-view) {
-      flex-direction: row;
-    }
-
-    #listContainer.subscriber-view {
-      width: 100%;
-      flex-direction: row-reverse;
-    }
-
-    #listContainer.subscriber-view .column.fcda {
-      flex: 1;
-      width: 25%;
-      position: relative;
-    }
-
-    .column {
-      flex: 50%;
-      margin: 0px 6px 0px;
-      min-width: 300px;
-      height: 100%;
-      overflow-y: clip;
-      overflow-x: auto;
-    }
-
     @media (min-width: 700px) {
       #listContainer.subscriber-view {
-        /* width: calc(100vw - 20px); */
         flex: auto;
       }
 
@@ -1261,8 +1220,31 @@ export default class SubscriberLaterBinding extends LitElement {
       }
     }
 
+    h1,
+    h2,
+    h3 {
+      color: var(--mdc-theme-on-surface);
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      margin: 0px;
+      line-height: 48px;
+      padding-left: 0.3em;
+    }
+
     h3 {
       margin: 4px 8px 16px;
+    }
+
+    .column {
+      flex: 50%;
+      margin: 0px 6px 0px;
+      min-width: 300px;
+      height: 100%;
+      overflow-y: clip;
+      overflow-x: auto;
     }
 
     .fcda,
@@ -1283,12 +1265,8 @@ export default class SubscriberLaterBinding extends LitElement {
       background-color: var(--mdc-theme-background);
     }
 
-    .interactive {
-      pointer-events: all;
-    }
-
     /* Filtering rules for control blocks end up implementing logic to allow
-    very fast CSS response. The following rules appear to be minimal but can be
+    very fast CSS response. The following 5 rules appear to be minimal but can be
     hard to understand intuitively for the multiple conditions. If modifying,
     it is suggested to create a truth-table to check for side-effects */
 
@@ -1318,8 +1296,64 @@ export default class SubscriberLaterBinding extends LitElement {
       display: none;
     }
 
+    #listContainer {
+      width: 100%;
+      display: flex;
+      padding: 8px 6px 16px;
+      height: calc(100vh - 136px);
+    }
+
+    #listContainer:not(.subscriber-view) {
+      flex-direction: row;
+    }
+
+    #listContainer.subscriber-view {
+      width: 100%;
+      flex-direction: row-reverse;
+    }
+
+    #listContainer.subscriber-view .column.fcda {
+      flex: 1;
+      width: 25%;
+      position: relative;
+    }
+
+    mwc-list-item {
+      --mdc-list-item-meta-size: 48px;
+    }
+
+    /* required for anchors */
+    section {
+      position: relative;
+      max-height: 100%;
+    }
+
+    .styled-scrollbars {
+      max-height: 78vh;
+      overflow: auto;
+    }
+
+    .styled-scrollbars {
+      scrollbar-width: thin;
+      scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+    }
+
+    .styled-scrollbars::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .styled-scrollbars::-webkit-scrollbar-track {
+      background: var(--scrollbarBG);
+    }
+
+    .styled-scrollbars::-webkit-scrollbar-thumb {
+      background: var(--thumbBG);
+      border-radius: 6px;
+      border: 3px solid var(--scrollbarBG);
+    }
+
     /* Filtering rules for ExtRefs end up implementing logic to allow
-    very fast CSS response. The following rules appear to be minimal but can be
+    very fast CSS response. The following 5 rules appear to be minimal but can be
     hard to understand intuitively for the multiple conditions. If modifying,
     it is suggested to create a truth-table to check for side-effects */
 
@@ -1347,45 +1381,6 @@ export default class SubscriberLaterBinding extends LitElement {
 
     #subscriberExtRefList:not(.show-bound) mwc-list-item.extref.show-bound {
       display: none;
-    }
-
-    mwc-list-item.hidden[noninteractive] + li[divider] {
-      display: none;
-    }
-
-    mwc-list-item {
-      --mdc-list-item-meta-size: 48px;
-    }
-
-    /* required for anchors */
-    section {
-      position: relative;
-      max-height: 100%;
-    }
-
-    .styled-scrollbars {
-      max-height: 78vh;
-      overflow: auto;
-    }
-
-    .styled-scrollbars {
-      /* Foreground, Background */
-      scrollbar-width: thin;
-      scrollbar-color: var(--thumbBG) var(--scrollbarBG);
-    }
-
-    .styled-scrollbars::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .styled-scrollbars::-webkit-scrollbar-track {
-      background: var(--scrollbarBG);
-    }
-
-    .styled-scrollbars::-webkit-scrollbar-thumb {
-      background: var(--thumbBG);
-      border-radius: 6px;
-      border: 3px solid var(--scrollbarBG);
     }
 
     #switchView {
