@@ -25,7 +25,7 @@ import { Edit, newEditEvent } from '@openscd/open-scd-core';
 
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
-import type { SelectedDetail, SingleSelectedEvent } from '@material/mwc-list';
+import type { SingleSelectedEvent } from '@material/mwc-list';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
 import type { Menu } from '@material/mwc-menu';
@@ -705,7 +705,7 @@ export default class SubscriberLaterBinding extends LitElement {
             }
           }
 
-          // deselect
+          // deselect ExtRef
           if (this.extRefListSubscriberSelectedUI && this.notAutoIncrement) {
             this.extRefListSubscriberSelectedUI.selected = false;
             this.extRefListSubscriberSelectedUI.activated = false;
@@ -715,7 +715,7 @@ export default class SubscriberLaterBinding extends LitElement {
           selectedListItem!.selected = false;
           selectedListItem!.activated = false;
 
-          // remove state
+          // reset state
           this.currentSelectedControlElement = undefined;
           this.currentSelectedFcdaElement = undefined;
 
@@ -1063,24 +1063,29 @@ export default class SubscriberLaterBinding extends LitElement {
                 class="styled-scrollbars"
                 @selected=${(ev: SingleSelectedEvent) => {
                   console.log('extref publisher view selected');
-                  const selectedListItem = (<OscdFilteredList>ev.target)
-                    .selected;
+                  const selectedListItem = (<ListItemBase>(
+                    (<OscdFilteredList>ev.target).selected
+                  ))!;
+
                   if (!selectedListItem) return;
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const { extref } = (<any>selectedListItem).dataset;
+
+                  const { extref } = selectedListItem.dataset;
                   // TODO: The selector function does not work correctly when there are multiple ExtRefs with the
                   // same desc and intAddr. Alas. It should index them correctly.
                   const selectedExtRefElement = this.doc.querySelector(
-                    selector('ExtRef', extref)
+                    selector('ExtRef', extref ?? 'Unknown ExtRef')
                   );
+
                   if (!selectedExtRefElement) return;
+
                   if (isSubscribed(selectedExtRefElement)) {
                     this.unsubscribe(selectedExtRefElement);
                   } else {
                     this.subscribe(selectedExtRefElement!);
-                    // can be subscribed if the right conditions are there
                   }
-                  (<ListItem>selectedListItem).selected = false;
+
+                  selectedListItem.selected = false;
+                  this.requestUpdate();
                 }}
               >
                 ${this.renderPublisherViewSubscribedExtRefs()}
@@ -1099,29 +1104,31 @@ export default class SubscriberLaterBinding extends LitElement {
               const selectedListItem = (<ListItemBase>(
                 (<OscdFilteredList>ev.target).selected
               ))!;
+
               if (!selectedListItem) return;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
               const { extref } = selectedListItem.dataset;
               const selectedExtRefElement = <Element>(
-                this.doc.querySelector(selector('ExtRef', extref ?? 'Unknown'))
+                this.doc.querySelector(
+                  selector('ExtRef', extref ?? 'Unknown ExtRef')
+                )
               );
+
               if (!selectedExtRefElement) return;
+
               if (isSubscribed(selectedExtRefElement)) {
                 this.unsubscribe(selectedExtRefElement);
 
-                const { index } = <SelectedDetail<number>>ev.detail;
-
-                selectedListItem!.selected = false;
-                selectedListItem!.activated = false;
-                this.extRefListSubscriberUI?.toggle(index, false);
-                this.extRefListSubscriberUI?.layout(true);
+                selectedListItem.selected = false;
+                selectedListItem.activated = false;
               } else {
                 this.currentSelectedExtRefElement = selectedExtRefElement;
               }
+
               this.requestUpdate();
             }}
-            >${this.renderSubscriberViewExtRefs()}</oscd-filtered-list
-          >
+            >${this.renderSubscriberViewExtRefs()}
+          </oscd-filtered-list>
         </section>`;
   }
 
@@ -1139,7 +1146,6 @@ export default class SubscriberLaterBinding extends LitElement {
         title="${msg('Alternate between Publisher and Subscriber view')}"
         @click=${async () => {
           this.fcdaListUI.items.forEach(item => {
-            // TODO: Should this rule be generally disabled, ask ca-d
             // eslint-disable-next-line no-param-reassign
             item.activated = false;
             // eslint-disable-next-line no-param-reassign
@@ -1234,7 +1240,8 @@ export default class SubscriberLaterBinding extends LitElement {
       margin: 0px 6px 0px;
       min-width: 300px;
       height: 100%;
-      overflow-y: auto;
+      overflow-y: clip;
+      overflow-x: auto;
     }
 
     @media (min-width: 700px) {
@@ -1386,8 +1393,5 @@ export default class SubscriberLaterBinding extends LitElement {
       bottom: 8px;
       right: 8px;
     }
-
-    /* TODO Button moving */
-    /* TODO: Improve vertical scrollbars */
   `;
 }
