@@ -11011,7 +11011,7 @@ class SubscriberLaterBinding extends s$1 {
               </oscd-filtered-list>`
                 : x `<h3>${msg('No published item selected')}</h3>`}
         </section>`
-            : x ` <section class="column">
+            : x ` <section class="column extref">
           ${this.renderSubscriberViewExtRefListTitle()}
           <oscd-filtered-list
             id="subscriberExtRefList"
@@ -11104,7 +11104,7 @@ SubscriberLaterBinding.styles = i$5 `
       do we need in OpenSCD special theme colours for scrollbars 
       that can be used here? */
       --scrollbarBG: var(--mdc-theme-background, #cfcfcf00);
-      --thumbBG: var(--mdc-theme-primary, #996cd8cc);
+      --thumbBG: var(--mdc-button-disabled-ink-color, #996cd8cc);
     }
 
     @media (min-width: 700px) {
@@ -11112,7 +11112,7 @@ SubscriberLaterBinding.styles = i$5 `
         flex: auto;
       }
 
-      #listContainer.subscriber-view .column {
+      #listContainer.subscriber-view .column.extref {
         resize: horizontal;
         width: 65%;
         flex: none;
@@ -11225,14 +11225,14 @@ SubscriberLaterBinding.styles = i$5 `
       --mdc-list-item-meta-size: 48px;
     }
 
-    /* required for anchors */
     section {
       position: relative;
       max-height: 100%;
+      background-color: var(--mdc-theme-surface);
     }
 
     .styled-scrollbars {
-      max-height: 78vh;
+      max-height: 100%;
       overflow: auto;
     }
 
@@ -11252,7 +11252,6 @@ SubscriberLaterBinding.styles = i$5 `
     .styled-scrollbars::-webkit-scrollbar-thumb {
       background: var(--thumbBG);
       border-radius: 6px;
-      border: 3px solid var(--scrollbarBG);
     }
 
     /* Filtering rules for ExtRefs end up implementing logic to allow
