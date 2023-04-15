@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+<xliff version="1.2"
+  xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file target-language="de" source-language="en" original="lit-localize-inputs" datatype="plaintext">
     <body>
       <trans-unit id="s7b172c6f7ac1cb0c">
@@ -62,9 +63,13 @@
         <source>Change between GOOSE and Sampled Value publishers</source>
         <target>Zwischen GOOSE- und Sampled-Value-Publishern wechseln</target>
       </trans-unit>
-      <trans-unit id="s8593cda43a906b03">
-        <source>Alternate between Publisher and Subscriber view</source>
-        <target>Zwischen Publisher- und Subscriber-Ansicht wechseln</target>
+      <trans-unit id="s8515776e84d433b7">
+        <source>Switch between Publisher and Subscriber view</source>
+        <target>Wechseln Sie zwischen Publisher- und Subscriber-Ansicht</target>
+      </trans-unit>
+      <trans-unit id="sca093ee6bf313c3e">
+        <source>Invalid Mapping</source>
+        <target>Ungültige Zuordnung</target>
       </trans-unit>
     </body>
   </file>

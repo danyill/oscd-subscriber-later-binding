@@ -485,6 +485,7 @@ export default class SubscriberLaterBinding extends LitElement {
   private updateView(): void {
     if (this.subscriberView) {
       this.listContainerUI.classList.add('subscriber-view');
+
       this.filterMenuExtRefUI.anchor = <HTMLElement>(
         this.filterMenuExtRefButtonUI
       );
@@ -511,7 +512,7 @@ export default class SubscriberLaterBinding extends LitElement {
     }
   }
 
-  protected firstUpdated(): void {
+  protected async firstUpdated(): Promise<void> {
     this.restoreSettings();
 
     this.filterMenuFcdaUI.anchor = <HTMLElement>this.filterMenuFcdaButtonUI;
@@ -524,6 +525,7 @@ export default class SubscriberLaterBinding extends LitElement {
       this.updateFcdaFilter();
     });
 
+    await this.updateComplete;
     this.updateView();
   }
 
@@ -928,6 +930,17 @@ export default class SubscriberLaterBinding extends LitElement {
       );
     }
 
+    const extRefDescription = getDescriptionAttribute(extRefElement);
+
+    const supAndctrlDescription =
+      supervisionDescription || controlBlockDescription
+        ? `${[controlBlockDescription, supervisionDescription]
+            .filter(desc => desc !== undefined)
+            .join(', ')}`
+        : nothing;
+
+    const hasInvalidMapping = bound && !subscriberFCDA;
+
     const filterClasses = {
       'show-bound': bound,
       'show-not-bound': !bound,
@@ -937,7 +950,7 @@ export default class SubscriberLaterBinding extends LitElement {
       twoline
       class="extref ${classMap(filterClasses)}"
       graphic="large"
-      ?hasMeta=${supervisionNode !== undefined}
+      ?hasMeta=${supervisionNode !== undefined || hasInvalidMapping}
       data-extref="${identity(extRefElement)}"
       value="${identity(extRefElement)}${supervisionNode
         ? ` ${identity(supervisionNode)}`
@@ -949,21 +962,26 @@ export default class SubscriberLaterBinding extends LitElement {
         ${bound && subscriberFCDA
           ? `⬌ ${identity(subscriberFCDA) ?? 'Unknown'}`
           : ''}
+        ${hasInvalidMapping ? `⬌ ${msg('Invalid Mapping')}` : ''}
       </span>
       <span slot="secondary"
-        >${getDescriptionAttribute(extRefElement)
-          ? html` ${getDescriptionAttribute(extRefElement)}`
-          : nothing}
-        ${supervisionDescription || controlBlockDescription
-          ? html`(${[controlBlockDescription, supervisionDescription]
-              .filter(desc => desc !== undefined)
-              .join(', ')})`
-          : nothing}
+        >${extRefDescription ? html` ${extRefDescription}` : nothing}
+        ${extRefDescription && supAndctrlDescription !== nothing
+          ? `(${supAndctrlDescription})`
+          : supAndctrlDescription}
       </span>
       <mwc-icon slot="graphic">${bound ? 'link' : 'link_off'}</mwc-icon>
-      ${bound && supervisionNode !== undefined
+      ${bound && supervisionNode !== undefined && !hasInvalidMapping
         ? html`<mwc-icon title="${identity(supervisionNode!)}" slot="meta"
             >monitor_heart</mwc-icon
+          >`
+        : nothing}
+      ${hasInvalidMapping
+        ? html`<mwc-icon
+            class="${hasInvalidMapping ? 'invalid-mapping' : ''}"
+            title="${msg('Invalid Mapping')}"
+            slot="meta"
+            >error</mwc-icon
           >`
         : nothing}
     </mwc-list-item>`;
@@ -1137,6 +1155,7 @@ export default class SubscriberLaterBinding extends LitElement {
           this.requestUpdate();
           await this.updateComplete;
 
+          // await for regeneration of UI and then attach anchors
           this.updateView();
         }}
       ></mwc-icon-button-toggle>
@@ -1262,6 +1281,10 @@ export default class SubscriberLaterBinding extends LitElement {
 
     #fcdaList:not(.show-subscribed) mwc-list-item.fcda.show-subscribed {
       display: none;
+    }
+
+    .invalid-mapping {
+      color: var(--mdc-theme-error, red);
     }
 
     #listContainer {
