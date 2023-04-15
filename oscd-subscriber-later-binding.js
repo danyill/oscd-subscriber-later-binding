@@ -10512,7 +10512,7 @@ class SubscriberLaterBinding extends s$1 {
             this.listContainerUI.classList.remove('subscriber-view');
         }
     }
-    firstUpdated() {
+    async firstUpdated() {
         this.restoreSettings();
         this.filterMenuFcdaUI.anchor = this.filterMenuFcdaButtonUI;
         this.filterMenuFcdaUI.addEventListener('closed', () => {
@@ -10520,6 +10520,7 @@ class SubscriberLaterBinding extends s$1 {
             this.hideNotSubscribed = !this.filterMenuFcdaUI.index.has(1);
             this.updateFcdaFilter();
         });
+        await this.updateComplete;
         this.updateView();
     }
     // eslint-disable-next-line class-methods-use-this
@@ -10856,6 +10857,13 @@ class SubscriberLaterBinding extends s$1 {
         if (supervisionNode) {
             supervisionDescription = trimIdentityParent(identity(supervisionNode));
         }
+        const extRefDescription = getDescriptionAttribute(extRefElement);
+        const supAndctrlDescription = supervisionDescription || controlBlockDescription
+            ? `${[controlBlockDescription, supervisionDescription]
+                .filter(desc => desc !== undefined)
+                .join(', ')}`
+            : A;
+        const hasInvalidMapping = bound && !subscriberFCDA;
         const filterClasses = {
             'show-bound': bound,
             'show-not-bound': !bound,
@@ -10864,7 +10872,7 @@ class SubscriberLaterBinding extends s$1 {
       twoline
       class="extref ${o(filterClasses)}"
       graphic="large"
-      ?hasMeta=${supervisionNode !== undefined}
+      ?hasMeta=${supervisionNode !== undefined || hasInvalidMapping}
       data-extref="${identity(extRefElement)}"
       value="${identity(extRefElement)}${supervisionNode
             ? ` ${identity(supervisionNode)}`
@@ -10876,21 +10884,26 @@ class SubscriberLaterBinding extends s$1 {
         ${bound && subscriberFCDA
             ? `⬌ ${(_a = identity(subscriberFCDA)) !== null && _a !== void 0 ? _a : 'Unknown'}`
             : ''}
+        ${hasInvalidMapping ? `⬌ ${msg('Invalid Mapping')}` : ''}
       </span>
       <span slot="secondary"
-        >${getDescriptionAttribute(extRefElement)
-            ? x ` ${getDescriptionAttribute(extRefElement)}`
-            : A}
-        ${supervisionDescription || controlBlockDescription
-            ? x `(${[controlBlockDescription, supervisionDescription]
-                .filter(desc => desc !== undefined)
-                .join(', ')})`
-            : A}
+        >${extRefDescription ? x ` ${extRefDescription}` : A}
+        ${extRefDescription && supAndctrlDescription !== A
+            ? `(${supAndctrlDescription})`
+            : supAndctrlDescription}
       </span>
       <mwc-icon slot="graphic">${bound ? 'link' : 'link_off'}</mwc-icon>
-      ${bound && supervisionNode !== undefined
+      ${bound && supervisionNode !== undefined && !hasInvalidMapping
             ? x `<mwc-icon title="${identity(supervisionNode)}" slot="meta"
             >monitor_heart</mwc-icon
+          >`
+            : A}
+      ${hasInvalidMapping
+            ? x `<mwc-icon
+            class="${hasInvalidMapping ? 'invalid-mapping' : ''}"
+            title="${msg('Invalid Mapping')}"
+            slot="meta"
+            >error</mwc-icon
           >`
             : A}
     </mwc-list-item>`;
@@ -11027,6 +11040,7 @@ class SubscriberLaterBinding extends s$1 {
             // required to update CSS state for filter buttons?
             this.requestUpdate();
             await this.updateComplete;
+            // await for regeneration of UI and then attach anchors
             this.updateView();
         }}
       ></mwc-icon-button-toggle>
@@ -11151,6 +11165,10 @@ SubscriberLaterBinding.styles = i$5 `
 
     #fcdaList:not(.show-subscribed) mwc-list-item.fcda.show-subscribed {
       display: none;
+    }
+
+    .invalid-mapping {
+      color: var(--mdc-theme-error, red);
     }
 
     #listContainer {

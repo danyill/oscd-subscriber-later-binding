@@ -68,7 +68,7 @@ export default class SubscriberLaterBinding extends LitElement {
     private updateExtRefFilter;
     private updateFcdaFilter;
     private updateView;
-    protected firstUpdated(): void;
+    protected firstUpdated(): Promise<void>;
     private renderSubscribedExtRefElement;
     renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult;
     renderFCDAListTitle(): TemplateResult;
