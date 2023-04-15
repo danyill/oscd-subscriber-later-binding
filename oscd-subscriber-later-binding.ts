@@ -75,6 +75,10 @@ export default class SubscriberLaterBinding extends LitElement {
   @property({ attribute: false })
   doc!: XMLDocument;
 
+  @property() docName!: string;
+
+  @property() editCount!: number;
+
   @property()
   controlTag: controlTagType = 'GSEControl'; // eventually parameterise
 
@@ -768,7 +772,7 @@ export default class SubscriberLaterBinding extends LitElement {
                 >${this.iconControlLookup[this.controlTag]}</mwc-icon
               >
             </mwc-list-item>
-            <!-- <li divider role="separator"></li> -->
+            <li divider role="separator"></li>
             ${fcdaElements.map(fcdaElement =>
               this.renderFCDA(controlElement, fcdaElement)
             )}
@@ -1018,9 +1022,12 @@ export default class SubscriberLaterBinding extends LitElement {
               this.getCachedSupervision(extRef) !== undefined
                 ? identity(this.getCachedSupervision(extRef)!)
                 : '';
+            const controlBlockDescription =
+              getFcdaSrcControlBlockDescription(extRef);
+            const extRefDescription = getDescriptionAttribute(extRef);
             return `${
               typeof extRefid === 'string' ? extRefid : ''
-            }${supervisionId}`;
+            } ${supervisionId} ${controlBlockDescription} ${extRefDescription}`;
           })
           .join(' ')}"
       >
@@ -1305,6 +1312,10 @@ export default class SubscriberLaterBinding extends LitElement {
 
     mwc-list-item {
       --mdc-list-item-meta-size: 48px;
+    }
+
+    mwc-list-item.hidden[noninteractive] + li[divider] {
+      display: none;
     }
 
     section {
