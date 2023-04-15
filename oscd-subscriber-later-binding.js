@@ -10733,7 +10733,7 @@ class SubscriberLaterBinding extends s$1 {
                 >${this.iconControlLookup[this.controlTag]}</mwc-icon
               >
             </mwc-list-item>
-            <!-- <li divider role="separator"></li> -->
+            <li divider role="separator"></li>
             ${fcdaElements.map(fcdaElement => this.renderFCDA(controlElement, fcdaElement))}
           `;
         })}
@@ -10950,7 +10950,9 @@ class SubscriberLaterBinding extends s$1 {
                 const supervisionId = this.getCachedSupervision(extRef) !== undefined
                     ? identity(this.getCachedSupervision(extRef))
                     : '';
-                return `${typeof extRefid === 'string' ? extRefid : ''}${supervisionId}`;
+                const controlBlockDescription = getFcdaSrcControlBlockDescription(extRef);
+                const extRefDescription = getDescriptionAttribute(extRef);
+                return `${typeof extRefid === 'string' ? extRefid : ''} ${supervisionId} ${controlBlockDescription} ${extRefDescription}`;
             })
                 .join(' ')}"
       >
@@ -11210,6 +11212,10 @@ SubscriberLaterBinding.styles = i$5 `
       --mdc-list-item-meta-size: 48px;
     }
 
+    mwc-list-item.hidden[noninteractive] + li[divider] {
+      display: none;
+    }
+
     section {
       position: relative;
       max-height: 100%;
@@ -11279,6 +11285,12 @@ SubscriberLaterBinding.styles = i$5 `
 __decorate([
     e$5({ attribute: false })
 ], SubscriberLaterBinding.prototype, "doc", void 0);
+__decorate([
+    e$5()
+], SubscriberLaterBinding.prototype, "docName", void 0);
+__decorate([
+    e$5()
+], SubscriberLaterBinding.prototype, "editCount", void 0);
 __decorate([
     e$5()
 ], SubscriberLaterBinding.prototype, "controlTag", void 0);

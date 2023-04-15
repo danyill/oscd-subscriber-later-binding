@@ -13,6 +13,8 @@ import type { OscdFilteredList } from './foundation/components/oscd-filtered-lis
 declare type controlTagType = 'SampledValueControl' | 'GSEControl';
 export default class SubscriberLaterBinding extends LitElement {
     doc: XMLDocument;
+    docName: string;
+    editCount: number;
     controlTag: controlTagType;
     private extRefCounters;
     get subscriberView(): boolean;
