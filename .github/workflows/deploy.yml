@@ -11,10 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Use Node.js 16
+      - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
 
       - name: Configure git
         run: |
@@ -23,12 +23,11 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-          
+
       - name: Bundle
         run: npm run-script bundle
-
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: . # The folder the action should deploy (root)
+          folder: dist
