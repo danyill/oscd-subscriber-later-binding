@@ -1,6 +1,3 @@
-/* eslint-disable no-console */
-// TODO: Remove this no-console
-// TODO: This file is rather long... and doesn't feel modular or well-abstracted. But how best to fix?
 import {
   css,
   html,
@@ -219,7 +216,6 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#publisherExtRefSection')
   publisherExtRefSectionUI?: HTMLElement;
 
-  // TODO: Do we actually use this?
   @query('#subscriberExtRefList')
   extRefListSubscriberUI?: OscdFilteredList;
 
@@ -277,16 +273,6 @@ export default class SubscriberLaterBinding extends LitElement {
     return this.extRefCounters.get(controlBlockFcdaId);
   }
 
-  // private openEditWizard(controlElement: Element): void {
-  //   // const wizard = wizards[this.controlTag].edit(controlElement);
-  //   // if (wizard) this.dispatchEvent(newWizardEvent(wizard));
-  // }
-
-  private resetSelection(): void {
-    this.currentSelectedControlElement = undefined;
-    this.currentSelectedFcdaElement = undefined;
-  }
-
   protected updated(_changedProperties: PropertyValues): void {
     super.updated(_changedProperties);
 
@@ -298,7 +284,8 @@ export default class SubscriberLaterBinding extends LitElement {
       this.currentSelectedExtRefElement = undefined;
     }
 
-    // TODO: If the same document is opened how do I force a change in core?
+    // TODO: If the same document is opened how do I force a change
+    // See: https://github.com/openscd/open-scd-core/issues/92
   }
 
   /**
@@ -476,6 +463,9 @@ export default class SubscriberLaterBinding extends LitElement {
     } else {
       filterClassList.remove('show-not-bound');
     }
+
+    // force refresh for CSS style change
+    this.requestUpdate();
   }
 
   private updateFcdaFilter(): void {
@@ -491,6 +481,9 @@ export default class SubscriberLaterBinding extends LitElement {
     } else {
       this.fcdaListUI!.classList.remove('show-not-subscribed');
     }
+
+    // force refresh for CSS style change
+    this.requestUpdate();
   }
 
   private updateView(): void {
@@ -536,7 +529,6 @@ export default class SubscriberLaterBinding extends LitElement {
     this.updateView();
   }
 
-  // TODO: Ask Christian if this is a great crime?
   // eslint-disable-next-line class-methods-use-this
   private renderSubscribedExtRefElement(
     extRefElement: Element
@@ -621,7 +613,6 @@ export default class SubscriberLaterBinding extends LitElement {
           icon="filter_list"
           @click=${() => {
             if (!this.filterMenuFcdaUI.open) this.filterMenuFcdaUI.show();
-            else this.filterMenuFcdaUI.close();
           }}
         ></mwc-icon-button>
         <mwc-menu
@@ -660,7 +651,6 @@ export default class SubscriberLaterBinding extends LitElement {
       ?activatable=${!this.subscriberView}
       class="styled-scrollbars ${classMap(filteredListClasses)}"
       @selected="${(ev: SingleSelectedEvent) => {
-        console.log('fcda selected');
         const selectedListItem = (<ListItemBase>(
           (<OscdFilteredList>ev.target).selected
         ))!;
@@ -876,7 +866,6 @@ export default class SubscriberLaterBinding extends LitElement {
         icon="filter_list"
         @click=${() => {
           if (!this.filterMenuExtRefUI.open) this.filterMenuExtRefUI.show();
-          else this.filterMenuExtRefUI.close();
         }}
       ></mwc-icon-button>
       <mwc-menu
@@ -1055,8 +1044,6 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-not-bound': !this.hideNotBound,
     };
 
-    console.log('rendering extrefs');
-
     return !this.subscriberView
       ? html`<section class="column">
           <h1>${msg('Subscriber Inputs')}</h1>
@@ -1066,7 +1053,6 @@ export default class SubscriberLaterBinding extends LitElement {
                 id="publisherExtRefList"
                 class="styled-scrollbars"
                 @selected=${(ev: SingleSelectedEvent) => {
-                  console.log('extref publisher view selected');
                   const selectedListItem = (<ListItemBase>(
                     (<OscdFilteredList>ev.target).selected
                   ))!;
@@ -1075,7 +1061,8 @@ export default class SubscriberLaterBinding extends LitElement {
 
                   const { extref } = selectedListItem.dataset;
                   // TODO: The selector function does not work correctly when there are multiple ExtRefs with the
-                  // same desc and intAddr. Alas. It should index them correctly.
+                  // same desc and intAddr.
+                  // See: https://github.com/openscd/open-scd/issues/1214
                   const selectedExtRefElement = this.doc.querySelector(
                     selector('ExtRef', extref ?? 'Unknown ExtRef')
                   );
@@ -1104,7 +1091,6 @@ export default class SubscriberLaterBinding extends LitElement {
             class="styled-scrollbars ${classMap(filteredListClasses)}"
             activatable
             @selected=${(ev: SingleSelectedEvent) => {
-              console.log('extref subscriber view selected');
               const selectedListItem = (<ListItemBase>(
                 (<OscdFilteredList>ev.target).selected
               ))!;
@@ -1155,10 +1141,15 @@ export default class SubscriberLaterBinding extends LitElement {
             // eslint-disable-next-line no-param-reassign
             item.selected = false;
           });
+
+          // reset state
           this.currentSelectedControlElement = undefined;
           this.currentSelectedFcdaElement = undefined;
+
+          // required to update CSS state for filter buttons?
           this.requestUpdate();
           await this.updateComplete;
+
           this.updateView();
         }}
       ></mwc-icon-button-toggle>
@@ -1184,9 +1175,7 @@ export default class SubscriberLaterBinding extends LitElement {
     `;
   }
 
-  // TODO: SwitchView shouldn't be fixed but should the header be sticky?
   render(): TemplateResult {
-    console.log('render called');
     return html` <div id="listContainer">
       ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
     </div>`;
@@ -1197,9 +1186,6 @@ export default class SubscriberLaterBinding extends LitElement {
       width: 100vw;
       display: flex;
 
-      /* TODO: How to apply alpha to theme colors -- 
-      do we need in OpenSCD special theme colours for scrollbars 
-      that can be used here? */
       --scrollbarBG: var(--mdc-theme-background, #cfcfcf00);
       --thumbBG: var(--mdc-button-disabled-ink-color, #996cd8cc);
     }
@@ -1260,8 +1246,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
     #filterFcdaIcon.filter-off,
     #filterExtRefIcon.filter-off {
-      /* TODO: MDC theme secondary is not defined in open-scd core? */
-      color: var(--mdc-theme-secondary);
+      color: var(--mdc-theme-secondary, #018786);
       background-color: var(--mdc-theme-background);
     }
 
