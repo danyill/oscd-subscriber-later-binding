@@ -80,7 +80,7 @@ export default class SubscriberLaterBinding extends LitElement {
   @property() editCount!: number;
 
   @property()
-  controlTag: controlTagType = 'GSEControl'; // eventually parameterise
+  controlTag: controlTagType = 'GSEControl';
 
   @state()
   private extRefCounters = new Map();
