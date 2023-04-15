@@ -52,7 +52,6 @@ export default class SubscriberLaterBinding extends LitElement {
     };
     private getControlElements;
     private getExtRefCount;
-    private resetSelection;
     protected updated(_changedProperties: PropertyValues): void;
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.

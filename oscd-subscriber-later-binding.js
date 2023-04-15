@@ -10367,14 +10367,6 @@ class SubscriberLaterBinding extends s$1 {
         }
         return this.extRefCounters.get(controlBlockFcdaId);
     }
-    // private openEditWizard(controlElement: Element): void {
-    //   // const wizard = wizards[this.controlTag].edit(controlElement);
-    //   // if (wizard) this.dispatchEvent(newWizardEvent(wizard));
-    // }
-    resetSelection() {
-        this.currentSelectedControlElement = undefined;
-        this.currentSelectedFcdaElement = undefined;
-    }
     updated(_changedProperties) {
         super.updated(_changedProperties);
         // When a new document is loaded we will reset the Map to clear old entries.
@@ -10384,7 +10376,8 @@ class SubscriberLaterBinding extends s$1 {
             this.currentSelectedFcdaElement = undefined;
             this.currentSelectedExtRefElement = undefined;
         }
-        // TODO: If the same document is opened how do I force a change in core?
+        // TODO: If the same document is opened how do I force a change
+        // See: https://github.com/openscd/open-scd-core/issues/92
     }
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.
@@ -10495,6 +10488,8 @@ class SubscriberLaterBinding extends s$1 {
         else {
             filterClassList.remove('show-not-bound');
         }
+        // force refresh for CSS style change
+        this.requestUpdate();
     }
     updateFcdaFilter() {
         // Update filter CSS rules
@@ -10510,6 +10505,8 @@ class SubscriberLaterBinding extends s$1 {
         else {
             this.fcdaListUI.classList.remove('show-not-subscribed');
         }
+        // force refresh for CSS style change
+        this.requestUpdate();
     }
     updateView() {
         if (this.subscriberView) {
@@ -10538,7 +10535,6 @@ class SubscriberLaterBinding extends s$1 {
         });
         this.updateView();
     }
-    // TODO: Ask Christian if this is a great crime?
     // eslint-disable-next-line class-methods-use-this
     renderSubscribedExtRefElement(extRefElement) {
         const supervisionNode = getExistingSupervision(extRefElement);
@@ -10613,8 +10609,6 @@ class SubscriberLaterBinding extends s$1 {
           @click=${() => {
             if (!this.filterMenuFcdaUI.open)
                 this.filterMenuFcdaUI.show();
-            else
-                this.filterMenuFcdaUI.close();
         }}
         ></mwc-icon-button>
         <mwc-menu
@@ -10652,7 +10646,6 @@ class SubscriberLaterBinding extends s$1 {
       class="styled-scrollbars ${o(filteredListClasses)}"
       @selected="${(ev) => {
             var _a, _b, _c;
-            console.log('fcda selected');
             const selectedListItem = (ev.target.selected);
             if (!selectedListItem)
                 return;
@@ -10816,8 +10809,6 @@ class SubscriberLaterBinding extends s$1 {
         @click=${() => {
             if (!this.filterMenuExtRefUI.open)
                 this.filterMenuExtRefUI.show();
-            else
-                this.filterMenuExtRefUI.close();
         }}
       ></mwc-icon-button>
       <mwc-menu
@@ -10976,7 +10967,6 @@ class SubscriberLaterBinding extends s$1 {
             'show-bound': !this.hideBound,
             'show-not-bound': !this.hideNotBound,
         };
-        console.log('rendering extrefs');
         return !this.subscriberView
             ? x `<section class="column">
           <h1>${msg('Subscriber Inputs')}</h1>
@@ -10986,13 +10976,13 @@ class SubscriberLaterBinding extends s$1 {
                 id="publisherExtRefList"
                 class="styled-scrollbars"
                 @selected=${(ev) => {
-                    console.log('extref publisher view selected');
                     const selectedListItem = (ev.target.selected);
                     if (!selectedListItem)
                         return;
                     const { extref } = selectedListItem.dataset;
                     // TODO: The selector function does not work correctly when there are multiple ExtRefs with the
-                    // same desc and intAddr. Alas. It should index them correctly.
+                    // same desc and intAddr.
+                    // See: https://github.com/openscd/open-scd/issues/1214
                     const selectedExtRefElement = this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown ExtRef'));
                     if (!selectedExtRefElement)
                         return;
@@ -11018,7 +11008,6 @@ class SubscriberLaterBinding extends s$1 {
             class="styled-scrollbars ${o(filteredListClasses)}"
             activatable
             @selected=${(ev) => {
-                console.log('extref subscriber view selected');
                 const selectedListItem = (ev.target.selected);
                 if (!selectedListItem)
                     return;
@@ -11059,8 +11048,10 @@ class SubscriberLaterBinding extends s$1 {
                 // eslint-disable-next-line no-param-reassign
                 item.selected = false;
             });
+            // reset state
             this.currentSelectedControlElement = undefined;
             this.currentSelectedFcdaElement = undefined;
+            // required to update CSS state for filter buttons?
             this.requestUpdate();
             await this.updateComplete;
             this.updateView();
@@ -11087,9 +11078,7 @@ class SubscriberLaterBinding extends s$1 {
       </mwc-icon-button-toggle>
     `;
     }
-    // TODO: SwitchView shouldn't be fixed but should the header be sticky?
     render() {
-        console.log('render called');
         return x ` <div id="listContainer">
       ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
     </div>`;
@@ -11100,9 +11089,6 @@ SubscriberLaterBinding.styles = i$5 `
       width: 100vw;
       display: flex;
 
-      /* TODO: How to apply alpha to theme colors -- 
-      do we need in OpenSCD special theme colours for scrollbars 
-      that can be used here? */
       --scrollbarBG: var(--mdc-theme-background, #cfcfcf00);
       --thumbBG: var(--mdc-button-disabled-ink-color, #996cd8cc);
     }
@@ -11163,8 +11149,7 @@ SubscriberLaterBinding.styles = i$5 `
 
     #filterFcdaIcon.filter-off,
     #filterExtRefIcon.filter-off {
-      /* TODO: MDC theme secondary is not defined in open-scd core? */
-      color: var(--mdc-theme-secondary);
+      color: var(--mdc-theme-secondary, #018786);
       background-color: var(--mdc-theme-background);
     }
 
