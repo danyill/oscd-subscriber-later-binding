@@ -1,4 +1,4 @@
-= Subscriber Later Binding Plugin: `oscd-subscriber-later-binding`
+= OpenSCD Plugin: Subscriber Later Binding
 :sectnums:
 :sectlinks:
 :toc:
@@ -16,16 +16,7 @@
 
 == What is this?
 
-This plugin is intended to allow a user to carry out later-binding
-subscriptions for IEC 61850 GOOSE and SMV.
-
-It offers a publisher and subscriber view of the data flows to allow efficient and intuitive use.
-
-.Subscriber View
-image::screenshot-subscriber-goose.png[width=800,link={imagesdir}/screenshot-subscriber-goose.png]
-
-.Publisher View
-image::screenshot-publisher-sv.png[width=800,link={imagesdir}/screenshot-publisher-sv.png]
+This plugin is intended to allow a user to carry out later-binding subscriptions for IEC 61850 GOOSE and SMV.
 
 * This is a plugin for {uri-openscd-core}[open-scd-core], the core
 editor engine for {uri-openscd}[OpenSCD].
@@ -35,7 +26,15 @@ editor engine for {uri-openscd}[OpenSCD].
 
 * This plugin uses the link:LICENSE[Apache License] and is intended for you to use, study, share and improve.
 
-Feel free to log an issue to request fixes, improvements or new features.
+It offers a publisher and subscriber view to allow efficient and intuitive use.
+
+.Subscriber View
+image::screenshot-subscriber-goose.png[width=800,link={imagesdir}/screenshot-subscriber-goose.png]
+
+.Publisher View
+image::screenshot-publisher-sv.png[width=800,link={imagesdir}/screenshot-publisher-sv.png]
+
+Feel free to log issues to request fixes, improvements or new features.
 
 == How to use?
 
