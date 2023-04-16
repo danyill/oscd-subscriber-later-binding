@@ -120,121 +120,6 @@ const defaultMsg = ((template) => isStrTagged(template)
 
 /**
  * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-/**
- * Name of the event dispatched to `window` whenever a locale change starts,
- * finishes successfully, or fails. Only relevant to runtime mode.
- *
- * The `detail` of this event is an object with a `status` string that can be:
- * "loading", "ready", or "error", along with the relevant locale code, and
- * error message if applicable.
- *
- * You can listen for this event to know when your application should be
- * re-rendered following a locale change. See also the Localized mixin, which
- * automatically re-renders LitElement classes using this event.
- */
-const LOCALE_STATUS_EVENT = 'lit-localize-status';
-
-/**
- * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-class LocalizeController {
-    constructor(host) {
-        this.__litLocalizeEventHandler = (event) => {
-            if (event.detail.status === 'ready') {
-                this.host.requestUpdate();
-            }
-        };
-        this.host = host;
-    }
-    hostConnected() {
-        window.addEventListener(LOCALE_STATUS_EVENT, this.__litLocalizeEventHandler);
-    }
-    hostDisconnected() {
-        window.removeEventListener(LOCALE_STATUS_EVENT, this.__litLocalizeEventHandler);
-    }
-}
-/**
- * Re-render the given LitElement whenever a new active locale has loaded.
- *
- * See also {@link localized} for the same functionality as a decorator.
- *
- * When using lit-localize in transform mode, calls to this function are
- * replaced with undefined.
- *
- * Usage:
- *
- *   import {LitElement, html} from 'lit';
- *   import {msg, updateWhenLocaleChanges} from '@lit/localize';
- *
- *   class MyElement extends LitElement {
- *     constructor() {
- *       super();
- *       updateWhenLocaleChanges(this);
- *     }
- *
- *     render() {
- *       return html`<b>${msg('Hello World')}</b>`;
- *     }
- *   }
- */
-const _updateWhenLocaleChanges = (host) => host.addController(new LocalizeController(host));
-const updateWhenLocaleChanges = _updateWhenLocaleChanges;
-
-/**
- * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-/**
- * Class decorator to enable re-rendering the given LitElement whenever a new
- * active locale has loaded.
- *
- * See also {@link updateWhenLocaleChanges} for the same functionality without
- * the use of decorators.
- *
- * When using lit-localize in transform mode, applications of this decorator are
- * removed.
- *
- * Usage:
- *
- *   import {LitElement, html} from 'lit';
- *   import {customElement} from 'lit/decorators.js';
- *   import {msg, localized} from '@lit/localize';
- *
- *   @localized()
- *   @customElement('my-element')
- *   class MyElement extends LitElement {
- *     render() {
- *       return html`<b>${msg('Hello World')}</b>`;
- *     }
- *   }
- */
-const _localized = () => (classOrDescriptor) => typeof classOrDescriptor === 'function'
-    ? legacyLocalized(classOrDescriptor)
-    : standardLocalized(classOrDescriptor);
-const localized = _localized;
-const standardLocalized = ({ kind, elements }) => {
-    return {
-        kind,
-        elements,
-        finisher(clazz) {
-            clazz.addInitializer(updateWhenLocaleChanges);
-        },
-    };
-};
-const legacyLocalized = (clazz) => {
-    clazz.addInitializer(updateWhenLocaleChanges);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return clazz;
-};
-
-/**
- * @license
  * Copyright 2020 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -10411,7 +10296,7 @@ const storedProperties = [
 function trimIdentityParent(idString) {
     return idString.split('>').slice(1).join('>').trim().slice(1);
 }
-let SubscriberLaterBinding = class SubscriberLaterBinding extends s$1 {
+class SubscriberLaterBinding extends s$1 {
     constructor() {
         super(...arguments);
         this.controlTag = 'SampledValueControl';
@@ -11182,7 +11067,7 @@ let SubscriberLaterBinding = class SubscriberLaterBinding extends s$1 {
       ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
     </div>`;
     }
-};
+}
 SubscriberLaterBinding.styles = i$5 `
     :host {
       width: 100vw;
@@ -11478,10 +11363,6 @@ __decorate([
 __decorate([
     t$1()
 ], SubscriberLaterBinding.prototype, "currentSelectedExtRefElement", void 0);
-SubscriberLaterBinding = __decorate([
-    localized()
-], SubscriberLaterBinding);
-var SubscriberLaterBinding$1 = SubscriberLaterBinding;
 
-export { SubscriberLaterBinding$1 as default };
+export { SubscriberLaterBinding as default };
 //# sourceMappingURL=oscd-subscriber-later-binding.js.map
