@@ -21,14 +21,11 @@ subscriptions for IEC 61850 GOOSE and SMV.
 
 It offers a publisher and subscriber view of the data flows to allow efficient and intuitive use.
 
-[cols="2*a"]
-|===
-|.Subscriber View
-image::screenshot-subscriber-goose.png[]
+.Subscriber View
+image::screenshot-subscriber-goose.png[width=800,link={imagesdir}/screenshot-subscriber-goose.png]
 
-|.Publisher View
-image::screenshot-publisher-sv.png[]
-|===
+.Publisher View
+image::screenshot-publisher-sv.png[width=800,link={imagesdir}/screenshot-publisher-sv.png]
 
 * This is a plugin for {uri-openscd-core}[open-scd-core], the core
 editor engine for {uri-openscd}[OpenSCD].
