@@ -1,20 +1,66 @@
-== <oscd-subscriber-later-binding>
+= Subscriber Later Binding Plugin: `oscd-subscriber-later-binding`
+:sectnums:
+:sectlinks:
+:toc:
+:uri-openscd-core: https://github.com/openscd/open-scd-core#readme
+:uri-openscd: https://github.com/openscd/open-scd
+:uri-openwc: https://github.com/open-wc/open-wc
+:uri-plugin: https://github.com/danyill/oscd-subscriber-later-binding
+:uri-ci-bundle: https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js
 
-This webcomponent follows the
-https://github.com/open-wc/open-wc[open-wc] recommendation.
+:imagesdir: docs/media
 
-=== What is this?
-
-This is a plugin for
-https://github.com/openscd/open-scd-core#readme[open-scd-core], the core
-editor engine for OpenSCD.
+== What is this?
 
 This plugin is intended to allow a user to carry out later-binding
-subscriptions for GOOSE and SMV.
+subscriptions for IEC 61850 GOOSE and SMV.
 
-Start up a demo server with `npm start` and see for yourself!
+.Plugin Screenshot
+image::screenshot.png[]
 
-=== Linting and formatting
+* This is a plugin for {uri-openscd-core}[open-scd-core], the core
+editor engine for {uri-openscd}[OpenSCD].
+
+* This plugin is a web component and follows the
+{uri-openwc}[open-wc] recommendations.
+
+
+
+
+
+== How to use?
+
+
+=== As a demo
+
+. Clone this project:
++
+[subs=+attributes]
+....
+$ git clone {uri-plugin}
+....
+
+. Install dependencies
+
+  $ npm i
+
+. Start up a demo server 
+
+  $ npm run start
+
+. Open in your browser locally at http://localhost:8000/demo/
+
+=== As part of a distribution
+
+TODO: Something belongs here...
+
+=== As part of the OpenSCD distribution
+
+
+
+
+
+== Linting and formatting
 
 To scan the project for linting and formatting errors, run
 
@@ -30,14 +76,7 @@ To automatically fix linting and formatting errors, run
 npm run format
 ----
 
-=== Testing with Web Test Runner
-
-____
-This demo plugin does nothing much that could be tested as it relies
-exclusively on built-in browser components to do its job. We therefore
-currently have no tests. If you find something that could be tested,
-please feel free!
-____
+== Testing with Web Test Runner
 
 To execute a single test run:
 
