@@ -19,13 +19,16 @@
 This plugin is intended to allow a user to carry out later-binding
 subscriptions for IEC 61850 GOOSE and SMV.
 
-It offers either both a publisher and subscriber view of the data flows to allow efficient and intuitive use.
+It offers a publisher and subscriber view of the data flows to allow efficient and intuitive use.
 
-.Subscriber View
+[cols="2*a"]
+|===
+|.Subscriber View
 image::screenshot-subscriber-goose.png[]
 
-.Publisher View
+|.Publisher View
 image::screenshot-publisher-sv.png[]
+|===
 
 * This is a plugin for {uri-openscd-core}[open-scd-core], the core
 editor engine for {uri-openscd}[OpenSCD].
@@ -79,7 +82,7 @@ IMPORTANT: Currently the reactive update cycle in OpenSCD doesn't optimally supp
 This is the URL of the bundle built by CI and is always the latest alpha version of this plugin.
 +
 .OpenSCD Add Custom Extension Screen
-image::screenshot-add-extension.png[]
+image::screenshot-add-extension.png[width=300]
 
 . Click on menu:Add[].
 
@@ -115,7 +118,7 @@ IMPORTANT: Currently this doesn't work...
 
 . Click OK on the summary, it should like similar to that shown below:
 +
-image::screenshot-openscd-core-add.png[width=400]
+image::screenshot-openscd-core-add.png[width=250]
 
 . Open a file and enjoy!
 
@@ -173,7 +176,7 @@ To run a local development server that serves the basic demo located in
 
 == Credit
 
-This plugin was refactored from base code in OpenSCD and relies on the code, architecture and review effort of multiple people other than the author of this plugin, including:
+This plugin was refactored from base code in OpenSCD and relies on the code, architecture and review effort of multiple people other than the authors of this plugin, including:
 
 * Rob Tjalma
 * Dennis Labordus
