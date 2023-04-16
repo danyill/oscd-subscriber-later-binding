@@ -7,7 +7,7 @@ import {
   SVGTemplateResult,
   TemplateResult,
 } from 'lit';
-import { msg } from '@lit/localize';
+import { localized, msg } from '@lit/localize';
 import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
@@ -104,6 +104,7 @@ function trimIdentityParent(idString: string): string {
   return idString.split('>').slice(1).join('>').trim().slice(1);
 }
 
+@localized()
 export default class SubscriberLaterBinding extends LitElement {
   @property({ attribute: false })
   doc!: XMLDocument;
