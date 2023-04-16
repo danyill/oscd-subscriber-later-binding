@@ -2,21 +2,30 @@
 :sectnums:
 :sectlinks:
 :toc:
+:imagesdir: docs/media
+:icons: font
+:experimental:
+:uri-action-translate-ci-bundle: https://jakobvogelsang.github.io/oscd-action-translate/oscd-action-translate.js
 :uri-openscd-core: https://github.com/openscd/open-scd-core#readme
 :uri-openscd: https://github.com/openscd/open-scd
+:uri-openscd-app: https://openscd.github.io
+:uri-openscd-core-app: https://openscd.github.io/open-scd/
 :uri-openwc: https://github.com/open-wc/open-wc
 :uri-plugin: https://github.com/danyill/oscd-subscriber-later-binding
 :uri-ci-bundle: https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js
-
-:imagesdir: docs/media
 
 == What is this?
 
 This plugin is intended to allow a user to carry out later-binding
 subscriptions for IEC 61850 GOOSE and SMV.
 
-.Plugin Screenshot
-image::screenshot.png[]
+It offers either both a publisher and subscriber view of the data flows to allow efficient and intuitive use.
+
+.Subscriber View
+image::screenshot-subscriber-goose.png[]
+
+.Publisher View
+image::screenshot-publisher-sv.png[]
 
 * This is a plugin for {uri-openscd-core}[open-scd-core], the core
 editor engine for {uri-openscd}[OpenSCD].
@@ -24,14 +33,13 @@ editor engine for {uri-openscd}[OpenSCD].
 * This plugin is a web component and follows the
 {uri-openwc}[open-wc] recommendations.
 
+* This plugin uses the link:LICENSE[Apache License] and is intended for you to use, study, share and improve.
 
-
-
+Feel free to log an issue to request fixes, improvements or new features.
 
 == How to use?
 
-
-=== As a demo
+=== Locally for testing
 
 . Clone this project:
 +
@@ -50,17 +58,70 @@ $ git clone {uri-plugin}
 
 . Open in your browser locally at http://localhost:8000/demo/
 
-=== As part of a distribution
+=== As part of your own distribution
 
-TODO: Something belongs here...
+NOTE: Something belongs here...
+
+// TODO: Add instructions here
 
 === As part of the OpenSCD distribution
 
+TIP: OpenSCD is transitioning to use of `open-scd-core`, these instructions will require updating at the end of this transition.
 
+IMPORTANT: Currently the reactive update cycle in OpenSCD doesn't optimally support this plugin's behaviour -- it scrolls to the top of lists after a subscription is made or one of the window panes may go blank. This is a known issue and under investigation.
 
+. Open your OpenSCD distribution or use {uri-openscd-app}.
 
+. Create a custom extension by going to menu:menu[Extensions>Add Custom Extension].
 
-== Linting and formatting
+. Enter the name 'Subscriber Later Binding', select 'Editor tab' and enter {uri-ci-bundle} as the URL.
++
+This is the URL of the bundle built by CI and is always the latest alpha version of this plugin.
++
+.OpenSCD Add Custom Extension Screen
+image::screenshot-add-extension.png[]
+
+. Click on menu:Add[].
+
+. Until OpenSCD is fully transitioned to open-scd-core, a conversion plugin is also required to interface between the old and new APIs.
+
+. Create another custom extension by going to menu:menu[Extensions>Add Custom Extension].
+
+. Enter the name 'Action Translate', select 'Menu entry' and enter {uri-action-translate-ci-bundle} as the URL.
++
+This is the URL of the bundle built by CI and is always the latest alpha version of this plugin.
+
+. You should now be able to scroll across in the menu-bar and find a tab, "Subscriber Later Binding"
++
+TIP: If there are too many editor plugin, hold down shift and wheel-mouse up and down to scroll them easily.
+
+=== Online Using the Latest open-scd-core
+
+IMPORTANT: Currently this doesn't work...
+
+. The latest core is available at {uri-openscd-core-app}.
+
+. Go to menu:Menu[Add plugins...]
+
+. Select Cancel - this is an editor plugin.
+
+. Select OK to required a loaded document.
+
+. Choose a plugin name of 'Subscriber Later Binding'.
+
+. Choose a plugin icon of 'link'
+
+. Provide a plugin source URI of: {uri-ci-bundle}
+
+. Click OK on the summary, it should like similar to that shown below:
++
+image::screenshot-openscd-core-add.png[width=400]
+
+. Open a file and enjoy!
+
+== Development
+
+=== Linting and formatting
 
 To scan the project for linting and formatting errors, run
 
@@ -76,7 +137,7 @@ To automatically fix linting and formatting errors, run
 npm run format
 ----
 
-== Testing with Web Test Runner
+=== Testing with Web Test Runner
 
 To execute a single test run:
 
@@ -109,5 +170,14 @@ npm start
 
 To run a local development server that serves the basic demo located in
 `demo/index.html`
+
+== Credit
+
+This plugin was refactored from base code in OpenSCD and relies on the code, architecture and review effort of multiple people other than the author of this plugin, including:
+
+* Rob Tjalma
+* Dennis Labordus
+* Jakob Vogelsang
+* Juan Munoz
 
 © 2023 OpenSCD Daniel Mulholland, Christian Dinkel
