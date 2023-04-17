@@ -43,6 +43,7 @@ import {
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
   instantiateSubscriptionSupervision,
+  isPartiallyConfigured,
   isSubscribed,
   removeSubscriptionSupervision,
   unsupportedExtRefElement,
@@ -179,7 +180,7 @@ export default class SubscriberLaterBinding extends LitElement {
   extRefListSubscriberSelectedUI?: ListItem;
 
   @query('#fcdaList mwc-list-item[selected]')
-  fcdaListSubscriberSelectedUI?: ListItem;
+  fcdaListSelectedUI?: ListItem;
 
   @state()
   private extRefCounters = new Map();
@@ -272,6 +273,20 @@ export default class SubscriberLaterBinding extends LitElement {
       this.currentSelectedControlElement = undefined;
       this.currentSelectedFcdaElement = undefined;
       this.currentSelectedExtRefElement = undefined;
+
+      // deselect in UI
+      if (this.extRefListSubscriberSelectedUI) {
+        this.extRefListSubscriberSelectedUI.selected = false;
+        this.extRefListSubscriberSelectedUI.activated = false;
+      }
+
+      if (this.fcdaListSelectedUI) {
+        this.fcdaListSelectedUI.selected = false;
+        this.fcdaListSelectedUI.activated = false;
+      }
+
+      // force CSS refresh to remove selected/activated indication
+      this.requestUpdate();
     }
 
     const settingsUpdateRequired = Array.from(_changedProperties.keys()).some(
@@ -647,11 +662,12 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-not-subscribed': !this.hideNotSubscribed,
     };
 
+    // TODO: Activatable is not working correctly on very large files
     return html`<oscd-filtered-list
       id="fcdaList"
       ?activatable=${!this.subscriberView}
       class="styled-scrollbars ${classMap(filteredListClasses)}"
-      @selected="${(ev: SingleSelectedEvent) => {
+      @selected="${async (ev: SingleSelectedEvent) => {
         const selectedListItem = (<ListItemBase>(
           (<OscdFilteredList>ev.target).selected
         ))!;
@@ -665,6 +681,12 @@ export default class SubscriberLaterBinding extends LitElement {
         this.currentSelectedFcdaElement =
           this.doc.querySelector(selector('FCDA', fcda ?? 'Unknown')) ??
           undefined;
+
+        // force update of text filter - breaks abstraction
+        // TODO: FIXME
+        // this.requestUpdate();
+        // await this.updateComplete;
+        // this.extRefListPublisherUI?.onFilterInput();
 
         // only continue if conditions for subscription met
         if (
@@ -816,30 +838,40 @@ export default class SubscriberLaterBinding extends LitElement {
       <li divider role="separator"></li>
       ${availableExtRefs.length > 0
         ? html`${availableExtRefs.map(
-            extRefElement => html` <mwc-list-item
-              graphic="large"
-              ?disabled=${unsupportedExtRefElement(
-                extRefElement,
-                this.currentSelectedFcdaElement,
-                this.currentSelectedControlElement
-              )}
-              twoline
-              class="extref"
-              data-extref="${identity(extRefElement)}"
-              value="${identity(extRefElement)}"
-            >
-              <span>
-                ${extRefElement.getAttribute('intAddr')}
-                ${getDescriptionAttribute(extRefElement)
-                  ? html` (${getDescriptionAttribute(extRefElement)})`
-                  : nothing}
-              </span>
-              <span slot="secondary"
-                >${identity(extRefElement.parentElement)}</span
+            extRefElement =>
+              html`<mwc-list-item
+                graphic="large"
+                ?disabled=${unsupportedExtRefElement(
+                  extRefElement,
+                  this.currentSelectedFcdaElement,
+                  this.currentSelectedControlElement
+                )}
+                ?hasMeta=${isPartiallyConfigured(extRefElement)}
+                twoline
+                class="extref"
+                data-extref="${identity(extRefElement)}"
+                value="${identity(extRefElement)}"
               >
-              <mwc-icon slot="graphic">link_off</mwc-icon>
-            </mwc-list-item>`
-          )}`
+                <span>
+                  ${extRefElement.getAttribute('intAddr')}
+                  ${getDescriptionAttribute(extRefElement)
+                    ? html` (${getDescriptionAttribute(extRefElement)})`
+                    : nothing}
+                </span>
+                <span slot="secondary"
+                  >${identity(extRefElement.parentElement)}</span
+                >
+                <mwc-icon slot="graphic">link_off</mwc-icon>
+                ${isPartiallyConfigured(extRefElement)
+                  ? html`<mwc-icon
+                      slot="meta"
+                      class="invalid-mapping"
+                      title="${msg('Invalid Mapping')}"
+                      >warning</mwc-icon
+                    >`
+                  : ''}
+              </mwc-list-item>`
+          )}}`
         : html`<mwc-list-item graphic="large" noninteractive>
             ${msg('No available inputs to subscribe')}
           </mwc-list-item>`}
@@ -939,7 +971,9 @@ export default class SubscriberLaterBinding extends LitElement {
             .join(', ')}`
         : nothing;
 
-    const hasInvalidMapping = bound && !subscriberFCDA;
+    const hasInvalidMapping =
+      (bound && !subscriberFCDA) ||
+      (!bound && isPartiallyConfigured(extRefElement));
 
     const filterClasses = {
       'show-bound': bound,
@@ -1142,9 +1176,9 @@ export default class SubscriberLaterBinding extends LitElement {
           this.subscriberView = this.switchViewUI?.on ?? false;
 
           // deselect in UI
-          if (this.fcdaListSubscriberSelectedUI) {
-            this.fcdaListSubscriberSelectedUI.selected = false;
-            this.fcdaListSubscriberSelectedUI.activated = false;
+          if (this.fcdaListSelectedUI) {
+            this.fcdaListSelectedUI.selected = false;
+            this.fcdaListSelectedUI.activated = false;
           }
 
           // reset state

@@ -385,6 +385,32 @@ export function isSubscribed(extRefElement: Element): boolean {
 }
 
 /**
+ * Check if the ExtRef is already partially subscribed to a FCDA Element.
+ *
+ * @param extRefElement - The Ext Ref Element to check.
+ */
+export function isPartiallyConfigured(extRefElement: Element): boolean {
+  const partialConfigElements = [
+    'iedName',
+    'ldInst',
+    'prefix',
+    'lnClass',
+    'lnInst',
+    'doName',
+    'daName',
+    'srcLDInst',
+    'srcPrefix',
+    'srcLNClass',
+    'srcLNInst',
+    'srcCBName',
+  ];
+
+  return partialConfigElements.some(
+    attr => extRefElement.getAttribute(attr) !== null
+  );
+}
+
+/**
  * Return Val elements within an LGOS/LSVS instance for a particular IED and control block type.
  * @param ied - IED SCL element.
  * @param cbTagName - Either GSEControl or (defaults to) SampledValueControl.
