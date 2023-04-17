@@ -40,6 +40,12 @@ export declare function getExistingSupervision(extRef: Element | null): Element 
  */
 export declare function isSubscribed(extRefElement: Element): boolean;
 /**
+ * Check if the ExtRef is already partially subscribed to a FCDA Element.
+ *
+ * @param extRefElement - The Ext Ref Element to check.
+ */
+export declare function isPartiallyConfigured(extRefElement: Element): boolean;
+/**
  * Counts the max number of LN instances with supervision allowed for
  * the given control block's type of message.
  *

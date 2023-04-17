@@ -36,7 +36,7 @@ export default class SubscriberLaterBinding extends LitElement {
     publisherExtRefSectionUI?: HTMLElement;
     extRefListSubscriberUI?: OscdFilteredList;
     extRefListSubscriberSelectedUI?: ListItem;
-    fcdaListSubscriberSelectedUI?: ListItem;
+    fcdaListSelectedUI?: ListItem;
     private extRefCounters;
     currentSelectedControlElement: Element | undefined;
     currentSelectedFcdaElement: Element | undefined;
