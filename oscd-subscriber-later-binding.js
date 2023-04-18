@@ -10699,10 +10699,16 @@ class SubscriberLaterBinding extends s$1 {
             // if incrementing, click on next ExtRef list item if not subscribed
             if (this.extRefListSubscriberSelectedUI && !this.notAutoIncrement) {
                 const nextActivatableItem = (this.extRefListSubscriberUI.querySelector('mwc-list-item[activated].extref ~ mwc-list-item.extref'));
-                const { extref } = nextActivatableItem.dataset;
-                const nextExtRef = (_c = this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown'))) !== null && _c !== void 0 ? _c : undefined;
-                if (nextActivatableItem && nextExtRef && !isSubscribed(nextExtRef)) {
-                    nextActivatableItem.click();
+                if (nextActivatableItem) {
+                    const { extref } = nextActivatableItem.dataset;
+                    const nextExtRef = (_c = this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown'))) !== null && _c !== void 0 ? _c : undefined;
+                    if (nextExtRef && !isSubscribed(nextExtRef)) {
+                        nextActivatableItem.click();
+                    }
+                    else {
+                        this.extRefListSubscriberSelectedUI.selected = false;
+                        this.extRefListSubscriberSelectedUI.activated = false;
+                    }
                 }
                 else {
                     // next ExtRef is already bound, deselect
