@@ -10358,7 +10358,13 @@ class SubscriberLaterBinding extends s$1 {
     }
     getControlElements(controlTag) {
         if (this.doc) {
-            return Array.from(this.doc.querySelectorAll(`LN0 > ${controlTag}`));
+            return Array.from(this.doc.querySelectorAll(`LN0 > ${controlTag}`)).filter(control => {
+                var _a, _b, _c;
+                return !this.subscriberView ||
+                    !this.currentSelectedExtRefElement ||
+                    ((_a = control.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name')) !==
+                        ((_c = (_b = this.currentSelectedExtRefElement) === null || _b === void 0 ? void 0 : _b.closest('IED')) === null || _c === void 0 ? void 0 : _c.getAttribute('name'));
+            });
         }
         return [];
     }
@@ -10818,7 +10824,7 @@ class SubscriberLaterBinding extends s$1 {
                       >warning</mwc-icon
                     >`
                 : ''}
-              </mwc-list-item>`)}}`
+              </mwc-list-item>`)}`
             : x `<mwc-list-item graphic="large" noninteractive>
             ${msg('No available inputs to subscribe')}
           </mwc-list-item>`}
@@ -10852,14 +10858,14 @@ class SubscriberLaterBinding extends s$1 {
           left
           ?selected=${!this.hideBound}
         >
-          <span>${msg('Bound')}</span>
+          <span>${msg('Subscribed')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="show-not-bound"
           left
           ?selected=${!this.hideNotBound}
         >
-          <span>${msg('Unbound')}</span>
+          <span>${msg('Not Subscribed')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
@@ -10895,8 +10901,8 @@ class SubscriberLaterBinding extends s$1 {
         let supervisionNode;
         let controlBlockDescription;
         let supervisionDescription;
-        const bound = isSubscribed(extRefElement);
-        if (bound) {
+        const subscribed = isSubscribed(extRefElement);
+        if (subscribed) {
             subscriberFCDA = findFCDAs$1(extRefElement).find(x => x !== undefined);
             supervisionNode = this.getCachedSupervision(extRefElement);
             controlBlockDescription =
@@ -10911,11 +10917,11 @@ class SubscriberLaterBinding extends s$1 {
                 .filter(desc => desc !== undefined)
                 .join(', ')}`
             : A;
-        const hasInvalidMapping = (bound && !subscriberFCDA) ||
-            (!bound && isPartiallyConfigured(extRefElement));
+        const hasInvalidMapping = (subscribed && !subscriberFCDA) ||
+            (!subscribed && isPartiallyConfigured(extRefElement));
         const filterClasses = {
-            'show-bound': bound,
-            'show-not-bound': !bound,
+            'show-bound': subscribed,
+            'show-not-bound': !subscribed,
         };
         return x `<mwc-list-item
       twoline
@@ -10930,7 +10936,7 @@ class SubscriberLaterBinding extends s$1 {
       <span>
         ${trimIdentityParent(identity(extRefElement.parentElement))}:
         ${extRefElement.getAttribute('intAddr')}
-        ${bound && subscriberFCDA
+        ${subscribed && subscriberFCDA
             ? `⬌ ${(_a = identity(subscriberFCDA)) !== null && _a !== void 0 ? _a : 'Unknown'}`
             : ''}
         ${hasInvalidMapping ? `⬌ ${msg('Invalid Mapping')}` : ''}
@@ -10941,8 +10947,8 @@ class SubscriberLaterBinding extends s$1 {
             ? `(${supAndctrlDescription})`
             : supAndctrlDescription}
       </span>
-      <mwc-icon slot="graphic">${bound ? 'link' : 'link_off'}</mwc-icon>
-      ${bound && supervisionNode !== undefined && !hasInvalidMapping
+      <mwc-icon slot="graphic">${subscribed ? 'link' : 'link_off'}</mwc-icon>
+      ${subscribed && supervisionNode !== undefined && !hasInvalidMapping
             ? x `<mwc-icon title="${identity(supervisionNode)}" slot="meta"
             >monitor_heart</mwc-icon
           >`
@@ -11053,6 +11059,8 @@ class SubscriberLaterBinding extends s$1 {
                     // deselect in UI
                     selectedListItem.selected = false;
                     selectedListItem.activated = false;
+                    // process de-selection to allow an additional click to unsubscribe
+                    this.requestUpdate();
                 }
                 else {
                     this.currentSelectedExtRefElement = selectedExtRefElement;
