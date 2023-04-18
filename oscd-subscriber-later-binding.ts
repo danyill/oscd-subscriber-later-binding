@@ -239,7 +239,17 @@ export default class SubscriberLaterBinding extends LitElement {
 
   private getControlElements(controlTag: controlTagType): Element[] {
     if (this.doc) {
-      return Array.from(this.doc.querySelectorAll(`LN0 > ${controlTag}`));
+      return Array.from(
+        this.doc.querySelectorAll(`LN0 > ${controlTag}`)
+      ).filter(
+        control =>
+          !this.subscriberView ||
+          !this.currentSelectedExtRefElement ||
+          control.closest('IED')?.getAttribute('name') !==
+            this.currentSelectedExtRefElement
+              ?.closest('IED')
+              ?.getAttribute('name')
+      );
     }
     return [];
   }
@@ -709,13 +719,18 @@ export default class SubscriberLaterBinding extends LitElement {
               'mwc-list-item[activated].extref ~ mwc-list-item.extref'
             )
           );
-          const { extref } = (<ListItem>nextActivatableItem).dataset;
-          const nextExtRef =
-            this.doc.querySelector(selector('ExtRef', extref ?? 'Unknown')) ??
-            undefined;
 
-          if (nextActivatableItem && nextExtRef && !isSubscribed(nextExtRef)) {
-            nextActivatableItem.click();
+          if (nextActivatableItem) {
+            const { extref } = (<ListItem>nextActivatableItem).dataset;
+            const nextExtRef =
+              this.doc.querySelector(selector('ExtRef', extref ?? 'Unknown')) ??
+              undefined;
+            if (nextExtRef && !isSubscribed(nextExtRef)) {
+              nextActivatableItem.click();
+            } else {
+              this.extRefListSubscriberSelectedUI.selected = false;
+              this.extRefListSubscriberSelectedUI.activated = false;
+            }
           } else {
             // next ExtRef is already bound, deselect
             this.extRefListSubscriberSelectedUI.selected = false;
@@ -871,7 +886,7 @@ export default class SubscriberLaterBinding extends LitElement {
                     >`
                   : ''}
               </mwc-list-item>`
-          )}}`
+          )}`
         : html`<mwc-list-item graphic="large" noninteractive>
             ${msg('No available inputs to subscribe')}
           </mwc-list-item>`}
@@ -905,14 +920,14 @@ export default class SubscriberLaterBinding extends LitElement {
           left
           ?selected=${!this.hideBound}
         >
-          <span>${msg('Bound')}</span>
+          <span>${msg('Subscribed')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="show-not-bound"
           left
           ?selected=${!this.hideNotBound}
         >
-          <span>${msg('Unbound')}</span>
+          <span>${msg('Not Subscribed')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
@@ -947,9 +962,9 @@ export default class SubscriberLaterBinding extends LitElement {
     let controlBlockDescription: string | undefined;
     let supervisionDescription: string | undefined;
 
-    const bound = isSubscribed(extRefElement);
+    const subscribed = isSubscribed(extRefElement);
 
-    if (bound) {
+    if (subscribed) {
       subscriberFCDA = findFCDAs(extRefElement).find(x => x !== undefined);
       supervisionNode = this.getCachedSupervision(extRefElement);
       controlBlockDescription =
@@ -972,12 +987,12 @@ export default class SubscriberLaterBinding extends LitElement {
         : nothing;
 
     const hasInvalidMapping =
-      (bound && !subscriberFCDA) ||
-      (!bound && isPartiallyConfigured(extRefElement));
+      (subscribed && !subscriberFCDA) ||
+      (!subscribed && isPartiallyConfigured(extRefElement));
 
     const filterClasses = {
-      'show-bound': bound,
-      'show-not-bound': !bound,
+      'show-bound': subscribed,
+      'show-not-bound': !subscribed,
     };
 
     return html`<mwc-list-item
@@ -993,7 +1008,7 @@ export default class SubscriberLaterBinding extends LitElement {
       <span>
         ${trimIdentityParent(<string>identity(extRefElement.parentElement))}:
         ${extRefElement.getAttribute('intAddr')}
-        ${bound && subscriberFCDA
+        ${subscribed && subscriberFCDA
           ? `⬌ ${identity(subscriberFCDA) ?? 'Unknown'}`
           : ''}
         ${hasInvalidMapping ? `⬌ ${msg('Invalid Mapping')}` : ''}
@@ -1004,8 +1019,8 @@ export default class SubscriberLaterBinding extends LitElement {
           ? `(${supAndctrlDescription})`
           : supAndctrlDescription}
       </span>
-      <mwc-icon slot="graphic">${bound ? 'link' : 'link_off'}</mwc-icon>
-      ${bound && supervisionNode !== undefined && !hasInvalidMapping
+      <mwc-icon slot="graphic">${subscribed ? 'link' : 'link_off'}</mwc-icon>
+      ${subscribed && supervisionNode !== undefined && !hasInvalidMapping
         ? html`<mwc-icon title="${identity(supervisionNode!)}" slot="meta"
             >monitor_heart</mwc-icon
           >`
@@ -1149,6 +1164,8 @@ export default class SubscriberLaterBinding extends LitElement {
                 // deselect in UI
                 selectedListItem.selected = false;
                 selectedListItem.activated = false;
+                // process de-selection to allow an additional click to unsubscribe
+                this.requestUpdate();
               } else {
                 this.currentSelectedExtRefElement = selectedExtRefElement;
               }
