@@ -38,14 +38,6 @@
         <source>Filter</source>
         <target>Filter</target>
       </trans-unit>
-      <trans-unit id="se275ef18f06cf8eb">
-        <source>Bound</source>
-        <target>Gebunden</target>
-      </trans-unit>
-      <trans-unit id="se7a38a6492965c7a">
-        <source>Unbound</source>
-        <target>Ungebunden</target>
-      </trans-unit>
       <trans-unit id="s9d8b8aa2b404c2c8">
         <source>Settings</source>
         <target>Einstellungen</target>
