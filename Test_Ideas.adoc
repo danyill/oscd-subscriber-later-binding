@@ -1,0 +1,130 @@
+
+= Subscriber Plugin Tests
+
+* Tests should generally be done for both GOOSE and SMV.
+
+== Publisher View
+
+=== Views of Data
+
+* Can select an FCDA
+** Activation shows
+** ExtRef list updates
+** With an FCDA selected the ExtRefs does not including the FCDAs parent IED
+
+* Can see an ExtRef which has an invalid mapping (e.g. SEL quality)
+
+* Can see an ExtRef which has a mapping to a non-present FCDA (in this file)
+(should we distingusih this visually?)
+
+* Can filter FCDAs using a text search
+
+* Can filter ExtRefs using a text search
+
+* When filtering FCDAs, when an FCDA is selected, a text filter in the ExtRef view is updated
+
+* Can see a supervision instance's name and the supervision icon if present
+
+* Filtering of FCDAs is preserved across reloads of the page with local storage not refreshed
+* Filtering of ExtRefs is preserved across reloads of the page with local storage not refreshed
+
+* If pXX attributes are specified then the correct items are grayed out in the ExtRef list
+
+* If there is a data object rather than a data attribute, it is greyed out but otherwise displays correctly
+
+
+=== Subscription
+
+
+* When an FCDA is selected and an ExtRef is selected a subscription is made (without a supervision)
+
+* As above but with undo/redo
+
+* When an FCDA is selected and an ExtRef is selected a subscription is made (with a supervision)
+
+* As above but with undo/redo
+
+* WHen an FCDA is selected and an ExtRef is selected which has an invalid mapping a subscription is made
+
+* As above but with undo/redo
+
+* When an FCDA is selected and an ExtRef which is disabled is attempted to be selected, there is no action
+
+* edit Count remains the same
+
+* When an ExtRef which is subscribed is selected the subscription is removed and returns to the available subscription list
+
+
+== Subcriber View
+
+* Can select an ExtRef
+** Activation shows
+** FCDA list updates
+** With an ExtRef selected the FCDA list does not including the ExtRefs parent IED
+
+* Can see an ExtRef which has an invalid mapping (e.g. SEL quality)
+
+* Can see an ExtRef which has a mapping to a non-present FCDA (in this file)
+(should we distingusih this visually?)
+
+* Can filter ExtRefs using a text search
+
+* Can filter FCDAs using a text search
+
+* When filtering ExtRefss, when an ExtRef is selected, a text filter in the FCDA view is updated
+
+* Can see a supervision instance's name and the supervision icon if present in ExtRef view
+
+* Filtering of ExtRefs is preserved across reloads of the page with local storage not refreshed
+* Filtering of FCDAs  is preserved across reloads of the page with local storage not refreshed
+
+* If pXX attributes are specified then the correct items are grayed out in the FCDA list on ExtRef selectin
+
+* If there is a data object rather than a data attribute, it is greyed out but otherwise displays correctly in the FCDA list
+
+* With the FCDA filters on "unsubscribed only", items disappear from the FCDA list as they are subscribed
+
+* With the FCDA filters on "subscribed only", items disappear from the FCDA list as they are unsubscribed
+
+
+=== Subscription
+
+NOTE: With auto-increment off initially
+
+* When an ExtRef is selected it becomes activated and the FCDA list is updated (removing the ExtRef's IED)
+
+* When an FCDA is then selected a subscription is made (without a supervision)
+
+* As above but with undo/redo
+
+* When an ExtRef is selected and an FCDA is selected a subscription is made (with a supervision)
+
+* As above but with undo/redo
+
+* When an ExtRef is selected with an invalid mapping and an FCDA is selected a subscription is made
+
+* As above but with undo/redo
+
+* When an ExtRef is selected and an FCDA which is disabled is attempted to be selected, there is no action
+
+* edit Count remains the same
+
+* When an ExtRef which is subscribed is selected the subscription is removed and returns to the available subscription list
+
+Now with filters on:
+
+If Subscribed filter is on the in the ExtRef list, items disappear as they are clicked on
+If Subscribed filter is on the in the ExtRef list and there is a text filter, items disappear as they are clicked on correctly
+
+If the FCDA filters are on unsubscribed only, items disappear as they are subscribed in the ExtRef view
+
+
+
+
+
+Now with auto-increment on:
+
+Subscribe an ExtRef and check that:
+
+* The next ExtRef is selected if it is empty
+* If it is non-empty it is not selected
