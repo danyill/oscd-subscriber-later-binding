@@ -1,9 +1,10 @@
 import { LitElement, PropertyValues, TemplateResult } from 'lit';
+import '@material/mwc-icon';
+import '@material/mwc-icon-button-toggle';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item';
 import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
-import '@material/mwc-icon-button-toggle';
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
