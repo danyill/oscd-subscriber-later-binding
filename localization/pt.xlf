@@ -62,6 +62,10 @@
         <source>Invalid Mapping</source>
         <target>Mapeamento inválido</target>
       </trans-unit>
+      <trans-unit id="s70c2825ea00a6e1d">
+        <source>The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.</source>
+        <target>A assinatura é válida, mas o elemento não está presente - verifique se o IED, bloco de controle e conjunto de dados estão corretos.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -12,11 +12,12 @@ import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
 
+import '@material/mwc-icon';
+import '@material/mwc-icon-button-toggle';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item';
 import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
-import '@material/mwc-icon-button-toggle';
 
 import { Edit, newEditEvent } from '@openscd/open-scd-core';
 
@@ -245,10 +246,8 @@ export default class SubscriberLaterBinding extends LitElement {
         control =>
           !this.subscriberView ||
           !this.currentSelectedExtRefElement ||
-          control.closest('IED')?.getAttribute('name') !==
-            this.currentSelectedExtRefElement
-              ?.closest('IED')
-              ?.getAttribute('name')
+          control.closest('IED') !==
+            this.currentSelectedExtRefElement?.closest('IED')
       );
     }
     return [];
@@ -417,10 +416,12 @@ export default class SubscriberLaterBinding extends LitElement {
       true
     ).filter(
       extRefElement =>
-        !isSubscribed(extRefElement) &&
-        (!extRefElement.hasAttribute('serviceType') ||
-          extRefElement.getAttribute('serviceType') ===
-            serviceTypeLookup[this.controlTag])
+        !isSubscribed(extRefElement) ||
+        (isSubscribed(extRefElement) &&
+          !findFCDAs(extRefElement).find(x => x !== undefined) &&
+          (!extRefElement.hasAttribute('serviceType') ||
+            extRefElement.getAttribute('serviceType') ===
+              serviceTypeLookup[this.controlTag]))
     );
   }
 
@@ -852,41 +853,54 @@ export default class SubscriberLaterBinding extends LitElement {
       </mwc-list-item>
       <li divider role="separator"></li>
       ${availableExtRefs.length > 0
-        ? html`${availableExtRefs.map(
-            extRefElement =>
-              html`<mwc-list-item
-                graphic="large"
-                ?disabled=${unsupportedExtRefElement(
-                  extRefElement,
-                  this.currentSelectedFcdaElement,
-                  this.currentSelectedControlElement
-                )}
-                ?hasMeta=${isPartiallyConfigured(extRefElement)}
-                twoline
-                class="extref"
-                data-extref="${identity(extRefElement)}"
-                value="${identity(extRefElement)}"
+        ? html`${availableExtRefs.map(extRefElement => {
+            const hasMissingMapping =
+              isSubscribed(extRefElement) &&
+              !findFCDAs(extRefElement).find(x => x !== undefined);
+            return html`<mwc-list-item
+              graphic="large"
+              ?disabled=${unsupportedExtRefElement(
+                extRefElement,
+                this.currentSelectedFcdaElement,
+                this.currentSelectedControlElement
+              )}
+              ?hasMeta=${isPartiallyConfigured(extRefElement) ||
+              hasMissingMapping}
+              twoline
+              class="extref"
+              data-extref="${identity(extRefElement)}"
+              value="${identity(extRefElement)}"
+            >
+              <span>
+                ${extRefElement.getAttribute('intAddr')}
+                ${getDescriptionAttribute(extRefElement)
+                  ? html` (${getDescriptionAttribute(extRefElement)})`
+                  : nothing}
+              </span>
+              <span slot="secondary"
+                >${identity(extRefElement.parentElement)}</span
               >
-                <span>
-                  ${extRefElement.getAttribute('intAddr')}
-                  ${getDescriptionAttribute(extRefElement)
-                    ? html` (${getDescriptionAttribute(extRefElement)})`
-                    : nothing}
-                </span>
-                <span slot="secondary"
-                  >${identity(extRefElement.parentElement)}</span
-                >
-                <mwc-icon slot="graphic">link_off</mwc-icon>
-                ${isPartiallyConfigured(extRefElement)
-                  ? html`<mwc-icon
-                      slot="meta"
-                      class="invalid-mapping"
-                      title="${msg('Invalid Mapping')}"
-                      >warning</mwc-icon
-                    >`
-                  : ''}
-              </mwc-list-item>`
-          )}`
+              <mwc-icon slot="graphic">link_off</mwc-icon>
+              ${isPartiallyConfigured(extRefElement)
+                ? html`<mwc-icon
+                    slot="meta"
+                    class="invalid-mapping"
+                    title="${msg('Invalid Mapping')}"
+                    >warning</mwc-icon
+                  >`
+                : nothing}
+              ${hasMissingMapping
+                ? html`<mwc-icon
+                    class="${hasMissingMapping ? 'missing-mapping' : ''}"
+                    title="${msg(
+                      'The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.'
+                    )}"
+                    slot="meta"
+                    >warning</mwc-icon
+                  >`
+                : nothing}
+            </mwc-list-item>`;
+          })}`
         : html`<mwc-list-item graphic="large" noninteractive>
             ${msg('No available inputs to subscribe')}
           </mwc-list-item>`}
@@ -986,13 +1000,14 @@ export default class SubscriberLaterBinding extends LitElement {
             .join(', ')}`
         : nothing;
 
-    const hasInvalidMapping =
-      (subscribed && !subscriberFCDA) ||
-      (!subscribed && isPartiallyConfigured(extRefElement));
+    const hasInvalidMapping = isPartiallyConfigured(extRefElement);
+    const hasMissingMapping = subscribed && !subscriberFCDA;
+
+    const bound = subscribed || hasInvalidMapping;
 
     const filterClasses = {
-      'show-bound': subscribed,
-      'show-not-bound': !subscribed,
+      'show-bound': bound,
+      'show-not-bound': !bound,
     };
 
     return html`<mwc-list-item
@@ -1020,7 +1035,10 @@ export default class SubscriberLaterBinding extends LitElement {
           : supAndctrlDescription}
       </span>
       <mwc-icon slot="graphic">${subscribed ? 'link' : 'link_off'}</mwc-icon>
-      ${subscribed && supervisionNode !== undefined && !hasInvalidMapping
+      ${subscribed &&
+      supervisionNode !== undefined &&
+      !hasInvalidMapping &&
+      !hasMissingMapping
         ? html`<mwc-icon title="${identity(supervisionNode!)}" slot="meta"
             >monitor_heart</mwc-icon
           >`
@@ -1031,6 +1049,16 @@ export default class SubscriberLaterBinding extends LitElement {
             title="${msg('Invalid Mapping')}"
             slot="meta"
             >error</mwc-icon
+          >`
+        : nothing}
+      ${hasMissingMapping
+        ? html`<mwc-icon
+            class="${hasMissingMapping ? 'missing-mapping' : ''}"
+            title="${msg(
+              'The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.'
+            )}"
+            slot="meta"
+            >warning</mwc-icon
           >`
         : nothing}
     </mwc-list-item>`;
@@ -1121,10 +1149,13 @@ export default class SubscriberLaterBinding extends LitElement {
 
                   if (!selectedExtRefElement) return;
 
-                  if (isSubscribed(selectedExtRefElement)) {
-                    this.unsubscribe(selectedExtRefElement);
-                  } else {
+                  if (
+                    !isSubscribed(selectedExtRefElement) ||
+                    !findFCDAs(selectedExtRefElement).find(x => x !== undefined)
+                  ) {
                     this.subscribe(selectedExtRefElement!);
+                  } else {
+                    this.unsubscribe(selectedExtRefElement);
                   }
 
                   selectedListItem.selected = false;
@@ -1336,6 +1367,12 @@ export default class SubscriberLaterBinding extends LitElement {
 
     .invalid-mapping {
       color: var(--mdc-theme-error, red);
+    }
+
+    /* TODO: OpenSCD currently doesn't have "warning" or "invalid" colours 
+    outside of logging but these may be generally useful to plugin authors */
+    .missing-mapping {
+      color: var(--mdc-theme-error, orange);
     }
 
     #listContainer {

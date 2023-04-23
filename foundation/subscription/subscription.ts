@@ -405,8 +405,10 @@ export function isPartiallyConfigured(extRefElement: Element): boolean {
     'srcCBName',
   ];
 
-  return partialConfigElements.some(
-    attr => extRefElement.getAttribute(attr) !== null
+  return (
+    partialConfigElements.some(
+      attr => extRefElement.getAttribute(attr) !== null
+    ) && !isSubscribed(extRefElement)
   );
 }
 
