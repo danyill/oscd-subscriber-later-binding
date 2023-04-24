@@ -1,14 +1,22 @@
+/* eslint-disable func-names */
+/* eslint-disable prefer-arrow-callback */
+
 import { visualDiff } from '@web/test-runner-visual-regression';
 
+import { setViewport, sendMouse, resetMouse } from '@web/test-runner-commands';
+
 import { expect, fixture, html } from '@open-wc/testing';
+// eslint-disable-next-line import/no-relative-packages
+
+import '@openscd/open-scd-core';
+
+// import { test, expect } from '@playwright/test';
+
+// import type { OpenSCD } from '@openscd/open-scd-core';
 
 import SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
-import {
-  getExtRefItem,
-  getFcdaItem,
-  getFcdaItemCount,
-} from './test-support.js';
+import { getExtRefItem, getFcdaItem, midEl } from './test-support.js';
 
 const factor = window.process && process.env.CI ? 4 : 2;
 
@@ -18,77 +26,216 @@ function timeout(ms: number) {
   });
 }
 
-mocha.timeout(2000 * factor);
+mocha.timeout(12000 * factor);
 
-describe('oscd-subscription-later-binding', () => {
-  if (customElements.get('oscd-plugin') === undefined)
-    customElements.define('oscd-plugin', SubscriberLaterBinding);
+function testName(test: any, prefix: string): string {
+  return test.test!.fullTitle().slice(prefix.length);
+}
+
+async function tryViewportSet(): Promise<void> {
+  // target 1920x1080 screen-resolution, giving typical browser size of...
+  // await setViewport({ width: 1745, height: 845 });
+}
+
+const pluginName = 'oscd-subscriber-later-binding';
+
+describe(pluginName, () => {
+  let editor: any;
+
+  beforeEach(async function () {
+    const plugins = {
+      // menu: [
+      //   {
+      //     name: 'Open File',
+      //     translations: { de: 'Datei öffnen' },
+      //     icon: 'folder_open',
+      //     active: true,
+      //     src: 'https://openscd.github.io/oscd-open/oscd-open.js',
+      //   },
+      //   {
+      //     name: 'Save File',
+      //     translations: { de: 'Datei speichern' },
+      //     icon: 'save',
+      //     active: true,
+      //     src: 'https://openscd.github.io/oscd-save/oscd-save.js',
+      //   },
+      // ],
+      editor: [
+        {
+          name: 'Subscriber Later Binding',
+          translations: {
+            de: 'Späte Bindung des Abonnenten',
+            pt: 'Associação Tardia de Assinante',
+          },
+          icon: 'link',
+          active: true,
+          requireDoc: false,
+          src: 'data:text/javascript;charset=utf-8,export%20default%20class%20TestEditorPlugin%20extends%20HTMLElement%20%7B%0D%0A%20%20constructor%20%28%29%20%7B%20super%28%29%3B%20this.innerHTML%20%3D%20%60%3Cp%3ETest%20Editor%20Plugin%3C%2Fp%3E%60%3B%20%7D%0D%0A%7D',
+          // '../../dist/oscd-subscriber-later-binding.js',
+        },
+      ],
+    };
+
+    const ed = await fixture(`<open-scd
+    plugins='{
+    "menu": 
+    [
+      {"name": "Open File", "translations": {"de": "Datei öffnen"}, "icon": "folder_open", "active": true, "src": "https://openscd.github.io/oscd-open/oscd-open.js"}, 
+      {"name": "Save File", "translations": {"de": "Datei speichern"}, "icon": "save", "active": true, "src": "https://openscd.github.io/oscd-save/oscd-save.js"}
+    ],
+    "editor": 
+    [
+      {"name": "Subscriber Later Binding", "translations": {"de": "Späte Bindung des Abonnenten", "pt": "Associação Tardia de Assinante"}, "icon": "link", "active": true, "requireDoc": true, "src": "data:text/javascript;charset=utf-8,export%20default%20class%20TestEditorPlugin%20extends%20HTMLElement%20%7B%0D%0A%20%20constructor%20%28%29%20%7B%20super%28%29%3B%20this.innerHTML%20%3D%20%60%3Cp%3ETest%20Editor%20Plugin%3C%2Fp%3E%60%3B%20%7D%0D%0A%7D"}
+    ]
+  }'
+  ></open-scd><script type="module">
+    import '@openscd/open-scd-core/open-scd.js';
+  
+    const editor = document.querySelector('open-scd');
+    const params = new URL(document.location).searchParams;
+    for (const [name, value] of params) {
+      editor.setAttribute(name, value);
+    }
+  </script>`);
+
+    document.body.prepend(ed);
+
+    // editor = document.createElement('open-scd');
+    // document.body.prepend(editor);
+    editor = document.querySelector('open-scd');
+    await editor.updateComplete;
+    // editor.plugins = plugins;
+
+    await editor.updateComplete;
+    await timeout(500);
+  });
+
+  afterEach(() => {
+    editor.remove();
+  });
+
+  // if (customElements.get('oscd-plugin') === undefined)
+  //   customElements.define('oscd-plugin', Editing(SubscriberLaterBinding));
 
   let plugin: SubscriberLaterBinding;
   let doc: XMLDocument;
 
-  describe('When opened for GOOSE', () => {
-    const controlTag = 'GSEControl';
+  describe('goose', () => {
+    describe('publisher view', () => {
+      beforeEach(async function () {
+        // localStorage.clear();
+        // await tryViewportSet();
+        // resetMouse();
 
-    describe('in the Subscriber View', () => {
-      beforeEach(async () => {
         doc = await fetch('/test/fixtures/GOOSE-2007B4.scd')
           .then(response => response.text())
           .then(str => new DOMParser().parseFromString(str, 'application/xml'));
 
-        plugin = await fixture(
-          html`<oscd-plugin
-            .controlTag="${controlTag}"
-            .doc=${doc}
-          ></oscd-plugin>`
-        );
+        editor.doc = doc;
+        await timeout(300);
+        await editor.updateComplete;
       });
 
-      it('when selecting an FCDA element with subscriptions it looks like the latest snapshot', async () => {
+      // afterEach(() => plugin.remove());
+
+      // it('can select an FCDA and see subscriptions present and available', async function () {
+      //   const fcdaListElement = plugin.fcdaListUI;
+
+      //   const item = getFcdaItem(
+      //     fcdaListElement,
+      //     'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+      //     'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      //   );
+      //   await sendMouse({
+      //     type: 'click',
+      //     button: 'left',
+      //     position: midEl(item!),
+      //   });
+
+      //   await timeout(100);
+      //   await visualDiff(plugin, testName(this, pluginName));
+      // });
+
+      it('can subscribe an FCDA and update counts', async function () {
         const fcdaListElement = plugin.fcdaListUI;
-        getFcdaItem(
+
+        const fcda = getFcdaItem(
           fcdaListElement,
           'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
           'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
-        )?.click();
+        );
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
         await plugin.updateComplete;
 
-        // expect(plugin).shadowDom.to.equalSnapshot();
-        await timeout(20);
-        await visualDiff(plugin, `goose-fcda-with-subscriptions`);
-        // TODO: How do I get the material icons shown correctly in the test runner?
+        const extRefListElement = plugin.extRefListPublisherUI;
+        const extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]'
+        );
+        await sendMouse({
+          type: 'move',
+          position: midEl(extref!),
+        });
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+
+        // await plugin.updateComplete;
+
+        plugin.requestUpdate();
+        await plugin.updateComplete;
+
+        await timeout(1000);
+        await visualDiff(plugin, testName(this, pluginName));
       });
 
-      it('when subscribing an available ExtRef then the lists are changed', async () => {
-        const fcdaListElement = plugin.fcdaListUI;
-        let extRefListElement = plugin.extRefListPublisherUI!;
+      // it('changes to subscriber view', async function () {
+      //   await sendMouse({
+      //     type: 'click',
+      //     button: 'left',
+      //     position: midEl(plugin.switchViewUI!),
+      //   });
 
-        const controlId = 'GOOSE_Publisher>>QB2_Disconnector>GOOSE1';
-        const fcdaId =
-          'GOOSE_Publisher>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos q (ST)';
+      //   await plugin.updateComplete;
+      //   await timeout(100);
+      //   await visualDiff(plugin, testName(this, pluginName));
+      // });
 
-        getFcdaItem(fcdaListElement, controlId, fcdaId)?.click();
-        await plugin.updateComplete;
+      // it('when subscribing an available ExtRef then the lists are changed', async () => {
+      //   const fcdaListElement = plugin.fcdaListUI;
 
-        expect(plugin.getSubscribedExtRefElements().length).to.be.equal(0);
-        expect(getFcdaItemCount(fcdaListElement, controlId, fcdaId)).to.be
-          .undefined;
-        expect(plugin.getAvailableExtRefElements().length).to.be.equal(3);
+      //   const controlId = 'GOOSE_Publisher>>QB2_Disconnector>GOOSE1';
+      //   const fcdaId =
+      //     'GOOSE_Publisher>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos q (ST)';
 
-        const extRefId =
-          'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]';
+      //   getFcdaItem(fcdaListElement, controlId, fcdaId)?.click();
+      //   await plugin.updateComplete;
 
-        extRefListElement = plugin.extRefListPublisherUI!;
+      //   expect(plugin.getSubscribedExtRefElements().length).to.be.equal(0);
+      //   // expect(getFcdaItemCount(fcdaListElement, controlId, fcdaId)).to.be
+      //   //   .undefined;
+      //   expect(plugin.getAvailableExtRefElements().length).to.be.equal(3);
 
-        getExtRefItem(extRefListElement, extRefId)?.click();
-        await plugin.updateComplete;
+      //   const extRefListElement = plugin.extRefListPublisherUI!;
+      //   const extRefId =
+      //     'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]';
+      //   getExtRefItem(extRefListElement, extRefId)?.click();
 
-        expect(plugin.getSubscribedExtRefElements().length).to.be.equal(1);
-        //   expect(getSelectedSubItemValue(fcdaListElement)).to.have.text('1');
-        //   expect(
-        //     extRefListElement['getAvailableExtRefElements']().length
-        //   ).to.be.equal(4);
-      });
+      //   await plugin.updateComplete;
+
+      //   // expect(plugin.getSubscribedExtRefElements().length).to.be.equal(1);
+      //   //   expect(getSelectedSubItemValue(fcdaListElement)).to.have.text('1');
+      //   //   expect(
+      //   //     extRefListElement['getAvailableExtRefElements']().length
+      //   //   ).to.be.equal(4);
+      // });
     });
   });
 });

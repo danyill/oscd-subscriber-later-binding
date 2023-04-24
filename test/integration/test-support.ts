@@ -1,5 +1,28 @@
 import { OscdFilteredList } from '../../foundation/components/oscd-filtered-list.js';
 
+// getFcdaItem
+// getExtRefItem
+// getSwitchView
+// getSwitchType
+// getFcdaSearchField
+// getExtRefSearchField
+// getFcdaFilterField
+// getExtRefFilterField
+// getExtRefSettingsField
+// getUndoButton
+// getRedoButton
+// getFilterFieldListItem
+// getSettingsFieldListItem
+
+export function midEl(element: Element): [number, number] {
+  const { x, y, width, height } = element.getBoundingClientRect();
+
+  return [
+    Math.floor(x + window.pageXOffset + width / 2),
+    Math.floor(y + window.pageYOffset + height / 2),
+  ];
+}
+
 export function getFcdaItem(
   listElement: OscdFilteredList,
   controlIdentity: string,
@@ -8,15 +31,6 @@ export function getFcdaItem(
   return listElement.querySelector(
     `mwc-list-item.fcda[data-control="${controlIdentity}"][data-fcda="${fcdaIdentity}"]`
   );
-}
-
-export function getFcdaItemCount(
-  listElement: OscdFilteredList,
-  controlIdentity: string,
-  fcdaIdentity: string
-): string | null | undefined {
-  const element = getFcdaItem(listElement, controlIdentity, fcdaIdentity);
-  return element?.querySelector('.fcda span[slot="meta"]')?.textContent;
 }
 
 export function getExtRefItem(

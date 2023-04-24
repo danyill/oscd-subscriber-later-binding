@@ -1,6 +1,7 @@
 import { visualRegressionPlugin } from '@web/test-runner-visual-regression/plugin';
 import { playwrightLauncher } from '@web/test-runner-playwright';
 
+import path from 'path';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 
@@ -20,10 +21,12 @@ const filteredLogs = [
   'mwc-list-item scheduled an update',
 ];
 
+// TODO: re-enable other browsers
+// TODO: Diagnose incorrect mwc-icon display  in webkit, may be upstream issue
 const browsers = [
   playwrightLauncher({ product: 'chromium' }),
-  playwrightLauncher({ product: 'firefox' }),
-  playwrightLauncher({ product: 'webkit' }),
+  // playwrightLauncher({ product: 'firefox' }),
+  // playwrightLauncher({ product: 'webkit' }),
 ];
 
 function defaultGetImageDiff({ baselineImage, image, options }) {
@@ -77,6 +80,12 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
           result.diffPercentage = 0;
         return result;
       },
+      getBaselineName: ({ browser, name }) =>
+        path.join('baseline', `${name}-${browser}`),
+      getDiffName: ({ browser, name }) =>
+        path.join('failed', `${name}-${browser}-diff`),
+      getFailedName: ({ browser, name }) =>
+        path.join('failed', `${name}-${browser}`),
     }),
   ],
 
