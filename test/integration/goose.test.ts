@@ -5,16 +5,11 @@ import { visualDiff } from '@web/test-runner-visual-regression';
 
 import { setViewport, sendMouse, resetMouse } from '@web/test-runner-commands';
 
-import { expect, fixture, html } from '@open-wc/testing';
-// eslint-disable-next-line import/no-relative-packages
+import { fixture, html } from '@open-wc/testing';
 
-import '@openscd/open-scd-core';
+import '@openscd/open-scd-core/open-scd.js';
 
 // import { test, expect } from '@playwright/test';
-
-// import type { OpenSCD } from '@openscd/open-scd-core';
-
-import SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
 import { getExtRefItem, getFcdaItem, midEl } from './test-support.js';
 
@@ -34,32 +29,33 @@ function testName(test: any, prefix: string): string {
 
 async function tryViewportSet(): Promise<void> {
   // target 1920x1080 screen-resolution, giving typical browser size of...
-  // await setViewport({ width: 1745, height: 845 });
+  await setViewport({ width: 1745, height: 845 });
 }
 
 const pluginName = 'oscd-subscriber-later-binding';
 
 describe(pluginName, () => {
   let editor: any;
+  let plugin: any;
 
   beforeEach(async function () {
     const plugins = {
-      // menu: [
-      //   {
-      //     name: 'Open File',
-      //     translations: { de: 'Datei öffnen' },
-      //     icon: 'folder_open',
-      //     active: true,
-      //     src: 'https://openscd.github.io/oscd-open/oscd-open.js',
-      //   },
-      //   {
-      //     name: 'Save File',
-      //     translations: { de: 'Datei speichern' },
-      //     icon: 'save',
-      //     active: true,
-      //     src: 'https://openscd.github.io/oscd-save/oscd-save.js',
-      //   },
-      // ],
+      menu: [
+        {
+          name: 'Open File',
+          translations: { de: 'Datei öffnen' },
+          icon: 'folder_open',
+          active: true,
+          src: 'https://openscd.github.io/oscd-open/oscd-open.js',
+        },
+        {
+          name: 'Save File',
+          translations: { de: 'Datei speichern' },
+          icon: 'save',
+          active: true,
+          src: 'https://openscd.github.io/oscd-save/oscd-save.js',
+        },
+      ],
       editor: [
         {
           name: 'Subscriber Later Binding',
@@ -70,69 +66,47 @@ describe(pluginName, () => {
           icon: 'link',
           active: true,
           requireDoc: false,
-          src: 'data:text/javascript;charset=utf-8,export%20default%20class%20TestEditorPlugin%20extends%20HTMLElement%20%7B%0D%0A%20%20constructor%20%28%29%20%7B%20super%28%29%3B%20this.innerHTML%20%3D%20%60%3Cp%3ETest%20Editor%20Plugin%3C%2Fp%3E%60%3B%20%7D%0D%0A%7D',
-          // '../../dist/oscd-subscriber-later-binding.js',
+          src: '/dist/oscd-subscriber-later-binding.js',
         },
       ],
     };
 
-    const ed = await fixture(`<open-scd
-    plugins='{
-    "menu": 
-    [
-      {"name": "Open File", "translations": {"de": "Datei öffnen"}, "icon": "folder_open", "active": true, "src": "https://openscd.github.io/oscd-open/oscd-open.js"}, 
-      {"name": "Save File", "translations": {"de": "Datei speichern"}, "icon": "save", "active": true, "src": "https://openscd.github.io/oscd-save/oscd-save.js"}
-    ],
-    "editor": 
-    [
-      {"name": "Subscriber Later Binding", "translations": {"de": "Späte Bindung des Abonnenten", "pt": "Associação Tardia de Assinante"}, "icon": "link", "active": true, "requireDoc": true, "src": "data:text/javascript;charset=utf-8,export%20default%20class%20TestEditorPlugin%20extends%20HTMLElement%20%7B%0D%0A%20%20constructor%20%28%29%20%7B%20super%28%29%3B%20this.innerHTML%20%3D%20%60%3Cp%3ETest%20Editor%20Plugin%3C%2Fp%3E%60%3B%20%7D%0D%0A%7D"}
-    ]
-  }'
-  ></open-scd><script type="module">
-    import '@openscd/open-scd-core/open-scd.js';
-  
-    const editor = document.querySelector('open-scd');
-    const params = new URL(document.location).searchParams;
-    for (const [name, value] of params) {
-      editor.setAttribute(name, value);
-    }
-  </script>`);
-
+    const ed = await fixture(
+      html`<open-scd
+        language="en"
+        plugins="${JSON.stringify(plugins)}"
+      ></open-scd>`
+    );
     document.body.prepend(ed);
-
-    // editor = document.createElement('open-scd');
-    // document.body.prepend(editor);
+    // TODO remove once OpenSCD is exported as a Lit Element and updateComplete is available
+    await timeout(1000);
     editor = document.querySelector('open-scd');
-    await editor.updateComplete;
-    // editor.plugins = plugins;
-
-    await editor.updateComplete;
-    await timeout(500);
+    plugin = document
+      .querySelector('open-scd')!
+      .shadowRoot!.querySelector(editor.editor);
   });
 
   afterEach(() => {
     editor.remove();
   });
 
-  // if (customElements.get('oscd-plugin') === undefined)
-  //   customElements.define('oscd-plugin', Editing(SubscriberLaterBinding));
-
-  let plugin: SubscriberLaterBinding;
   let doc: XMLDocument;
 
   describe('goose', () => {
     describe('publisher view', () => {
       beforeEach(async function () {
-        // localStorage.clear();
-        // await tryViewportSet();
-        // resetMouse();
+        localStorage.clear();
+        await tryViewportSet();
+        resetMouse();
 
         doc = await fetch('/test/fixtures/GOOSE-2007B4.scd')
           .then(response => response.text())
           .then(str => new DOMParser().parseFromString(str, 'application/xml'));
 
-        editor.doc = doc;
-        await timeout(300);
+        editor.docName = 'GOOSE-2007B4.scd';
+        editor.docs[editor.docName] = doc;
+        // TODO remove once OpenSCD is exported as a Lit Element and updateComplete is available
+        await timeout(500);
         await editor.updateComplete;
       });
 
