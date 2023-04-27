@@ -10458,7 +10458,9 @@ class SubscriberLaterBinding extends s$1 {
         let fcdaElement;
         if (this.subscriberView) {
             controlBlockElement = findControlBlock(extRef);
-            fcdaElement = findFCDA(extRef, controlBlockElement);
+            // invalid mappings may not have a control block but can still be removed
+            if (controlBlockElement)
+                fcdaElement = findFCDA(extRef, controlBlockElement);
         }
         else {
             controlBlockElement = this.currentSelectedControlElement;
@@ -11112,7 +11114,8 @@ class SubscriberLaterBinding extends s$1 {
                 const selectedExtRefElement = (this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown ExtRef')));
                 if (!selectedExtRefElement)
                     return;
-                if (isSubscribed(selectedExtRefElement)) {
+                if (isSubscribed(selectedExtRefElement) ||
+                    isPartiallyConfigured(selectedExtRefElement)) {
                     this.unsubscribe(selectedExtRefElement);
                     // deselect in UI
                     selectedListItem.selected = false;
