@@ -349,7 +349,9 @@ export default class SubscriberLaterBinding extends LitElement {
     let fcdaElement;
     if (this.subscriberView) {
       controlBlockElement = findControlBlock(extRef);
-      fcdaElement = findFCDA(extRef, controlBlockElement);
+      // invalid mappings may not have a control block but can still be removed
+      if (controlBlockElement)
+        fcdaElement = findFCDA(extRef, controlBlockElement);
     } else {
       controlBlockElement = this.currentSelectedControlElement;
       fcdaElement = this.currentSelectedFcdaElement!;
@@ -1189,7 +1191,10 @@ export default class SubscriberLaterBinding extends LitElement {
 
               if (!selectedExtRefElement) return;
 
-              if (isSubscribed(selectedExtRefElement)) {
+              if (
+                isSubscribed(selectedExtRefElement) ||
+                isPartiallyConfigured(selectedExtRefElement)
+              ) {
                 this.unsubscribe(selectedExtRefElement);
 
                 // deselect in UI
