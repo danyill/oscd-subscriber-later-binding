@@ -10,7 +10,7 @@
 :uri-openscd: https://github.com/openscd
 :uri-openscd-app: https://openscd.github.io
 :uri-openscd-core-app: https://openscd.github.io/open-scd/
-:uri-openscd-core-plugin: https://openscd.github.io/open-scd/?plugins=%7B%22menu%22:%5B%7B%22name%22:%22Open%20File%22,%22translations%22:%7B%22de%22:%22Datei%20%C3%B6ffnen%22%7D,%22icon%22:%22folder_open%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-open/oscd-open.js%22%7D,%7B%22name%22:%22Save%20File%22,%22translations%22:%7B%22de%22:%22Datei%20speichern%22%7D,%22icon%22:%22save%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-save/oscd-save.js%22%7D%5D,%22editor%22:%5B%7B%22name%22:%22Subscriber%20Later%20Binding%22,%22translations%22:%7B%22de%22:%22Sp%C3%A4te%20Bindung%20des%20Abonnenten%22,%22pt%22:%22Associa%C3%A7%C3%A3o%20Tardia%20de%20Assinante%22%7D,%22icon%22:%22link%22,%22active%22:true,%22requireDoc%22:false,%22src%22:%22https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js%22%7D%5D%7D
+:uri-openscd-core-plugin: pass:v[https://openscd.github.io/open-scd/?plugins=%7B%22menu%22:%5B%7B%22name%22:%22Open%20File%22,%22translations%22:%7B%22de%22:%22Datei%20%C3%B6ffnen%22%7D,%22icon%22:%22folder_open%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-open/oscd-open.js%22%7D,%7B%22name%22:%22Save%20File%22,%22translations%22:%7B%22de%22:%22Datei%20speichern%22%7D,%22icon%22:%22save%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-save/oscd-save.js%22%7D%5D,%22editor%22:%5B%7B%22name%22:%22Subscriber%20Later%20Binding%22,%22translations%22:%7B%22de%22:%22Sp%C3%A4te%20Bindung%20des%20Abonnenten%22,%22pt%22:%22Associa%C3%A7%C3%A3o%20Tardia%20de%20Assinante%22%7D,%22icon%22:%22link%22,%22active%22:true,%22requireDoc%22:false,%22src%22:%22https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js%22%7D%5D%7D]
 // TIP:
 // the above URI is done by taking the plugins object from demo.html and updating to the correct {uri-ci-bundle} value and then in the browser calling:
 // console.log(`https://openscd.github.io/open-scd/?plugins=${encodeURI(JSON.stringify(plugins))}`)
@@ -33,13 +33,16 @@ editor engine for {uri-openscd}[OpenSCD].
 
 It offers a publisher and subscriber view to allow efficient and intuitive use.
 
-${uri-openscd-core-plugin}[Try it out online]! In this view it is without theming and only presents this plugin along with the open and save plugins.
+{uri-openscd-core-plugin}[Try it out online]! In this view it is without theming and only presents this plugin along with the open and save plugins.
 
-.Subscriber View
+// TODO: Update screenshots
+|===
+a|.Subscriber View
 image::screenshot-subscriber-goose.png[width=800,link={imagesdir}/screenshot-subscriber-goose.png]
 
-.Publisher View
+a|.Publisher View
 image::screenshot-publisher-sv.png[width=800,link={imagesdir}/screenshot-publisher-sv.png]
+|===
 
 Feel free to log issues to request fixes, improvements or new features.
 
@@ -98,6 +101,7 @@ $ git clone {uri-plugin}
 
 TIP: OpenSCD is transitioning to use of `open-scd-core`, these instructions will require updating at the end of this transition.
 
+// TODO: Is this fixed yet?
 IMPORTANT: Currently the reactive update cycle in OpenSCD doesn't optimally support this plugin's behaviour -- it scrolls to the top of lists after a subscription is made or one of the window panes may go blank. This is a known issue and under investigation.
 
 . Open your OpenSCD distribution or use {uri-openscd-app}.
@@ -135,13 +139,13 @@ Each plugin appears in the following form:
 [source,json,subs=+attributes]
 ----
 {
-    name: 'Subscriber Later Binding', <.>
-    src: '{uri-ci-bundle}', <.>
-    icon: 'link', <.>
-    default: true, <.>
-    kind: 'editor', <.>
-    requireDoc: true, <.>
-    position: 'middle' <.>
+    name: 'Subscriber Later Binding', // <.>
+    src: '{uri-ci-bundle}', //  <.>
+    icon: 'link', // <.>
+    default: true, // <.>
+    kind: 'editor', // <.>
+    requireDoc: true, // <.>
+    position: 'middle' // <.>
   }
 ----
 <.> Name of the plugin which appears in the editor menu at top of screen
@@ -186,15 +190,15 @@ Within an OpenSCD core distribution, plugins are also loaded from a json file wi
 [source,json,subs=+attributes]
 ----
 {
-  "name": "Subscriber Later Binding", <.>
-  "translations": { <.>
+  "name": "Subscriber Later Binding", // <.>
+  "translations": { // <.>
     "de": "Späte Bindung des Abonnenten",
     "pt": "Associação Tardia de Assinante"
   },
-  "icon": "link", <.>
-  "active": true, <.>
-  "requireDoc": true, <.>
-  "src": "/dist/oscd-subscriber-later-binding.js" <.>
+  "icon": "link", // <.>
+  "active": true, // <.>
+  "requireDoc": true, // <.>
+  "src": "/dist/oscd-subscriber-later-binding.js" // <.>
 }
 ----
 <.> Name of the plugin which appears in the editor menu at top of screen
