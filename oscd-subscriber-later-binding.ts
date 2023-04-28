@@ -1372,6 +1372,29 @@ export default class SubscriberLaterBinding extends LitElement {
       ${controlElements
         ? this.renderControlList(controlElements)
         : html`<h3>${msg('Not Subscribed')}</h3> `}
+    </section>`;
+  }
+
+  renderControlTypeSelector(): TemplateResult {
+    return html`
+      <mwc-icon-button-toggle
+        id="switchControlType"
+        title="${msg('Change between GOOSE and Sampled Value publishers')}"
+        @click=${() => {
+          this.controlTag = this.switchControlTypeUI?.on
+            ? 'GSEControl'
+            : 'SampledValueControl';
+        }}
+      >
+        ${gooseActionIcon} ${smvActionIcon}
+      </mwc-icon-button-toggle>
+    `;
+  }
+
+  render(): TemplateResult {
+    return html` <div id="listContainer">
+        ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
+      </div>
       <mwc-icon-button-toggle
         id="switchView"
         onIcon="swap_horiz"
@@ -1397,30 +1420,7 @@ export default class SubscriberLaterBinding extends LitElement {
           // await for regeneration of UI and then attach anchors
           this.updateView();
         }}
-      ></mwc-icon-button-toggle>
-    </section> `;
-  }
-
-  renderControlTypeSelector(): TemplateResult {
-    return html`
-      <mwc-icon-button-toggle
-        id="switchControlType"
-        title="${msg('Change between GOOSE and Sampled Value publishers')}"
-        @click=${() => {
-          this.controlTag = this.switchControlTypeUI?.on
-            ? 'GSEControl'
-            : 'SampledValueControl';
-        }}
-      >
-        ${gooseActionIcon} ${smvActionIcon}
-      </mwc-icon-button-toggle>
-    `;
-  }
-
-  render(): TemplateResult {
-    return html` <div id="listContainer">
-      ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
-    </div>`;
+      ></mwc-icon-button-toggle>`;
   }
 
   static styles = css`
@@ -1640,9 +1640,10 @@ export default class SubscriberLaterBinding extends LitElement {
     }
 
     #switchView {
+      z-index: 1;
       position: absolute;
-      bottom: 8px;
-      right: 8px;
+      bottom: 16px;
+      right: 16px;
     }
 
     #switchControlType,
