@@ -216,6 +216,11 @@ export default class SubscriberLaterBinding extends LitElement {
 
   private supervisionData = new Map();
 
+  // constructor() {
+  //   super();
+  //   this.restoreSettings();
+  // }
+
   protected storeSettings(): void {
     const storedConfiguration = {
       subscriberView: this.switchViewUI?.on ?? false,
@@ -251,7 +256,10 @@ export default class SubscriberLaterBinding extends LitElement {
 
     this.hideSubscribed = storedConfiguration?.hideSubscribed || false;
     this.hideNotSubscribed = storedConfiguration?.hideNotSubscribed || false;
+    this.hideDisabled = storedConfiguration?.hideDisabled || false;
+
     this.notAutoIncrement = storedConfiguration?.notAutoIncrement ?? false;
+
     this.hideBound = storedConfiguration?.hideBound ?? false;
     this.hideNotBound = storedConfiguration?.hideNotBound ?? false;
     this.strictServiceTypes = storedConfiguration?.strictServiceTypes ?? false;
@@ -313,6 +321,7 @@ export default class SubscriberLaterBinding extends LitElement {
         this.fcdaListSelectedUI.activated = false;
       }
 
+      this.updateView();
       // force CSS refresh to remove selected/activated indication
       this.requestUpdate();
     }
@@ -431,6 +440,19 @@ export default class SubscriberLaterBinding extends LitElement {
     );
   }
 
+  private isExtRefViewable(extRefElement: Element): boolean {
+    return (
+      extRefElement.hasAttribute('intAddr') &&
+      ((!this.strictServiceTypes &&
+        !extRefElement.hasAttribute('serviceType') &&
+        !extRefElement.hasAttribute('pServT')) ||
+        extRefElement.getAttribute('serviceType') ===
+          serviceTypeLookup[this.controlTag] ||
+        extRefElement.getAttribute('pServT') ===
+          serviceTypeLookup[this.controlTag])
+    );
+  }
+
   public getAvailableExtRefElements(): Element[] {
     return getExtRefElements(
       <Element>this.doc.getRootNode(),
@@ -438,12 +460,12 @@ export default class SubscriberLaterBinding extends LitElement {
       true
     ).filter(
       extRefElement =>
-        !isSubscribed(extRefElement) ||
-        (isSubscribed(extRefElement) &&
-          !findFCDAs(extRefElement).find(x => x !== undefined) &&
-          (!extRefElement.hasAttribute('serviceType') ||
-            extRefElement.getAttribute('serviceType') ===
-              serviceTypeLookup[this.controlTag]))
+        // TODO: Manage robustness for for subscribed things?
+        // !isSubscribed(extRefElement) ||
+        // what about pXX types ?? !!
+        !isSubscribed(extRefElement) &&
+        !findFCDAs(extRefElement).find(x => x !== undefined) &&
+        this.isExtRefViewable(extRefElement)
     );
   }
 
@@ -468,25 +490,12 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  private getExtRefElementsByIED(
-    ied: Element,
-    controlTag: controlTagType
-  ): Element[] {
+  private getExtRefElementsByIED(ied: Element): Element[] {
     return Array.from(
       ied.querySelectorAll(
         ':scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
       )
-    ).filter(
-      extRefElement =>
-        extRefElement.hasAttribute('intAddr') &&
-        ((!extRefElement.hasAttribute('serviceType') &&
-          !this.strictServiceTypes &&
-          !extRefElement.hasAttribute('pServT')) ||
-          extRefElement.getAttribute('serviceType') ===
-            serviceTypeLookup[controlTag] ||
-          extRefElement.getAttribute('pServT') ===
-            serviceTypeLookup[controlTag])
-    );
+    ).filter(extRefElement => this.isExtRefViewable(extRefElement));
   }
 
   private getCachedSupervision(extRefElement: Element): Element | undefined {
@@ -513,8 +522,7 @@ export default class SubscriberLaterBinding extends LitElement {
     this.requestUpdate();
   }
 
-  private updateFcdaFilter(): void {
-    // Update filter CSS rules
+  private updateFilterCSS(): void {
     if (!this.hideSubscribed) {
       this.fcdaListUI!.classList.add('show-subscribed');
     } else {
@@ -527,14 +535,14 @@ export default class SubscriberLaterBinding extends LitElement {
       this.fcdaListUI!.classList.remove('show-not-subscribed');
     }
 
-    if (!this.hideDisabled) {
-      if (this.extRefListPublisherUI)
-        this.extRefListPublisherUI.classList.add('show-disabled');
-      this.fcdaListUI!.classList.add('show-disabled');
-    } else {
+    if (this.hideDisabled) {
       if (this.extRefListPublisherUI)
         this.extRefListPublisherUI.classList.remove('show-disabled');
       this.fcdaListUI!.classList.remove('show-disabled');
+    } else {
+      if (this.extRefListPublisherUI)
+        this.extRefListPublisherUI.classList.add('show-disabled');
+      this.fcdaListUI!.classList.add('show-disabled');
     }
 
     // force refresh for CSS style change
@@ -576,11 +584,23 @@ export default class SubscriberLaterBinding extends LitElement {
       this.filterMenuExtRefPublisherUI.anchor = <HTMLElement>(
         this.filterMenuExtrefPublisherButtonUI
       );
+
+      this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
+        this.strictServiceTypes = (<Set<number>>(
+          this.filterMenuExtRefPublisherUI.index
+        )).has(0);
+        this.hideDisabled = !(<Set<number>>(
+          this.filterMenuExtRefPublisherUI.index
+        )).has(1);
+
+        this.updateFilterCSS();
+      });
     }
   }
 
   protected async firstUpdated(): Promise<void> {
     this.restoreSettings();
+    this.updateFilterCSS();
 
     this.filterMenuFcdaUI.anchor = <HTMLElement>this.filterMenuFcdaButtonUI;
 
@@ -594,18 +614,23 @@ export default class SubscriberLaterBinding extends LitElement {
         1
       );
       this.hideDisabled = !(<Set<number>>this.filterMenuFcdaUI.index).has(2);
-      this.updateFcdaFilter();
+      this.updateFilterCSS();
     });
 
+    // TODO: Code duplication with the above
     this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
-      this.strictServiceTypes = !(<Set<number>>this.filterMenuFcdaUI.index).has(
-        0
-      );
-      this.hideDisabled = !(<Set<number>>this.filterMenuFcdaUI.index).has(1);
+      this.strictServiceTypes = !(<Set<number>>(
+        this.filterMenuExtRefPublisherUI.index
+      )).has(0);
+      this.hideDisabled = !(<Set<number>>(
+        this.filterMenuExtRefPublisherUI.index
+      )).has(1);
+
+      this.updateFilterCSS();
     });
 
+    this.requestUpdate();
     await this.updateComplete;
-    this.updateView();
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -668,7 +693,6 @@ export default class SubscriberLaterBinding extends LitElement {
     const filterClasses = {
       'show-subscribed': fcdaCount !== 0,
       'show-not-subscribed': fcdaCount === 0,
-      'show-disabled': isDisabled,
     };
 
     return html`<mwc-list-item
@@ -1200,9 +1224,7 @@ export default class SubscriberLaterBinding extends LitElement {
       getOrderedIeds(this.doc),
       i => `${identity(i)} ${this.controlTag}`,
       ied => {
-        const extRefs = Array.from(
-          this.getExtRefElementsByIED(ied, this.controlTag)
-        );
+        const extRefs = Array.from(this.getExtRefElementsByIED(ied));
         const someBound = extRefs.some(extRef => isSubscribed(extRef));
         const someNotBound = extRefs.some(extRef => !isSubscribed(extRef));
 
@@ -1239,7 +1261,7 @@ export default class SubscriberLaterBinding extends LitElement {
             <mwc-icon slot="graphic">developer_board</mwc-icon>
           </mwc-list-item>
           ${repeat(
-            Array.from(this.getExtRefElementsByIED(ied, this.controlTag)),
+            Array.from(this.getExtRefElementsByIED(ied)),
             exId => `${identity(exId)} ${this.controlTag}`,
             extRef => this.renderSubscriberViewExtRef(extRef)
           )}
@@ -1261,7 +1283,9 @@ export default class SubscriberLaterBinding extends LitElement {
           this.currentSelectedFcdaElement
             ? html`<oscd-filtered-list
                 id="publisherExtRefList"
-                class="styled-scrollbars"
+                class="styled-scrollbars ${!this.hideDisabled
+                  ? 'show-disabled'
+                  : ''}"
                 @selected=${(ev: SingleSelectedEvent) => {
                   const selectedListItem = (<ListItemBase>(
                     (<OscdFilteredList>ev.target).selected
