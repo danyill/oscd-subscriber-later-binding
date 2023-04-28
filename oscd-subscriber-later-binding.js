@@ -11247,6 +11247,28 @@ class SubscriberLaterBinding extends s$1 {
       ${controlElements
             ? this.renderControlList(controlElements)
             : x `<h3>${msg('Not Subscribed')}</h3> `}
+    </section>`;
+    }
+    renderControlTypeSelector() {
+        return x `
+      <mwc-icon-button-toggle
+        id="switchControlType"
+        title="${msg('Change between GOOSE and Sampled Value publishers')}"
+        @click=${() => {
+            var _a;
+            this.controlTag = ((_a = this.switchControlTypeUI) === null || _a === void 0 ? void 0 : _a.on)
+                ? 'GSEControl'
+                : 'SampledValueControl';
+        }}
+      >
+        ${gooseActionIcon} ${smvActionIcon}
+      </mwc-icon-button-toggle>
+    `;
+    }
+    render() {
+        return x ` <div id="listContainer">
+        ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
+      </div>
       <mwc-icon-button-toggle
         id="switchView"
         onIcon="swap_horiz"
@@ -11269,29 +11291,7 @@ class SubscriberLaterBinding extends s$1 {
             // await for regeneration of UI and then attach anchors
             this.updateView();
         }}
-      ></mwc-icon-button-toggle>
-    </section> `;
-    }
-    renderControlTypeSelector() {
-        return x `
-      <mwc-icon-button-toggle
-        id="switchControlType"
-        title="${msg('Change between GOOSE and Sampled Value publishers')}"
-        @click=${() => {
-            var _a;
-            this.controlTag = ((_a = this.switchControlTypeUI) === null || _a === void 0 ? void 0 : _a.on)
-                ? 'GSEControl'
-                : 'SampledValueControl';
-        }}
-      >
-        ${gooseActionIcon} ${smvActionIcon}
-      </mwc-icon-button-toggle>
-    `;
-    }
-    render() {
-        return x ` <div id="listContainer">
-      ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
-    </div>`;
+      ></mwc-icon-button-toggle>`;
     }
 }
 SubscriberLaterBinding.styles = i$5 `
@@ -11511,9 +11511,10 @@ SubscriberLaterBinding.styles = i$5 `
     }
 
     #switchView {
+      z-index: 1;
       position: absolute;
-      bottom: 8px;
-      right: 8px;
+      bottom: 16px;
+      right: 16px;
     }
 
     #switchControlType,
