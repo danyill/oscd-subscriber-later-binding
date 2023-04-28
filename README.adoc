@@ -7,12 +7,17 @@
 :experimental:
 :uri-action-translate-ci-bundle: https://jakobvogelsang.github.io/oscd-action-translate/oscd-action-translate.js
 :uri-openscd-core: https://github.com/openscd/open-scd-core#readme
-:uri-openscd: https://github.com/openscd/open-scd
+:uri-openscd: https://github.com/openscd
 :uri-openscd-app: https://openscd.github.io
 :uri-openscd-core-app: https://openscd.github.io/open-scd/
+:uri-openscd-core-plugin: https://openscd.github.io/open-scd/?plugins=%7B%22menu%22:%5B%7B%22name%22:%22Open%20File%22,%22translations%22:%7B%22de%22:%22Datei%20%C3%B6ffnen%22%7D,%22icon%22:%22folder_open%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-open/oscd-open.js%22%7D,%7B%22name%22:%22Save%20File%22,%22translations%22:%7B%22de%22:%22Datei%20speichern%22%7D,%22icon%22:%22save%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-save/oscd-save.js%22%7D%5D,%22editor%22:%5B%7B%22name%22:%22Subscriber%20Later%20Binding%22,%22translations%22:%7B%22de%22:%22Sp%C3%A4te%20Bindung%20des%20Abonnenten%22,%22pt%22:%22Associa%C3%A7%C3%A3o%20Tardia%20de%20Assinante%22%7D,%22icon%22:%22link%22,%22active%22:true,%22requireDoc%22:false,%22src%22:%22https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js%22%7D%5D%7D
+// TIP:
+// the above URI is done by taking the plugins object from demo.html and updating to the correct {uri-ci-bundle} value and then in the browser calling:
+// console.log(`https://openscd.github.io/open-scd/?plugins=${encodeURI(JSON.stringify(plugins))}`)
 :uri-openwc: https://github.com/open-wc/open-wc
 :uri-plugin: https://github.com/danyill/oscd-subscriber-later-binding
 :uri-ci-bundle: https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js
+:uri-material-icons: https://fonts.google.com/icons
 
 == What is this?
 
@@ -28,6 +33,8 @@ editor engine for {uri-openscd}[OpenSCD].
 
 It offers a publisher and subscriber view to allow efficient and intuitive use.
 
+${uri-openscd-core-plugin}[Try it out online]! In this view it is without theming and only presents this plugin along with the open and save plugins.
+
 .Subscriber View
 image::screenshot-subscriber-goose.png[width=800,link={imagesdir}/screenshot-subscriber-goose.png]
 
@@ -37,6 +44,36 @@ image::screenshot-publisher-sv.png[width=800,link={imagesdir}/screenshot-publish
 Feel free to log issues to request fixes, improvements or new features.
 
 == How to use?
+
+=== Online Using the Latest open-scd-core
+
+==== Using a URL
+
+Open SCD core allows plugins to be loaded from a URL.
+
+You can click on {uri-openscd-core-plugin}[this link] to trial this plugin.
+
+==== Manually
+
+. The latest core is available at {uri-openscd-core-app}.
+
+. Go to menu:Menu[Add plugins...]
+
+. Select Cancel - this is an editor plugin.
+
+. Select OK to required a loaded document.
+
+. Choose a plugin name of 'Subscriber Later Binding'.
+
+. Choose a plugin icon of 'link'
+
+. Provide a plugin source URI of: {uri-ci-bundle}
+
+. Click OK on the summary, it should like similar to that shown below:
++
+image::screenshot-openscd-core-add.png[width=250]
+
+. Open a file and enjoy!
 
 === Locally for testing
 
@@ -56,12 +93,6 @@ $ git clone {uri-plugin}
   $ npm run start
 
 . Open in your browser locally at http://localhost:8000/demo/
-
-=== As part of your own distribution
-
-NOTE: Something belongs here...
-
-// TODO: Add instructions here
 
 === As part of the OpenSCD distribution
 
@@ -94,29 +125,89 @@ This is the URL of the bundle built by CI and is always the latest alpha version
 +
 TIP: If there are too many editor plugin, hold down shift and wheel-mouse up and down to scroll them easily.
 
-=== Online Using the Latest open-scd-core
+=== As part of your own distribution
 
-IMPORTANT: Currently this doesn't work...
+==== Within the current OpenSCD distribution
 
-. The latest core is available at {uri-openscd-core-app}.
-
-. Go to menu:Menu[Add plugins...]
-
-. Select Cancel - this is an editor plugin.
-
-. Select OK to required a loaded document.
-
-. Choose a plugin name of 'Subscriber Later Binding'.
-
-. Choose a plugin icon of 'link'
-
-. Provide a plugin source URI of: {uri-ci-bundle}
-
-. Click OK on the summary, it should like similar to that shown below:
+. Within the current OpenSCD distribution, plugins are stored in the `public/js/plugins.js` folder. 
+Each plugin appears in the following form:
 +
-image::screenshot-openscd-core-add.png[width=250]
+[source,json,subs=+attributes]
+----
+{
+    name: 'Subscriber Later Binding', <.>
+    src: '{uri-ci-bundle}', <.>
+    icon: 'link', <.>
+    default: true, <.>
+    kind: 'editor', <.>
+    requireDoc: true, <.>
+    position: 'middle' <.>
+  }
+----
+<.> Name of the plugin which appears in the editor menu at top of screen
+<.> URL which can be a local or remote resource. For a local resource, begins without a forward slash, e.g. `plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js`. 
+In this case what is shown is loading a plugin from the build process.
+<.> A material icon, see others at {uri-material-icons}[Material Symbols and Icons]
+<.> Whether the plugin is enabled by default or has to be enabled in the plugins menu
+<.> The type of plugin, either `menu` or `editor`. This is an `editor` plugin.
+<.> Whether a document must be loaded for this plugin to be available
+<.> A string, either `top`, `middle` or `bottom` to give a location in the menu. 
+Otherwise inferred from the order in the file relative to other plugins.
 
-. Open a file and enjoy!
+. You need to copy an entry like the above, ensure the `src` URL resolves and the plugin should be loaded when the distribution is built.
+
+. If you are building locally you likely need to run an `npm run bundle` command in each plugin to make the `dist` folder, containing a single JavaScript file with the plugin available to OpenSCD.
+
+==== Within an OpenSCD core distribution
+
+Within an OpenSCD core distribution, plugins are also loaded from a json file with a slightly different schema.
+
+. Typically the distribution will be served from a static web page and within the web page there will be a plugins property declared on an `open-scd` object, for instance:
++
+[source,js]
+----
+<open-scd
+  plugins='{
+  "menu": 
+  [
+    {"name": "Open File", "translations": {"de": "Datei öffnen"}, "icon": "folder_open", "active": true, "src": "https://openscd.github.io/oscd-open/oscd-open.js"}, 
+    {"name": "Save File", "translations": {"de": "Datei speichern"}, "icon": "save", "active": true, "src": "https://openscd.github.io/oscd-save/oscd-save.js"}
+  ],
+  "editor": 
+  [
+    {"name": "Subscriber Later Binding", "translations": {"de": "Späte Bindung des Abonnenten", "pt": "Associação Tardia de Assinante"}, "icon": "link", "active": true, "requireDoc": true, "src": "/plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js"}
+  ]
+}'
+></open-scd>
+----
+
+. This plugin is an editor plugin, editor plugins are an array of JSON of the following form:
++
+[source,json,subs=+attributes]
+----
+{
+  "name": "Subscriber Later Binding", <.>
+  "translations": { <.>
+    "de": "Späte Bindung des Abonnenten",
+    "pt": "Associação Tardia de Assinante"
+  },
+  "icon": "link", <.>
+  "active": true, <.>
+  "requireDoc": true, <.>
+  "src": "/dist/oscd-subscriber-later-binding.js" <.>
+}
+----
+<.> Name of the plugin which appears in the editor menu at top of screen
+<.> Translations of the plugin name as required using standard locale names.
+<.> A material icon, see others at {uri-material-icons}[Material Symbols and Icons]
+<.> Whether the plugin is enabled by default or has to be enabled in the plugins menu
+<.> Whether a document must be loaded for this plugin to be available
+<.> URL which can be a local or remote resource. For a local resource, begins with a forward slash, e.g. `plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js`. 
+In this case what is shown is loading a plugin from the internet using the continuous integration build process.
+
+. You need to copy an entry like the above, ensure the `src` URL resolves and the plugin should be loaded when the distribution is built.
+
+. If you are building locally you likely need to run an `npm run bundle` command in each plugin to make the `dist` folder, containing a single JavaScript file with the plugin available to OpenSCD.
 
 == Development
 
