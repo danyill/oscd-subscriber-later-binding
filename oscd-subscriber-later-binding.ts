@@ -1644,5 +1644,10 @@ export default class SubscriberLaterBinding extends LitElement {
       bottom: 8px;
       right: 8px;
     }
+
+    #switchControlType,
+    #switchView {
+      --mdc-icon-size: 32px;
+    }
   `;
 }
