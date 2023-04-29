@@ -11,6 +11,17 @@ import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
 import type { TextField } from '@material/mwc-textfield';
 import { css, html, unsafeCSS } from 'lit';
 
+function debounce(callback: any, delay = 250) {
+  let timeout: any;
+
+  return (...args: any) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  };
+}
+
 function slotItem(item: Element): Element {
   if (!item.closest('oscd-filtered-list') || !item.parentElement) return item;
   if (item.parentElement instanceof OscdFilteredList) return item;
@@ -96,7 +107,8 @@ export class OscdFilteredList extends ListBase {
       });
   }
 
-  onFilterInput(): void {
+  // TODO: Need to upstream -- debounce added to improve performance slightly
+  onFilterInput = debounce(() => {
     Array.from(
       this.querySelectorAll(
         'mwc-list-item, mwc-check-list-item, mwc-radio-list-item'
@@ -104,7 +116,7 @@ export class OscdFilteredList extends ListBase {
     ).forEach(item =>
       hideFiltered(item as ListItemBase, this.searchField.value)
     );
-  }
+  }, 500);
 
   protected onListItemConnected(e: CustomEvent): void {
     super.onListItemConnected(e);
