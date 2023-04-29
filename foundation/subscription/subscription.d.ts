@@ -3,6 +3,25 @@ export declare const SCL_NAMESPACE = "http://www.iec.ch/61850/2003/SCL";
 export declare function getFcdaTitleValue(fcdaElement: Element): string;
 export declare function getFcdaSubtitleValue(fcdaElement: Element): string;
 /**
+ * Edition 2 and later SCL files allow to restrict subscription on
+ * later binding type inputs (`ExtRef` elements) based on a `CDC` and
+ * basic type `bType`.
+ * @param extRef - A later binding type input in the sink IED
+ * @returns data objects `CDC` and data attribute basic type `bType` or `null`
+ */
+export declare function inputRestriction(extRef: Element): {
+    cdc: string | null;
+    bType: string | null;
+};
+/**
+ * @param fcda - Data attribute reference in a data set
+ * @returns Data objects `CDC` and data attributes `bType`
+ */
+export declare function fcdaSpecification(fcda: Element): {
+    cdc: string | null;
+    bType: string | null;
+};
+/**
  * Check data consistency of source `FCDA` and sink `ExtRef` based on
  * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
  * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.

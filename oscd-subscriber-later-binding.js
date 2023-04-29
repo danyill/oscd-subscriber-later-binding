@@ -7318,6 +7318,7 @@ function dataAttributeSpecification(anyLn, doName, daName) {
     const bType = leaf.getAttribute('bType');
     return { bType, cdc };
 }
+// TODO: This is now exported as it can be quite useful
 /**
  * Edition 2 and later SCL files allow to restrict subscription on
  * later binding type inputs (`ExtRef` elements) based on a `CDC` and
@@ -7339,6 +7340,7 @@ function inputRestriction(extRef) {
     }
     return { cdc: null, bType: null };
 }
+// TODO: I have exported this
 /**
  * @param fcda - Data attribute reference in a data set
  * @returns Data objects `CDC` and data attributes `bType`
@@ -10644,7 +10646,9 @@ class SubscriberLaterBinding extends s$1 {
     }
     // eslint-disable-next-line class-methods-use-this
     renderSubscribedExtRefElement(extRefElement) {
+        var _a, _b;
         const supervisionNode = getExistingSupervision(extRefElement);
+        const spec = inputRestriction(extRefElement);
         return x ` <mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
@@ -10652,6 +10656,10 @@ class SubscriberLaterBinding extends s$1 {
       class="extref"
       value="${identity(extRefElement)}"
       data-extref="${identity(extRefElement)}"
+      title="${spec.cdc && spec.bType
+            ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'} 
+Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
+            : ''}"
     >
       <span>
         ${extRefElement.getAttribute('intAddr')}
@@ -10681,12 +10689,14 @@ class SubscriberLaterBinding extends s$1 {
             isFcdo);
     }
     renderFCDA(controlElement, fcdaElement) {
+        var _a;
         const fcdaCount = this.getExtRefCount(fcdaElement, controlElement);
         const isDisabled = this.isFcdaDisabled(fcdaElement, controlElement);
         const filterClasses = {
             'show-subscribed': fcdaCount !== 0,
             'show-not-subscribed': fcdaCount === 0,
         };
+        const spec = fcdaSpecification(fcdaElement);
         return x `<mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
@@ -10697,6 +10707,8 @@ class SubscriberLaterBinding extends s$1 {
       data-fcda="${identity(fcdaElement)}"
       value="${identity(controlElement)}
              ${identity(fcdaElement)}"
+      title="CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'} 
+ Basic Type: ${spec.bType}"
     >
       <span>${getFcdaTitleValue(fcdaElement)}</span>
       <span slot="secondary">${getFcdaSubtitleValue(fcdaElement)}</span>
@@ -10903,8 +10915,10 @@ class SubscriberLaterBinding extends s$1 {
       <li divider role="separator"></li>
       ${availableExtRefs.length > 0
             ? x `${availableExtRefs.map(extRefElement => {
+                var _a, _b;
                 const hasMissingMapping = isSubscribed(extRefElement) &&
                     !findFCDAs$1(extRefElement).find(x => x !== undefined);
+                const spec = inputRestriction(extRefElement);
                 return x `<mwc-list-item
               graphic="large"
               ?disabled=${unsupportedExtRefElement(extRefElement, this.currentSelectedFcdaElement, this.currentSelectedControlElement)}
@@ -10914,6 +10928,10 @@ class SubscriberLaterBinding extends s$1 {
               class="extref"
               data-extref="${identity(extRefElement)}"
               value="${identity(extRefElement)}"
+              title="${spec.cdc && spec.bType
+                    ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'} 
+Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
+                    : ''}"
             >
               <span>
                 ${extRefElement.getAttribute('intAddr')}
@@ -11059,7 +11077,7 @@ class SubscriberLaterBinding extends s$1 {
     </h1>`;
     }
     renderSubscriberViewExtRef(extRefElement) {
-        var _a;
+        var _a, _b, _c, _d, _e;
         let subscriberFCDA;
         let supervisionNode;
         let controlBlockDescription;
@@ -11083,6 +11101,14 @@ class SubscriberLaterBinding extends s$1 {
         const hasInvalidMapping = isPartiallyConfigured(extRefElement);
         const hasMissingMapping = subscribed && !subscriberFCDA;
         const bound = subscribed || hasInvalidMapping;
+        const specExtRef = inputRestriction(extRefElement);
+        const specFcda = subscriberFCDA ? fcdaSpecification(subscriberFCDA) : null;
+        const specExtRefText = specExtRef.cdc || specExtRef.bType
+            ? `ExtRef: CDC: ${(_a = specExtRef.cdc) !== null && _a !== void 0 ? _a : '?'}, Basic Type: ${(_b = specExtRef.bType) !== null && _b !== void 0 ? _b : '?'}`
+            : '';
+        const specFcdaText = specFcda && (specFcda.cdc || specFcda.bType)
+            ? `FCDA: CDC: ${(_c = specFcda.cdc) !== null && _c !== void 0 ? _c : '?'}, Basic Type: ${(_d = specFcda.bType) !== null && _d !== void 0 ? _d : '?'}`
+            : '';
         const filterClasses = {
             'show-bound': bound,
             'show-not-bound': !bound,
@@ -11096,12 +11122,13 @@ class SubscriberLaterBinding extends s$1 {
       value="${identity(extRefElement)}${supervisionNode
             ? ` ${identity(supervisionNode)}`
             : ''}"
+      title="${[specExtRefText, specFcdaText].join('\n')}"
     >
       <span>
         ${trimIdentityParent(identity(extRefElement.parentElement))}:
         ${extRefElement.getAttribute('intAddr')}
         ${subscribed && subscriberFCDA
-            ? `⬌ ${(_a = identity(subscriberFCDA)) !== null && _a !== void 0 ? _a : 'Unknown'}`
+            ? `⬌ ${(_e = identity(subscriberFCDA)) !== null && _e !== void 0 ? _e : 'Unknown'}`
             : ''}
         ${hasInvalidMapping ? `⬌ ${msg('Invalid Mapping')}` : ''}
       </span>
