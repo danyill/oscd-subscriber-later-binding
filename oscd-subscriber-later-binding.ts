@@ -1251,9 +1251,18 @@ export default class SubscriberLaterBinding extends LitElement {
                 const controlBlockDescription =
                   getFcdaSrcControlBlockDescription(extRef);
                 const extRefDescription = getDescriptionAttribute(extRef);
+                const subscribed = isSubscribed(extRef);
+
+                let subscriberFCDA;
+                if (subscribed) {
+                  subscriberFCDA = findFCDAs(extRef).find(x => x !== undefined);
+                }
+
                 return `${
                   typeof extRefid === 'string' ? extRefid : ''
-                } ${supervisionId} ${controlBlockDescription} ${extRefDescription}`;
+                } ${supervisionId} ${controlBlockDescription} ${extRefDescription} ${
+                  subscriberFCDA ? identity(subscriberFCDA) : ''
+                }`;
               })
               .join(' ')}"
           >
@@ -1365,16 +1374,6 @@ export default class SubscriberLaterBinding extends LitElement {
         </section>`;
   }
 
-  renderPublisherFCDAs(): TemplateResult {
-    const controlElements = this.getControlElements(this.controlTag);
-    return html`<section class="column fcda">
-      ${this.renderFCDAListTitle()}
-      ${controlElements
-        ? this.renderControlList(controlElements)
-        : html`<h3>${msg('Not Subscribed')}</h3> `}
-    </section>`;
-  }
-
   renderControlTypeSelector(): TemplateResult {
     return html`
       <mwc-icon-button-toggle
@@ -1391,36 +1390,50 @@ export default class SubscriberLaterBinding extends LitElement {
     `;
   }
 
+  renderPublisherFCDAs(): TemplateResult {
+    const controlElements = this.getControlElements(this.controlTag);
+    return html`<section class="column fcda">
+      ${this.renderFCDAListTitle()}
+      ${controlElements
+        ? this.renderControlList(controlElements)
+        : html`<h3>${msg('Not Subscribed')}</h3> `}
+    </section>`;
+  }
+
+  renderswitchView(): TemplateResult {
+    return html`<mwc-icon-button-toggle
+      id="switchView"
+      onIcon="swap_horiz"
+      offIcon="swap_horiz"
+      title="${msg('Switch between Publisher and Subscriber view')}"
+      @click=${async () => {
+        this.subscriberView = this.switchViewUI?.on ?? false;
+
+        // deselect in UI
+        if (this.fcdaListSelectedUI) {
+          this.fcdaListSelectedUI.selected = false;
+          this.fcdaListSelectedUI.activated = false;
+        }
+
+        // reset state
+        this.currentSelectedControlElement = undefined;
+        this.currentSelectedFcdaElement = undefined;
+
+        // required to update CSS state for filter buttons?
+        this.requestUpdate();
+        await this.updateComplete;
+
+        // await for regeneration of UI and then attach anchors
+        this.updateView();
+      }}
+    ></mwc-icon-button-toggle>`;
+  }
+
   render(): TemplateResult {
     return html` <div id="listContainer">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
       </div>
-      <mwc-icon-button-toggle
-        id="switchView"
-        onIcon="swap_horiz"
-        offIcon="swap_horiz"
-        title="${msg('Switch between Publisher and Subscriber view')}"
-        @click=${async () => {
-          this.subscriberView = this.switchViewUI?.on ?? false;
-
-          // deselect in UI
-          if (this.fcdaListSelectedUI) {
-            this.fcdaListSelectedUI.selected = false;
-            this.fcdaListSelectedUI.activated = false;
-          }
-
-          // reset state
-          this.currentSelectedControlElement = undefined;
-          this.currentSelectedFcdaElement = undefined;
-
-          // required to update CSS state for filter buttons?
-          this.requestUpdate();
-          await this.updateComplete;
-
-          // await for regeneration of UI and then attach anchors
-          this.updateView();
-        }}
-      ></mwc-icon-button-toggle>`;
+      ${this.renderswitchView()}`;
   }
 
   static styles = css`
