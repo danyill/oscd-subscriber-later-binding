@@ -31,6 +31,7 @@ import type { Menu } from '@material/mwc-menu';
 import { identity } from './foundation/identities/identity.js';
 import {
   canRemoveSubscriptionSupervision,
+  fcdaSpecification,
   findControlBlock,
   findFCDA,
   getCbReference,
@@ -43,6 +44,7 @@ import {
   getOrderedIeds,
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
+  inputRestriction,
   instantiateSubscriptionSupervision,
   isPartiallyConfigured,
   isSubscribed,
@@ -638,6 +640,8 @@ export default class SubscriberLaterBinding extends LitElement {
     extRefElement: Element
   ): TemplateResult {
     const supervisionNode = getExistingSupervision(extRefElement);
+    const spec = inputRestriction(extRefElement);
+
     return html` <mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
@@ -645,6 +649,10 @@ export default class SubscriberLaterBinding extends LitElement {
       class="extref"
       value="${identity(extRefElement)}"
       data-extref="${identity(extRefElement)}"
+      title="${spec.cdc && spec.bType
+        ? `CDC: ${spec.cdc ?? '?'} 
+Basic Type: ${spec.bType ?? '?'}`
+        : ''}"
     >
       <span>
         ${extRefElement.getAttribute('intAddr')}
@@ -695,6 +703,8 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-not-subscribed': fcdaCount === 0,
     };
 
+    const spec = fcdaSpecification(fcdaElement);
+
     return html`<mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
@@ -705,6 +715,8 @@ export default class SubscriberLaterBinding extends LitElement {
       data-fcda="${identity(fcdaElement)}"
       value="${identity(controlElement)}
              ${identity(fcdaElement)}"
+      title="CDC: ${spec.cdc ?? '?'} 
+ Basic Type: ${spec.bType}"
     >
       <span>${getFcdaTitleValue(fcdaElement)}</span>
       <span slot="secondary">${getFcdaSubtitleValue(fcdaElement)}</span>
@@ -966,6 +978,8 @@ export default class SubscriberLaterBinding extends LitElement {
             const hasMissingMapping =
               isSubscribed(extRefElement) &&
               !findFCDAs(extRefElement).find(x => x !== undefined);
+            const spec = inputRestriction(extRefElement);
+
             return html`<mwc-list-item
               graphic="large"
               ?disabled=${unsupportedExtRefElement(
@@ -979,6 +993,10 @@ export default class SubscriberLaterBinding extends LitElement {
               class="extref"
               data-extref="${identity(extRefElement)}"
               value="${identity(extRefElement)}"
+              title="${spec.cdc && spec.bType
+                ? `CDC: ${spec.cdc ?? '?'} 
+Basic Type: ${spec.bType ?? '?'}`
+                : ''}"
             >
               <span>
                 ${extRefElement.getAttribute('intAddr')}
@@ -1159,6 +1177,22 @@ export default class SubscriberLaterBinding extends LitElement {
 
     const bound = subscribed || hasInvalidMapping;
 
+    const specExtRef = inputRestriction(extRefElement);
+    const specFcda = subscriberFCDA ? fcdaSpecification(subscriberFCDA) : null;
+
+    const specExtRefText =
+      specExtRef.cdc || specExtRef.bType
+        ? `ExtRef: CDC: ${specExtRef.cdc ?? '?'}, Basic Type: ${
+            specExtRef.bType ?? '?'
+          }`
+        : '';
+    const specFcdaText =
+      specFcda && (specFcda.cdc || specFcda.bType)
+        ? `FCDA: CDC: ${specFcda.cdc ?? '?'}, Basic Type: ${
+            specFcda.bType ?? '?'
+          }`
+        : '';
+
     const filterClasses = {
       'show-bound': bound,
       'show-not-bound': !bound,
@@ -1173,6 +1207,7 @@ export default class SubscriberLaterBinding extends LitElement {
       value="${identity(extRefElement)}${supervisionNode
         ? ` ${identity(supervisionNode)}`
         : ''}"
+      title="${[specExtRefText, specFcdaText].join('\n')}"
     >
       <span>
         ${trimIdentityParent(<string>identity(extRefElement.parentElement))}:

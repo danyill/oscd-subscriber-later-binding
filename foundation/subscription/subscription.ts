@@ -70,6 +70,7 @@ function dataAttributeSpecification(
   return { bType, cdc };
 }
 
+// TODO: This is now exported as it can be quite useful
 /**
  * Edition 2 and later SCL files allow to restrict subscription on
  * later binding type inputs (`ExtRef` elements) based on a `CDC` and
@@ -77,7 +78,7 @@ function dataAttributeSpecification(
  * @param extRef - A later binding type input in the sink IED
  * @returns data objects `CDC` and data attribute basic type `bType` or `null`
  */
-function inputRestriction(extRef: Element): {
+export function inputRestriction(extRef: Element): {
   cdc: string | null;
   bType: string | null;
 } {
@@ -100,11 +101,12 @@ function inputRestriction(extRef: Element): {
   return { cdc: null, bType: null };
 }
 
+// TODO: I have exported this
 /**
  * @param fcda - Data attribute reference in a data set
  * @returns Data objects `CDC` and data attributes `bType`
  */
-function fcdaSpecification(fcda: Element): {
+export function fcdaSpecification(fcda: Element): {
   cdc: string | null;
   bType: string | null;
 } {
