@@ -87,8 +87,9 @@ export default class SubscriberLaterBinding extends LitElement {
     private renderSubscriberViewExtRef;
     private renderSubscriberViewExtRefs;
     renderExtRefs(): TemplateResult;
-    renderPublisherFCDAs(): TemplateResult;
     renderControlTypeSelector(): TemplateResult;
+    renderPublisherFCDAs(): TemplateResult;
+    renderswitchView(): TemplateResult;
     render(): TemplateResult;
     static styles: import("lit").CSSResult;
 }

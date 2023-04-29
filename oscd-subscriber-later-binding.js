@@ -10164,6 +10164,15 @@ TextField = __decorate([
     e$6('mwc-textfield')
 ], TextField);
 
+function debounce(callback, delay = 250) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            callback(...args);
+        }, delay);
+    };
+}
 function slotItem(item) {
     if (!item.closest('oscd-filtered-list') || !item.parentElement)
         return item;
@@ -10203,6 +10212,10 @@ let OscdFilteredList = class OscdFilteredList extends ListBase {
         super();
         /** Whether the check all option (checkbox next to search text field) is activated */
         this.disableCheckAll = false;
+        // TODO: Need to upstream -- debounce added to improve performance slightly
+        this.onFilterInput = debounce(() => {
+            Array.from(this.querySelectorAll('mwc-list-item, mwc-check-list-item, mwc-radio-list-item')).forEach(item => hideFiltered(item, this.searchField.value));
+        }, 500);
         this.addEventListener('selected', () => {
             this.requestUpdate();
         });
@@ -10230,9 +10243,6 @@ let OscdFilteredList = class OscdFilteredList extends ListBase {
             // eslint-disable-next-line no-param-reassign
             item.selected = select;
         });
-    }
-    onFilterInput() {
-        Array.from(this.querySelectorAll('mwc-list-item, mwc-check-list-item, mwc-radio-list-item')).forEach(item => hideFiltered(item, this.searchField.value));
     }
     onListItemConnected(e) {
         super.onListItemConnected(e);
@@ -11155,7 +11165,12 @@ class SubscriberLaterBinding extends s$1 {
                     : '';
                 const controlBlockDescription = getFcdaSrcControlBlockDescription(extRef);
                 const extRefDescription = getDescriptionAttribute(extRef);
-                return `${typeof extRefid === 'string' ? extRefid : ''} ${supervisionId} ${controlBlockDescription} ${extRefDescription}`;
+                const subscribed = isSubscribed(extRef);
+                let subscriberFCDA;
+                if (subscribed) {
+                    subscriberFCDA = findFCDAs$1(extRef).find(x => x !== undefined);
+                }
+                return `${typeof extRefid === 'string' ? extRefid : ''} ${supervisionId} ${controlBlockDescription} ${extRefDescription} ${subscriberFCDA ? identity(subscriberFCDA) : ''}`;
             })
                 .join(' ')}"
           >
@@ -11240,15 +11255,6 @@ class SubscriberLaterBinding extends s$1 {
           </oscd-filtered-list>
         </section>`;
     }
-    renderPublisherFCDAs() {
-        const controlElements = this.getControlElements(this.controlTag);
-        return x `<section class="column fcda">
-      ${this.renderFCDAListTitle()}
-      ${controlElements
-            ? this.renderControlList(controlElements)
-            : x `<h3>${msg('Not Subscribed')}</h3> `}
-    </section>`;
-    }
     renderControlTypeSelector() {
         return x `
       <mwc-icon-button-toggle
@@ -11265,16 +11271,22 @@ class SubscriberLaterBinding extends s$1 {
       </mwc-icon-button-toggle>
     `;
     }
-    render() {
-        return x ` <div id="listContainer">
-        ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
-      </div>
-      <mwc-icon-button-toggle
-        id="switchView"
-        onIcon="swap_horiz"
-        offIcon="swap_horiz"
-        title="${msg('Switch between Publisher and Subscriber view')}"
-        @click=${async () => {
+    renderPublisherFCDAs() {
+        const controlElements = this.getControlElements(this.controlTag);
+        return x `<section class="column fcda">
+      ${this.renderFCDAListTitle()}
+      ${controlElements
+            ? this.renderControlList(controlElements)
+            : x `<h3>${msg('Not Subscribed')}</h3> `}
+    </section>`;
+    }
+    renderswitchView() {
+        return x `<mwc-icon-button-toggle
+      id="switchView"
+      onIcon="swap_horiz"
+      offIcon="swap_horiz"
+      title="${msg('Switch between Publisher and Subscriber view')}"
+      @click=${async () => {
             var _a, _b;
             this.subscriberView = (_b = (_a = this.switchViewUI) === null || _a === void 0 ? void 0 : _a.on) !== null && _b !== void 0 ? _b : false;
             // deselect in UI
@@ -11291,7 +11303,13 @@ class SubscriberLaterBinding extends s$1 {
             // await for regeneration of UI and then attach anchors
             this.updateView();
         }}
-      ></mwc-icon-button-toggle>`;
+    ></mwc-icon-button-toggle>`;
+    }
+    render() {
+        return x ` <div id="listContainer">
+        ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
+      </div>
+      ${this.renderswitchView()}`;
     }
 }
 SubscriberLaterBinding.styles = i$5 `

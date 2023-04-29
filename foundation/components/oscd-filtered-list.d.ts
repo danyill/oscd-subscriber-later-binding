@@ -16,7 +16,7 @@ export declare class OscdFilteredList extends ListBase {
     private get isSomeSelected();
     searchField: TextField;
     private onCheckAll;
-    onFilterInput(): void;
+    onFilterInput: (...args: any) => void;
     protected onListItemConnected(e: CustomEvent): void;
     constructor();
     private renderCheckAll;
