@@ -66,6 +66,14 @@
         <source>The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.</source>
         <target>Das Abonnement ist gültig, aber das Element ist nicht vorhanden - überprüfen Sie, ob IED, Steuerblock und Datensatz korrekt sind.</target>
       </trans-unit>
+      <trans-unit id="s66722bc2ea775e05">
+        <source>Disabled</source>
+        <target>Deaktiviert</target>
+      </trans-unit>
+      <trans-unit id="s4a29983da137eeb2">
+        <source>Strict Service Types</source>
+        <target>Strenge Diensttypen</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
