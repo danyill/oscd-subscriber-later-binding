@@ -88,7 +88,9 @@ export function inputRestriction(extRef: Element): {
   if (!pLN || !pDO || !pDA) return { cdc: null, bType: null };
 
   const anyLns = Array.from(
-    extRef.ownerDocument.querySelectorAll(`LN[lnClass="${pLN}"],LN0[lnClass="${pLN}"]`) ?? []
+    extRef.ownerDocument.querySelectorAll(
+      `LN[lnClass="${pLN}"],LN0[lnClass="${pLN}"]`
+    ) ?? []
   );
 
   for (const anyLn of anyLns) {
