@@ -112,6 +112,61 @@ function trimIdentityParent(idString: string): string {
   return idString.split('>').slice(1).join('>').trim().slice(1);
 }
 
+// TODO: This needs careful review!
+function getFcdaInstDesc(fcda: Element, includeDai: boolean): string[] {
+  const [doName, daName] = ['doName', 'daName'].map(attr =>
+    fcda.getAttribute(attr)
+  );
+
+  const ied = fcda.closest('IED');
+
+  const anyLn = Array.from(
+    ied?.querySelectorAll(
+      `LDevice[inst="${fcda.getAttribute(
+        'ldInst'
+      )}"] > LN, LDevice[inst="${fcda.getAttribute('ldInst')}"] LN0`
+    ) ?? []
+  ).find(
+    lN =>
+      (lN.getAttribute('prefix') ?? '') ===
+        (fcda.getAttribute('prefix') ?? '') &&
+      (lN.getAttribute('lnClass') ?? '') ===
+        (fcda.getAttribute('lnClass') ?? '') &&
+      (lN.getAttribute('inst') ?? '') === (fcda.getAttribute('lnInst') ?? '')
+  );
+
+  if (!anyLn) return [];
+
+  const descs: (string | null | undefined)[] = [];
+
+  descs.push(anyLn.closest('LDevice')?.getAttribute('desc'));
+  descs.push(anyLn.getAttribute('desc'));
+
+  const doNames = doName!.split('.');
+
+  const doi = anyLn.querySelector(`DOI[name="${doNames[0]}"`);
+
+  if (!doi) return descs.filter(d => d !== null && d !== undefined) as string[];
+
+  descs.push(doi?.getAttribute('desc'));
+
+  let previousDI: Element = doi;
+  doNames.slice(1).forEach(sdiName => {
+    const sdi = previousDI.querySelector(`SDI[name="${sdiName}"]`);
+    if (sdi) previousDI = sdi;
+    descs.push(sdi?.getAttribute('desc'));
+  });
+
+  if (!includeDai || !daName)
+    return descs.filter(d => d !== null && d !== undefined) as string[];
+
+  const daNames = daName?.split('.');
+  const dai = previousDI.querySelector(`DAI[name="${daNames[0]}"]`);
+  descs.push(dai?.getAttribute('desc'));
+
+  return descs.filter(d => d !== null && d !== undefined) as string[];
+}
+
 export default class SubscriberLaterBinding extends LitElement {
   @property({ attribute: false })
   doc!: XMLDocument;
@@ -641,11 +696,12 @@ export default class SubscriberLaterBinding extends LitElement {
   ): TemplateResult {
     const supervisionNode = getExistingSupervision(extRefElement);
     const spec = inputRestriction(extRefElement);
+    const desc = getDescriptionAttribute(extRefElement);
 
     return html` <mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
-      twoline
+      ?twoline=${desc || supervisionNode}
       class="extref"
       value="${identity(extRefElement)}"
       data-extref="${identity(extRefElement)}"
@@ -654,14 +710,12 @@ export default class SubscriberLaterBinding extends LitElement {
 Basic Type: ${spec.bType ?? '?'}`
         : ''}"
     >
-      <span>
+      <span
+        >${identity(extRefElement.parentElement)}
         ${extRefElement.getAttribute('intAddr')}
-        ${getDescriptionAttribute(extRefElement)
-          ? html` (${getDescriptionAttribute(extRefElement)})`
-          : nothing}
       </span>
       <span slot="secondary"
-        >${identity(extRefElement.parentElement)}${supervisionNode !== null
+        >${desc}${supervisionNode !== null
           ? ` (${identity(supervisionNode)})`
           : ''}</span
       >
@@ -704,22 +758,25 @@ Basic Type: ${spec.bType ?? '?'}`
     };
 
     const spec = fcdaSpecification(fcdaElement);
+    const fcdaDescription = getFcdaInstDesc(fcdaElement, true).join('>');
 
     return html`<mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
       ?disabled=${isDisabled}
-      twoline
+      ?twoline=${fcdaDescription !== ''}
       class="fcda ${classMap(filterClasses)}"
       data-control="${identity(controlElement)}"
       data-fcda="${identity(fcdaElement)}"
       value="${identity(controlElement)}
              ${identity(fcdaElement)}"
       title="CDC: ${spec.cdc ?? '?'} 
- Basic Type: ${spec.bType}"
+Basic Type: ${spec.bType}"
     >
-      <span>${getFcdaTitleValue(fcdaElement)}</span>
-      <span slot="secondary">${getFcdaSubtitleValue(fcdaElement)}</span>
+      <span
+        >${getFcdaSubtitleValue(fcdaElement)} ${getFcdaTitleValue(fcdaElement)}
+      </span>
+      <span slot="secondary"> ${fcdaDescription}</span>
       <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
       ${fcdaCount !== 0 ? html`<span slot="meta">${fcdaCount}</span>` : nothing}
     </mwc-list-item>`;
@@ -979,6 +1036,7 @@ Basic Type: ${spec.bType ?? '?'}`
               isSubscribed(extRefElement) &&
               !findFCDAs(extRefElement).find(x => x !== undefined);
             const spec = inputRestriction(extRefElement);
+            const desc = getDescriptionAttribute(extRefElement);
 
             return html`<mwc-list-item
               graphic="large"
@@ -989,7 +1047,7 @@ Basic Type: ${spec.bType ?? '?'}`
               )}
               ?hasMeta=${isPartiallyConfigured(extRefElement) ||
               hasMissingMapping}
-              twoline
+              ?twoline=${desc}
               class="extref"
               data-extref="${identity(extRefElement)}"
               value="${identity(extRefElement)}"
@@ -999,14 +1057,10 @@ Basic Type: ${spec.bType ?? '?'}`
                 : ''}"
             >
               <span>
+                ${identity(extRefElement.parentElement)}
                 ${extRefElement.getAttribute('intAddr')}
-                ${getDescriptionAttribute(extRefElement)
-                  ? html` (${getDescriptionAttribute(extRefElement)})`
-                  : nothing}
               </span>
-              <span slot="secondary"
-                >${identity(extRefElement.parentElement)}</span
-              >
+              <span slot="secondary">${desc}</span>
               <mwc-icon slot="graphic">link_off</mwc-icon>
               ${isPartiallyConfigured(extRefElement)
                 ? html`<mwc-icon
@@ -1180,6 +1234,15 @@ Basic Type: ${spec.bType ?? '?'}`
     const specExtRef = inputRestriction(extRefElement);
     const specFcda = subscriberFCDA ? fcdaSpecification(subscriberFCDA) : null;
 
+    const fcdaName = subscriberFCDA
+      ? `${getFcdaSubtitleValue(subscriberFCDA)} ${getFcdaTitleValue(
+          subscriberFCDA
+        )} `
+      : '';
+    const fcdaDesc = subscriberFCDA
+      ? getFcdaInstDesc(subscriberFCDA, true).join('>')
+      : null;
+
     const specExtRefText =
       specExtRef.cdc || specExtRef.bType
         ? `ExtRef: CDC: ${specExtRef.cdc ?? '?'}, Basic Type: ${
@@ -1209,16 +1272,24 @@ Basic Type: ${spec.bType ?? '?'}`
         : ''}"
       title="${[specExtRefText, specFcdaText].join('\n')}"
     >
-      <span>
-        ${trimIdentityParent(<string>identity(extRefElement.parentElement))}:
-        ${extRefElement.getAttribute('intAddr')}
-        ${subscribed && subscriberFCDA
-          ? `⬌ ${identity(subscriberFCDA) ?? 'Unknown'}`
-          : ''}
-        ${hasInvalidMapping ? `⬌ ${msg('Invalid Mapping')}` : ''}
-      </span>
+      <div class="extref-firstline">
+        <span>
+          ${trimIdentityParent(<string>identity(extRefElement.parentElement))}:
+          ${extRefElement.getAttribute('intAddr')}
+        </span>
+        ${(subscribed && subscriberFCDA) || hasInvalidMapping
+          ? html`<mwc-icon>arrow_back</mwc-icon>
+              <span>
+                ${subscribed && subscriberFCDA ? `${fcdaName}` : ''}
+                ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''}
+              </span>`
+          : nothing}
+      </div>
       <span slot="secondary"
         >${extRefDescription ? html` ${extRefDescription}` : nothing}
+        ${extRefDescription && fcdaDesc && fcdaDesc !== ''
+          ? `🡄 ${fcdaDesc}`
+          : nothing}
         ${extRefDescription && supAndctrlDescription !== nothing
           ? `(${supAndctrlDescription})`
           : supAndctrlDescription}
@@ -1697,6 +1768,11 @@ Basic Type: ${spec.bType ?? '?'}`
     #switchControlType,
     #switchView {
       --mdc-icon-size: 32px;
+    }
+
+    .extref-firstline {
+      display: inline-flex;
+      align-items: center;
     }
   `;
 }

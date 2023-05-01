@@ -102,6 +102,8 @@ export function inputRestriction(extRef: Element): {
 }
 
 // TODO: I have exported this
+// TODO I have modified this from LDevice[inst="${fcda.getAttribute('inst')}"] LN0` to LDevice[inst="${fcda.getAttribute('ldInst')}"] LN0`
+// there is no inst attribute declared against an FCDA
 /**
  * @param fcda - Data attribute reference in a data set
  * @returns Data objects `CDC` and data attributes `bType`
@@ -121,7 +123,7 @@ export function fcdaSpecification(fcda: Element): {
     ied?.querySelectorAll(
       `LDevice[inst="${fcda.getAttribute(
         'ldInst'
-      )}"] > LN, LDevice[inst="${fcda.getAttribute('inst')}"] LN0`
+      )}"] > LN, LDevice[inst="${fcda.getAttribute('ldInst')}"] LN0`
     ) ?? []
   ).find(
     aLn =>
