@@ -7327,12 +7327,11 @@ function dataAttributeSpecification(anyLn, doName, daName) {
  * @returns data objects `CDC` and data attribute basic type `bType` or `null`
  */
 function inputRestriction(extRef) {
-    var _a, _b;
+    var _a;
     const [pLN, pDO, pDA] = ['pLN', 'pDO', 'pDA'].map(attr => extRef.getAttribute(attr));
     if (!pLN || !pDO || !pDA)
         return { cdc: null, bType: null };
-    const anyLns = Array.from((_b = (_a = extRef
-        .closest('IED')) === null || _a === void 0 ? void 0 : _a.querySelectorAll(`LN[lnClass="${pLN}"],LN0[lnClass="${pLN}"]`)) !== null && _b !== void 0 ? _b : []);
+    const anyLns = Array.from((_a = extRef.ownerDocument.querySelectorAll(`LN[lnClass="${pLN}"],LN0[lnClass="${pLN}"]`)) !== null && _a !== void 0 ? _a : []);
     for (const anyLn of anyLns) {
         const dataSpec = dataAttributeSpecification(anyLn, pDO, pDA);
         if (dataSpec.cdc !== null && dataSpec.bType !== null)
