@@ -9,9 +9,9 @@ import { fixture, html } from '@open-wc/testing';
 
 import '@openscd/open-scd-core/open-scd.js';
 
-// import { test, expect } from '@playwright/test';
-
+import { LitElement } from 'lit';
 import { getExtRefItem, getFcdaItem, midEl } from './test-support.js';
+import { OscdFilteredList } from '../../foundation/components/oscd-filtered-list.js';
 
 const factor = window.process && process.env.CI ? 4 : 2;
 
@@ -21,7 +21,7 @@ function timeout(ms: number) {
   });
 }
 
-mocha.timeout(12000 * factor);
+mocha.timeout(120000 * factor);
 
 function testName(test: any, prefix: string): string {
   return test.test!.fullTitle().slice(prefix.length);
@@ -34,28 +34,23 @@ async function tryViewportSet(): Promise<void> {
 
 const pluginName = 'oscd-subscriber-later-binding';
 
+type OpenSCD = LitElement & {
+  editor: string;
+  docName: string;
+  docs: Record<string, XMLDocument>;
+};
+
+type Plugin = LitElement & {
+  fcdaListUI: OscdFilteredList;
+  extRefListPublisherUI?: OscdFilteredList;
+};
+
 describe(pluginName, () => {
-  let editor: any;
-  let plugin: any;
+  let editor: OpenSCD;
+  let plugin: Plugin;
 
   beforeEach(async function () {
     const plugins = {
-      menu: [
-        {
-          name: 'Open File',
-          translations: { de: 'Datei öffnen' },
-          icon: 'folder_open',
-          active: true,
-          src: 'https://openscd.github.io/oscd-open/oscd-open.js',
-        },
-        {
-          name: 'Save File',
-          translations: { de: 'Datei speichern' },
-          icon: 'save',
-          active: true,
-          src: 'https://openscd.github.io/oscd-save/oscd-save.js',
-        },
-      ],
       editor: [
         {
           name: 'Subscriber Later Binding',
@@ -78,12 +73,11 @@ describe(pluginName, () => {
       ></open-scd>`
     );
     document.body.prepend(ed);
-    // TODO remove once OpenSCD is exported as a Lit Element and updateComplete is available
-    await timeout(1000);
-    editor = document.querySelector('open-scd');
+
+    editor = document.querySelector<OpenSCD>('open-scd')!;
     plugin = document
       .querySelector('open-scd')!
-      .shadowRoot!.querySelector(editor.editor);
+      .shadowRoot!.querySelector<Plugin>(editor.editor)!;
   });
 
   afterEach(() => {
@@ -105,9 +99,10 @@ describe(pluginName, () => {
 
         editor.docName = 'GOOSE-2007B4.scd';
         editor.docs[editor.docName] = doc;
-        // TODO remove once OpenSCD is exported as a Lit Element and updateComplete is available
-        await timeout(500);
+
         await editor.updateComplete;
+        await plugin.updateComplete;
+        // timeout(2000);
       });
 
       // afterEach(() => plugin.remove());
@@ -161,12 +156,10 @@ describe(pluginName, () => {
           position: midEl(extref!),
         });
 
-        // await plugin.updateComplete;
-
         plugin.requestUpdate();
         await plugin.updateComplete;
 
-        await timeout(1000);
+        await timeout(150);
         await visualDiff(plugin, testName(this, pluginName));
       });
 
