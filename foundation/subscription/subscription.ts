@@ -331,6 +331,8 @@ export function getSubscribedExtRefElements(
   );
 }
 
+// TODO: FIXME -- This is only adequate for greater than edition 2 !
+// TODO: Do we need to include srcLNInst?
 export function getCbReference(extRef: Element): string {
   const extRefValues = ['iedName', 'srcPrefix', 'srcCBName'];
   const [srcIedName, srcPrefix, srcCBName] = extRefValues.map(
@@ -711,9 +713,7 @@ export function instantiateSubscriptionSupervision(
     });
   }
 
-  let daiElement = availableLN.querySelector(
-    `DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]`
-  );
+  let daiElement = doiElement.querySelector(`DAI[name="setSrcRef"]`);
   if (!daiElement) {
     daiElement = subscriberIED.ownerDocument.createElementNS(
       SCL_NAMESPACE,
@@ -739,19 +739,27 @@ export function instantiateSubscriptionSupervision(
     });
   }
 
-  let valElement = availableLN.querySelector(`Val`);
+  const valTextContent = controlBlockReference(controlBlock);
+  let valElement = daiElement.querySelector(`Val`);
   if (!valElement) {
     valElement = subscriberIED.ownerDocument.createElementNS(
       SCL_NAMESPACE,
       'Val'
     );
+    valElement.textContent = valTextContent;
+
+    edits.push({
+      parent: daiElement!,
+      reference: null,
+      node: valElement,
+    });
+  } else {
+    edits.push({
+      parent: valElement!,
+      reference: null,
+      node: new Text(valTextContent ?? 'Unknown Control Block'),
+    });
   }
-  valElement.textContent = controlBlockReference(controlBlock);
-  edits.push({
-    parent: daiElement!,
-    reference: null,
-    node: valElement,
-  });
 
   return edits;
 }

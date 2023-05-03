@@ -112,6 +112,21 @@ function trimIdentityParent(idString: string): string {
   return idString.split('>').slice(1).join('>').trim().slice(1);
 }
 
+function extRefPath(extRef: Element): string {
+  if (!extRef) return 'Unknown';
+  const lN = extRef.closest('LN') ?? extRef.closest('LN0');
+  const lDevice = lN!.closest('LDevice');
+
+  const ldInst = lDevice?.getAttribute('inst');
+  const lnPrefix = lN?.getAttribute('prefix');
+  const lnClass = lN?.getAttribute('lnClass');
+  const lnInst = lN?.getAttribute('inst');
+
+  return [ldInst, '/', lnPrefix, lnClass, lnInst]
+    .filter(a => a !== null)
+    .join(' ');
+}
+
 // TODO: This needs careful review!
 function getFcdaInstDesc(fcda: Element, includeDai: boolean): string[] {
   const [doName, daName] = ['doName', 'daName'].map(attr =>
@@ -271,6 +286,7 @@ export default class SubscriberLaterBinding extends LitElement {
   @state()
   currentSelectedExtRefElement: Element | undefined;
 
+  @state()
   private supervisionData = new Map();
 
   // constructor() {
@@ -360,12 +376,16 @@ export default class SubscriberLaterBinding extends LitElement {
   protected updated(_changedProperties: PropertyValues): void {
     super.updated(_changedProperties);
 
-    // When a new document is loaded we will reset the Map to clear old entries.
+    // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
+    // TODO: Is this too broadly scoped?
     if (_changedProperties.has('doc')) {
       this.extRefCounters = new Map();
       this.currentSelectedControlElement = undefined;
       this.currentSelectedFcdaElement = undefined;
       this.currentSelectedExtRefElement = undefined;
+
+      // reset supervision cache
+      this.reCreateSupervisionCache();
 
       // deselect in UI
       if (this.extRefListSubscriberSelectedUI) {
@@ -451,6 +471,8 @@ export default class SubscriberLaterBinding extends LitElement {
     }
 
     this.dispatchEvent(newEditEvent(editActions));
+
+    this.reCreateSupervisionCache();
   }
 
   /**
@@ -485,6 +507,8 @@ export default class SubscriberLaterBinding extends LitElement {
       this.currentSelectedControlElement
     )} ${identity(this.currentSelectedFcdaElement)}`;
     this.extRefCounters.delete(controlBlockFcdaId);
+
+    this.reCreateSupervisionCache();
   }
 
   public getSubscribedExtRefElements(): Element[] {
@@ -517,12 +541,9 @@ export default class SubscriberLaterBinding extends LitElement {
       true
     ).filter(
       extRefElement =>
-        // TODO: Manage robustness for for subscribed things?
-        // !isSubscribed(extRefElement) ||
-        // what about pXX types ?? !!
-        !isSubscribed(extRefElement) &&
-        !findFCDAs(extRefElement).find(x => x !== undefined) &&
-        this.isExtRefViewable(extRefElement)
+        !isSubscribed(extRefElement) ||
+        (!findFCDAs(extRefElement).find(x => x !== undefined) &&
+          this.isExtRefViewable(extRefElement))
     );
   }
 
@@ -540,9 +561,15 @@ export default class SubscriberLaterBinding extends LitElement {
       serviceTypeLookup[this.controlTag]
     ).forEach(supervisionLN => {
       const cbRef = supervisionLN!.querySelector(
-        `LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
-      )?.textContent;
-      if (cbRef) this.supervisionData.set(cbRef, supervisionLN);
+        `${refSelector}>DAI[name="setSrcRef"]>Val`
+      );
+      const iedName =
+        supervisionLN.closest('IED')?.getAttribute('name') ?? 'Unknown IED';
+      if (cbRef)
+        this.supervisionData.set(
+          `${iedName} ${cbRef.textContent ?? ''}`,
+          supervisionLN
+        );
     });
   }
 
@@ -556,8 +583,10 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   private getCachedSupervision(extRefElement: Element): Element | undefined {
+    const iedName =
+      extRefElement.closest('IED')?.getAttribute('name') ?? 'Unknown IED';
     const cbRefKey = getCbReference(extRefElement);
-    return this.supervisionData.get(cbRefKey);
+    return this.supervisionData.get(`${iedName} ${cbRefKey}`);
   }
 
   private updateExtRefFilter(): void {
@@ -1235,7 +1264,9 @@ Basic Type: ${spec.bType ?? '?'}`
     const specFcda = subscriberFCDA ? fcdaSpecification(subscriberFCDA) : null;
 
     const fcdaName = subscriberFCDA
-      ? `${getFcdaSubtitleValue(subscriberFCDA)} ${getFcdaTitleValue(
+      ? `${
+          subscriberFCDA.closest('IED')?.getAttribute('name') ?? 'Unknown'
+        } > ${getFcdaSubtitleValue(subscriberFCDA)} ${getFcdaTitleValue(
           subscriberFCDA
         )} `
       : '';
@@ -1272,19 +1303,14 @@ Basic Type: ${spec.bType ?? '?'}`
         : ''}"
       title="${[specExtRefText, specFcdaText].join('\n')}"
     >
-      <div class="extref-firstline">
-        <span>
-          ${trimIdentityParent(<string>identity(extRefElement.parentElement))}:
-          ${extRefElement.getAttribute('intAddr')}
-        </span>
+      <span class="extref-firstline">
+        ${extRefPath(extRefElement)}: ${extRefElement.getAttribute('intAddr')}
         ${(subscribed && subscriberFCDA) || hasInvalidMapping
-          ? html`<mwc-icon>arrow_back</mwc-icon>
-              <span>
-                ${subscribed && subscriberFCDA ? `${fcdaName}` : ''}
-                ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''}
-              </span>`
+          ? html`<mwc-icon class="left-inline-arrow">arrow_back</mwc-icon>
+              ${subscribed && subscriberFCDA ? `${fcdaName}` : ''}
+              ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
           : nothing}
-      </div>
+      </span>
       <span slot="secondary"
         >${extRefDescription ? html` ${extRefDescription}` : nothing}
         ${extRefDescription && fcdaDesc && fcdaDesc !== ''
@@ -1489,6 +1515,7 @@ Basic Type: ${spec.bType ?? '?'}`
           this.controlTag = this.switchControlTypeUI?.on
             ? 'GSEControl'
             : 'SampledValueControl';
+          this.reCreateSupervisionCache();
         }}
       >
         ${gooseActionIcon} ${smvActionIcon}
@@ -1770,9 +1797,9 @@ Basic Type: ${spec.bType ?? '?'}`
       --mdc-icon-size: 32px;
     }
 
-    .extref-firstline {
-      display: inline-flex;
-      align-items: center;
+    .left-inline-arrow {
+      position: relative;
+      top: 5px;
     }
   `;
 }
