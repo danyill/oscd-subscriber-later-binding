@@ -7480,6 +7480,8 @@ function isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement) 
 function getSubscribedExtRefElements(rootElement, controlTag, fcdaElement, controlElement, includeLaterBinding) {
     return getExtRefElements(rootElement, fcdaElement, includeLaterBinding).filter(extRefElement => isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement));
 }
+// TODO: FIXME -- This is only adequate for greater than edition 2 !
+// TODO: Do we need to include srcLNInst?
 function getCbReference(extRef) {
     var _a, _b;
     const extRefValues = ['iedName', 'srcPrefix', 'srcCBName'];
@@ -7742,7 +7744,7 @@ function instantiateSubscriptionSupervision(controlBlock, subscriberIED) {
             node: doiElement,
         });
     }
-    let daiElement = availableLN.querySelector(`DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]`);
+    let daiElement = doiElement.querySelector(`DAI[name="setSrcRef"]`);
     if (!daiElement) {
         daiElement = subscriberIED.ownerDocument.createElementNS(SCL_NAMESPACE, 'DAI');
         const srcValRef = subscriberIED.querySelector(`LN[lnClass="${supervisionType}"]>DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]`);
@@ -7758,16 +7760,24 @@ function instantiateSubscriptionSupervision(controlBlock, subscriberIED) {
             node: daiElement,
         });
     }
-    let valElement = availableLN.querySelector(`Val`);
+    const valTextContent = controlBlockReference(controlBlock);
+    let valElement = daiElement.querySelector(`Val`);
     if (!valElement) {
         valElement = subscriberIED.ownerDocument.createElementNS(SCL_NAMESPACE, 'Val');
+        valElement.textContent = valTextContent;
+        edits.push({
+            parent: daiElement,
+            reference: null,
+            node: valElement,
+        });
     }
-    valElement.textContent = controlBlockReference(controlBlock);
-    edits.push({
-        parent: daiElement,
-        reference: null,
-        node: valElement,
-    });
+    else {
+        edits.push({
+            parent: valElement,
+            reference: null,
+            node: new Text(valTextContent !== null && valTextContent !== void 0 ? valTextContent : 'Unknown Control Block'),
+        });
+    }
     return edits;
 }
 // TODO: Discuss with ca-d about changes to OpenSCD core for this with changes to update actions
@@ -10357,6 +10367,20 @@ const storedProperties = [
 function trimIdentityParent(idString) {
     return idString.split('>').slice(1).join('>').trim().slice(1);
 }
+function extRefPath(extRef) {
+    var _a;
+    if (!extRef)
+        return 'Unknown';
+    const lN = (_a = extRef.closest('LN')) !== null && _a !== void 0 ? _a : extRef.closest('LN0');
+    const lDevice = lN.closest('LDevice');
+    const ldInst = lDevice === null || lDevice === void 0 ? void 0 : lDevice.getAttribute('inst');
+    const lnPrefix = lN === null || lN === void 0 ? void 0 : lN.getAttribute('prefix');
+    const lnClass = lN === null || lN === void 0 ? void 0 : lN.getAttribute('lnClass');
+    const lnInst = lN === null || lN === void 0 ? void 0 : lN.getAttribute('inst');
+    return [ldInst, '/', lnPrefix, lnClass, lnInst]
+        .filter(a => a !== null)
+        .join(' ');
+}
 // TODO: This needs careful review!
 function getFcdaInstDesc(fcda, includeDai) {
     var _a, _b;
@@ -10463,12 +10487,15 @@ class SubscriberLaterBinding extends s$1 {
     }
     updated(_changedProperties) {
         super.updated(_changedProperties);
-        // When a new document is loaded we will reset the Map to clear old entries.
+        // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
+        // TODO: Is this too broadly scoped?
         if (_changedProperties.has('doc')) {
             this.extRefCounters = new Map();
             this.currentSelectedControlElement = undefined;
             this.currentSelectedFcdaElement = undefined;
             this.currentSelectedExtRefElement = undefined;
+            // reset supervision cache
+            this.reCreateSupervisionCache();
             // deselect in UI
             if (this.extRefListSubscriberSelectedUI) {
                 this.extRefListSubscriberSelectedUI.selected = false;
@@ -10533,6 +10560,7 @@ class SubscriberLaterBinding extends s$1 {
             this.extRefCounters.delete(controlBlockFcdaId);
         }
         this.dispatchEvent(newEditEvent(editActions));
+        this.reCreateSupervisionCache();
     }
     /**
      * Subscribing means copying a list of attributes from the FCDA Element (and others) to the ExtRef Element.
@@ -10550,6 +10578,7 @@ class SubscriberLaterBinding extends s$1 {
         this.dispatchEvent(newEditEvent([updateEdit, ...supervisionActions]));
         const controlBlockFcdaId = `${identity(this.currentSelectedControlElement)} ${identity(this.currentSelectedFcdaElement)}`;
         this.extRefCounters.delete(controlBlockFcdaId);
+        this.reCreateSupervisionCache();
     }
     getSubscribedExtRefElements() {
         return getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, this.currentSelectedFcdaElement, this.currentSelectedControlElement, true);
@@ -10565,13 +10594,9 @@ class SubscriberLaterBinding extends s$1 {
                     serviceTypeLookup[this.controlTag]));
     }
     getAvailableExtRefElements() {
-        return getExtRefElements(this.doc.getRootNode(), this.currentSelectedFcdaElement, true).filter(extRefElement => 
-        // TODO: Manage robustness for for subscribed things?
-        // !isSubscribed(extRefElement) ||
-        // what about pXX types ?? !!
-        !isSubscribed(extRefElement) &&
-            !findFCDAs$1(extRefElement).find(x => x !== undefined) &&
-            this.isExtRefViewable(extRefElement));
+        return getExtRefElements(this.doc.getRootNode(), this.currentSelectedFcdaElement, true).filter(extRefElement => !isSubscribed(extRefElement) ||
+            (!findFCDAs$1(extRefElement).find(x => x !== undefined) &&
+                this.isExtRefViewable(extRefElement)));
     }
     reCreateSupervisionCache() {
         this.supervisionData = new Map();
@@ -10580,10 +10605,11 @@ class SubscriberLaterBinding extends s$1 {
             ? 'DOI[name="GoCBRef"]'
             : 'DOI[name="SvCBRef"]';
         getUsedSupervisionInstances(this.doc, serviceTypeLookup[this.controlTag]).forEach(supervisionLN => {
-            var _a;
-            const cbRef = (_a = supervisionLN.querySelector(`LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`)) === null || _a === void 0 ? void 0 : _a.textContent;
+            var _a, _b, _c;
+            const cbRef = supervisionLN.querySelector(`${refSelector}>DAI[name="setSrcRef"]>Val`);
+            const iedName = (_b = (_a = supervisionLN.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name')) !== null && _b !== void 0 ? _b : 'Unknown IED';
             if (cbRef)
-                this.supervisionData.set(cbRef, supervisionLN);
+                this.supervisionData.set(`${iedName} ${(_c = cbRef.textContent) !== null && _c !== void 0 ? _c : ''}`, supervisionLN);
         });
     }
     // eslint-disable-next-line class-methods-use-this
@@ -10591,8 +10617,10 @@ class SubscriberLaterBinding extends s$1 {
         return Array.from(ied.querySelectorAll(':scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef')).filter(extRefElement => this.isExtRefViewable(extRefElement));
     }
     getCachedSupervision(extRefElement) {
+        var _a, _b;
+        const iedName = (_b = (_a = extRefElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name')) !== null && _b !== void 0 ? _b : 'Unknown IED';
         const cbRefKey = getCbReference(extRefElement);
-        return this.supervisionData.get(cbRefKey);
+        return this.supervisionData.get(`${iedName} ${cbRefKey}`);
     }
     updateExtRefFilter() {
         const filterClassList = this.extRefListSubscriberUI.classList;
@@ -11114,7 +11142,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
     </h1>`;
     }
     renderSubscriberViewExtRef(extRefElement) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         let subscriberFCDA;
         let supervisionNode;
         let controlBlockDescription;
@@ -11141,16 +11169,16 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         const specExtRef = inputRestriction(extRefElement);
         const specFcda = subscriberFCDA ? fcdaSpecification(subscriberFCDA) : null;
         const fcdaName = subscriberFCDA
-            ? `${getFcdaSubtitleValue(subscriberFCDA)} ${getFcdaTitleValue(subscriberFCDA)} `
+            ? `${(_b = (_a = subscriberFCDA.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name')) !== null && _b !== void 0 ? _b : 'Unknown'} > ${getFcdaSubtitleValue(subscriberFCDA)} ${getFcdaTitleValue(subscriberFCDA)} `
             : '';
         const fcdaDesc = subscriberFCDA
             ? getFcdaInstDesc(subscriberFCDA, true).join('>')
             : null;
         const specExtRefText = specExtRef.cdc || specExtRef.bType
-            ? `ExtRef: CDC: ${(_a = specExtRef.cdc) !== null && _a !== void 0 ? _a : '?'}, Basic Type: ${(_b = specExtRef.bType) !== null && _b !== void 0 ? _b : '?'}`
+            ? `ExtRef: CDC: ${(_c = specExtRef.cdc) !== null && _c !== void 0 ? _c : '?'}, Basic Type: ${(_d = specExtRef.bType) !== null && _d !== void 0 ? _d : '?'}`
             : '';
         const specFcdaText = specFcda && (specFcda.cdc || specFcda.bType)
-            ? `FCDA: CDC: ${(_c = specFcda.cdc) !== null && _c !== void 0 ? _c : '?'}, Basic Type: ${(_d = specFcda.bType) !== null && _d !== void 0 ? _d : '?'}`
+            ? `FCDA: CDC: ${(_e = specFcda.cdc) !== null && _e !== void 0 ? _e : '?'}, Basic Type: ${(_f = specFcda.bType) !== null && _f !== void 0 ? _f : '?'}`
             : '';
         const filterClasses = {
             'show-bound': bound,
@@ -11167,19 +11195,14 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             : ''}"
       title="${[specExtRefText, specFcdaText].join('\n')}"
     >
-      <div class="extref-firstline">
-        <span>
-          ${trimIdentityParent(identity(extRefElement.parentElement))}:
-          ${extRefElement.getAttribute('intAddr')}
-        </span>
+      <span class="extref-firstline">
+        ${extRefPath(extRefElement)}: ${extRefElement.getAttribute('intAddr')}
         ${(subscribed && subscriberFCDA) || hasInvalidMapping
-            ? x `<mwc-icon>arrow_back</mwc-icon>
-              <span>
-                ${subscribed && subscriberFCDA ? `${fcdaName}` : ''}
-                ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''}
-              </span>`
+            ? x `<mwc-icon class="left-inline-arrow">arrow_back</mwc-icon>
+              ${subscribed && subscriberFCDA ? `${fcdaName}` : ''}
+              ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
             : A}
-      </div>
+      </span>
       <span slot="secondary"
         >${extRefDescription ? x ` ${extRefDescription}` : A}
         ${extRefDescription && fcdaDesc && fcdaDesc !== ''
@@ -11343,6 +11366,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             this.controlTag = ((_a = this.switchControlTypeUI) === null || _a === void 0 ? void 0 : _a.on)
                 ? 'GSEControl'
                 : 'SampledValueControl';
+            this.reCreateSupervisionCache();
         }}
       >
         ${gooseActionIcon} ${smvActionIcon}
@@ -11618,9 +11642,9 @@ SubscriberLaterBinding.styles = i$5 `
       --mdc-icon-size: 32px;
     }
 
-    .extref-firstline {
-      display: inline-flex;
-      align-items: center;
+    .left-inline-arrow {
+      position: relative;
+      top: 5px;
     }
   `;
 __decorate([
@@ -11725,6 +11749,9 @@ __decorate([
 __decorate([
     t$1()
 ], SubscriberLaterBinding.prototype, "currentSelectedExtRefElement", void 0);
+__decorate([
+    t$1()
+], SubscriberLaterBinding.prototype, "supervisionData", void 0);
 
 export { SubscriberLaterBinding as default };
 //# sourceMappingURL=oscd-subscriber-later-binding.js.map
