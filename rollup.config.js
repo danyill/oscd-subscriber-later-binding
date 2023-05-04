@@ -1,5 +1,6 @@
 import nodeResolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
+import copy from 'rollup-plugin-copy';
 
 export default {
   input: './oscd-subscriber-later-binding.ts',
@@ -15,5 +16,8 @@ export default {
     /** Resolve bare module imports */
     nodeResolve(),
     typescript(),
+    copy({
+      targets: [{ src: 'demo/index.deploy.html', dest: 'dist' }],
+    }),
   ],
 };

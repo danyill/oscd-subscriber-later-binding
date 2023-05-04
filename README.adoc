@@ -18,6 +18,7 @@
 :uri-plugin: https://github.com/danyill/oscd-subscriber-later-binding
 :uri-ci-bundle: https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js
 :uri-material-icons: https://fonts.google.com/icons
+:uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
 
 == What is this?
 
@@ -33,7 +34,7 @@ editor engine for {uri-openscd}[OpenSCD].
 
 It offers a publisher and subscriber view to allow efficient and intuitive use.
 
-{uri-openscd-core-plugin}[Try it out online]!
+{uri-openscd-core-plugin-demo}[Try it out online]!
 
 // TODO: Update screenshots
 |===
