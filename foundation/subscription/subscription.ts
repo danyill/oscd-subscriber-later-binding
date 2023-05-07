@@ -385,8 +385,9 @@ export function isSubscribed(extRefElement: Element): boolean {
     extRefElement.hasAttribute('ldInst') &&
     extRefElement.hasAttribute('lnClass') &&
     extRefElement.hasAttribute('lnInst') &&
-    extRefElement.hasAttribute('doName') &&
-    extRefElement.hasAttribute('daName')
+    extRefElement.hasAttribute('doName')
+    // TODO: Late change, may cause breakages
+    // extRefElement.hasAttribute('daName')
   );
 }
 
@@ -996,8 +997,8 @@ export function getFcdaSrcControlBlockDescription(
     'srcLDInst',
     'srcLNClass',
     'srcCBName',
-  ].map(name => extRefElement.getAttribute(name));
-  // QUESTION: Maybe we don't need srcLNClass ?
+  ].map(name => extRefElement.getAttribute(name) ?? '');
+
   return `${
     srcPrefix ? `${srcPrefix} ` : ''
   }${srcLDInst} / ${srcLNClass} ${srcCBName}`;

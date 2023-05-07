@@ -122,9 +122,7 @@ function extRefPath(extRef: Element): string {
   const lnClass = lN?.getAttribute('lnClass');
   const lnInst = lN?.getAttribute('inst');
 
-  return [ldInst, '/', lnPrefix, lnClass, lnInst]
-    .filter(a => a !== null)
-    .join(' ');
+  return [ldInst, '/', lnPrefix, lnClass, lnInst].filter(a => !!a).join(' ');
 }
 
 // TODO: This needs careful review!
@@ -994,6 +992,8 @@ Basic Type: ${spec.bType}"
             'show-not-subscribed': someNotSubscribed,
           };
 
+          const iedName = controlElement.closest('IED')?.getAttribute('name');
+
           // TODO: Restore wizard editing functionality
           return html`
             <mwc-list-item
@@ -1011,7 +1011,7 @@ Basic Type: ${spec.bType}"
                 )
                 .join('')}"
             >
-              <span>${getNameAttribute(controlElement)} </span>
+              <span>${iedName} > ${getNameAttribute(controlElement)} </span>
               <span slot="secondary"
                 >${getLnTitle(controlElement)}
                 ${getDescriptionAttribute(controlElement)
@@ -1422,7 +1422,9 @@ Basic Type: ${spec.bType ?? '?'}`
           >
             <span>${getNameAttribute(ied)}</span>
             <span slot="secondary"
-              >${[iedDesc, iedMfg, iedType].join(' - ')}</span
+              >${[iedDesc, iedMfg, iedType]
+                .filter(val => !!val)
+                .join(' - ')}</span
             >
             <mwc-icon slot="graphic">developer_board</mwc-icon>
           </mwc-list-item>
@@ -1479,6 +1481,8 @@ Basic Type: ${spec.bType ?? '?'}`
                   }
 
                   selectedListItem.selected = false;
+                  // This seems to help with long lists where others the update does not occur
+                  this.fcdaListUI.requestUpdate();
                   this.requestUpdate();
                 }}
               >
