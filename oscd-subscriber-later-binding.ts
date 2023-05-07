@@ -182,6 +182,21 @@ function getFcdaInstDesc(fcda: Element, includeDai: boolean): string[] {
   return descs.filter(d => d !== null && d !== undefined) as string[];
 }
 
+function getLnTitle(childElement: Element): string {
+  if (!childElement) return 'Unknown';
+  const lN = childElement.closest('LN') ?? childElement.closest('LN0');
+  const lDevice = lN!.closest('LDevice');
+
+  const ldInst = lDevice?.getAttribute('inst');
+  const lnPrefix = lN?.getAttribute('prefix');
+  const lnClass = lN?.getAttribute('lnClass');
+  const lnInst = lN?.getAttribute('inst');
+
+  return [ldInst, '/', lnPrefix, lnClass, lnInst]
+    .filter(a => a !== null)
+    .join(' ');
+}
+
 export default class SubscriberLaterBinding extends LitElement {
   @property({ attribute: false })
   doc!: XMLDocument;
@@ -787,7 +802,7 @@ Basic Type: ${spec.bType ?? '?'}`
     };
 
     const spec = fcdaSpecification(fcdaElement);
-    const fcdaDescription = getFcdaInstDesc(fcdaElement, true).join('>');
+    const fcdaDescription = getFcdaInstDesc(fcdaElement, true).join(' > ');
 
     return html`<mwc-list-item
       graphic="large"
@@ -996,13 +1011,13 @@ Basic Type: ${spec.bType}"
                 )
                 .join('')}"
             >
-              <span
-                >${getNameAttribute(controlElement)}
+              <span>${getNameAttribute(controlElement)} </span>
+              <span slot="secondary"
+                >${getLnTitle(controlElement)}
                 ${getDescriptionAttribute(controlElement)
-                  ? html`${getDescriptionAttribute(controlElement)}`
+                  ? html` - ${getDescriptionAttribute(controlElement)}`
                   : nothing}</span
               >
-              <span slot="secondary">${identity(controlElement)}</span>
               <mwc-icon slot="graphic"
                 >${iconControlLookup[this.controlTag]}</mwc-icon
               >
@@ -1368,12 +1383,19 @@ Basic Type: ${spec.bType ?? '?'}`
           'show-not-bound': someNotBound,
         };
 
+        const [iedDesc, iedType, iedMfg] = ['desc', 'type', 'manufacturer'].map(
+          attr => ied.getAttribute(attr)
+        );
+
         return html`
           <mwc-list-item
             class="ied ${classMap(filterClasses)}"
+            ?twoline=${iedDesc || iedType || iedMfg}
             noninteractive
             graphic="icon"
-            value="${Array.from(ied.querySelectorAll('Inputs > ExtRef'))
+            value="${[iedDesc, iedMfg, iedType].join(' - ')} ${Array.from(
+              ied.querySelectorAll('Inputs > ExtRef')
+            )
               .map(extRef => {
                 const extRefid = identity(extRef) as string;
                 const supervisionId =
@@ -1399,6 +1421,9 @@ Basic Type: ${spec.bType ?? '?'}`
               .join(' ')}"
           >
             <span>${getNameAttribute(ied)}</span>
+            <span slot="secondary"
+              >${[iedDesc, iedMfg, iedType].join(' - ')}</span
+            >
             <mwc-icon slot="graphic">developer_board</mwc-icon>
           </mwc-list-item>
           ${repeat(

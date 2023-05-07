@@ -12,7 +12,7 @@ import {
 export const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
 
 export function getFcdaTitleValue(fcdaElement: Element): string {
-  return `${fcdaElement.getAttribute('doName')}${
+  return `${fcdaElement.getAttribute('doName') ?? ''}${
     fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
       ? `.`
       : ``
@@ -26,9 +26,9 @@ export function getFcdaSubtitleValue(fcdaElement: Element): string {
     fcdaElement.getAttribute('prefix')
       ? ` ${fcdaElement.getAttribute('prefix')}`
       : ''
-  } ${fcdaElement.getAttribute('lnClass')} ${fcdaElement.getAttribute(
-    'lnInst'
-  )}`;
+  } ${fcdaElement.getAttribute('lnClass') ?? ''} ${
+    fcdaElement.getAttribute('lnInst') ?? ''
+  }`;
 }
 
 function dataAttributeSpecification(
