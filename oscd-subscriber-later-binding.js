@@ -7283,15 +7283,16 @@ function findFCDAs$1(extRef) {
 
 const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
 function getFcdaTitleValue(fcdaElement) {
-    var _a;
-    return `${fcdaElement.getAttribute('doName')}${fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
+    var _a, _b;
+    return `${(_a = fcdaElement.getAttribute('doName')) !== null && _a !== void 0 ? _a : ''}${fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
         ? `.`
-        : ``}${(_a = fcdaElement.getAttribute('daName')) !== null && _a !== void 0 ? _a : ''}`;
+        : ``}${(_b = fcdaElement.getAttribute('daName')) !== null && _b !== void 0 ? _b : ''}`;
 }
 function getFcdaSubtitleValue(fcdaElement) {
+    var _a, _b;
     return `${fcdaElement.getAttribute('ldInst')} ${fcdaElement.hasAttribute('ldInst') ? `/` : ''}${fcdaElement.getAttribute('prefix')
         ? ` ${fcdaElement.getAttribute('prefix')}`
-        : ''} ${fcdaElement.getAttribute('lnClass')} ${fcdaElement.getAttribute('lnInst')}`;
+        : ''} ${(_a = fcdaElement.getAttribute('lnClass')) !== null && _a !== void 0 ? _a : ''} ${(_b = fcdaElement.getAttribute('lnInst')) !== null && _b !== void 0 ? _b : ''}`;
 }
 function dataAttributeSpecification(anyLn, doName, daName) {
     const doc = anyLn.ownerDocument;
@@ -7519,8 +7520,10 @@ function isSubscribed(extRefElement) {
         extRefElement.hasAttribute('ldInst') &&
         extRefElement.hasAttribute('lnClass') &&
         extRefElement.hasAttribute('lnInst') &&
-        extRefElement.hasAttribute('doName') &&
-        extRefElement.hasAttribute('daName'));
+        extRefElement.hasAttribute('doName')
+    // TODO: Late change, may cause breakages
+    // extRefElement.hasAttribute('daName')
+    );
 }
 /**
  * Check if the ExtRef is already partially subscribed to a FCDA Element.
@@ -7971,8 +7974,7 @@ function getFcdaSrcControlBlockDescription(extRefElement) {
         'srcLDInst',
         'srcLNClass',
         'srcCBName',
-    ].map(name => extRefElement.getAttribute(name));
-    // QUESTION: Maybe we don't need srcLNClass ?
+    ].map(name => { var _a; return (_a = extRefElement.getAttribute(name)) !== null && _a !== void 0 ? _a : ''; });
     return `${srcPrefix ? `${srcPrefix} ` : ''}${srcLDInst} / ${srcLNClass} ${srcCBName}`;
 }
 function findFCDAs(extRef) {
@@ -10377,9 +10379,7 @@ function extRefPath(extRef) {
     const lnPrefix = lN === null || lN === void 0 ? void 0 : lN.getAttribute('prefix');
     const lnClass = lN === null || lN === void 0 ? void 0 : lN.getAttribute('lnClass');
     const lnInst = lN === null || lN === void 0 ? void 0 : lN.getAttribute('inst');
-    return [ldInst, '/', lnPrefix, lnClass, lnInst]
-        .filter(a => a !== null)
-        .join(' ');
+    return [ldInst, '/', lnPrefix, lnClass, lnInst].filter(a => !!a).join(' ');
 }
 // TODO: This needs careful review!
 function getFcdaInstDesc(fcda, includeDai) {
@@ -10417,6 +10417,20 @@ function getFcdaInstDesc(fcda, includeDai) {
     const dai = previousDI.querySelector(`DAI[name="${daNames[0]}"]`);
     descs.push(dai === null || dai === void 0 ? void 0 : dai.getAttribute('desc'));
     return descs.filter(d => d !== null && d !== undefined);
+}
+function getLnTitle(childElement) {
+    var _a;
+    if (!childElement)
+        return 'Unknown';
+    const lN = (_a = childElement.closest('LN')) !== null && _a !== void 0 ? _a : childElement.closest('LN0');
+    const lDevice = lN.closest('LDevice');
+    const ldInst = lDevice === null || lDevice === void 0 ? void 0 : lDevice.getAttribute('inst');
+    const lnPrefix = lN === null || lN === void 0 ? void 0 : lN.getAttribute('prefix');
+    const lnClass = lN === null || lN === void 0 ? void 0 : lN.getAttribute('lnClass');
+    const lnInst = lN === null || lN === void 0 ? void 0 : lN.getAttribute('inst');
+    return [ldInst, '/', lnPrefix, lnClass, lnInst]
+        .filter(a => a !== null)
+        .join(' ');
 }
 class SubscriberLaterBinding extends s$1 {
     constructor() {
@@ -10762,7 +10776,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             'show-not-subscribed': fcdaCount === 0,
         };
         const spec = fcdaSpecification(fcdaElement);
-        const fcdaDescription = getFcdaInstDesc(fcdaElement, true).join('>');
+        const fcdaDescription = getFcdaInstDesc(fcdaElement, true).join(' > ');
         return x `<mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
@@ -10912,6 +10926,7 @@ Basic Type: ${spec.bType}"
             return (fcdaElements.length && !(onlyHasDisabledItems && this.hideDisabled));
         })
             .map(controlElement => {
+            var _a;
             const fcdaElements = getFcdaElements(controlElement);
             const someSubscribed = fcdaElements.some(fcda => this.getExtRefCount(fcda, controlElement) !== 0);
             const someNotSubscribed = fcdaElements.some(fcda => this.getExtRefCount(fcda, controlElement) === 0);
@@ -10919,6 +10934,7 @@ Basic Type: ${spec.bType}"
                 'show-subscribed': someSubscribed,
                 'show-not-subscribed': someNotSubscribed,
             };
+            const iedName = (_a = controlElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
             // TODO: Restore wizard editing functionality
             return x `
             <mwc-list-item
@@ -10934,13 +10950,13 @@ Basic Type: ${spec.bType}"
                         ${identity(fcdaElement)}`)
                 .join('')}"
             >
-              <span
-                >${getNameAttribute(controlElement)}
+              <span>${iedName} > ${getNameAttribute(controlElement)} </span>
+              <span slot="secondary"
+                >${getLnTitle(controlElement)}
                 ${getDescriptionAttribute(controlElement)
-                ? x `${getDescriptionAttribute(controlElement)}`
+                ? x ` - ${getDescriptionAttribute(controlElement)}`
                 : A}</span
               >
-              <span slot="secondary">${identity(controlElement)}</span>
               <mwc-icon slot="graphic"
                 >${iconControlLookup[this.controlTag]}</mwc-icon
               >
@@ -11253,12 +11269,14 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                 'show-bound': someBound,
                 'show-not-bound': someNotBound,
             };
+            const [iedDesc, iedType, iedMfg] = ['desc', 'type', 'manufacturer'].map(attr => ied.getAttribute(attr));
             return x `
           <mwc-list-item
             class="ied ${o(filterClasses)}"
+            ?twoline=${iedDesc || iedType || iedMfg}
             noninteractive
             graphic="icon"
-            value="${Array.from(ied.querySelectorAll('Inputs > ExtRef'))
+            value="${[iedDesc, iedMfg, iedType].join(' - ')} ${Array.from(ied.querySelectorAll('Inputs > ExtRef'))
                 .map(extRef => {
                 const extRefid = identity(extRef);
                 const supervisionId = this.getCachedSupervision(extRef) !== undefined
@@ -11276,6 +11294,11 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                 .join(' ')}"
           >
             <span>${getNameAttribute(ied)}</span>
+            <span slot="secondary"
+              >${[iedDesc, iedMfg, iedType]
+                .filter(val => !!val)
+                .join(' - ')}</span
+            >
             <mwc-icon slot="graphic">developer_board</mwc-icon>
           </mwc-list-item>
           ${c(Array.from(this.getExtRefElementsByIED(ied)), exId => `${identity(exId)} ${this.controlTag}`, extRef => this.renderSubscriberViewExtRef(extRef))}
@@ -11316,6 +11339,8 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                         this.unsubscribe(selectedExtRefElement);
                     }
                     selectedListItem.selected = false;
+                    // This seems to help with long lists where others the update does not occur
+                    this.fcdaListUI.requestUpdate();
                     this.requestUpdate();
                 }}
               >
