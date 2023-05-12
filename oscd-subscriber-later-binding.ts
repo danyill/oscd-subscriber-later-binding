@@ -22,13 +22,21 @@ import { repeat } from 'lit/directives/repeat.js';
 import { Edit, newEditEvent } from '@openscd/open-scd-core';
 // import '@openscd/oscd-filtered-list';
 
-import { CheckListItem } from '@material/mwc-list/mwc-check-list-item';
-import { Icon } from '@material/mwc-icon';
-import { IconButtonToggle } from '@material/mwc-icon-button-toggle';
-import { List, SingleSelectedEvent } from '@material/mwc-list';
-import { ListItem } from '@material/mwc-list/mwc-list-item';
-import { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
-import { Menu } from '@material/mwc-menu';
+import type { Icon } from '@material/mwc-icon';
+import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
+import type { SingleSelectedEvent } from '@material/mwc-list';
+import type { ListItem } from '@material/mwc-list/mwc-list-item';
+import type { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
+import type { Menu } from '@material/mwc-menu';
+
+import {
+  MdIcon,
+  MdFilledIconButtonToggle,
+  MdList,
+  MdListItem,
+  MdMenu,
+} from '@scoped-elements/material-web';
+
 import { OscdFilteredList } from '@openscd/oscd-filtered-list';
 import '@webcomponents/scoped-custom-element-registry';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
@@ -312,12 +320,11 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
   // }
   static get scopedElements() {
     return {
-      'my-mwc-icon': Icon,
-      'my-mwc-icon-button-toggle': IconButtonToggle,
-      'my-mwc-list': List,
-      'my-mwc-list-item': ListItem,
-      'my-mwc-check-list-item': CheckListItem,
-      'my-mwc-menu': Menu,
+      'my-mwc-icon': MdIcon,
+      'my-mwc-icon-button-toggle': MdFilledIconButtonToggle,
+      'my-mwc-list': MdList,
+      'my-mwc-list-item': MdListItem,
+      'my-mwc-menu': MdMenu,
     };
   }
 
@@ -1853,3 +1860,5 @@ Basic Type: ${spec.bType ?? '?'}`
     }
   `;
 }
+
+// customElements.define('oscd-subscriber-later-binding', SubscriberLaterBinding);

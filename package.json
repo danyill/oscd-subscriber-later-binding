@@ -42,6 +42,7 @@
     "@open-wc/scoped-elements": "^2.1.5",
     "@openscd/open-scd-core": "^0.0.1-rc2.8",
     "@openscd/oscd-filtered-list": "^1.0.1",
+    "@scoped-elements/material-web": "^0.1.7",
     "@web/test-runner-commands": "^0.6.6",
     "@webcomponents/scoped-custom-element-registry": "^0.0.9",
     "lit": "^2.4.0"
