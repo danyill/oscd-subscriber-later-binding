@@ -5,6 +5,7 @@ import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item';
 import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
+import '@openscd/oscd-filtered-list';
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
