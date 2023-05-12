@@ -20,6 +20,7 @@ import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
 
 import { Edit, newEditEvent } from '@openscd/open-scd-core';
+import '@openscd/oscd-filtered-list';
 
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
@@ -1520,6 +1521,10 @@ Basic Type: ${spec.bType ?? '?'}`
                 // deselect in UI
                 selectedListItem.selected = false;
                 selectedListItem.activated = false;
+                // any previous selections are not relevant and not part of our state
+                this.currentSelectedExtRefElement = undefined;
+                this.currentSelectedFcdaElement = undefined;
+                this.currentSelectedControlElement = undefined;
                 // process de-selection to allow an additional click to unsubscribe
                 this.requestUpdate();
               } else {
