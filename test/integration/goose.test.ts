@@ -10,8 +10,8 @@ import { fixture, html } from '@open-wc/testing';
 import '@openscd/open-scd-core/open-scd.js';
 
 import { LitElement } from 'lit';
+import { OscdFilteredList } from '@openscd/oscd-filtered-list';
 import { getExtRefItem, getFcdaItem, midEl } from './test-support.js';
-import { OscdFilteredList } from '../../foundation/components/oscd-filtered-list.js';
 
 const factor = window.process && process.env.CI ? 4 : 2;
 

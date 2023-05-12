@@ -25,6 +25,19 @@
 }'
 ></open-scd>
 
+<script>
+  const _customElementsDefine = window.customElements.define;
+  window.customElements.define = (name, cl, conf) => {
+    if (!customElements.get(name)) {
+      try {
+        _customElementsDefine.call(window.customElements, name, cl, conf);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  };
+</script>
+
 <script type="module">
   import '@openscd/open-scd-core/open-scd.js';
 

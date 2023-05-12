@@ -1,4 +1,4 @@
-import { OscdFilteredList } from '../../foundation/components/oscd-filtered-list.js';
+import { OscdFilteredList } from '@openscd/oscd-filtered-list';
 
 // getFcdaItem
 // getExtRefItem

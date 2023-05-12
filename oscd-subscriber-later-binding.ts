@@ -25,8 +25,9 @@ import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
 import type { SingleSelectedEvent } from '@material/mwc-list';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
-import { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
+import type { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
 import type { Menu } from '@material/mwc-menu';
+import type { OscdFilteredList } from '@openscd/oscd-filtered-list';
 
 import { identity } from './foundation/identities/identity.js';
 import {
@@ -67,8 +68,6 @@ import {
 
 import './foundation/components/oscd-filtered-list.js';
 import { selector } from './foundation/identities/selector.js';
-
-import type { OscdFilteredList } from './foundation/components/oscd-filtered-list.js';
 
 type controlTagType = 'SampledValueControl' | 'GSEControl';
 
@@ -889,7 +888,7 @@ Basic Type: ${spec.bType}"
       class="styled-scrollbars ${classMap(filteredListClasses)}"
       @selected="${async (ev: SingleSelectedEvent) => {
         const selectedListItem = (<ListItemBase>(
-          (<OscdFilteredList>ev.target).selected
+          (<unknown>(<OscdFilteredList>ev.target).selected)
         ))!;
         if (!selectedListItem) return;
 
@@ -1456,7 +1455,7 @@ Basic Type: ${spec.bType ?? '?'}`
                   : ''}"
                 @selected=${(ev: SingleSelectedEvent) => {
                   const selectedListItem = (<ListItemBase>(
-                    (<OscdFilteredList>ev.target).selected
+                    (<unknown>(<OscdFilteredList>ev.target).selected)
                   ))!;
 
                   if (!selectedListItem) return;
@@ -1499,7 +1498,7 @@ Basic Type: ${spec.bType ?? '?'}`
             activatable
             @selected=${(ev: SingleSelectedEvent) => {
               const selectedListItem = (<ListItemBase>(
-                (<OscdFilteredList>ev.target).selected
+                (<unknown>(<OscdFilteredList>ev.target).selected)
               ))!;
 
               if (!selectedListItem) return;
