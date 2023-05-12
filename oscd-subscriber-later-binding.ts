@@ -66,7 +66,6 @@ import {
   smvActionIcon,
 } from './foundation/icons.js';
 
-import './foundation/components/oscd-filtered-list.js';
 import { selector } from './foundation/identities/selector.js';
 
 type controlTagType = 'SampledValueControl' | 'GSEControl';
