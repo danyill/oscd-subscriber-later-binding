@@ -9,8 +9,7 @@ import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import type { Menu } from '@material/mwc-menu';
-import './foundation/components/oscd-filtered-list.js';
-import type { OscdFilteredList } from './foundation/components/oscd-filtered-list.js';
+import type { OscdFilteredList } from '@openscd/oscd-filtered-list';
 declare type controlTagType = 'SampledValueControl' | 'GSEControl';
 export default class SubscriberLaterBinding extends LitElement {
     doc: XMLDocument;
