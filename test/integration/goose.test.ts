@@ -10,7 +10,9 @@ import { fixture, html } from '@open-wc/testing';
 import '@openscd/open-scd-core/open-scd.js';
 
 import { LitElement } from 'lit';
-import { OscdFilteredList } from '@openscd/oscd-filtered-list';
+// import type { OscdFilteredList } from '@openscd/oscd-filtered-list';
+
+import SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 import { getExtRefItem, getFcdaItem, midEl } from './test-support.js';
 
 const factor = window.process && process.env.CI ? 4 : 2;
@@ -40,14 +42,9 @@ type OpenSCD = LitElement & {
   docs: Record<string, XMLDocument>;
 };
 
-type Plugin = LitElement & {
-  fcdaListUI: OscdFilteredList;
-  extRefListPublisherUI?: OscdFilteredList;
-};
-
 describe(pluginName, () => {
   let editor: OpenSCD;
-  let plugin: Plugin;
+  let plugin: SubscriberLaterBinding;
 
   beforeEach(async function () {
     const plugins = {
@@ -67,17 +64,35 @@ describe(pluginName, () => {
     };
 
     const ed = await fixture(
-      html`<open-scd
-        language="en"
-        plugins="${JSON.stringify(plugins)}"
-      ></open-scd>`
+      html`<script>
+          const _customElementsDefine = window.customElements.define;
+          window.customElements.define = (name, cl, conf) => {
+            if (!customElements.get(name)) {
+              try {
+                _customElementsDefine.call(
+                  window.customElements,
+                  name,
+                  cl,
+                  conf
+                );
+              } catch (e) {
+                console.warn(e);
+              }
+            }
+          };
+        </script>
+        <open-scd
+          language="en"
+          plugins="${JSON.stringify(plugins)}"
+        ></open-scd>`
     );
     document.body.prepend(ed);
+    await timeout(150);
 
     editor = document.querySelector<OpenSCD>('open-scd')!;
     plugin = document
       .querySelector('open-scd')!
-      .shadowRoot!.querySelector<Plugin>(editor.editor)!;
+      .shadowRoot!.querySelector<SubscriberLaterBinding>(editor.editor)!;
   });
 
   afterEach(() => {
@@ -102,7 +117,7 @@ describe(pluginName, () => {
 
         await editor.updateComplete;
         await plugin.updateComplete;
-        // timeout(2000);
+        await timeout(500);
       });
 
       // afterEach(() => plugin.remove());

@@ -12,23 +12,26 @@ import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
 
-import '@material/mwc-icon';
-import '@material/mwc-icon-button-toggle';
-import '@material/mwc-list';
-import '@material/mwc-list/mwc-list-item';
-import '@material/mwc-list/mwc-check-list-item';
-import '@material/mwc-menu';
+// import '@material/mwc-icon';
+// import '@material/mwc-icon-button-toggle';
+// import '@material/mwc-list';
+// import '@material/mwc-list/mwc-list-item';
+// import '@material/mwc-list/mwc-check-list-item';
+// import '@material/mwc-menu';
 
 import { Edit, newEditEvent } from '@openscd/open-scd-core';
-import '@openscd/oscd-filtered-list';
+// import '@openscd/oscd-filtered-list';
 
-import type { Icon } from '@material/mwc-icon';
-import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
-import type { SingleSelectedEvent } from '@material/mwc-list';
-import type { ListItem } from '@material/mwc-list/mwc-list-item';
-import type { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
-import type { Menu } from '@material/mwc-menu';
-import type { OscdFilteredList } from '@openscd/oscd-filtered-list';
+import { CheckListItem } from '@material/mwc-list/mwc-check-list-item';
+import { Icon } from '@material/mwc-icon';
+import { IconButtonToggle } from '@material/mwc-icon-button-toggle';
+import { List, SingleSelectedEvent } from '@material/mwc-list';
+import { ListItem } from '@material/mwc-list/mwc-list-item';
+import { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
+import { Menu } from '@material/mwc-menu';
+import { OscdFilteredList } from '@openscd/oscd-filtered-list';
+import '@webcomponents/scoped-custom-element-registry';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 
 import { identity } from './foundation/identities/identity.js';
 import {
@@ -194,7 +197,9 @@ function getLnTitle(childElement: Element): string {
     .join(' ');
 }
 
-export default class SubscriberLaterBinding extends LitElement {
+export default class SubscriberLaterBinding extends ScopedElementsMixin(
+  LitElement
+) {
   @property({ attribute: false })
   doc!: XMLDocument;
 
@@ -277,10 +282,10 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#subscriberExtRefList')
   extRefListSubscriberUI?: OscdFilteredList;
 
-  @query('#subscriberExtRefList mwc-list-item[selected]')
+  @query('#subscriberExtRefList my-mwc-list-item[selected]')
   extRefListSubscriberSelectedUI?: ListItem;
 
-  @query('#fcdaList mwc-list-item[selected]')
+  @query('#fcdaList my-mwc-list-item[selected]')
   fcdaListSelectedUI?: ListItem;
 
   @state()
@@ -305,6 +310,16 @@ export default class SubscriberLaterBinding extends LitElement {
   //   super();
   //   this.restoreSettings();
   // }
+  static get scopedElements() {
+    return {
+      'my-mwc-icon': Icon,
+      'my-mwc-icon-button-toggle': IconButtonToggle,
+      'my-mwc-list': List,
+      'my-mwc-list-item': ListItem,
+      'my-mwc-check-list-item': CheckListItem,
+      'my-mwc-menu': Menu,
+    };
+  }
 
   protected storeSettings(): void {
     const storedConfiguration = {
@@ -739,7 +754,7 @@ export default class SubscriberLaterBinding extends LitElement {
     const spec = inputRestriction(extRefElement);
     const desc = getDescriptionAttribute(extRefElement);
 
-    return html` <mwc-list-item
+    return html` <my-mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
       ?twoline=${desc || supervisionNode}
@@ -760,13 +775,13 @@ Basic Type: ${spec.bType ?? '?'}`
           ? ` (${identity(supervisionNode)})`
           : ''}</span
       >
-      <mwc-icon slot="graphic">link</mwc-icon>
+      <my-mwc-icon slot="graphic">link</my-mwc-icon>
       ${supervisionNode !== null
-        ? html`<mwc-icon title="${identity(supervisionNode)}" slot="meta"
-            >monitor_heart</mwc-icon
+        ? html`<my-mwc-icon title="${identity(supervisionNode)}" slot="meta"
+            >monitor_heart</my-mwc-icon
           >`
         : nothing}
-    </mwc-list-item>`;
+    </my-mwc-list-item>`;
   }
 
   private isFcdaDisabled(
@@ -801,7 +816,7 @@ Basic Type: ${spec.bType ?? '?'}`
     const spec = fcdaSpecification(fcdaElement);
     const fcdaDescription = getFcdaInstDesc(fcdaElement, true).join(' > ');
 
-    return html`<mwc-list-item
+    return html`<my-mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
       ?disabled=${isDisabled}
@@ -818,9 +833,9 @@ Basic Type: ${spec.bType}"
         >${getFcdaSubtitleValue(fcdaElement)} ${getFcdaTitleValue(fcdaElement)}
       </span>
       <span slot="secondary"> ${fcdaDescription}</span>
-      <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
+      <my-mwc-icon slot="graphic">subdirectory_arrow_right</my-mwc-icon>
       ${fcdaCount !== 0 ? html`<span slot="meta">${fcdaCount}</span>` : nothing}
-    </mwc-list-item>`;
+    </my-mwc-list-item>`;
   }
 
   renderFCDAListTitle(): TemplateResult {
@@ -833,44 +848,44 @@ Basic Type: ${spec.bType}"
         ${this.controlTag === 'SampledValueControl'
           ? msg('Publisher Sampled Value Messages')
           : msg('Publisher GOOSE Messages')}
-        <mwc-icon-button
+        <my-mwc-icon-button
           id="filterFcdaIcon"
           class="${classMap(menuClasses)}"
           icon="filter_list"
           @click=${() => {
             if (!this.filterMenuFcdaUI.open) this.filterMenuFcdaUI.show();
           }}
-        ></mwc-icon-button>
-        <mwc-menu
+        ></my-mwc-icon-button>
+        <my-mwc-menu
           id="filterFcdaMenu"
           multi
           corner="BOTTOM_RIGHT"
           menuCorner="END"
         >
-          <mwc-check-list-item
+          <my-mwc-check-list-item
             class="filter-subscribed"
             left
             ?selected=${!this.hideSubscribed}
           >
             <span>${msg('Subscribed')}</span>
-          </mwc-check-list-item>
-          <mwc-check-list-item
+          </my-mwc-check-list-item>
+          <my-mwc-check-list-item
             class="filter-not-subscribed"
             left
             ?selected=${!this.hideNotSubscribed}
           >
             <span>${msg('Not Subscribed')}</span>
-          </mwc-check-list-item>
+          </my-mwc-check-list-item>
           ${this.subscriberView
-            ? html`<mwc-check-list-item
+            ? html`<my-mwc-check-list-item
                 class="filter-disabled"
                 left
                 ?selected=${!this.hideDisabled}
               >
                 <span>${msg('Disabled')}</span>
-              </mwc-check-list-item>`
+              </my-mwc-check-list-item>`
             : nothing}
-        </mwc-menu>
+        </my-mwc-menu>
       </h1>
     `;
   }
@@ -925,7 +940,7 @@ Basic Type: ${spec.bType}"
         if (this.extRefListSubscriberSelectedUI && !this.notAutoIncrement) {
           const nextActivatableItem = <ListItem>(
             this.extRefListSubscriberUI!.querySelector(
-              'mwc-list-item[activated].extref ~ mwc-list-item.extref'
+              'my-mwc-list-item[activated].extref ~ my-mwc-list-item.extref'
             )
           );
 
@@ -995,7 +1010,7 @@ Basic Type: ${spec.bType}"
 
           // TODO: Restore wizard editing functionality
           return html`
-            <mwc-list-item
+            <my-mwc-list-item
               noninteractive
               class="control ${classMap(filterClasses)}"
               graphic="icon"
@@ -1017,10 +1032,10 @@ Basic Type: ${spec.bType}"
                   ? html` - ${getDescriptionAttribute(controlElement)}`
                   : nothing}</span
               >
-              <mwc-icon slot="graphic"
-                >${iconControlLookup[this.controlTag]}</mwc-icon
+              <my-mwc-icon slot="graphic"
+                >${iconControlLookup[this.controlTag]}</my-mwc-icon
               >
-            </mwc-list-item>
+            </my-mwc-list-item>
             ${fcdaElements.map(fcdaElement =>
               this.renderFCDA(controlElement, fcdaElement)
             )}
@@ -1032,7 +1047,7 @@ Basic Type: ${spec.bType}"
   private renderPublisherViewSubscribedExtRefs(): TemplateResult {
     const subscribedExtRefs = this.getSubscribedExtRefElements();
     return html`
-      <mwc-list-item
+      <my-mwc-list-item
         noninteractive
         value="${subscribedExtRefs
           .map(
@@ -1044,22 +1059,22 @@ Basic Type: ${spec.bType}"
           .join(' ')}"
       >
         <span>${msg('Subscribed')}</span>
-      </mwc-list-item>
+      </my-mwc-list-item>
       <li divider role="separator"></li>
       ${subscribedExtRefs.length > 0
         ? html`${subscribedExtRefs.map(extRefElement =>
             this.renderSubscribedExtRefElement(extRefElement)
           )}`
-        : html`<mwc-list-item graphic="large" noninteractive>
+        : html`<my-mwc-list-item graphic="large" noninteractive>
             ${msg('No subscribed inputs')}
-          </mwc-list-item>`}
+          </my-mwc-list-item>`}
     `;
   }
 
   private renderPublisherViewAvailableExtRefs(): TemplateResult {
     const availableExtRefs = this.getAvailableExtRefElements();
     return html`
-      <mwc-list-item
+      <my-mwc-list-item
         noninteractive
         value="${availableExtRefs
           .map(
@@ -1071,7 +1086,7 @@ Basic Type: ${spec.bType}"
           .join(' ')}"
       >
         <span> ${msg('Available to subscribe')} </span>
-      </mwc-list-item>
+      </my-mwc-list-item>
       <li divider role="separator"></li>
       ${availableExtRefs.length > 0
         ? html`${availableExtRefs.map(extRefElement => {
@@ -1081,7 +1096,7 @@ Basic Type: ${spec.bType}"
             const spec = inputRestriction(extRefElement);
             const desc = getDescriptionAttribute(extRefElement);
 
-            return html`<mwc-list-item
+            return html`<my-mwc-list-item
               graphic="large"
               ?disabled=${unsupportedExtRefElement(
                 extRefElement,
@@ -1104,59 +1119,59 @@ Basic Type: ${spec.bType ?? '?'}`
                 ${extRefElement.getAttribute('intAddr')}
               </span>
               <span slot="secondary">${desc}</span>
-              <mwc-icon slot="graphic">link_off</mwc-icon>
+              <my-mwc-icon slot="graphic">link_off</my-mwc-icon>
               ${isPartiallyConfigured(extRefElement)
-                ? html`<mwc-icon
+                ? html`<my-mwc-icon
                     slot="meta"
                     class="invalid-mapping"
                     title="${msg('Invalid Mapping')}"
-                    >warning</mwc-icon
+                    >warning</my-mwc-icon
                   >`
                 : nothing}
               ${hasMissingMapping
-                ? html`<mwc-icon
+                ? html`<my-mwc-icon
                     class="${hasMissingMapping ? 'missing-mapping' : ''}"
                     title="${msg(
                       'The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.'
                     )}"
                     slot="meta"
-                    >warning</mwc-icon
+                    >warning</my-mwc-icon
                   >`
                 : nothing}
-            </mwc-list-item>`;
+            </my-mwc-list-item>`;
           })}`
-        : html`<mwc-list-item graphic="large" noninteractive>
+        : html`<my-mwc-list-item graphic="large" noninteractive>
             ${msg('No available inputs to subscribe')}
-          </mwc-list-item>`}
+          </my-mwc-list-item>`}
     `;
   }
 
   private renderPublisherViewExtRefListTitle(): TemplateResult {
     return html`<h1>
       ${msg('Subscriber Inputs')}
-      <mwc-menu
+      <my-mwc-menu
         id="filterExtRefMenuPublisher"
         multi
         class="filter-menu"
         corner="BOTTOM_RIGHT"
         menuCorner="END"
       >
-        <mwc-check-list-item
+        <my-mwc-check-list-item
           class="show-strict-service-types"
           left
           ?selected=${this.strictServiceTypes}
         >
           <span>${msg('Strict Service Types')}</span>
-        </mwc-check-list-item>
-        <mwc-check-list-item
+        </my-mwc-check-list-item>
+        <my-mwc-check-list-item
           class="filter-disabled"
           left
           ?selected=${!this.hideDisabled}
         >
           <span>${msg('Disabled')}</span>
-        </mwc-check-list-item>
-      </mwc-menu>
-      <mwc-icon-button
+        </my-mwc-check-list-item>
+      </my-mwc-menu>
+      <my-mwc-icon-button
         id="filterExtRefPublisherIcon"
         title="${msg('Filter')}"
         icon="filter_list"
@@ -1165,7 +1180,7 @@ Basic Type: ${spec.bType ?? '?'}`
             this.filterMenuExtRefPublisherUI.show();
           else this.filterMenuExtRefPublisherUI.close();
         }}
-      ></mwc-icon-button>
+      ></my-mwc-icon-button>
     </h1>`;
   }
 
@@ -1175,7 +1190,7 @@ Basic Type: ${spec.bType ?? '?'}`
     };
     return html`<h1 class="subscriber-title">
       ${msg('Subscriber Inputs')}
-      <mwc-icon-button
+      <my-mwc-icon-button
         id="filterExtRefIcon"
         class="${classMap(menuClasses)}"
         title="${msg('Filter')}"
@@ -1183,37 +1198,37 @@ Basic Type: ${spec.bType ?? '?'}`
         @click=${() => {
           if (!this.filterMenuExtRefUI.open) this.filterMenuExtRefUI.show();
         }}
-      ></mwc-icon-button>
-      <mwc-menu
+      ></my-mwc-icon-button>
+      <my-mwc-menu
         id="filterExtRefMenu"
         multi
         class="filter-menu"
         corner="BOTTOM_RIGHT"
         menuCorner="END"
       >
-        <mwc-check-list-item
+        <my-mwc-check-list-item
           class="show-bound"
           left
           ?selected=${!this.hideBound}
         >
           <span>${msg('Subscribed')}</span>
-        </mwc-check-list-item>
-        <mwc-check-list-item
+        </my-mwc-check-list-item>
+        <my-mwc-check-list-item
           class="show-not-bound"
           left
           ?selected=${!this.hideNotBound}
         >
           <span>${msg('Not Subscribed')}</span>
-        </mwc-check-list-item>
-        <mwc-check-list-item
+        </my-mwc-check-list-item>
+        <my-mwc-check-list-item
           class="show-strict-service-types"
           left
           ?selected=${this.strictServiceTypes}
         >
           <span>${msg('Strict Service Types')}</span>
-        </mwc-check-list-item>
-      </mwc-menu>
-      <mwc-icon-button
+        </my-mwc-check-list-item>
+      </my-mwc-menu>
+      <my-mwc-icon-button
         id="settingsExtRefIcon"
         title="${msg('Settings')}"
         icon="settings"
@@ -1221,21 +1236,21 @@ Basic Type: ${spec.bType ?? '?'}`
           if (!this.settingsMenuExtRefUI.open) this.settingsMenuExtRefUI.show();
           else this.settingsMenuExtRefUI.close();
         }}
-      ></mwc-icon-button>
-      <mwc-menu
+      ></my-mwc-icon-button>
+      <my-mwc-menu
         id="settingsExtRefMenu"
         multi
         corner="BOTTOM_RIGHT"
         menuCorner="END"
       >
-        <mwc-check-list-item
+        <my-mwc-check-list-item
           class="auto-increment"
           left
           ?selected=${!this.notAutoIncrement}
         >
           <span>${msg('Auto-increment')}</span>
-        </mwc-check-list-item>
-      </mwc-menu>
+        </my-mwc-check-list-item>
+      </my-mwc-menu>
     </h1>`;
   }
 
@@ -1306,7 +1321,7 @@ Basic Type: ${spec.bType ?? '?'}`
       'show-not-bound': !bound,
     };
 
-    return html`<mwc-list-item
+    return html`<my-mwc-list-item
       twoline
       class="extref ${classMap(filterClasses)}"
       graphic="large"
@@ -1320,7 +1335,7 @@ Basic Type: ${spec.bType ?? '?'}`
       <span class="extref-firstline">
         ${extRefPath(extRefElement)}: ${extRefElement.getAttribute('intAddr')}
         ${(subscribed && subscriberFCDA) || hasInvalidMapping
-          ? html`<mwc-icon class="left-inline-arrow">arrow_back</mwc-icon>
+          ? html`<my-mwc-icon class="left-inline-arrow">arrow_back</my-mwc-icon>
               ${subscribed && subscriberFCDA ? `${fcdaName}` : ''}
               ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
           : nothing}
@@ -1334,34 +1349,36 @@ Basic Type: ${spec.bType ?? '?'}`
           ? `(${supAndctrlDescription})`
           : supAndctrlDescription}
       </span>
-      <mwc-icon slot="graphic">${subscribed ? 'link' : 'link_off'}</mwc-icon>
+      <my-mwc-icon slot="graphic"
+        >${subscribed ? 'link' : 'link_off'}</my-mwc-icon
+      >
       ${subscribed &&
       supervisionNode !== undefined &&
       !hasInvalidMapping &&
       !hasMissingMapping
-        ? html`<mwc-icon title="${identity(supervisionNode!)}" slot="meta"
-            >monitor_heart</mwc-icon
+        ? html`<my-mwc-icon title="${identity(supervisionNode!)}" slot="meta"
+            >monitor_heart</my-mwc-icon
           >`
         : nothing}
       ${hasInvalidMapping
-        ? html`<mwc-icon
+        ? html`<my-mwc-icon
             class="${hasInvalidMapping ? 'invalid-mapping' : ''}"
             title="${msg('Invalid Mapping')}"
             slot="meta"
-            >error</mwc-icon
+            >error</my-mwc-icon
           >`
         : nothing}
       ${hasMissingMapping
-        ? html`<mwc-icon
+        ? html`<my-mwc-icon
             class="${hasMissingMapping ? 'missing-mapping' : ''}"
             title="${msg(
               'The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.'
             )}"
             slot="meta"
-            >warning</mwc-icon
+            >warning</my-mwc-icon
           >`
         : nothing}
-    </mwc-list-item>`;
+    </my-mwc-list-item>`;
   }
 
   private renderSubscriberViewExtRefs(): TemplateResult {
@@ -1387,7 +1404,7 @@ Basic Type: ${spec.bType ?? '?'}`
         );
 
         return html`
-          <mwc-list-item
+          <my-mwc-list-item
             class="ied ${classMap(filterClasses)}"
             ?twoline=${iedDesc || iedType || iedMfg}
             noninteractive
@@ -1425,8 +1442,8 @@ Basic Type: ${spec.bType ?? '?'}`
                 .filter(val => !!val)
                 .join(' - ')}</span
             >
-            <mwc-icon slot="graphic">developer_board</mwc-icon>
-          </mwc-list-item>
+            <my-mwc-icon slot="graphic">developer_board</my-mwc-icon>
+          </my-mwc-list-item>
           ${repeat(
             Array.from(this.getExtRefElementsByIED(ied)),
             exId => `${identity(exId)} ${this.controlTag}`,
@@ -1540,7 +1557,7 @@ Basic Type: ${spec.bType ?? '?'}`
 
   renderControlTypeSelector(): TemplateResult {
     return html`
-      <mwc-icon-button-toggle
+      <my-mwc-icon-button-toggle
         id="switchControlType"
         title="${msg('Change between GOOSE and Sampled Value publishers')}"
         @click=${() => {
@@ -1551,7 +1568,7 @@ Basic Type: ${spec.bType ?? '?'}`
         }}
       >
         ${gooseActionIcon} ${smvActionIcon}
-      </mwc-icon-button-toggle>
+      </my-mwc-icon-button-toggle>
     `;
   }
 
@@ -1566,7 +1583,7 @@ Basic Type: ${spec.bType ?? '?'}`
   }
 
   renderswitchView(): TemplateResult {
-    return html`<mwc-icon-button-toggle
+    return html`<my-mwc-icon-button-toggle
       id="switchView"
       onIcon="swap_horiz"
       offIcon="swap_horiz"
@@ -1591,7 +1608,7 @@ Basic Type: ${spec.bType ?? '?'}`
         // await for regeneration of UI and then attach anchors
         this.updateView();
       }}
-    ></mwc-icon-button-toggle>`;
+    ></my-mwc-icon-button-toggle>`;
   }
 
   render(): TemplateResult {
@@ -1677,37 +1694,38 @@ Basic Type: ${spec.bType ?? '?'}`
     it is suggested to create a truth-table to check for side-effects */
 
     /* remove all control blocks if no filters */
-    #fcdaList:not(.show-subscribed, .show-not-subscribed) mwc-list-item {
+    #fcdaList:not(.show-subscribed, .show-not-subscribed) my-mwc-list-item {
       display: none;
     }
 
     /* remove control blocks taking care to respect multiple conditions */
     #fcdaList.show-not-subscribed:not(.show-subscribed)
-      mwc-list-item.control.show-subscribed:not(.show-not-subscribed) {
+      my-mwc-list-item.control.show-subscribed:not(.show-not-subscribed) {
       display: none;
     }
 
     #fcdaList.show-subscribed:not(.show-not-subscribed)
-      mwc-list-item.control.show-not-subscribed:not(.show-subscribed) {
+      my-mwc-list-item.control.show-not-subscribed:not(.show-subscribed) {
       display: none;
     }
 
     /* remove fcdas if not part of filter */
-    #fcdaList:not(.show-not-subscribed) mwc-list-item.fcda.show-not-subscribed {
+    #fcdaList:not(.show-not-subscribed)
+      my-mwc-list-item.fcda.show-not-subscribed {
       display: none;
     }
 
-    #fcdaList:not(.show-subscribed) mwc-list-item.fcda.show-subscribed {
+    #fcdaList:not(.show-subscribed) my-mwc-list-item.fcda.show-subscribed {
       display: none;
     }
 
     /* hide disabled items for subscriber view */
-    #fcdaList:not(.show-disabled) mwc-list-item.fcda[disabled] {
+    #fcdaList:not(.show-disabled) my-mwc-list-item.fcda[disabled] {
       display: none;
     }
 
     /* hide disabled items for publisher view available extrefs */
-    #publisherExtRefList:not(.show-disabled) mwc-list-item.extref[disabled] {
+    #publisherExtRefList:not(.show-disabled) my-mwc-list-item.extref[disabled] {
       display: none;
     }
 
@@ -1743,11 +1761,11 @@ Basic Type: ${spec.bType ?? '?'}`
       position: relative;
     }
 
-    mwc-list-item {
+    my-mwc-list-item {
       --mdc-list-item-meta-size: 48px;
     }
 
-    mwc-list-item.hidden[noninteractive] + li[divider] {
+    my-mwc-list-item.hidden[noninteractive] + li[divider] {
       display: none;
     }
 
@@ -1781,8 +1799,8 @@ Basic Type: ${spec.bType ?? '?'}`
       border-radius: 6px;
     }
 
-    mwc-list-item.ied,
-    mwc-list-item.control {
+    my-mwc-list-item.ied,
+    my-mwc-list-item.control {
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     }
 
@@ -1792,28 +1810,28 @@ Basic Type: ${spec.bType ?? '?'}`
     it is suggested to create a truth-table to check for side-effects */
 
     /* remove all ExtRefs if no filters */
-    #subscriberExtRefList:not(.show-bound, .show-not-bound) mwc-list-item {
+    #subscriberExtRefList:not(.show-bound, .show-not-bound) my-mwc-list-item {
       display: none;
     }
 
     /* remove ExtRefs taking care to respect multiple conditions */
     #subscriberExtRefList.show-not-bound:not(.show-bound)
-      mwc-list-item.ied.show-bound:not(.show-not-bound) {
+      my-mwc-list-item.ied.show-bound:not(.show-not-bound) {
       display: none;
     }
 
     #subscriberExtRefList.show-bound:not(.show-not-bound)
-      mwc-list-item.ied.show-not-bound:not(.show-bound) {
+      my-mwc-list-item.ied.show-not-bound:not(.show-bound) {
       display: none;
     }
 
     /* remove ExtRefs if not part of filter */
     #subscriberExtRefList:not(.show-not-bound)
-      mwc-list-item.extref.show-not-bound {
+      my-mwc-list-item.extref.show-not-bound {
       display: none;
     }
 
-    #subscriberExtRefList:not(.show-bound) mwc-list-item.extref.show-bound {
+    #subscriberExtRefList:not(.show-bound) my-mwc-list-item.extref.show-bound {
       display: none;
     }
 
