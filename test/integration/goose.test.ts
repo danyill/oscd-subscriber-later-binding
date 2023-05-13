@@ -48,6 +48,7 @@ type Plugin = LitElement & {
 describe(pluginName, () => {
   let editor: OpenSCD;
   let plugin: Plugin;
+  let script: HTMLScriptElement;
 
   beforeEach(async function () {
     const plugins = {
@@ -66,8 +67,30 @@ describe(pluginName, () => {
       ],
     };
 
+    script = document.createElement('script');
+    script.type = 'module';
+
+    script.textContent = `
+    const _customElementsDefine = window.customElements.define;
+    window.customElements.define = (name, cl, conf) => {
+      if (!customElements.get(name)) {
+        try {
+          _customElementsDefine.call(
+            window.customElements,
+            name,
+            cl,
+            conf
+          );
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    };
+  `;
+    document.head.appendChild(script);
+
     const ed = await fixture(
-      html`<open-scd
+      html` <open-scd
         language="en"
         plugins="${JSON.stringify(plugins)}"
       ></open-scd>`
@@ -82,6 +105,7 @@ describe(pluginName, () => {
 
   afterEach(() => {
     editor.remove();
+    script.remove();
   });
 
   let doc: XMLDocument;
