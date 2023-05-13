@@ -90,7 +90,7 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   ],
 
   // TODO: Ask Christian about .spec.js vs .test.js
-  files: 'dist/test/**/*.test.js',
+  // files: 'dist/test/**/*.test.js',
 
   groups: [
     {
