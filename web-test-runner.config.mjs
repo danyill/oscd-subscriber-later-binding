@@ -11,9 +11,9 @@ const local = !process.env.CI;
 // eslint-disable-next-line no-console
 console.assert(local, 'Running in CI!');
 // eslint-disable-next-line no-console
-console.assert(!fuzzy, 'Running on OS with 1% test pixel diff threshold!');
+console.assert(!fuzzy, 'Running on OS with 0.2% test pixel diff threshold!');
 
-const thresholdPercentage = fuzzy && local ? 1 : 0;
+const thresholdPercentage = fuzzy && local ? 0.2 : 0;
 
 const filteredLogs = [
   'Running in dev mode',

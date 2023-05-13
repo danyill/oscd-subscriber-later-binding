@@ -23,7 +23,7 @@ function timeout(ms: number) {
   });
 }
 
-mocha.timeout(120000 * factor);
+mocha.timeout(2000 * factor);
 
 function testName(test: any): string {
   return test.test!.fullTitle();
@@ -84,7 +84,7 @@ beforeEach(async function () {
   document.head.appendChild(script);
 
   const ed = await fixture(
-    html` <open-scd
+    html`<open-scd
       language="en"
       plugins="${JSON.stringify(plugins)}"
     ></open-scd>`
@@ -120,11 +120,15 @@ describe('goose', () => {
 
       await editor.updateComplete;
       await plugin.updateComplete;
-      await timeout(2000);
+      // font loading seems to be time consuming
+      await timeout(500); // page rendering
+    });
+
+    afterEach(async () => {
+      localStorage.clear();
     });
 
     it('initially has no FCDA selected', async function () {
-      await timeout(150);
       await visualDiff(plugin, testName(this));
     });
 
@@ -143,7 +147,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(150);
+      await timeout(150); // animation or re-render on ripple?
       await visualDiff(plugin, testName(this));
     });
 
@@ -158,7 +162,7 @@ describe('goose', () => {
 
       await editor.updateComplete;
       await plugin.updateComplete;
-      await timeout(1500);
+      await timeout(150); // page rendering
 
       const fcdaListElement = plugin.fcdaListUI;
 
@@ -174,7 +178,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(250);
+      await timeout(150); // render
       await visualDiff(plugin, testName(this));
     });
 
@@ -200,19 +204,12 @@ describe('goose', () => {
         button: 'left',
         position: midEl(button!),
       });
-      await button.updateComplete;
+
+      await timeout(150); // rendering
 
       const filterNotSubscribed = plugin.filterMenuFcdaUI.querySelector(
         '.filter-not-subscribed'
       );
-
-      await timeout(500);
-
-      await sendMouse({
-        type: 'move',
-        position: midEl(filterNotSubscribed!),
-      });
-      await plugin.updateComplete;
 
       await sendMouse({
         type: 'click',
@@ -221,15 +218,32 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
+      await timeout(150); // rendering
+      await visualDiff(plugin, testName(this));
+    });
+
+    it('filters only not subscribed FCDAs', async function () {
+      const button = plugin.filterMenuFcdaButtonUI;
+
       await sendMouse({
-        type: 'move',
+        type: 'click',
+        button: 'left',
         position: midEl(button!),
       });
-      await plugin.updateComplete;
-      resetMouse();
-      plugin.requestUpdate();
 
-      await timeout(500);
+      await timeout(150); // rendering
+
+      const filterSubscribed =
+        plugin.filterMenuFcdaUI.querySelector('.filter-subscribed');
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(filterSubscribed!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(150); // rendering
       await visualDiff(plugin, testName(this));
     });
 
@@ -271,10 +285,6 @@ describe('goose', () => {
         extRefListElement!,
         'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]'
       );
-      await sendMouse({
-        type: 'move',
-        position: midEl(extref!),
-      });
 
       await sendMouse({
         type: 'click',
@@ -282,24 +292,56 @@ describe('goose', () => {
         position: midEl(extref!),
       });
 
-      plugin.requestUpdate();
+      await plugin.updateComplete;
+
+      await timeout(150); // render
+      await visualDiff(plugin, testName(this));
+    });
+
+    it('can unsubscribe an FCDA and update counts', async function () {
+      const fcdaListElement = plugin.fcdaListUI;
+
+      const fcda = getFcdaItem(
+        fcdaListElement,
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      );
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(fcda!),
+      });
+      await plugin.updateComplete;
+
+      const extRefListElement = plugin.extRefListPublisherUI;
+      const extref = getExtRefItem(
+        extRefListElement!,
+        'GOOSE_Subscriber>>Earth_Switch> CSWI 1>Pos;CSWI1/Pos/stVal[0]'
+      );
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(extref!),
+      });
+
+      await plugin.updateComplete;
+
+      await timeout(150); // render
+      await visualDiff(plugin, testName(this));
+    });
+
+    it('changes to subscriber view', async function () {
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(plugin.switchViewUI!),
+      });
       await plugin.updateComplete;
 
       await timeout(150);
       await visualDiff(plugin, testName(this));
     });
-
-    // it('changes to subscriber view', async function () {
-    //   await sendMouse({
-    //     type: 'click',
-    //     button: 'left',
-    //     position: midEl(plugin.switchViewUI!),
-    //   });
-
-    //   await plugin.updateComplete;
-    //   await timeout(100);
-    //   await visualDiff(plugin, testName(this, pluginName));
-    // });
 
     // it('when subscribing an available ExtRef then the lists are changed', async () => {
     //   const fcdaListElement = plugin.fcdaListUI;
