@@ -16,6 +16,7 @@ import { getExtRefItem, getFcdaItem, midEl } from './test-support.js';
 import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
 const factor = window.process && process.env.CI ? 4 : 2;
+const ciWaitFactor = 2;
 
 function timeout(ms: number) {
   return new Promise(res => {
@@ -122,7 +123,7 @@ describe('goose', () => {
       await editor.updateComplete;
       await plugin.updateComplete;
       // font loading seems to be time consuming
-      await timeout(500); // page rendering
+      await timeout(500 * ciWaitFactor); // page rendering
     });
 
     afterEach(async () => {
@@ -148,7 +149,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(200); // animation or re-render on ripple?
+      await timeout(200 * ciWaitFactor); // animation or re-render on ripple?
       await visualDiff(plugin, testName(this));
     });
 
@@ -163,7 +164,7 @@ describe('goose', () => {
 
       await editor.updateComplete;
       await plugin.updateComplete;
-      await timeout(150); // page rendering
+      await timeout(150 * ciWaitFactor); // page rendering
 
       const fcdaListElement = plugin.fcdaListUI;
 
@@ -179,7 +180,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(150); // render
+      await timeout(150 * ciWaitFactor); // render
       await visualDiff(plugin, testName(this));
     });
 
@@ -193,7 +194,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(250);
+      await timeout(250 * ciWaitFactor);
       await visualDiff(plugin, testName(this));
     });
 
@@ -206,7 +207,7 @@ describe('goose', () => {
         position: midEl(button!),
       });
       await plugin.updateComplete;
-      await timeout(150); // rendering
+      await timeout(150 * ciWaitFactor); // rendering
 
       const filterNotSubscribed = plugin.filterMenuFcdaUI.querySelector(
         '.filter-not-subscribed'
@@ -219,7 +220,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(400); // rendering
+      await timeout(400 * ciWaitFactor); // rendering
       await visualDiff(plugin, testName(this));
     });
 
@@ -232,7 +233,7 @@ describe('goose', () => {
         position: midEl(button!),
       });
 
-      await timeout(150); // rendering
+      await timeout(150 * ciWaitFactor); // rendering
 
       const filterSubscribed =
         plugin.filterMenuFcdaUI.querySelector('.filter-subscribed');
@@ -244,7 +245,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(400); // rendering
+      await timeout(400 * ciWaitFactor); // rendering
       await visualDiff(plugin, testName(this));
     });
 
@@ -257,7 +258,7 @@ describe('goose', () => {
         position: midEl(extRefFilterMenu!),
       });
 
-      await timeout(150); // rendering
+      await timeout(150 * ciWaitFactor); // rendering
       await visualDiff(plugin, testName(this));
     });
 
@@ -276,7 +277,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(150); // animation or re-render on ripple?
+      await timeout(150 * ciWaitFactor); // animation or re-render on ripple?
 
       const extRefFilterMenu = plugin.filterMenuExtrefPublisherButtonUI;
 
@@ -286,7 +287,7 @@ describe('goose', () => {
         position: midEl(extRefFilterMenu!),
       });
 
-      await timeout(150); // rendering
+      await timeout(150 * ciWaitFactor); // rendering
 
       const filterDisabled =
         plugin.filterMenuExtRefPublisherUI.querySelector('.filter-disabled');
@@ -298,7 +299,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(150); // rendering
+      await timeout(150 * ciWaitFactor); // rendering
       await visualDiff(plugin, testName(this));
     });
 
@@ -316,7 +317,7 @@ describe('goose', () => {
     //     position: midEl(item!),
     //   });
 
-    //   await timeout(100);
+    //   await timeout(100*ciWaitFactor);
     //   await visualDiff(plugin, testName(this, pluginName));
     // });
 
@@ -349,7 +350,7 @@ describe('goose', () => {
 
       await plugin.updateComplete;
 
-      await timeout(300); // render
+      await timeout(300 * ciWaitFactor); // render
       await visualDiff(plugin, testName(this));
     });
 
@@ -382,7 +383,7 @@ describe('goose', () => {
 
       await plugin.updateComplete;
 
-      await timeout(150); // render
+      await timeout(150 * ciWaitFactor); // render
       await visualDiff(plugin, testName(this));
     });
 
@@ -394,7 +395,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(150);
+      await timeout(150 * ciWaitFactor);
       await visualDiff(plugin, testName(this));
     });
 
@@ -406,7 +407,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(150);
+      await timeout(150 * ciWaitFactor);
       await visualDiff(plugin, testName(this));
     });
 
