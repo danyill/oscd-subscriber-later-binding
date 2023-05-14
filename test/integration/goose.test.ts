@@ -130,6 +130,12 @@ describe('goose', () => {
     });
 
     it('initially has no FCDA selected', async function () {
+      // carrying out an action causes a refresh?
+      await sendMouse({
+        type: 'move',
+        position: midEl(plugin!),
+      });
+
       await visualDiff(plugin, testName(this));
     });
 

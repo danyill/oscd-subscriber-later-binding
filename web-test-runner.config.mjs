@@ -5,28 +5,31 @@ import path from 'path';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 
-const fuzzy = ['win32', 'darwin'].includes(process.platform); // allow for 1% difference on non-linux OSs
+const fuzzy = ['win32', 'darwin'].includes(process.platform); // allow for difference on non-linux OSs
 const local = !process.env.CI;
+
+const thresholdPercentage = fuzzy && !local ? 0.2 : 0;
 
 // eslint-disable-next-line no-console
 console.assert(local, 'Running in CI!');
 // eslint-disable-next-line no-console
-console.assert(!fuzzy, 'Running on OS with 0.2% test pixel diff threshold!');
-
-const thresholdPercentage = fuzzy && local ? 0.2 : 0;
+console.assert(
+  !fuzzy,
+  `Running on OS with ${thresholdPercentage}% test pixel diff threshold!`
+);
 
 const filteredLogs = [
   'Running in dev mode',
   'Lit is in dev mode',
-  'mwc-list-item scheduled an update',
+  'scheduled an update',
 ];
 
 // TODO: re-enable other browsers
 // TODO: Diagnose incorrect mwc-icon display  in webkit, may be upstream issue
 const browsers = [
   playwrightLauncher({ product: 'chromium' }),
-  // playwrightLauncher({ product: 'firefox' }),
-  // playwrightLauncher({ product: 'webkit' }),
+  playwrightLauncher({ product: 'firefox' }),
+  playwrightLauncher({ product: 'webkit' }),
 ];
 
 function defaultGetImageDiff({ baselineImage, image, options }) {
@@ -74,6 +77,9 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
     visualRegressionPlugin({
       update: process.argv.includes('--update-visual-baseline'),
       baseDir: 'test/screenshots',
+      diffOptions: {
+        includeAA: true,
+      },
       getImageDiff: options => {
         const result = defaultGetImageDiff(options);
         if (result.diffPercentage < thresholdPercentage)
@@ -88,9 +94,6 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
         path.join('failed', `${name}-${browser}`),
     }),
   ],
-
-  // TODO: Ask Christian about .spec.js vs .test.js
-  // files: 'dist/test/**/*.test.js',
 
   groups: [
     {
