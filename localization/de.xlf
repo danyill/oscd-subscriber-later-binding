@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+<xliff version="1.2"
+  xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file target-language="de" source-language="en" original="lit-localize-inputs" datatype="plaintext">
     <body>
       <trans-unit id="s7b172c6f7ac1cb0c">
@@ -70,9 +71,13 @@
         <source>Disabled</source>
         <target>Deaktiviert</target>
       </trans-unit>
-      <trans-unit id="s4a29983da137eeb2">
-        <source>Strict Service Types</source>
-        <target>Strenge Diensttypen</target>
+      <trans-unit id="sa476e1e85cf33f8a">
+        <source>Unspecified Service Types</source>
+        <target>Nicht spezifizierte Diensttypen</target>
+      </trans-unit>
+      <trans-unit id="s2715af43c340fa9c">
+        <source>Show Disabled</source>
+        <target>Deaktivierte anzeigen</target>
       </trans-unit>
     </body>
   </file>

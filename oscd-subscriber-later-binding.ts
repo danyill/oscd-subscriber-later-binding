@@ -670,7 +670,7 @@ export default class SubscriberLaterBinding extends LitElement {
         this.hideNotBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(
           1
         );
-        this.strictServiceTypes = (<Set<number>>(
+        this.strictServiceTypes = !(<Set<number>>(
           this.filterMenuExtRefUI.index
         )).has(2);
 
@@ -684,7 +684,7 @@ export default class SubscriberLaterBinding extends LitElement {
       );
 
       this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
-        this.strictServiceTypes = (<Set<number>>(
+        this.strictServiceTypes = !(<Set<number>>(
           this.filterMenuExtRefPublisherUI.index
         )).has(0);
         this.hideDisabled = !(<Set<number>>(
@@ -711,7 +711,8 @@ export default class SubscriberLaterBinding extends LitElement {
       this.hideNotSubscribed = !(<Set<number>>this.filterMenuFcdaUI.index).has(
         1
       );
-      this.hideDisabled = !(<Set<number>>this.filterMenuFcdaUI.index).has(2);
+      if (this.subscriberView)
+        this.hideDisabled = !(<Set<number>>this.filterMenuFcdaUI.index).has(2);
       this.updateFilterCSS();
     });
 
@@ -1132,6 +1133,10 @@ Basic Type: ${spec.bType ?? '?'}`
   }
 
   private renderPublisherViewExtRefListTitle(): TemplateResult {
+    const menuClasses = {
+      'filter-off': this.strictServiceTypes || this.hideDisabled,
+    };
+
     return html`<h1>
       ${msg('Subscriber Inputs')}
       <mwc-menu
@@ -1142,22 +1147,23 @@ Basic Type: ${spec.bType ?? '?'}`
         menuCorner="END"
       >
         <mwc-check-list-item
-          class="show-strict-service-types"
+          class="show-unspecified-service-types"
           left
-          ?selected=${this.strictServiceTypes}
+          ?selected=${!this.strictServiceTypes}
         >
-          <span>${msg('Strict Service Types')}</span>
+          <span>${msg('Unspecified Service Types')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="filter-disabled"
           left
           ?selected=${!this.hideDisabled}
         >
-          <span>${msg('Disabled')}</span>
+          <span>${msg('Show Disabled')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
         id="filterExtRefPublisherIcon"
+        class="${classMap(menuClasses)}"
         title="${msg('Filter')}"
         icon="filter_list"
         @click=${() => {
@@ -1206,11 +1212,11 @@ Basic Type: ${spec.bType ?? '?'}`
           <span>${msg('Not Subscribed')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
-          class="show-strict-service-types"
+          class="show-unspecified-service-types"
           left
-          ?selected=${this.strictServiceTypes}
+          ?selected=${!this.strictServiceTypes}
         >
-          <span>${msg('Strict Service Types')}</span>
+          <span>${msg('Unspecified Service Types')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
@@ -1666,7 +1672,8 @@ Basic Type: ${spec.bType ?? '?'}`
     }
 
     #filterFcdaIcon.filter-off,
-    #filterExtRefIcon.filter-off {
+    #filterExtRefIcon.filter-off,
+    #filterExtRefPublisherIcon.filter-off {
       color: var(--mdc-theme-secondary, #018786);
       background-color: var(--mdc-theme-background);
     }

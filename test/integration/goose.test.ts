@@ -99,6 +99,7 @@ beforeEach(async function () {
 
 afterEach(() => {
   editor.remove();
+  plugin.remove();
   script.remove();
 });
 
@@ -147,7 +148,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(150); // animation or re-render on ripple?
+      await timeout(200); // animation or re-render on ripple?
       await visualDiff(plugin, testName(this));
     });
 
@@ -190,9 +191,9 @@ describe('goose', () => {
         button: 'left',
         position: midEl(button!),
       });
-      await button.updateComplete;
+      await plugin.updateComplete;
 
-      await timeout(150);
+      await timeout(250);
       await visualDiff(plugin, testName(this));
     });
 
@@ -204,7 +205,7 @@ describe('goose', () => {
         button: 'left',
         position: midEl(button!),
       });
-
+      await plugin.updateComplete;
       await timeout(150); // rendering
 
       const filterNotSubscribed = plugin.filterMenuFcdaUI.querySelector(
@@ -218,7 +219,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
-      await timeout(150); // rendering
+      await timeout(400); // rendering
       await visualDiff(plugin, testName(this));
     });
 
@@ -240,6 +241,60 @@ describe('goose', () => {
         type: 'click',
         button: 'left',
         position: midEl(filterSubscribed!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(400); // rendering
+      await visualDiff(plugin, testName(this));
+    });
+
+    it('shows ExtRef filter options defaulting to on', async function () {
+      const extRefFilterMenu = plugin.filterMenuExtrefPublisherButtonUI;
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(extRefFilterMenu!),
+      });
+
+      await timeout(150); // rendering
+      await visualDiff(plugin, testName(this));
+    });
+
+    it('filters disabled items with pXX attributes', async function () {
+      const fcdaListElement = plugin.fcdaListUI;
+
+      const fcda = getFcdaItem(
+        fcdaListElement,
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      );
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(fcda!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(150); // animation or re-render on ripple?
+
+      const extRefFilterMenu = plugin.filterMenuExtrefPublisherButtonUI;
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(extRefFilterMenu!),
+      });
+
+      await timeout(150); // rendering
+
+      const filterDisabled =
+        plugin.filterMenuExtRefPublisherUI.querySelector('.filter-disabled');
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(filterDisabled!),
       });
       await plugin.updateComplete;
 
@@ -294,7 +349,7 @@ describe('goose', () => {
 
       await plugin.updateComplete;
 
-      await timeout(150); // render
+      await timeout(300); // render
       await visualDiff(plugin, testName(this));
     });
 
@@ -336,6 +391,18 @@ describe('goose', () => {
         type: 'click',
         button: 'left',
         position: midEl(plugin.switchViewUI!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(150);
+      await visualDiff(plugin, testName(this));
+    });
+
+    it('changes to sampled values view', async function () {
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(plugin.switchControlTypeUI!),
       });
       await plugin.updateComplete;
 
