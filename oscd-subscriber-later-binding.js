@@ -18028,7 +18028,7 @@ class SubscriberLaterBinding extends s$1 {
             this.filterMenuExtRefUI.addEventListener('closed', () => {
                 this.hideBound = !this.filterMenuExtRefUI.index.has(0);
                 this.hideNotBound = !this.filterMenuExtRefUI.index.has(1);
-                this.strictServiceTypes = (this.filterMenuExtRefUI.index).has(2);
+                this.strictServiceTypes = !(this.filterMenuExtRefUI.index).has(2);
                 this.updateExtRefFilter();
             });
         }
@@ -18036,7 +18036,7 @@ class SubscriberLaterBinding extends s$1 {
             this.listContainerUI.classList.remove('subscriber-view');
             this.filterMenuExtRefPublisherUI.anchor = (this.filterMenuExtrefPublisherButtonUI);
             this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
-                this.strictServiceTypes = (this.filterMenuExtRefPublisherUI.index).has(0);
+                this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
                 this.hideDisabled = !(this.filterMenuExtRefPublisherUI.index).has(1);
                 this.updateFilterCSS();
             });
@@ -18050,7 +18050,8 @@ class SubscriberLaterBinding extends s$1 {
         this.filterMenuFcdaUI.addEventListener('closed', () => {
             this.hideSubscribed = !this.filterMenuFcdaUI.index.has(0);
             this.hideNotSubscribed = !this.filterMenuFcdaUI.index.has(1);
-            this.hideDisabled = !this.filterMenuFcdaUI.index.has(2);
+            if (this.subscriberView)
+                this.hideDisabled = !this.filterMenuFcdaUI.index.has(2);
             this.updateFilterCSS();
         });
         // TODO: Code duplication with the above
@@ -18386,6 +18387,9 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
     `;
     }
     renderPublisherViewExtRefListTitle() {
+        const menuClasses = {
+            'filter-off': this.strictServiceTypes || this.hideDisabled,
+        };
         return x `<h1>
       ${msg('Subscriber Inputs')}
       <mwc-menu
@@ -18396,22 +18400,23 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         menuCorner="END"
       >
         <mwc-check-list-item
-          class="show-strict-service-types"
+          class="show-unspecified-service-types"
           left
-          ?selected=${this.strictServiceTypes}
+          ?selected=${!this.strictServiceTypes}
         >
-          <span>${msg('Strict Service Types')}</span>
+          <span>${msg('Unspecified Service Types')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="filter-disabled"
           left
           ?selected=${!this.hideDisabled}
         >
-          <span>${msg('Disabled')}</span>
+          <span>${msg('Show Disabled')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
         id="filterExtRefPublisherIcon"
+        class="${o(menuClasses)}"
         title="${msg('Filter')}"
         icon="filter_list"
         @click=${() => {
@@ -18461,11 +18466,11 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
           <span>${msg('Not Subscribed')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
-          class="show-strict-service-types"
+          class="show-unspecified-service-types"
           left
-          ?selected=${this.strictServiceTypes}
+          ?selected=${!this.strictServiceTypes}
         >
-          <span>${msg('Strict Service Types')}</span>
+          <span>${msg('Unspecified Service Types')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
@@ -18846,7 +18851,8 @@ SubscriberLaterBinding.styles = i$5 `
     }
 
     #filterFcdaIcon.filter-off,
-    #filterExtRefIcon.filter-off {
+    #filterExtRefIcon.filter-off,
+    #filterExtRefPublisherIcon.filter-off {
       color: var(--mdc-theme-secondary, #018786);
       background-color: var(--mdc-theme-background);
     }
