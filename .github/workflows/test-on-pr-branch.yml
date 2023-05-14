@@ -23,3 +23,12 @@ jobs:
 
       - name: Run tests
         run: npm run-script test
+
+      - name: Create visual test failures artifact
+          uses: actions/upload-artifact@v3
+          if: failure()
+          with:
+            name: visual-test-failures
+            path: test/screenshots/failed
+            retention-days: 1
+            if-no-files-found: ignore 
