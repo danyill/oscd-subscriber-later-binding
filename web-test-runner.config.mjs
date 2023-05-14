@@ -24,12 +24,24 @@ const filteredLogs = [
   'scheduled an update',
 ];
 
-// TODO: re-enable other browsers
-// TODO: Diagnose incorrect mwc-icon display  in webkit, may be upstream issue
+// Consistency in fonts is hard without containers, see:
+// https://github.com/microsoft/playwright/issues/20097
+// https://github.com/puppeteer/puppeteer/issues/661
 const browsers = [
-  playwrightLauncher({ product: 'chromium' }),
+  playwrightLauncher({
+    product: 'chromium',
+    launchOptions: {
+      args: [
+        '--font-render-hinting=none',
+        '--disable-skia-runtime-opts',
+        '--disable-font-subpixel-positioning',
+        '--disable-lcd-text',
+        '--disable-gpu',
+      ],
+    },
+  }),
   playwrightLauncher({ product: 'firefox' }),
-  playwrightLauncher({ product: 'webkit' }),
+  // playwrightLauncher({ product: 'webkit' }),
 ];
 
 function defaultGetImageDiff({ baselineImage, image, options }) {
@@ -113,6 +125,9 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
      -moz-animation: none !important;
      animation: none !important;
     }
+    </style>
+    <style>
+    * { -webkit-font-smoothing: antialiased; }
     </style>
     <script>window.process = { env: ${JSON.stringify(process.env)} }</script>
     <script type="module" src="${testFramework}"></script>

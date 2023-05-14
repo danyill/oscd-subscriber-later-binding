@@ -95,6 +95,8 @@ beforeEach(async function () {
   plugin = document
     .querySelector('open-scd')!
     .shadowRoot!.querySelector<SubscriberLaterBinding>(editor.editor)!;
+
+  await document.fonts.ready;
 });
 
 afterEach(() => {
@@ -121,7 +123,7 @@ describe('goose', () => {
 
       await editor.updateComplete;
       await plugin.updateComplete;
-      // font loading seems to be time consuming
+
       await timeout(500); // page rendering
     });
 
@@ -136,6 +138,7 @@ describe('goose', () => {
         position: midEl(plugin!),
       });
 
+      await timeout(500); // page rendering
       await visualDiff(plugin, testName(this));
     });
 
