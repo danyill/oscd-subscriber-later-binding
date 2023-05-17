@@ -20,8 +20,10 @@ export default class SubscriberLaterBinding extends LitElement {
     subscriberView: boolean;
     hideSubscribed: boolean;
     hideNotSubscribed: boolean;
-    hideDisabled: boolean;
+    hideDataObjects: boolean;
+    hidePreconfiguredNotMatching: boolean;
     notAutoIncrement: boolean;
+    notChangeSupervisionLNs: boolean;
     hideBound: boolean;
     hideNotBound: boolean;
     strictServiceTypes: boolean;
@@ -34,8 +36,10 @@ export default class SubscriberLaterBinding extends LitElement {
     filterMenuExtRefButtonUI: Icon;
     filterMenuExtrefPublisherButtonUI: Icon;
     listContainerUI: HTMLDivElement;
-    settingsMenuExtRefUI: Menu;
-    settingsMenuExtRefButtonUI: Icon;
+    settingsMenuExtRefSubscriberUI: Menu;
+    settingsMenuExtRefPublisherUI: Menu;
+    settingsMenuExtRefSubscriberButtonUI: Icon;
+    settingsMenuExtRefPublisherButtonUI: Icon;
     fcdaListUI: OscdFilteredList;
     extRefListPublisherUI?: OscdFilteredList;
     publisherExtRefSectionUI?: HTMLElement;
@@ -89,7 +93,7 @@ export default class SubscriberLaterBinding extends LitElement {
     renderExtRefs(): TemplateResult;
     renderControlTypeSelector(): TemplateResult;
     renderPublisherFCDAs(): TemplateResult;
-    renderswitchView(): TemplateResult;
+    renderSwitchView(): TemplateResult;
     render(): TemplateResult;
     static styles: import("lit").CSSResult;
 }

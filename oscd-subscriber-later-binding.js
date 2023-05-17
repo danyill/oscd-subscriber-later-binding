@@ -17698,8 +17698,10 @@ const storedProperties = [
     'controlTag',
     'hideSubscribed',
     'hideNotSubscribed',
-    'hideDisabled',
+    'hideDataObjects',
+    'hidePreconfiguredNotMatching',
     'notAutoIncrement',
+    'notChangeSupervisionLNs',
     'hideBound',
     'hideNotBound',
     'strictServiceTypes',
@@ -17790,8 +17792,10 @@ class SubscriberLaterBinding extends s$1 {
                 : 'SampledValueControl',
             hideSubscribed: this.hideSubscribed,
             hideNotSubscribed: this.hideNotSubscribed,
-            hideDisabled: this.hideDisabled,
+            hideDataObjects: this.hideDataObjects,
+            hidePreconfiguredNotMatching: this.hidePreconfiguredNotMatching,
             notAutoIncrement: this.notAutoIncrement,
+            notChangeSupervisionLNs: this.notChangeSupervisionLNs,
             hideBound: this.hideBound,
             hideNotBound: this.hideNotBound,
             strictServiceTypes: this.strictServiceTypes,
@@ -17799,7 +17803,7 @@ class SubscriberLaterBinding extends s$1 {
         localStorage.setItem('subscriber-later-binding', JSON.stringify(storedConfiguration));
     }
     restoreSettings() {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g;
         const storedSettings = localStorage.getItem('subscriber-later-binding');
         const storedConfiguration = storedSettings
             ? JSON.parse(storedSettings)
@@ -17810,11 +17814,15 @@ class SubscriberLaterBinding extends s$1 {
         this.switchControlTypeUI.on = this.controlTag === 'GSEControl';
         this.hideSubscribed = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideSubscribed) || false;
         this.hideNotSubscribed = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideNotSubscribed) || false;
-        this.hideDisabled = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideDisabled) || false;
+        this.hideDataObjects = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideDataObjects) || false;
+        this.hidePreconfiguredNotMatching =
+            (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hidePreconfiguredNotMatching) || false;
         this.notAutoIncrement = (_c = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.notAutoIncrement) !== null && _c !== void 0 ? _c : false;
-        this.hideBound = (_d = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideBound) !== null && _d !== void 0 ? _d : false;
-        this.hideNotBound = (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideNotBound) !== null && _e !== void 0 ? _e : false;
-        this.strictServiceTypes = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.strictServiceTypes) !== null && _f !== void 0 ? _f : false;
+        this.notChangeSupervisionLNs =
+            (_d = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.notChangeSupervisionLNs) !== null && _d !== void 0 ? _d : false;
+        this.hideBound = (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideBound) !== null && _e !== void 0 ? _e : false;
+        this.hideNotBound = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideNotBound) !== null && _f !== void 0 ? _f : false;
+        this.strictServiceTypes = (_g = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.strictServiceTypes) !== null && _g !== void 0 ? _g : false;
     }
     getControlElements(controlTag) {
         if (this.doc) {
@@ -17893,7 +17901,8 @@ class SubscriberLaterBinding extends s$1 {
             srcCBName: null,
         }));
         const subscriberIed = extRef.closest('IED') || undefined;
-        if (canRemoveSubscriptionSupervision(extRef))
+        if (!this.notChangeSupervisionLNs &&
+            canRemoveSubscriptionSupervision(extRef))
             editActions.push(...removeSubscriptionSupervision(this.currentSelectedControlElement, subscriberIed));
         let controlBlockElement;
         let fcdaElement;
@@ -17912,7 +17921,8 @@ class SubscriberLaterBinding extends s$1 {
             this.extRefCounters.delete(controlBlockFcdaId);
         }
         this.dispatchEvent(newEditEvent(editActions));
-        this.reCreateSupervisionCache();
+        if (!this.notChangeSupervisionLNs)
+            this.reCreateSupervisionCache();
     }
     /**
      * Subscribing means copying a list of attributes from the FCDA Element (and others) to the ExtRef Element.
@@ -17926,11 +17936,14 @@ class SubscriberLaterBinding extends s$1 {
         }
         const updateEdit = updateExtRefElement(extRef, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
         const subscriberIed = extRef.closest('IED') || undefined;
-        const supervisionActions = instantiateSubscriptionSupervision(this.currentSelectedControlElement, subscriberIed);
+        let supervisionActions = [];
+        if (!this.notChangeSupervisionLNs)
+            supervisionActions = instantiateSubscriptionSupervision(this.currentSelectedControlElement, subscriberIed);
         this.dispatchEvent(newEditEvent([updateEdit, ...supervisionActions]));
         const controlBlockFcdaId = `${identity(this.currentSelectedControlElement)} ${identity(this.currentSelectedFcdaElement)}`;
         this.extRefCounters.delete(controlBlockFcdaId);
-        this.reCreateSupervisionCache();
+        if (!this.notChangeSupervisionLNs)
+            this.reCreateSupervisionCache();
     }
     getSubscribedExtRefElements() {
         return getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, this.currentSelectedFcdaElement, this.currentSelectedControlElement, true);
@@ -17992,27 +18005,24 @@ class SubscriberLaterBinding extends s$1 {
         this.requestUpdate();
     }
     updateFilterCSS() {
-        if (!this.hideSubscribed) {
-            this.fcdaListUI.classList.add('show-subscribed');
-        }
-        else {
+        var _a, _b;
+        if (this.hideSubscribed) {
             this.fcdaListUI.classList.remove('show-subscribed');
         }
-        if (!this.hideNotSubscribed) {
-            this.fcdaListUI.classList.add('show-not-subscribed');
-        }
         else {
+            this.fcdaListUI.classList.add('show-subscribed');
+        }
+        if (this.hideNotSubscribed) {
             this.fcdaListUI.classList.remove('show-not-subscribed');
         }
-        if (this.hideDisabled) {
-            if (this.extRefListPublisherUI)
-                this.extRefListPublisherUI.classList.remove('show-disabled');
-            this.fcdaListUI.classList.remove('show-disabled');
+        else {
+            this.fcdaListUI.classList.add('show-not-subscribde');
+        }
+        if (this.hidePreconfiguredNotMatching) {
+            (_a = this.extRefListPublisherUI) === null || _a === void 0 ? void 0 : _a.classList.remove('show-pxx-mismatch');
         }
         else {
-            if (this.extRefListPublisherUI)
-                this.extRefListPublisherUI.classList.add('show-disabled');
-            this.fcdaListUI.classList.add('show-disabled');
+            (_b = this.extRefListPublisherUI) === null || _b === void 0 ? void 0 : _b.classList.add('show-pxx-mismatch');
         }
         // force refresh for CSS style change
         this.requestUpdate();
@@ -18021,15 +18031,16 @@ class SubscriberLaterBinding extends s$1 {
         if (this.subscriberView) {
             this.listContainerUI.classList.add('subscriber-view');
             this.filterMenuExtRefUI.anchor = (this.filterMenuExtRefButtonUI);
-            this.settingsMenuExtRefUI.anchor = (this.settingsMenuExtRefButtonUI);
-            this.settingsMenuExtRefUI.addEventListener('closed', () => {
-                this.notAutoIncrement = !(this.settingsMenuExtRefUI.index).has(0);
-            });
             this.filterMenuExtRefUI.addEventListener('closed', () => {
                 this.hideBound = !this.filterMenuExtRefUI.index.has(0);
                 this.hideNotBound = !this.filterMenuExtRefUI.index.has(1);
                 this.strictServiceTypes = !(this.filterMenuExtRefUI.index).has(2);
-                this.updateExtRefFilter();
+            });
+            this.updateExtRefFilter();
+            this.settingsMenuExtRefSubscriberUI.anchor = (this.settingsMenuExtRefSubscriberButtonUI);
+            this.settingsMenuExtRefSubscriberUI.addEventListener('closed', () => {
+                this.notAutoIncrement = !(this.settingsMenuExtRefSubscriberUI.index).has(0);
+                this.notChangeSupervisionLNs = !(this.settingsMenuExtRefSubscriberUI.index).has(1);
             });
         }
         else {
@@ -18037,9 +18048,13 @@ class SubscriberLaterBinding extends s$1 {
             this.filterMenuExtRefPublisherUI.anchor = (this.filterMenuExtrefPublisherButtonUI);
             this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
                 this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
-                this.hideDisabled = !(this.filterMenuExtRefPublisherUI.index).has(1);
-                this.updateFilterCSS();
+                this.hidePreconfiguredNotMatching = !(this.filterMenuExtRefPublisherUI.index).has(1);
             });
+            this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
+            this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
+                this.notChangeSupervisionLNs = !(this.settingsMenuExtRefPublisherUI.index).has(0);
+            });
+            this.updateFilterCSS();
         }
     }
     async firstUpdated() {
@@ -18050,15 +18065,20 @@ class SubscriberLaterBinding extends s$1 {
         this.filterMenuFcdaUI.addEventListener('closed', () => {
             this.hideSubscribed = !this.filterMenuFcdaUI.index.has(0);
             this.hideNotSubscribed = !this.filterMenuFcdaUI.index.has(1);
+            this.hideDataObjects = !this.filterMenuFcdaUI.index.has(2);
             if (this.subscriberView)
-                this.hideDisabled = !this.filterMenuFcdaUI.index.has(2);
+                this.hidePreconfiguredNotMatching = !(this.filterMenuFcdaUI.index).has(3);
             this.updateFilterCSS();
         });
         // TODO: Code duplication with the above
         this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
             this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
-            this.hideDisabled = !(this.filterMenuExtRefPublisherUI.index).has(1);
+            this.hidePreconfiguredNotMatching = !(this.filterMenuExtRefPublisherUI.index).has(1);
             this.updateFilterCSS();
+        });
+        this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
+        this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
+            this.notChangeSupervisionLNs = !(this.settingsMenuExtRefPublisherUI.index).has(0);
         });
         this.requestUpdate();
         await this.updateComplete;
@@ -18098,13 +18118,18 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             : A}
     </mwc-list-item>`;
     }
-    isFcdaDisabled(fcdaElement, controlElement) {
+    isFcdaDisabled(fcdaElement, controlElement, withFilter = false) {
         // If daName is missing, we have an FCDO which is not currently supported
         // TODO: Remove this and actually support FCDOs
         const isFcdo = !fcdaElement.getAttribute('daName');
-        return ((this.subscriberView &&
-            unsupportedExtRefElement(this.currentSelectedExtRefElement, fcdaElement, controlElement)) ||
-            isFcdo);
+        const isPreconfiguredNotMatching = this.subscriberView &&
+            unsupportedExtRefElement(this.currentSelectedExtRefElement, fcdaElement, controlElement);
+        const disabledFcdo = (isFcdo && !withFilter) || (withFilter && isFcdo && this.hideDataObjects);
+        const disablePreconfigured = (isPreconfiguredNotMatching && !withFilter) ||
+            (withFilter &&
+                isPreconfiguredNotMatching &&
+                this.hidePreconfiguredNotMatching);
+        return disabledFcdo || disablePreconfigured;
     }
     renderFCDA(controlElement, fcdaElement) {
         var _a;
@@ -18113,6 +18138,9 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         const filterClasses = {
             'show-subscribed': fcdaCount !== 0,
             'show-not-subscribed': fcdaCount === 0,
+            'show-data-objects': !fcdaElement.getAttribute('daName'),
+            'show-pxx-mismatch': this.subscriberView &&
+                unsupportedExtRefElement(this.currentSelectedExtRefElement, fcdaElement, controlElement),
         };
         const spec = fcdaSpecification(fcdaElement);
         const fcdaDescription = getFcdaInstDesc(fcdaElement, true).join(' > ');
@@ -18139,7 +18167,10 @@ Basic Type: ${spec.bType}"
     }
     renderFCDAListTitle() {
         const menuClasses = {
-            'filter-off': this.hideSubscribed || this.hideNotSubscribed,
+            'filter-off': this.hideSubscribed ||
+                this.hideNotSubscribed ||
+                this.hideDataObjects ||
+                (this.hidePreconfiguredNotMatching && this.subscriberView),
         };
         return x `
       <h1>
@@ -18176,14 +18207,23 @@ Basic Type: ${spec.bType}"
           >
             <span>${msg('Not Subscribed')}</span>
           </mwc-check-list-item>
+          <mwc-check-list-item
+            class="filter-disabled"
+            left
+            ?selected=${!this.hideDataObjects}
+          >
+            <span>${msg('Show Data Objects')}</span>
+          </mwc-check-list-item>
           ${this.subscriberView
             ? x `<mwc-check-list-item
-                class="filter-disabled"
+                class="filter-preconfigured"
                 left
-                ?selected=${!this.hideDisabled}
+                ?selected=${!this.hidePreconfiguredNotMatching}
               >
-                <span>${msg('Disabled')}</span>
-              </mwc-check-list-item>`
+                <span
+                  >${msg('Show Non-Matching Preconfigured')}</span
+                ></mwc-check-list-item
+              >`
             : A}
         </mwc-menu>
       </h1>
@@ -18193,6 +18233,8 @@ Basic Type: ${spec.bType}"
         const filteredListClasses = {
             'show-subscribed': !this.hideSubscribed,
             'show-not-subscribed': !this.hideNotSubscribed,
+            'show-pxx-mismatch': !this.hidePreconfiguredNotMatching,
+            'show-data-objects': !this.hideDataObjects,
         };
         // TODO: Activatable is not working correctly on very large files
         return x `<oscd-filtered-list
@@ -18259,10 +18301,10 @@ Basic Type: ${spec.bType}"
       ${controlElements
             .filter(controlElement => {
             const fcdaElements = getFcdaElements(controlElement);
-            // if disabled items are  filtered then don't show them
-            const onlyHasDisabledItems = this.hideDisabled &&
-                fcdaElements.every(fcda => this.isFcdaDisabled(fcda, controlElement));
-            return (fcdaElements.length && !(onlyHasDisabledItems && this.hideDisabled));
+            // if disabled (non-matching pXX or DOs) are filtered
+            // then don't show them
+            const onlyHasDisabledItems = fcdaElements.every(fcda => this.isFcdaDisabled(fcda, controlElement, true));
+            return fcdaElements.length && !onlyHasDisabledItems;
         })
             .map(controlElement => {
             var _a;
@@ -18343,13 +18385,14 @@ Basic Type: ${spec.bType}"
                     !findFCDAs$1(extRefElement).find(x => x !== undefined);
                 const spec = inputRestriction(extRefElement);
                 const desc = getDescriptionAttribute(extRefElement);
+                const disabledExtRef = unsupportedExtRefElement(extRefElement, this.currentSelectedFcdaElement, this.currentSelectedControlElement);
                 return x `<mwc-list-item
               graphic="large"
-              ?disabled=${unsupportedExtRefElement(extRefElement, this.currentSelectedFcdaElement, this.currentSelectedControlElement)}
+              ?disabled=${disabledExtRef}
               ?hasMeta=${isPartiallyConfigured(extRefElement) ||
                     hasMissingMapping}
               ?twoline=${desc}
-              class="extref"
+              class="extref ${disabledExtRef ? 'show-pxx-mismatch' : ''}"
               data-extref="${identity(extRefElement)}"
               value="${identity(extRefElement)}"
               title="${spec.cdc && spec.bType
@@ -18388,7 +18431,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
     }
     renderPublisherViewExtRefListTitle() {
         const menuClasses = {
-            'filter-off': this.strictServiceTypes || this.hideDisabled,
+            'filter-off': this.strictServiceTypes || this.hidePreconfiguredNotMatching,
         };
         return x `<h1>
       ${msg('Subscriber Inputs')}
@@ -18407,11 +18450,11 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
           <span>${msg('Unspecified Service Types')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
-          class="filter-disabled"
+          class="filter-preconfigured"
           left
-          ?selected=${!this.hideDisabled}
+          ?selected=${!this.hidePreconfiguredNotMatching}
         >
-          <span>${msg('Show Disabled')}</span>
+          <span>${msg('Show Non-Matching Preconfigured')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
@@ -18426,11 +18469,36 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                 this.filterMenuExtRefPublisherUI.close();
         }}
       ></mwc-icon-button>
+      <mwc-icon-button
+        id="settingsExtRefPublisherIcon"
+        title="${msg('Settings')}"
+        icon="settings"
+        @click=${() => {
+            if (!this.settingsMenuExtRefPublisherUI.open)
+                this.settingsMenuExtRefPublisherUI.show();
+            else
+                this.settingsMenuExtRefPublisherUI.close();
+        }}
+      ></mwc-icon-button>
+      <mwc-menu
+        id="settingsExtRefPublisherMenu"
+        multi
+        corner="BOTTOM_RIGHT"
+        menuCorner="END"
+      >
+        <mwc-check-list-item
+          class="no-supervisions"
+          left
+          ?selected=${!this.notChangeSupervisionLNs}
+        >
+          <span>${msg('Change Supervision LNs')}</span>
+        </mwc-check-list-item>
+      </mwc-menu>
     </h1>`;
     }
     renderSubscriberViewExtRefListTitle() {
         const menuClasses = {
-            'filter-off': this.hideBound || this.hideNotBound,
+            'filter-off': this.hideBound || this.hideNotBound || this.strictServiceTypes,
         };
         return x `<h1 class="subscriber-title">
       ${msg('Subscriber Inputs')}
@@ -18474,18 +18542,18 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
-        id="settingsExtRefIcon"
+        id="settingsExtRefSubscriberIcon"
         title="${msg('Settings')}"
         icon="settings"
         @click=${() => {
-            if (!this.settingsMenuExtRefUI.open)
-                this.settingsMenuExtRefUI.show();
+            if (!this.settingsMenuExtRefSubscriberUI.open)
+                this.settingsMenuExtRefSubscriberUI.show();
             else
-                this.settingsMenuExtRefUI.close();
+                this.settingsMenuExtRefSubscriberUI.close();
         }}
       ></mwc-icon-button>
       <mwc-menu
-        id="settingsExtRefMenu"
+        id="settingsExtRefSubscriberMenu"
         multi
         corner="BOTTOM_RIGHT"
         menuCorner="END"
@@ -18496,6 +18564,13 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
           ?selected=${!this.notAutoIncrement}
         >
           <span>${msg('Auto-increment')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="no-supervisions"
+          left
+          ?selected=${!this.notChangeSupervisionLNs}
+        >
+          <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -18649,21 +18724,16 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         })}`;
     }
     renderExtRefs() {
-        const filteredListClasses = {
-            'show-bound': !this.hideBound,
-            'show-not-bound': !this.hideNotBound,
-        };
-        return !this.subscriberView
-            ? x `<section class="column">
-          ${this.renderPublisherViewExtRefListTitle()}
-          ${this.currentSelectedControlElement &&
-                this.currentSelectedFcdaElement
+        if (!this.subscriberView) {
+            return x `<section class="column">
+        ${this.renderPublisherViewExtRefListTitle()}
+        ${this.currentSelectedControlElement && this.currentSelectedFcdaElement
                 ? x `<oscd-filtered-list
-                id="publisherExtRefList"
-                class="styled-scrollbars ${!this.hideDisabled
-                    ? 'show-disabled'
+              id="publisherExtRefList"
+              class="styled-scrollbars ${!this.hidePreconfiguredNotMatching
+                    ? 'show-pxx-mismatch'
                     : ''}"
-                @selected=${(ev) => {
+              @selected=${(ev) => {
                     const selectedListItem = ev.target.selected;
                     if (!selectedListItem)
                         return;
@@ -18686,47 +18756,52 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                     this.fcdaListUI.requestUpdate();
                     this.requestUpdate();
                 }}
-              >
-                ${this.renderPublisherViewSubscribedExtRefs()}
-                ${this.renderPublisherViewAvailableExtRefs()}
-              </oscd-filtered-list>`
+            >
+              ${this.renderPublisherViewSubscribedExtRefs()}
+              ${this.renderPublisherViewAvailableExtRefs()}
+            </oscd-filtered-list>`
                 : x `<h3>${msg('No published item selected')}</h3>`}
-        </section>`
-            : x ` <section class="column extref">
-          ${this.renderSubscriberViewExtRefListTitle()}
-          <oscd-filtered-list
-            id="subscriberExtRefList"
-            class="styled-scrollbars ${o(filteredListClasses)}"
-            activatable
-            @selected=${(ev) => {
-                const selectedListItem = ev.target.selected;
-                if (!selectedListItem)
-                    return;
-                const { extref } = selectedListItem.dataset;
-                const selectedExtRefElement = (this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown ExtRef')));
-                if (!selectedExtRefElement)
-                    return;
-                if (isSubscribed(selectedExtRefElement) ||
-                    isPartiallyConfigured(selectedExtRefElement)) {
-                    this.unsubscribe(selectedExtRefElement);
-                    // deselect in UI
-                    selectedListItem.selected = false;
-                    selectedListItem.activated = false;
-                    // any previous selections are not relevant and not part of our state
-                    this.currentSelectedExtRefElement = undefined;
-                    this.currentSelectedFcdaElement = undefined;
-                    this.currentSelectedControlElement = undefined;
-                    // process de-selection to allow an additional click to unsubscribe
-                    this.requestUpdate();
-                }
-                else {
-                    this.currentSelectedExtRefElement = selectedExtRefElement;
-                }
+      </section>`;
+        }
+        const filteredListClasses = {
+            'show-bound': !this.hideBound,
+            'show-not-bound': !this.hideNotBound,
+        };
+        return x ` <section class="column extref">
+      ${this.renderSubscriberViewExtRefListTitle()}
+      <oscd-filtered-list
+        id="subscriberExtRefList"
+        class="styled-scrollbars ${o(filteredListClasses)}"
+        activatable
+        @selected=${(ev) => {
+            const selectedListItem = ev.target.selected;
+            if (!selectedListItem)
+                return;
+            const { extref } = selectedListItem.dataset;
+            const selectedExtRefElement = (this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown ExtRef')));
+            if (!selectedExtRefElement)
+                return;
+            if (isSubscribed(selectedExtRefElement) ||
+                isPartiallyConfigured(selectedExtRefElement)) {
+                this.unsubscribe(selectedExtRefElement);
+                // deselect in UI
+                selectedListItem.selected = false;
+                selectedListItem.activated = false;
+                // any previous selections are not relevant and not part of our state
+                this.currentSelectedExtRefElement = undefined;
+                this.currentSelectedFcdaElement = undefined;
+                this.currentSelectedControlElement = undefined;
+                // process de-selection to allow an additional click to unsubscribe
                 this.requestUpdate();
-            }}
-            >${this.renderSubscriberViewExtRefs()}
-          </oscd-filtered-list>
-        </section>`;
+            }
+            else {
+                this.currentSelectedExtRefElement = selectedExtRefElement;
+            }
+            this.requestUpdate();
+        }}
+        >${this.renderSubscriberViewExtRefs()}
+      </oscd-filtered-list>
+    </section>`;
     }
     renderControlTypeSelector() {
         return x `
@@ -18754,7 +18829,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             : x `<h3>${msg('Not Subscribed')}</h3> `}
     </section>`;
     }
-    renderswitchView() {
+    renderSwitchView() {
         return x `<mwc-icon-button-toggle
       id="switchView"
       onIcon="swap_horiz"
@@ -18783,7 +18858,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         return x ` <div id="listContainer">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
       </div>
-      ${this.renderswitchView()}`;
+      ${this.renderSwitchView()}`;
     }
 }
 SubscriberLaterBinding.styles = i$5 `
@@ -18845,7 +18920,8 @@ SubscriberLaterBinding.styles = i$5 `
 
     #filterFcdaIcon,
     #filterExtRefIcon,
-    #settingsExtRefIcon,
+    #settingsExtRefSubscriberIcon,
+    #settingsExtRefPublisherIcon,
     #filterExtRefPublisherIcon {
       float: right;
     }
@@ -18887,13 +18963,19 @@ SubscriberLaterBinding.styles = i$5 `
       display: none;
     }
 
-    /* hide disabled items for subscriber view */
-    #fcdaList:not(.show-disabled) mwc-list-item.fcda[disabled] {
+    /* hide data objects if filter enabled */
+    #fcdaList:not(.show-data-objects) mwc-list-item.fcda.show-data-objects {
       display: none;
     }
 
-    /* hide disabled items for publisher view available extrefs */
-    #publisherExtRefList:not(.show-disabled) mwc-list-item.extref[disabled] {
+    /* hide preferred items mismatch if filter enabled */
+    #fcdaList:not(.show-pxx-mismatch) mwc-list-item.fcda.show-pxx-mismatch {
+      display: none;
+    }
+
+    /* hide mismatch preferred items for publisher view available extrefs */
+    #publisherExtRefList:not(.show-pxx-mismatch)
+      mwc-list-item.extref.show-pxx-mismatch {
       display: none;
     }
 
@@ -19043,10 +19125,16 @@ __decorate([
 ], SubscriberLaterBinding.prototype, "hideNotSubscribed", void 0);
 __decorate([
     e$4({ type: Boolean })
-], SubscriberLaterBinding.prototype, "hideDisabled", void 0);
+], SubscriberLaterBinding.prototype, "hideDataObjects", void 0);
+__decorate([
+    e$4({ type: Boolean })
+], SubscriberLaterBinding.prototype, "hidePreconfiguredNotMatching", void 0);
 __decorate([
     e$4({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "notAutoIncrement", void 0);
+__decorate([
+    e$4({ type: Boolean })
+], SubscriberLaterBinding.prototype, "notChangeSupervisionLNs", void 0);
 __decorate([
     e$4({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "hideBound", void 0);
@@ -19084,11 +19172,17 @@ __decorate([
     i$2('#listContainer')
 ], SubscriberLaterBinding.prototype, "listContainerUI", void 0);
 __decorate([
-    i$2('#settingsExtRefMenu')
-], SubscriberLaterBinding.prototype, "settingsMenuExtRefUI", void 0);
+    i$2('#settingsExtRefSubscriberMenu')
+], SubscriberLaterBinding.prototype, "settingsMenuExtRefSubscriberUI", void 0);
 __decorate([
-    i$2('#settingsExtRefIcon')
-], SubscriberLaterBinding.prototype, "settingsMenuExtRefButtonUI", void 0);
+    i$2('#settingsExtRefPublisherMenu')
+], SubscriberLaterBinding.prototype, "settingsMenuExtRefPublisherUI", void 0);
+__decorate([
+    i$2('#settingsExtRefSubscriberIcon')
+], SubscriberLaterBinding.prototype, "settingsMenuExtRefSubscriberButtonUI", void 0);
+__decorate([
+    i$2('#settingsExtRefPublisherIcon')
+], SubscriberLaterBinding.prototype, "settingsMenuExtRefPublisherButtonUI", void 0);
 __decorate([
     i$2('#fcdaList')
 ], SubscriberLaterBinding.prototype, "fcdaListUI", void 0);
