@@ -254,8 +254,8 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#filterFcdaIcon')
   filterMenuFcdaButtonUI!: Icon;
 
-  @query('#filterExtRefMenu')
-  filterMenuExtRefUI!: Menu;
+  @query('#filterExtRefMenuSubscriber')
+  filterMenuExtRefSubscriberUI!: Menu;
 
   @query('#filterExtRefMenuPublisher')
   filterMenuExtRefPublisherUI!: Menu;
@@ -476,7 +476,7 @@ export default class SubscriberLaterBinding extends LitElement {
       })
     );
 
-    const subscriberIed = extRef.closest('IED') || undefined;
+    const subscriberIed = extRef.closest('IED')!;
 
     if (
       !this.notChangeSupervisionLNs &&
@@ -532,7 +532,7 @@ export default class SubscriberLaterBinding extends LitElement {
       this.currentSelectedFcdaElement
     );
 
-    const subscriberIed = extRef.closest('IED') || undefined;
+    const subscriberIed = extRef.closest('IED')!;
 
     let supervisionActions: Insert[] = [];
 
@@ -582,9 +582,9 @@ export default class SubscriberLaterBinding extends LitElement {
       true
     ).filter(
       extRefElement =>
-        !isSubscribed(extRefElement) ||
-        (!findFCDAs(extRefElement).find(x => x !== undefined) &&
-          this.isExtRefViewable(extRefElement))
+        (!isSubscribed(extRefElement) ||
+          !findFCDAs(extRefElement).find(x => x !== undefined)) &&
+        this.isExtRefViewable(extRefElement)
     );
   }
 
@@ -651,15 +651,15 @@ export default class SubscriberLaterBinding extends LitElement {
 
   private updateFilterCSS(): void {
     if (this.hideSubscribed) {
-      this.fcdaListUI!.classList.remove('show-subscribed');
+      this.fcdaListUI?.classList.remove('show-subscribed');
     } else {
-      this.fcdaListUI!.classList.add('show-subscribed');
+      this.fcdaListUI?.classList.add('show-subscribed');
     }
 
     if (this.hideNotSubscribed) {
-      this.fcdaListUI!.classList.remove('show-not-subscribed');
+      this.fcdaListUI?.classList.remove('show-not-subscribed');
     } else {
-      this.fcdaListUI!.classList.add('show-not-subscribde');
+      this.fcdaListUI?.classList.add('show-not-subscribde');
     }
 
     if (this.hidePreconfiguredNotMatching) {
@@ -676,17 +676,19 @@ export default class SubscriberLaterBinding extends LitElement {
     if (this.subscriberView) {
       this.listContainerUI.classList.add('subscriber-view');
 
-      this.filterMenuExtRefUI.anchor = <HTMLElement>(
+      this.filterMenuExtRefSubscriberUI.anchor = <HTMLElement>(
         this.filterMenuExtRefButtonUI
       );
 
-      this.filterMenuExtRefUI.addEventListener('closed', () => {
-        this.hideBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(0);
-        this.hideNotBound = !(<Set<number>>this.filterMenuExtRefUI.index).has(
-          1
-        );
+      this.filterMenuExtRefSubscriberUI.addEventListener('closed', () => {
+        this.hideBound = !(<Set<number>>(
+          this.filterMenuExtRefSubscriberUI.index
+        )).has(0);
+        this.hideNotBound = !(<Set<number>>(
+          this.filterMenuExtRefSubscriberUI.index
+        )).has(1);
         this.strictServiceTypes = !(<Set<number>>(
-          this.filterMenuExtRefUI.index
+          this.filterMenuExtRefSubscriberUI.index
         )).has(2);
       });
       this.updateExtRefFilter();
@@ -934,7 +936,7 @@ Basic Type: ${spec.bType}"
             <span>${msg('Not Subscribed')}</span>
           </mwc-check-list-item>
           <mwc-check-list-item
-            class="filter-disabled"
+            class="filter-data-objects"
             left
             ?selected=${!this.hideDataObjects}
           >
@@ -1293,11 +1295,12 @@ Basic Type: ${spec.bType ?? '?'}`
         title="${msg('Filter')}"
         icon="filter_list"
         @click=${() => {
-          if (!this.filterMenuExtRefUI.open) this.filterMenuExtRefUI.show();
+          if (!this.filterMenuExtRefSubscriberUI.open)
+            this.filterMenuExtRefSubscriberUI.show();
         }}
       ></mwc-icon-button>
       <mwc-menu
-        id="filterExtRefMenu"
+        id="filterExtRefMenuSubscriber"
         multi
         class="filter-menu"
         corner="BOTTOM_RIGHT"
@@ -1430,7 +1433,9 @@ Basic Type: ${spec.bType ?? '?'}`
       twoline
       class="extref ${classMap(filterClasses)}"
       graphic="large"
-      ?hasMeta=${supervisionNode !== undefined || hasInvalidMapping}
+      ?hasMeta=${supervisionNode !== undefined ||
+      hasInvalidMapping ||
+      hasMissingMapping}
       data-extref="${identity(extRefElement)}"
       value="${identity(extRefElement)}${supervisionNode
         ? ` ${identity(supervisionNode)}`
@@ -1595,7 +1600,7 @@ Basic Type: ${spec.bType ?? '?'}`
 
                 selectedListItem.selected = false;
                 // This seems to help with long lists where others the update does not occur
-                this.fcdaListUI.requestUpdate();
+                this.fcdaListUI?.requestUpdate();
                 this.requestUpdate();
               }}
             >
@@ -1611,51 +1616,54 @@ Basic Type: ${spec.bType ?? '?'}`
       'show-not-bound': !this.hideNotBound,
     };
 
-    return html` <section class="column extref">
+    const hasExtRefs = this.doc.querySelector(
+      'IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+    );
+
+    return html`<section class="column extref">
       ${this.renderSubscriberViewExtRefListTitle()}
-      <oscd-filtered-list
-        id="subscriberExtRefList"
-        class="styled-scrollbars ${classMap(filteredListClasses)}"
-        activatable
-        @selected=${(ev: SingleSelectedEvent) => {
-          const selectedListItem = (<ListItemBase>(
-            (<unknown>(<OscdFilteredList>ev.target).selected)
-          ))!;
+      ${!hasExtRefs
+        ? html`<h3>${msg('No inputs')}</h3>`
+        : html`<oscd-filtered-list
+            id="subscriberExtRefList"
+            class="styled-scrollbars ${classMap(filteredListClasses)}"
+            activatable
+            @selected=${(ev: SingleSelectedEvent) => {
+              const selectedListItem = (<ListItemBase>(
+                (<unknown>(<OscdFilteredList>ev.target).selected)
+              ))!;
 
-          if (!selectedListItem) return;
+              if (!selectedListItem) return;
 
-          const { extref } = selectedListItem.dataset;
-          const selectedExtRefElement = <Element>(
-            this.doc.querySelector(
-              selector('ExtRef', extref ?? 'Unknown ExtRef')
-            )
-          );
+              const { extref } = selectedListItem.dataset;
+              const selectedExtRefElement = <Element>(
+                this.doc.querySelector(
+                  selector('ExtRef', extref ?? 'Unknown ExtRef')
+                )
+              );
 
-          if (!selectedExtRefElement) return;
+              if (!selectedExtRefElement) return;
 
-          if (
-            isSubscribed(selectedExtRefElement) ||
-            isPartiallyConfigured(selectedExtRefElement)
-          ) {
-            this.unsubscribe(selectedExtRefElement);
+              if (
+                isSubscribed(selectedExtRefElement) ||
+                isPartiallyConfigured(selectedExtRefElement)
+              ) {
+                this.unsubscribe(selectedExtRefElement);
 
-            // deselect in UI
-            selectedListItem.selected = false;
-            selectedListItem.activated = false;
-            // any previous selections are not relevant and not part of our state
-            this.currentSelectedExtRefElement = undefined;
-            this.currentSelectedFcdaElement = undefined;
-            this.currentSelectedControlElement = undefined;
-            // process de-selection to allow an additional click to unsubscribe
-            this.requestUpdate();
-          } else {
-            this.currentSelectedExtRefElement = selectedExtRefElement;
-          }
+                // deselect in UI
+                // list item is left selected to allow further subscription
+                this.currentSelectedFcdaElement = undefined;
+                this.currentSelectedControlElement = undefined;
+                // process de-selection to allow an additional click to unsubscribe
+                this.requestUpdate();
+              }
 
-          this.requestUpdate();
-        }}
-        >${this.renderSubscriberViewExtRefs()}
-      </oscd-filtered-list>
+              this.currentSelectedExtRefElement = selectedExtRefElement;
+
+              this.requestUpdate();
+            }}
+            >${this.renderSubscriberViewExtRefs()}
+          </oscd-filtered-list>`}
     </section>`;
   }
 
@@ -1680,9 +1688,13 @@ Basic Type: ${spec.bType ?? '?'}`
     const controlElements = this.getControlElements(this.controlTag);
     return html`<section class="column fcda">
       ${this.renderFCDAListTitle()}
-      ${controlElements
+      ${controlElements.length !== 0
         ? this.renderControlList(controlElements)
-        : html`<h3>${msg('Not Subscribed')}</h3> `}
+        : html`<h3>
+            ${this.subscriberView
+              ? msg('No input selected')
+              : msg('No published item')}
+          </h3>`}
     </section>`;
   }
 
@@ -1893,7 +1905,7 @@ Basic Type: ${spec.bType ?? '?'}`
     }
 
     .styled-scrollbars {
-      scrollbar-width: thin;
+      scrollbar-width: auto;
       scrollbar-color: var(--thumbBG) var(--scrollbarBG);
     }
 

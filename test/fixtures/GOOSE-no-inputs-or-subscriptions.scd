@@ -36,7 +36,15 @@
 		<SubNetwork name="StationBus" desc="" type="8-MMS">
 			<BitRate unit="b/s" multiplier="M">100</BitRate>
 			<ConnectedAP iedName="GOOSE_Subscriber" apName="AP1"/>
-			<ConnectedAP xmlns="http://www.iec.ch/61850/2003/SCL" iedName="GOOSE_Publisher" apName="AP1">
+			<ConnectedAP iedName="GOOSE_Publisher" apName="AP1">
+				<GSE ldInst="QB2_Disconnector" cbName="GOOSE3">
+					<Address>
+						<P xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="MAC-Address" xsi:type="tP_MAC-Address">01-0C-CD-01-00-02</P>
+						<P xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="APPID" xsi:type="tP_APPID">0003</P>
+					</Address>
+					<MinTime unit="s" multiplier="m">10</MinTime>
+					<MaxTime unit="s" multiplier="m">1000</MaxTime>
+				</GSE>
 				<GSE ldInst="QB2_Disconnector" cbName="GOOSE2">
 					<Address>
 						<P xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="MAC-Address" xsi:type="tP_MAC-Address">01-0C-CD-01-00-01</P>
@@ -53,36 +61,20 @@
 					<MinTime unit="s" multiplier="m">10</MinTime>
 					<MaxTime unit="s" multiplier="m">1000</MaxTime>
 				</GSE>
+
 			</ConnectedAP>
 		</SubNetwork>
 	</Communication>
-	<IED xmlns="http://www.iec.ch/61850/2003/SCL" name="GOOSE_Subscriber" desc="GOOSE subscriber" manufacturer="Dummy">
+	<IED name="GOOSE_Not_a_Subscriber" desc="GOOSE not really a subscriber" manufacturer="Dummy">
 		<AccessPoint name="AP1">
 			<Server>
 				<Authentication/>
 				<LDevice inst="Earth_Switch">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0">
-						<Inputs>
-							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="q" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-						</Inputs>
 					</LN0>
 					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO">
-						<Inputs>
-							<ExtRef intAddr="Pos;CSWI1/Pos/stVal" desc="Interlocking.Input"/>
-							<ExtRef intAddr="Pos;CSWI1/Pos/q" desc="Interlocking.Input" iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="q" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-							<ExtRef intAddr="Pos;CILO/EnaOpn/stVal" desc="Interlocking.Input2" iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB1_Disconnector" lnClass="CILO" lnInst="1" prefix="" doName="EnaOpn" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-							<ExtRef intAddr="Pos;CILO/EnaCls/stVal" desc="Interlocking.Input3" iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB1_Disconnector" lnClass="CILO" lnInst="1" doName="EnaCls" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-							<ExtRef intAddr="Pos;CILO/EnaOpn2/stVal" desc="Interlocking.Input4" iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CILO" lnInst="1" doName="EnaOpn" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-						</Inputs>
 					</LN>
 					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI">
-						<Inputs>
-							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2" intAddr="Pos;CSWI1/Pos/stVal" desc="Interlocking.Input2"/>
-							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="q" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2" intAddr="Pos;CSWI1/Pos/q" desc="Interlocking.Input2"/>
-							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To Pos" pLN="CSWI" pDO="Pos" pDA="q" pServT="GOOSE"/>
-							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To Pos" pLN="CSWI" pDO="Pos" pDA="stVal" pServT="GOOSE"/>
-						</Inputs>
 					</LN>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
 				</LDevice>
@@ -95,6 +87,9 @@
 				<Authentication/>
 				<LDevice inst="QB2_Disconnector">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0">
+						<DataSet name="GOOSE3sDataSet">
+							<FCDA ldInst="QB1_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="stVal" fc="ST"/>
+						</DataSet>
 						<DataSet name="GOOSE2sDataSet">
 							<FCDA ldInst="QB2_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="stVal" fc="ST"/>
 							<FCDA ldInst="QB2_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="q" fc="ST"/>
@@ -107,6 +102,7 @@
 							<FCDA ldInst="QB1_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="q" fc="ST"/>
 							<FCDA ldInst="QB2_Disconnector" lnClass="CILO" lnInst="1" doName="EnaOpn" fc="ST"/>
 						</DataSet>
+						<GSEControl name="GOOSE3" type="GOOSE" appID="GOOSE3" confRev="1" datSet="GOOSE3sDataSet"/>
 						<GSEControl name="GOOSE2" type="GOOSE" appID="GOOSE2" confRev="1" datSet="GOOSE2sDataSet"/>
 						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet"/>
 					</LN0>

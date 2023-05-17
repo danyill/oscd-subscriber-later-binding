@@ -66,17 +66,33 @@
         <source>The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.</source>
         <target>Das Abonnement ist gültig, aber das Element ist nicht vorhanden - überprüfen Sie, ob IED, Steuerblock und Datensatz korrekt sind.</target>
       </trans-unit>
-      <trans-unit id="s66722bc2ea775e05">
-        <source>Disabled</source>
-        <target>Deaktiviert</target>
-      </trans-unit>
       <trans-unit id="sa476e1e85cf33f8a">
         <source>Unspecified Service Types</source>
         <target>Nicht spezifizierte Diensttypen</target>
       </trans-unit>
-      <trans-unit id="s2715af43c340fa9c">
-        <source>Show Disabled</source>
-        <target>Deaktivierte anzeigen</target>
+      <trans-unit id="s9e7b27be6840c6f0">
+        <source>Show Data Objects</source>
+        <target>Zeige Datenobjekte</target>
+      </trans-unit>
+      <trans-unit id="sf6b6ae7ea93ccb14">
+        <source>Show Non-Matching Preconfigured</source>
+        <target>Zeige nicht übereinstimmende vorkonfigurierte</target>
+      </trans-unit>
+      <trans-unit id="s22a10e043800c031">
+        <source>Change Supervision LNs</source>
+        <target>Ändere Überwachungs-LNs</target>
+      </trans-unit>
+      <trans-unit id="s27c699f64cb6ac93">
+        <source>No inputs</source>
+        <target>Keine Eingaben</target>
+      </trans-unit>
+      <trans-unit id="s991b3c5848a34d8f">
+        <source>No input selected</source>
+        <target>Keine Eingabe ausgewählt</target>
+      </trans-unit>
+      <trans-unit id="s656028c04af7c423">
+        <source>No published item</source>
+        <target>Kein veröffentlichter Eintrag</target>
       </trans-unit>
     </body>
   </file>

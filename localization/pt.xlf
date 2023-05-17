@@ -66,17 +66,33 @@
         <source>The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.</source>
         <target>A assinatura é válida, mas o elemento não está presente - verifique se o IED, bloco de controle e conjunto de dados estão corretos.</target>
       </trans-unit>
-      <trans-unit id="s66722bc2ea775e05">
-        <source>Disabled</source>
-        <target>Desabilitado</target>
-      </trans-unit>
       <trans-unit id="sa476e1e85cf33f8a">
         <source>Unspecified Service Types</source>
         <target>Tipos de Serviço Não Especificados</target>
       </trans-unit>
-      <trans-unit id="s2715af43c340fa9c">
-        <source>Show Disabled</source>
-        <target>Mostrar Desabilitados</target>
+      <trans-unit id="s9e7b27be6840c6f0">
+        <source>Show Data Objects</source>
+        <target>Mostrar Objetos de Dados</target>
+      </trans-unit>
+      <trans-unit id="sf6b6ae7ea93ccb14">
+        <source>Show Non-Matching Preconfigured</source>
+        <target>Mostrar Pré-configurados Não Correspondentes</target>
+      </trans-unit>
+      <trans-unit id="s22a10e043800c031">
+        <source>Change Supervision LNs</source>
+        <target>Alterar LNs de Supervisão</target>
+      </trans-unit>
+      <trans-unit id="s27c699f64cb6ac93">
+        <source>No inputs</source>
+        <target>Sem entradas</target>
+      </trans-unit>
+      <trans-unit id="s991b3c5848a34d8f">
+        <source>No input selected</source>
+        <target>Nenhum item selecionado</target>
+      </trans-unit>
+      <trans-unit id="s656028c04af7c423">
+        <source>No published item</source>
+        <target>Nenhum item publicado</target>
       </trans-unit>
     </body>
   </file>
