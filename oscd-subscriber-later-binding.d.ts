@@ -31,7 +31,7 @@ export default class SubscriberLaterBinding extends LitElement {
     switchControlTypeUI?: IconButtonToggle;
     filterMenuFcdaUI: Menu;
     filterMenuFcdaButtonUI: Icon;
-    filterMenuExtRefUI: Menu;
+    filterMenuExtRefSubscriberUI: Menu;
     filterMenuExtRefPublisherUI: Menu;
     filterMenuExtRefButtonUI: Icon;
     filterMenuExtrefPublisherButtonUI: Icon;

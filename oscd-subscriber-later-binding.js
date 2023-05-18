@@ -17900,7 +17900,7 @@ class SubscriberLaterBinding extends s$1 {
             srcLNInst: null,
             srcCBName: null,
         }));
-        const subscriberIed = extRef.closest('IED') || undefined;
+        const subscriberIed = extRef.closest('IED');
         if (!this.notChangeSupervisionLNs &&
             canRemoveSubscriptionSupervision(extRef))
             editActions.push(...removeSubscriptionSupervision(this.currentSelectedControlElement, subscriberIed));
@@ -17935,7 +17935,7 @@ class SubscriberLaterBinding extends s$1 {
             return;
         }
         const updateEdit = updateExtRefElement(extRef, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
-        const subscriberIed = extRef.closest('IED') || undefined;
+        const subscriberIed = extRef.closest('IED');
         let supervisionActions = [];
         if (!this.notChangeSupervisionLNs)
             supervisionActions = instantiateSubscriptionSupervision(this.currentSelectedControlElement, subscriberIed);
@@ -17959,9 +17959,9 @@ class SubscriberLaterBinding extends s$1 {
                     serviceTypeLookup[this.controlTag]));
     }
     getAvailableExtRefElements() {
-        return getExtRefElements(this.doc.getRootNode(), this.currentSelectedFcdaElement, true).filter(extRefElement => !isSubscribed(extRefElement) ||
-            (!findFCDAs$1(extRefElement).find(x => x !== undefined) &&
-                this.isExtRefViewable(extRefElement)));
+        return getExtRefElements(this.doc.getRootNode(), this.currentSelectedFcdaElement, true).filter(extRefElement => (!isSubscribed(extRefElement) ||
+            !findFCDAs$1(extRefElement).find(x => x !== undefined)) &&
+            this.isExtRefViewable(extRefElement));
     }
     reCreateSupervisionCache() {
         this.supervisionData = new Map();
@@ -18005,24 +18005,24 @@ class SubscriberLaterBinding extends s$1 {
         this.requestUpdate();
     }
     updateFilterCSS() {
-        var _a, _b;
+        var _a, _b, _c, _d, _e, _f;
         if (this.hideSubscribed) {
-            this.fcdaListUI.classList.remove('show-subscribed');
+            (_a = this.fcdaListUI) === null || _a === void 0 ? void 0 : _a.classList.remove('show-subscribed');
         }
         else {
-            this.fcdaListUI.classList.add('show-subscribed');
+            (_b = this.fcdaListUI) === null || _b === void 0 ? void 0 : _b.classList.add('show-subscribed');
         }
         if (this.hideNotSubscribed) {
-            this.fcdaListUI.classList.remove('show-not-subscribed');
+            (_c = this.fcdaListUI) === null || _c === void 0 ? void 0 : _c.classList.remove('show-not-subscribed');
         }
         else {
-            this.fcdaListUI.classList.add('show-not-subscribde');
+            (_d = this.fcdaListUI) === null || _d === void 0 ? void 0 : _d.classList.add('show-not-subscribde');
         }
         if (this.hidePreconfiguredNotMatching) {
-            (_a = this.extRefListPublisherUI) === null || _a === void 0 ? void 0 : _a.classList.remove('show-pxx-mismatch');
+            (_e = this.extRefListPublisherUI) === null || _e === void 0 ? void 0 : _e.classList.remove('show-pxx-mismatch');
         }
         else {
-            (_b = this.extRefListPublisherUI) === null || _b === void 0 ? void 0 : _b.classList.add('show-pxx-mismatch');
+            (_f = this.extRefListPublisherUI) === null || _f === void 0 ? void 0 : _f.classList.add('show-pxx-mismatch');
         }
         // force refresh for CSS style change
         this.requestUpdate();
@@ -18030,11 +18030,11 @@ class SubscriberLaterBinding extends s$1 {
     updateView() {
         if (this.subscriberView) {
             this.listContainerUI.classList.add('subscriber-view');
-            this.filterMenuExtRefUI.anchor = (this.filterMenuExtRefButtonUI);
-            this.filterMenuExtRefUI.addEventListener('closed', () => {
-                this.hideBound = !this.filterMenuExtRefUI.index.has(0);
-                this.hideNotBound = !this.filterMenuExtRefUI.index.has(1);
-                this.strictServiceTypes = !(this.filterMenuExtRefUI.index).has(2);
+            this.filterMenuExtRefSubscriberUI.anchor = (this.filterMenuExtRefButtonUI);
+            this.filterMenuExtRefSubscriberUI.addEventListener('closed', () => {
+                this.hideBound = !(this.filterMenuExtRefSubscriberUI.index).has(0);
+                this.hideNotBound = !(this.filterMenuExtRefSubscriberUI.index).has(1);
+                this.strictServiceTypes = !(this.filterMenuExtRefSubscriberUI.index).has(2);
             });
             this.updateExtRefFilter();
             this.settingsMenuExtRefSubscriberUI.anchor = (this.settingsMenuExtRefSubscriberButtonUI);
@@ -18208,7 +18208,7 @@ Basic Type: ${spec.bType}"
             <span>${msg('Not Subscribed')}</span>
           </mwc-check-list-item>
           <mwc-check-list-item
-            class="filter-disabled"
+            class="filter-data-objects"
             left
             ?selected=${!this.hideDataObjects}
           >
@@ -18508,12 +18508,12 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         title="${msg('Filter')}"
         icon="filter_list"
         @click=${() => {
-            if (!this.filterMenuExtRefUI.open)
-                this.filterMenuExtRefUI.show();
+            if (!this.filterMenuExtRefSubscriberUI.open)
+                this.filterMenuExtRefSubscriberUI.show();
         }}
       ></mwc-icon-button>
       <mwc-menu
-        id="filterExtRefMenu"
+        id="filterExtRefMenuSubscriber"
         multi
         class="filter-menu"
         corner="BOTTOM_RIGHT"
@@ -18622,7 +18622,9 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
       twoline
       class="extref ${o(filterClasses)}"
       graphic="large"
-      ?hasMeta=${supervisionNode !== undefined || hasInvalidMapping}
+      ?hasMeta=${supervisionNode !== undefined ||
+            hasInvalidMapping ||
+            hasMissingMapping}
       data-extref="${identity(extRefElement)}"
       value="${identity(extRefElement)}${supervisionNode
             ? ` ${identity(supervisionNode)}`
@@ -18734,6 +18736,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                     ? 'show-pxx-mismatch'
                     : ''}"
               @selected=${(ev) => {
+                    var _a;
                     const selectedListItem = ev.target.selected;
                     if (!selectedListItem)
                         return;
@@ -18753,7 +18756,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                     }
                     selectedListItem.selected = false;
                     // This seems to help with long lists where others the update does not occur
-                    this.fcdaListUI.requestUpdate();
+                    (_a = this.fcdaListUI) === null || _a === void 0 ? void 0 : _a.requestUpdate();
                     this.requestUpdate();
                 }}
             >
@@ -18767,40 +18770,38 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             'show-bound': !this.hideBound,
             'show-not-bound': !this.hideNotBound,
         };
-        return x ` <section class="column extref">
+        const hasExtRefs = this.doc.querySelector('IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef');
+        return x `<section class="column extref">
       ${this.renderSubscriberViewExtRefListTitle()}
-      <oscd-filtered-list
-        id="subscriberExtRefList"
-        class="styled-scrollbars ${o(filteredListClasses)}"
-        activatable
-        @selected=${(ev) => {
-            const selectedListItem = ev.target.selected;
-            if (!selectedListItem)
-                return;
-            const { extref } = selectedListItem.dataset;
-            const selectedExtRefElement = (this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown ExtRef')));
-            if (!selectedExtRefElement)
-                return;
-            if (isSubscribed(selectedExtRefElement) ||
-                isPartiallyConfigured(selectedExtRefElement)) {
-                this.unsubscribe(selectedExtRefElement);
-                // deselect in UI
-                selectedListItem.selected = false;
-                selectedListItem.activated = false;
-                // any previous selections are not relevant and not part of our state
-                this.currentSelectedExtRefElement = undefined;
-                this.currentSelectedFcdaElement = undefined;
-                this.currentSelectedControlElement = undefined;
-                // process de-selection to allow an additional click to unsubscribe
-                this.requestUpdate();
-            }
-            else {
+      ${!hasExtRefs
+            ? x `<h3>${msg('No inputs')}</h3>`
+            : x `<oscd-filtered-list
+            id="subscriberExtRefList"
+            class="styled-scrollbars ${o(filteredListClasses)}"
+            activatable
+            @selected=${(ev) => {
+                const selectedListItem = ev.target.selected;
+                if (!selectedListItem)
+                    return;
+                const { extref } = selectedListItem.dataset;
+                const selectedExtRefElement = (this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown ExtRef')));
+                if (!selectedExtRefElement)
+                    return;
+                if (isSubscribed(selectedExtRefElement) ||
+                    isPartiallyConfigured(selectedExtRefElement)) {
+                    this.unsubscribe(selectedExtRefElement);
+                    // deselect in UI
+                    // list item is left selected to allow further subscription
+                    this.currentSelectedFcdaElement = undefined;
+                    this.currentSelectedControlElement = undefined;
+                    // process de-selection to allow an additional click to unsubscribe
+                    this.requestUpdate();
+                }
                 this.currentSelectedExtRefElement = selectedExtRefElement;
-            }
-            this.requestUpdate();
-        }}
-        >${this.renderSubscriberViewExtRefs()}
-      </oscd-filtered-list>
+                this.requestUpdate();
+            }}
+            >${this.renderSubscriberViewExtRefs()}
+          </oscd-filtered-list>`}
     </section>`;
     }
     renderControlTypeSelector() {
@@ -18824,9 +18825,13 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         const controlElements = this.getControlElements(this.controlTag);
         return x `<section class="column fcda">
       ${this.renderFCDAListTitle()}
-      ${controlElements
+      ${controlElements.length !== 0
             ? this.renderControlList(controlElements)
-            : x `<h3>${msg('Not Subscribed')}</h3> `}
+            : x `<h3>
+            ${this.subscriberView
+                ? msg('No input selected')
+                : msg('No published item')}
+          </h3>`}
     </section>`;
     }
     renderSwitchView() {
@@ -19032,7 +19037,7 @@ SubscriberLaterBinding.styles = i$5 `
     }
 
     .styled-scrollbars {
-      scrollbar-width: thin;
+      scrollbar-width: auto;
       scrollbar-color: var(--thumbBG) var(--scrollbarBG);
     }
 
@@ -19157,8 +19162,8 @@ __decorate([
     i$2('#filterFcdaIcon')
 ], SubscriberLaterBinding.prototype, "filterMenuFcdaButtonUI", void 0);
 __decorate([
-    i$2('#filterExtRefMenu')
-], SubscriberLaterBinding.prototype, "filterMenuExtRefUI", void 0);
+    i$2('#filterExtRefMenuSubscriber')
+], SubscriberLaterBinding.prototype, "filterMenuExtRefSubscriberUI", void 0);
 __decorate([
     i$2('#filterExtRefMenuPublisher')
 ], SubscriberLaterBinding.prototype, "filterMenuExtRefPublisherUI", void 0);
