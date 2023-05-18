@@ -622,7 +622,7 @@ describe('goose', () => {
         });
         await plugin.updateComplete;
 
-        await timeout(150); // animation or re-render on ripple?
+        await timeout(200); // animation or re-render on ripple?
 
         const extRefFilterMenu = plugin.filterMenuExtrefPublisherButtonUI;
 
@@ -632,7 +632,7 @@ describe('goose', () => {
           position: midEl(extRefFilterMenu!),
         });
 
-        await timeout(200); // rendering
+        await timeout(250); // rendering
 
         const filterPreconfigured =
           plugin.filterMenuExtRefPublisherUI.querySelector(
@@ -646,7 +646,7 @@ describe('goose', () => {
         });
         await plugin.updateComplete;
 
-        await timeout(250); // rendering
+        await timeout(300); // rendering
         await visualDiff(plugin, testName(this));
       });
     });
