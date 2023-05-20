@@ -17779,10 +17779,6 @@ class SubscriberLaterBinding extends s$1 {
         this.extRefCounters = new Map();
         this.supervisionData = new Map();
     }
-    // constructor() {
-    //   super();
-    //   this.restoreSettings();
-    // }
     storeSettings() {
         var _a, _b, _c;
         const storedConfiguration = {
@@ -18726,6 +18722,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         })}`;
     }
     renderExtRefs() {
+        var _a;
         if (!this.subscriberView) {
             return x `<section class="column">
         ${this.renderPublisherViewExtRefListTitle()}
@@ -18770,7 +18767,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             'show-bound': !this.hideBound,
             'show-not-bound': !this.hideNotBound,
         };
-        const hasExtRefs = this.doc.querySelector('IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef');
+        const hasExtRefs = (_a = this.doc) === null || _a === void 0 ? void 0 : _a.querySelector('IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef');
         return x `<section class="column extref">
       ${this.renderSubscriberViewExtRefListTitle()}
       ${!hasExtRefs
@@ -18830,7 +18827,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             : x `<h3>
             ${this.subscriberView
                 ? msg('No input selected')
-                : msg('No published item')}
+                : msg('No published items')}
           </h3>`}
     </section>`;
     }
