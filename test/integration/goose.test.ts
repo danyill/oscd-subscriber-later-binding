@@ -10,7 +10,7 @@ import {
   sendKeys,
 } from '@web/test-runner-commands';
 
-import { fixture, html } from '@open-wc/testing';
+import { expect, fixture, html } from '@open-wc/testing';
 
 import '@openscd/open-scd-core/open-scd.js';
 
@@ -58,7 +58,7 @@ beforeEach(async function () {
         },
         icon: 'link',
         active: true,
-        requireDoc: false,
+        requireDoc: true,
         src: '/dist/oscd-subscriber-later-binding.js',
       },
     ],
@@ -705,6 +705,54 @@ describe('goose', () => {
       });
     });
 
+    it('for an FCDA shows a tooltip with cdc and basic type', async function () {
+      const fcdaListElement = plugin.fcdaListUI;
+
+      const fcda = getFcdaItem(
+        fcdaListElement,
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      );
+      await plugin.updateComplete;
+
+      // Doesn't seem to be testable by a visual test -- unsure why
+      const tooltip = fcda?.getAttribute('title');
+
+      expect(tooltip).to.be.equal(`CDC: DPC 
+Basic Type: Enum`);
+    });
+
+    it('for an ExtRef with pXX attrs shows a tooltip with cdc and basic type', async function () {
+      const fcdaListElement = plugin.fcdaListUI;
+
+      const fcda = getFcdaItem(
+        fcdaListElement,
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      );
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(fcda!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(200); // render
+
+      const extRefListElement = plugin.extRefListPublisherUI;
+      const extref = getExtRefItem(
+        extRefListElement!,
+        'GOOSE_Subscriber1>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+      );
+
+      // Doesn't seem to be testable by a visual test -- unsure why
+      const tooltip = extref?.getAttribute('title');
+
+      expect(tooltip).to.be.equal(`CDC: DPC 
+Basic Type: Enum`);
+    });
+
     it('changes to subscriber view', async function () {
       await sendMouse({
         type: 'click',
@@ -728,34 +776,5 @@ describe('goose', () => {
       await timeout(150);
       await visualDiff(plugin, testName(this));
     });
-
-    // it('when subscribing an available ExtRef then the lists are changed', async () => {
-    //   const fcdaListElement = plugin.fcdaListUI;
-
-    //   const controlId = 'GOOSE_Publisher>>QB2_Disconnector>GOOSE1';
-    //   const fcdaId =
-    //     'GOOSE_Publisher>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos q (ST)';
-
-    //   getFcdaItem(fcdaListElement, controlId, fcdaId)?.click();
-    //   await plugin.updateComplete;
-
-    //   expect(plugin.getSubscribedExtRefElements().length).to.be.equal(0);
-    //   // expect(getFcdaItemCount(fcdaListElement, controlId, fcdaId)).to.be
-    //   //   .undefined;
-    //   expect(plugin.getAvailableExtRefElements().length).to.be.equal(3);
-
-    //   const extRefListElement = plugin.extRefListPublisherUI!;
-    //   const extRefId =
-    //     'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]';
-    //   getExtRefItem(extRefListElement, extRefId)?.click();
-
-    //   await plugin.updateComplete;
-
-    //   // expect(plugin.getSubscribedExtRefElements().length).to.be.equal(1);
-    //   //   expect(getSelectedSubItemValue(fcdaListElement)).to.have.text('1');
-    //   //   expect(
-    //   //     extRefListElement['getAvailableExtRefElements']().length
-    //   //   ).to.be.equal(4);
-    // });
   });
 });
