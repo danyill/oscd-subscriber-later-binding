@@ -317,11 +317,6 @@ export default class SubscriberLaterBinding extends LitElement {
   @state()
   private supervisionData = new Map();
 
-  // constructor() {
-  //   super();
-  //   this.restoreSettings();
-  // }
-
   protected storeSettings(): void {
     const storedConfiguration = {
       subscriberView: this.switchViewUI?.on ?? false,
@@ -1616,7 +1611,7 @@ Basic Type: ${spec.bType ?? '?'}`
       'show-not-bound': !this.hideNotBound,
     };
 
-    const hasExtRefs = this.doc.querySelector(
+    const hasExtRefs = this.doc?.querySelector(
       'IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
     );
 
@@ -1693,7 +1688,7 @@ Basic Type: ${spec.bType ?? '?'}`
         : html`<h3>
             ${this.subscriberView
               ? msg('No input selected')
-              : msg('No published item')}
+              : msg('No published items')}
           </h3>`}
     </section>`;
   }
