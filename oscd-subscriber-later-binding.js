@@ -16865,13 +16865,13 @@ function findFCDAs$1(extRef) {
 }
 
 const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
-function getFcdaTitleValue(fcdaElement) {
+function getFcdaOrExtRefTitleValue(fcdaElement) {
     var _a, _b;
     return `${(_a = fcdaElement.getAttribute('doName')) !== null && _a !== void 0 ? _a : ''}${fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
         ? `.`
         : ``}${(_b = fcdaElement.getAttribute('daName')) !== null && _b !== void 0 ? _b : ''}`;
 }
-function getFcdaSubtitleValue(fcdaElement) {
+function getFcdaOrExtRefSubtitleValue(fcdaElement) {
     var _a, _b;
     return `${fcdaElement.getAttribute('ldInst')} ${fcdaElement.hasAttribute('ldInst') ? `/` : ''}${fcdaElement.getAttribute('prefix')
         ? ` ${fcdaElement.getAttribute('prefix')}`
@@ -18093,8 +18093,7 @@ class SubscriberLaterBinding extends s$1 {
       value="${identity(extRefElement)}"
       data-extref="${identity(extRefElement)}"
       title="${spec.cdc && spec.bType
-            ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'} 
-Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
+            ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             : ''}"
     >
       <span
@@ -18150,11 +18149,12 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
       data-fcda="${identity(fcdaElement)}"
       value="${identity(controlElement)}
              ${identity(fcdaElement)}"
-      title="CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'} 
+      title="CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}
 Basic Type: ${spec.bType}"
     >
       <span
-        >${getFcdaSubtitleValue(fcdaElement)} ${getFcdaTitleValue(fcdaElement)}
+        >${getFcdaOrExtRefSubtitleValue(fcdaElement)}
+        ${getFcdaOrExtRefTitleValue(fcdaElement)}
       </span>
       <span slot="secondary"> ${fcdaDescription}</span>
       <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
@@ -18322,8 +18322,8 @@ Basic Type: ${spec.bType}"
               hasMeta
               value="${identity(controlElement)}${fcdaElements
                 .map(fcdaElement => `
-                        ${getFcdaTitleValue(fcdaElement)}
-                        ${getFcdaSubtitleValue(fcdaElement)}
+                        ${getFcdaOrExtRefTitleValue(fcdaElement)}
+                        ${getFcdaOrExtRefSubtitleValue(fcdaElement)}
                         ${identity(fcdaElement)}`)
                 .join('')}"
             >
@@ -18392,8 +18392,7 @@ Basic Type: ${spec.bType}"
               data-extref="${identity(extRefElement)}"
               value="${identity(extRefElement)}"
               title="${spec.cdc && spec.bType
-                    ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'} 
-Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
+                    ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                     : ''}"
             >
               <span>
@@ -18407,7 +18406,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                     slot="meta"
                     class="invalid-mapping"
                     title="${msg('Invalid Mapping')}"
-                    >warning</mwc-icon
+                    >error</mwc-icon
                   >`
                     : A}
               ${hasMissingMapping
@@ -18572,7 +18571,7 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
     </h1>`;
     }
     renderSubscriberViewExtRef(extRefElement) {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e;
         let subscriberFCDA;
         let supervisionNode;
         let controlBlockDescription;
@@ -18598,17 +18597,19 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
         const bound = subscribed || hasInvalidMapping;
         const specExtRef = inputRestriction(extRefElement);
         const specFcda = subscriberFCDA ? fcdaSpecification(subscriberFCDA) : null;
-        const fcdaName = subscriberFCDA
-            ? `${(_b = (_a = subscriberFCDA.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name')) !== null && _b !== void 0 ? _b : 'Unknown'} > ${getFcdaSubtitleValue(subscriberFCDA)} ${getFcdaTitleValue(subscriberFCDA)} `
+        // this fcda name is taken from the ExtRef so even if an FCDA
+        // cannot be located we can "show" the subscription
+        const fcdaName = subscribed || hasMissingMapping
+            ? `${(_a = extRefElement.getAttribute('iedName')) !== null && _a !== void 0 ? _a : 'Unknown'} > ${getFcdaOrExtRefSubtitleValue(extRefElement)} ${getFcdaOrExtRefTitleValue(extRefElement)} `
             : '';
         const fcdaDesc = subscriberFCDA
             ? getFcdaInstDesc(subscriberFCDA, true).join('>')
             : null;
         const specExtRefText = specExtRef.cdc || specExtRef.bType
-            ? `ExtRef: CDC: ${(_c = specExtRef.cdc) !== null && _c !== void 0 ? _c : '?'}, Basic Type: ${(_d = specExtRef.bType) !== null && _d !== void 0 ? _d : '?'}`
+            ? `ExtRef: CDC: ${(_b = specExtRef.cdc) !== null && _b !== void 0 ? _b : '?'}, Basic Type: ${(_c = specExtRef.bType) !== null && _c !== void 0 ? _c : '?'}`
             : '';
         const specFcdaText = specFcda && (specFcda.cdc || specFcda.bType)
-            ? `FCDA: CDC: ${(_e = specFcda.cdc) !== null && _e !== void 0 ? _e : '?'}, Basic Type: ${(_f = specFcda.bType) !== null && _f !== void 0 ? _f : '?'}`
+            ? `FCDA: CDC: ${(_d = specFcda.cdc) !== null && _d !== void 0 ? _d : '?'}, Basic Type: ${(_e = specFcda.bType) !== null && _e !== void 0 ? _e : '?'}`
             : '';
         const filterClasses = {
             'show-bound': bound,
@@ -18629,9 +18630,9 @@ Basic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
     >
       <span class="extref-firstline">
         ${extRefPath(extRefElement)}: ${extRefElement.getAttribute('intAddr')}
-        ${(subscribed && subscriberFCDA) || hasInvalidMapping
+        ${subscribed || hasInvalidMapping
             ? x `<mwc-icon class="left-inline-arrow">arrow_back</mwc-icon>
-              ${subscribed && subscriberFCDA ? `${fcdaName}` : ''}
+              ${subscribed ? `${fcdaName}` : ''}
               ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
             : A}
       </span>

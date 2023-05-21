@@ -5,6 +5,7 @@ export declare const templates: {
     s27c699f64cb6ac93: string;
     s337459c5378dc0dc: string;
     s392d68658d0c0a7b: string;
+    s3a298ebf630293f0: string;
     s4d958711afb20742: string;
     s54431d00a8030125: string;
     s70c2825ea00a6e1d: string;
@@ -21,5 +22,4 @@ export declare const templates: {
     sea5933c70ba5a518: string;
     sf5bd9968dcf60b09: string;
     sf6b6ae7ea93ccb14: string;
-    s3a298ebf630293f0: string;
 };
