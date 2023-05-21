@@ -90,9 +90,10 @@
         <source>No input selected</source>
         <target>Keine Eingabe ausgewählt</target>
       </trans-unit>
-<trans-unit id="s3a298ebf630293f0">
-  <source>No published items</source>
-</trans-unit>
+      <trans-unit id="s3a298ebf630293f0">
+        <source>No published items</source>
+        <target>Sem itens publicados</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -15,6 +15,8 @@ import { expect, fixture, html } from '@open-wc/testing';
 import '@openscd/open-scd-core/open-scd.js';
 
 import { LitElement } from 'lit';
+import type { CheckListItem } from '@material/mwc-list/mwc-check-list-item.js';
+
 import { getExtRefItem, getFcdaItem, midEl } from './test-support.js';
 import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
@@ -127,7 +129,7 @@ describe('goose', () => {
       await editor.updateComplete;
       await plugin.updateComplete;
 
-      await timeout(500); // page rendering
+      await timeout(500); // plugin loading and initial render?
     });
 
     afterEach(async () => {
@@ -135,13 +137,14 @@ describe('goose', () => {
     });
 
     it('initially has no FCDA selected', async function () {
-      // carrying out an action causes a refresh?
+      // carrying out an action causes a content refresh somehow??
       await sendMouse({
         type: 'move',
         position: midEl(plugin!),
       });
 
-      await timeout(500); // page rendering
+      // webkit is especially fussy and appears to slowly change the layout?
+      await timeout(300);
       await visualDiff(plugin, testName(this));
     });
 
@@ -158,9 +161,11 @@ describe('goose', () => {
         button: 'left',
         position: midEl(fcda!),
       });
+      await fcda!.updateComplete;
+      await fcdaListElement.updateComplete;
       await plugin.updateComplete;
 
-      await timeout(200); // animation or re-render on ripple?
+      await timeout(150); // selection
       await visualDiff(plugin, testName(this));
     });
 
@@ -171,11 +176,9 @@ describe('goose', () => {
 
       editor.docName = 'GOOSE-no-inputs-or-subscriptions.scd';
       editor.docs[editor.docName] = doc;
-
       await editor.updateComplete;
       await plugin.updateComplete;
-
-      await timeout(500); // page rendering
+      await timeout(500); // plugin loading and initial render?
 
       const fcdaListElement = plugin.fcdaListUI;
 
@@ -184,14 +187,17 @@ describe('goose', () => {
         'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
         'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
       );
+
       await sendMouse({
         type: 'click',
         button: 'left',
         position: midEl(fcda!),
       });
+      await fcda!.updateComplete;
+      await fcdaListElement.updateComplete;
       await plugin.updateComplete;
 
-      await timeout(200); // animation or re-render on ripple?
+      await timeout(150); // selection
       await visualDiff(plugin, testName(this));
     });
 
@@ -209,6 +215,9 @@ describe('goose', () => {
           button: 'left',
           position: midEl(fcda!),
         });
+
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
         await plugin.updateComplete;
 
         const extRefListElement = plugin.extRefListPublisherUI;
@@ -222,10 +231,11 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extref!),
         });
-
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(300); // render
+        await timeout(150); // selection
         await visualDiff(plugin, testName(this));
       });
 
@@ -237,11 +247,14 @@ describe('goose', () => {
           'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
           'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
         );
+
         await sendMouse({
           type: 'click',
           button: 'left',
           position: midEl(fcda!),
         });
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
         await plugin.updateComplete;
 
         const extRefListElement = plugin.extRefListPublisherUI;
@@ -255,10 +268,11 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extref!),
         });
-
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(150); // render
+        await timeout(150); // selection
         await visualDiff(plugin, testName(this));
       });
 
@@ -270,13 +284,15 @@ describe('goose', () => {
           'GOOSE_Publisher>>QB2_Disconnector>GOOSE1',
           'GOOSE_Publisher>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos stVal (ST)'
         );
+
         await sendMouse({
           type: 'click',
           button: 'left',
           position: midEl(fcda!),
         });
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
         await plugin.updateComplete;
-        await timeout(150); // render
 
         const extRefListElement = plugin.extRefListPublisherUI;
         const extref = getExtRefItem(
@@ -289,10 +305,11 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extref!),
         });
-
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(300); // render
+        await timeout(150); // selection
         await visualDiff(plugin, testName(this));
       });
 
@@ -309,6 +326,8 @@ describe('goose', () => {
           button: 'left',
           position: midEl(fcda!),
         });
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
         await plugin.updateComplete;
 
         const extRefListElement = plugin.extRefListPublisherUI;
@@ -322,10 +341,11 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extref!),
         });
-
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(150); // render
+        await timeout(150); // selection
         await visualDiff(plugin, testName(this));
       });
 
@@ -337,16 +357,15 @@ describe('goose', () => {
           'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
         );
         fcda?.scrollIntoView();
-        await timeout(150); // render
 
         await sendMouse({
           type: 'click',
           button: 'left',
           position: midEl(fcda!),
         });
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
         await plugin.updateComplete;
-
-        await timeout(175); // render
 
         const extRefListElement = plugin.extRefListPublisherUI!;
         const extRefChosen = getExtRefItem(
@@ -355,18 +374,19 @@ describe('goose', () => {
         );
         extRefChosen?.scrollIntoView();
 
-        await timeout(150); // render
-
         //  unsubscribe
         await sendMouse({
           type: 'click',
           button: 'left',
           position: midEl(extRefChosen!),
         });
-
+        await extRefChosen!.updateComplete;
+        await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(175); // render
+        // increased for webkit
+        await timeout(300); // selection
+
         await visualDiff(plugin, testName(this));
       });
 
@@ -386,9 +406,9 @@ describe('goose', () => {
           button: 'left',
           position: midEl(fcda!),
         });
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
         await plugin.updateComplete;
-
-        await timeout(300); // rendering
 
         let extRefListElement = plugin.extRefListPublisherUI;
         const extref = getExtRefItem(
@@ -397,17 +417,14 @@ describe('goose', () => {
         );
         extref?.scrollIntoView();
 
-        await timeout(150); // rendering
-
         await sendMouse({
           type: 'click',
           button: 'left',
           position: midEl(extref!),
         });
-
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
         await plugin.updateComplete;
-
-        await timeout(250); // render
 
         // now set to not doing supervisions
         await sendMouse({
@@ -415,23 +432,21 @@ describe('goose', () => {
           button: 'left',
           position: midEl(button!),
         });
-        await plugin.updateComplete;
+        await timeout(150); // menu must show
 
-        await timeout(250); // rendering
-
-        const settingsNoSupervisions =
-          plugin.settingsMenuExtRefPublisherUI.querySelector(
-            '.no-supervisions'
-          );
+        const settingsNoSupervisions = <CheckListItem>(
+          plugin.settingsMenuExtRefPublisherUI.querySelector('.no-supervisions')
+        );
 
         await sendMouse({
           type: 'click',
           button: 'left',
           position: midEl(settingsNoSupervisions!),
         });
+        await timeout(150);
+        await settingsNoSupervisions!.updateComplete;
+        await plugin.settingsMenuExtRefPublisherUI.updateComplete;
         await plugin.updateComplete;
-
-        await timeout(150); // rendering
 
         // now do subscription which would normally result in supervision instantiation
         extRefListElement = plugin.extRefListPublisherUI;
@@ -441,17 +456,17 @@ describe('goose', () => {
         );
         extref2?.scrollIntoView();
 
-        await timeout(150); // rendering
-
         await sendMouse({
           type: 'click',
           button: 'left',
           position: midEl(extref2!),
         });
-
+        await extref2!.updateComplete;
+        await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(300); // render
+        // increased timeout for webkit
+        await timeout(200); // selection
         await visualDiff(plugin, testName(this));
       });
     });
@@ -472,7 +487,7 @@ describe('goose', () => {
         await editor.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(500); // page rendering
+        await timeout(500); // plugin loading and initial render?
       });
 
       afterEach(async () => {
@@ -487,9 +502,9 @@ describe('goose', () => {
           button: 'left',
           position: midEl(button!),
         });
-        await plugin.updateComplete;
+        await plugin.filterMenuFcdaUI.updateComplete;
 
-        await timeout(250);
+        await timeout(150); // opening dialog
         await visualDiff(plugin, testName(this));
       });
 
@@ -501,8 +516,7 @@ describe('goose', () => {
           button: 'left',
           position: midEl(button!),
         });
-        await plugin.updateComplete;
-        await timeout(150); // rendering
+        await timeout(150); // opening dialog
 
         const filterNotSubscribed = plugin.filterMenuFcdaUI.querySelector(
           '.filter-not-subscribed'
@@ -513,9 +527,11 @@ describe('goose', () => {
           button: 'left',
           position: midEl(filterNotSubscribed!),
         });
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(400); // rendering
+        await timeout(150); // rendering ?
         await visualDiff(plugin, testName(this));
       });
 
@@ -527,8 +543,7 @@ describe('goose', () => {
           button: 'left',
           position: midEl(button!),
         });
-
-        await timeout(150); // rendering
+        await timeout(150); // opening dialog
 
         const filterSubscribed =
           plugin.filterMenuFcdaUI.querySelector('.filter-subscribed');
@@ -538,9 +553,11 @@ describe('goose', () => {
           button: 'left',
           position: midEl(filterSubscribed!),
         });
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(400); // rendering
+        await timeout(150); // rendering ?
         await visualDiff(plugin, testName(this));
       });
 
@@ -552,8 +569,7 @@ describe('goose', () => {
           button: 'left',
           position: midEl(button!),
         });
-
-        await timeout(150); // rendering
+        await timeout(150); // opening dialog
 
         const filterSubscribed =
           plugin.filterMenuFcdaUI.querySelector('.filter-subscribed');
@@ -563,9 +579,8 @@ describe('goose', () => {
           button: 'left',
           position: midEl(filterSubscribed!),
         });
-
-        await timeout(150); // rendering
-
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
         await sendMouse({
@@ -573,8 +588,7 @@ describe('goose', () => {
           button: 'left',
           position: midEl(button!),
         });
-
-        await timeout(300); // rendering
+        await timeout(150); // opening dialog
 
         const filterDataObjects = plugin.filterMenuFcdaUI.querySelector(
           '.filter-data-objects'
@@ -585,12 +599,11 @@ describe('goose', () => {
           button: 'left',
           position: midEl(filterDataObjects!),
         });
-
-        await timeout(300); // rendering
-
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(400); // rendering
+        await timeout(150); // rendering ?
         await visualDiff(plugin, testName(this));
       });
 
@@ -602,8 +615,8 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extRefFilterMenu!),
         });
+        await timeout(150); // opening dialog
 
-        await timeout(150); // rendering
         await visualDiff(plugin, testName(this));
       });
 
@@ -615,14 +628,16 @@ describe('goose', () => {
           'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
           'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
         );
+
         await sendMouse({
           type: 'click',
           button: 'left',
           position: midEl(fcda!),
         });
+        await fcda?.updateComplete;
+        await fcdaListElement.updateComplete;
         await plugin.updateComplete;
-
-        await timeout(200); // animation or re-render on ripple?
+        await timeout(150); // selection
 
         const extRefFilterMenu = plugin.filterMenuExtrefPublisherButtonUI;
 
@@ -631,8 +646,7 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extRefFilterMenu!),
         });
-
-        await timeout(250); // rendering
+        await timeout(150); // opening dialog
 
         const filterPreconfigured =
           plugin.filterMenuExtRefPublisherUI.querySelector(
@@ -644,9 +658,10 @@ describe('goose', () => {
           button: 'left',
           position: midEl(filterPreconfigured!),
         });
+        await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(300); // rendering
+        await timeout(200); // rendering ?
         await visualDiff(plugin, testName(this));
       });
     });
@@ -661,10 +676,9 @@ describe('goose', () => {
           button: 'left',
           position: midEl(fcdaTextInput!),
         });
-
         sendKeys({ type: 'QB1' });
+        await plugin.fcdaListUI.updateComplete;
 
-        await timeout(300); // render
         await visualDiff(plugin, testName(this));
       });
 
@@ -682,9 +696,8 @@ describe('goose', () => {
           button: 'left',
           position: midEl(fcda!),
         });
+        await plugin.fcdaListUI.updateComplete;
         await plugin.updateComplete;
-
-        await timeout(150); // rendering
 
         // search ExtRefs
         const extRefTextInput =
@@ -697,10 +710,10 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extRefTextInput!),
         });
-
         sendKeys({ type: 'Thing' });
+        await plugin.extRefListPublisherUI?.updateComplete;
 
-        await timeout(300); // render
+        await timeout(150); // de-selection
         await visualDiff(plugin, testName(this));
       });
     });
@@ -718,8 +731,7 @@ describe('goose', () => {
       // Doesn't seem to be testable by a visual test -- unsure why
       const tooltip = fcda?.getAttribute('title');
 
-      expect(tooltip).to.be.equal(`CDC: DPC 
-Basic Type: Enum`);
+      expect(tooltip).to.be.equal('CDC: DPC\nBasic Type: Enum');
     });
 
     it('for an ExtRef with pXX attrs shows a tooltip with cdc and basic type', async function () {
@@ -736,9 +748,9 @@ Basic Type: Enum`);
         button: 'left',
         position: midEl(fcda!),
       });
+      await plugin.fcdaListUI.updateComplete;
       await plugin.updateComplete;
-
-      await timeout(200); // render
+      await timeout(150); // selection
 
       const extRefListElement = plugin.extRefListPublisherUI;
       const extref = getExtRefItem(
@@ -749,8 +761,7 @@ Basic Type: Enum`);
       // Doesn't seem to be testable by a visual test -- unsure why
       const tooltip = extref?.getAttribute('title');
 
-      expect(tooltip).to.be.equal(`CDC: DPC 
-Basic Type: Enum`);
+      expect(tooltip).to.be.equal(`CDC: DPC\nBasic Type: Enum`);
     });
 
     it('changes to subscriber view', async function () {
@@ -761,7 +772,7 @@ Basic Type: Enum`);
       });
       await plugin.updateComplete;
 
-      await timeout(150);
+      await timeout(150); // button selection
       await visualDiff(plugin, testName(this));
     });
 
@@ -773,8 +784,49 @@ Basic Type: Enum`);
       });
       await plugin.updateComplete;
 
-      await timeout(150);
+      await timeout(150); // button selection
       await visualDiff(plugin, testName(this));
     });
   });
+
+  describe('subscriber view', () => {
+    beforeEach(async function () {
+      localStorage.clear();
+      await tryViewportSet();
+      resetMouse();
+
+      doc = await fetch('/test/fixtures/GOOSE-2007B4-LGOS.scd')
+        .then(response => response.text())
+        .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+      editor.docName = 'GOOSE-2007B4-LGOS.scd';
+      editor.docs[editor.docName] = doc;
+
+      await editor.updateComplete;
+      await plugin.updateComplete;
+
+      await timeout(500); // plugin loading and initial render?
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(plugin.switchViewUI!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(150); // button selection
+    });
+
+    afterEach(async () => {
+      localStorage.clear();
+    });
+
+    it('initially has no ExtRef selected', async function () {
+      await timeout(200);
+      await visualDiff(plugin, testName(this));
+    });
+  });
+
+  // invalid mappings can be removed
+  // mappings with missing IEDs can be subscribed
 });

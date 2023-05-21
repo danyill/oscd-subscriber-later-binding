@@ -41,8 +41,8 @@ import {
   getExtRefElements,
   getFcdaElements,
   getFcdaSrcControlBlockDescription,
-  getFcdaSubtitleValue,
-  getFcdaTitleValue,
+  getFcdaOrExtRefSubtitleValue,
+  getFcdaOrExtRefTitleValue,
   getOrderedIeds,
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
@@ -795,8 +795,7 @@ export default class SubscriberLaterBinding extends LitElement {
       value="${identity(extRefElement)}"
       data-extref="${identity(extRefElement)}"
       title="${spec.cdc && spec.bType
-        ? `CDC: ${spec.cdc ?? '?'} 
-Basic Type: ${spec.bType ?? '?'}`
+        ? `CDC: ${spec.cdc ?? '?'}\nBasic Type: ${spec.bType ?? '?'}`
         : ''}"
     >
       <span
@@ -876,11 +875,12 @@ Basic Type: ${spec.bType ?? '?'}`
       data-fcda="${identity(fcdaElement)}"
       value="${identity(controlElement)}
              ${identity(fcdaElement)}"
-      title="CDC: ${spec.cdc ?? '?'} 
+      title="CDC: ${spec.cdc ?? '?'}
 Basic Type: ${spec.bType}"
     >
       <span
-        >${getFcdaSubtitleValue(fcdaElement)} ${getFcdaTitleValue(fcdaElement)}
+        >${getFcdaOrExtRefSubtitleValue(fcdaElement)}
+        ${getFcdaOrExtRefTitleValue(fcdaElement)}
       </span>
       <span slot="secondary"> ${fcdaDescription}</span>
       <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
@@ -1081,8 +1081,8 @@ Basic Type: ${spec.bType}"
               value="${identity(controlElement)}${fcdaElements
                 .map(
                   fcdaElement => `
-                        ${getFcdaTitleValue(fcdaElement)}
-                        ${getFcdaSubtitleValue(fcdaElement)}
+                        ${getFcdaOrExtRefTitleValue(fcdaElement)}
+                        ${getFcdaOrExtRefSubtitleValue(fcdaElement)}
                         ${identity(fcdaElement)}`
                 )
                 .join('')}"
@@ -1173,8 +1173,7 @@ Basic Type: ${spec.bType}"
               data-extref="${identity(extRefElement)}"
               value="${identity(extRefElement)}"
               title="${spec.cdc && spec.bType
-                ? `CDC: ${spec.cdc ?? '?'} 
-Basic Type: ${spec.bType ?? '?'}`
+                ? `CDC: ${spec.cdc ?? '?'}\nBasic Type: ${spec.bType ?? '?'}`
                 : ''}"
             >
               <span>
@@ -1188,7 +1187,7 @@ Basic Type: ${spec.bType ?? '?'}`
                     slot="meta"
                     class="invalid-mapping"
                     title="${msg('Invalid Mapping')}"
-                    >warning</mwc-icon
+                    >error</mwc-icon
                   >`
                 : nothing}
               ${hasMissingMapping
@@ -1395,13 +1394,16 @@ Basic Type: ${spec.bType ?? '?'}`
     const specExtRef = inputRestriction(extRefElement);
     const specFcda = subscriberFCDA ? fcdaSpecification(subscriberFCDA) : null;
 
-    const fcdaName = subscriberFCDA
-      ? `${
-          subscriberFCDA.closest('IED')?.getAttribute('name') ?? 'Unknown'
-        } > ${getFcdaSubtitleValue(subscriberFCDA)} ${getFcdaTitleValue(
-          subscriberFCDA
-        )} `
-      : '';
+    // this fcda name is taken from the ExtRef so even if an FCDA
+    // cannot be located we can "show" the subscription
+    const fcdaName =
+      subscribed || hasMissingMapping
+        ? `${
+            extRefElement.getAttribute('iedName') ?? 'Unknown'
+          } > ${getFcdaOrExtRefSubtitleValue(
+            extRefElement
+          )} ${getFcdaOrExtRefTitleValue(extRefElement)} `
+        : '';
     const fcdaDesc = subscriberFCDA
       ? getFcdaInstDesc(subscriberFCDA, true).join('>')
       : null;
@@ -1439,9 +1441,9 @@ Basic Type: ${spec.bType ?? '?'}`
     >
       <span class="extref-firstline">
         ${extRefPath(extRefElement)}: ${extRefElement.getAttribute('intAddr')}
-        ${(subscribed && subscriberFCDA) || hasInvalidMapping
+        ${subscribed || hasInvalidMapping
           ? html`<mwc-icon class="left-inline-arrow">arrow_back</mwc-icon>
-              ${subscribed && subscriberFCDA ? `${fcdaName}` : ''}
+              ${subscribed ? `${fcdaName}` : ''}
               ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
           : nothing}
       </span>

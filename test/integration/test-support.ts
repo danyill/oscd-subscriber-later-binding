@@ -1,18 +1,5 @@
+import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
 import { OscdFilteredList } from '@openscd/oscd-filtered-list';
-
-// getFcdaItem
-// getExtRefItem
-// getSwitchView
-// getSwitchType
-// getFcdaSearchField
-// getExtRefSearchField
-// getFcdaFilterField
-// getExtRefFilterField
-// getExtRefSettingsField
-// getUndoButton
-// getRedoButton
-// getFilterFieldListItem
-// getSettingsFieldListItem
 
 export function midEl(element: Element): [number, number] {
   const { x, y, width, height } = element.getBoundingClientRect();
@@ -27,7 +14,7 @@ export function getFcdaItem(
   listElement: OscdFilteredList,
   controlIdentity: string,
   fcdaIdentity: string
-): HTMLElement | null {
+): ListItemBase | null {
   return listElement.querySelector(
     `mwc-list-item.fcda[data-control="${controlIdentity}"][data-fcda="${fcdaIdentity}"]`
   );
@@ -36,22 +23,8 @@ export function getFcdaItem(
 export function getExtRefItem(
   listElement: OscdFilteredList,
   extRefId: string
-): HTMLElement | null {
+): ListItemBase | null {
   return listElement.querySelector(
     `mwc-list-item.extref[data-extref="${extRefId}"]`
   );
 }
-
-// export function getSubscribedExtRefsCount(
-//     listElement: ExtRefLaterBindingListSubscriber,
-//     iedName: string
-//   ): number {
-//     return (
-//       Array.from(
-//         listElement.shadowRoot!.querySelectorAll(
-//           'mwc-list-item.extref.show-bound'
-//         )
-//       ).filter(listItem => listItem.getAttribute('value')!.startsWith(iedName))
-//         .length || 0
-//     );
-//   }
