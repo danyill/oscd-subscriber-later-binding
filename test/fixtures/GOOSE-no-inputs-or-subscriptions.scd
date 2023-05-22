@@ -107,12 +107,7 @@
 						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet"/>
 					</LN0>
 					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO"/>
-					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI">
-						<Inputs>
-							<ExtRef intAddr="Pos;CILO1/Pos/stVal" desc="Interlocking.Input2"/>
-							<ExtRef intAddr="Pos;CILO1/Pos/q" desc="Interlocking.Input2"/>
-						</Inputs>
-					</LN>
+					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI"/>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
 				</LDevice>
 				<LDevice inst="QB1_Disconnector">

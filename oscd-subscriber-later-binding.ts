@@ -626,7 +626,8 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   private updateExtRefFilter(): void {
-    const filterClassList = this.extRefListSubscriberUI!.classList;
+    const filterClassList = this.extRefListSubscriberUI?.classList;
+    if (!filterClassList) return;
 
     if (!this.hideBound) {
       filterClassList.add('show-bound');

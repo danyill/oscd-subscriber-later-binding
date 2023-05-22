@@ -143,6 +143,7 @@ describe('goose', () => {
         position: midEl(plugin!),
       });
 
+      // TODO: Does ca-d have any ideas about this?
       // webkit is especially fussy and appears to slowly change the layout?
       await timeout(300);
       await visualDiff(plugin, testName(this));
@@ -776,6 +777,35 @@ describe('goose', () => {
       await visualDiff(plugin, testName(this));
     });
 
+    it('changes to subscriber view and deselects any FCDAs', async function () {
+      const fcdaListElement = plugin.fcdaListUI;
+
+      const fcda = getFcdaItem(
+        fcdaListElement,
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      )!;
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(fcda),
+      });
+      await fcda.updateComplete;
+      await plugin.fcdaListUI.updateComplete;
+      await plugin.updateComplete;
+      await timeout(150); // selection
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(plugin.switchViewUI!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(150); // button selection
+      await visualDiff(plugin, testName(this));
+    });
+
     it('changes to sampled values view', async function () {
       await sendMouse({
         type: 'click',
@@ -807,6 +837,8 @@ describe('goose', () => {
 
       await timeout(500); // plugin loading and initial render?
 
+      // TODO: Why can't I do this?
+      // plugin.setAttribute('subscriberview', '');
       await sendMouse({
         type: 'click',
         button: 'left',
@@ -822,7 +854,357 @@ describe('goose', () => {
     });
 
     it('initially has no ExtRef selected', async function () {
+      // carrying out an action causes a content refresh somehow??
+      await sendMouse({
+        type: 'move',
+        position: midEl(plugin!),
+      });
+
       await timeout(200);
+      await visualDiff(plugin, testName(this));
+    });
+
+    it('shows no available or subscribed inputs messages', async function () {
+      doc = await fetch('/test/fixtures/GOOSE-no-inputs-or-subscriptions.scd')
+        .then(response => response.text())
+        .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+      editor.docName = 'GOOSE-no-inputs-or-subscriptions.scd';
+      editor.docs[editor.docName] = doc;
+      await editor.updateComplete;
+      await plugin.updateComplete;
+      await timeout(500); // plugin loading and initial render?
+
+      await visualDiff(plugin, testName(this));
+    });
+
+    describe('can change subscriptions by', () => {
+      it('removing a missing ExtRef mapping', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]'
+        )!;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('removing an invalid ExtRef mapping', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/q[0]'
+        )!;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('subscribing to an FCDA without supervisions', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+        )!;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        const fcdaListElement = plugin.fcdaListUI;
+
+        const fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1',
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+        fcda?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
+
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('subscribing and unsubscribing an FCDA without supervisions', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+        )!;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        const fcdaListElement = plugin.fcdaListUI;
+        const fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1',
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+        fcda?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('subscribing to an FCDA with supervisions', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber1>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]'
+        )!;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        const fcdaListElement = plugin.fcdaListUI;
+
+        const fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2',
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
+
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('unsubscribing an ExtRef with supervisions', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI;
+        const extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+        );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      // XXX
+
+      // it('unsubscribing an FCDA with one supervision', async function () {
+      //   const fcdaListElement = plugin.fcdaListUI;
+      //   const fcda = getFcdaItem(
+      //     fcdaListElement,
+      //     'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2',
+      //     'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      //   );
+      //   fcda?.scrollIntoView();
+
+      //   await sendMouse({
+      //     type: 'click',
+      //     button: 'left',
+      //     position: midEl(fcda!),
+      //   });
+      //   await fcda!.updateComplete;
+      //   await fcdaListElement.updateComplete;
+      //   await plugin.updateComplete;
+
+      //   const extRefListElement = plugin.extRefListPublisherUI!;
+      //   const extRefChosen = getExtRefItem(
+      //     extRefListElement!,
+      //     'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
+      //   );
+      //   extRefChosen?.scrollIntoView();
+
+      //   //  unsubscribe
+      //   await sendMouse({
+      //     type: 'click',
+      //     button: 'left',
+      //     position: midEl(extRefChosen!),
+      //   });
+      //   await extRefChosen!.updateComplete;
+      //   await extRefListElement!.updateComplete;
+      //   await plugin.updateComplete;
+
+      //   // increased for webkit
+      //   await timeout(300); // selection
+
+      //   await visualDiff(plugin, testName(this));
+      // });
+
+      //     it('subscribing to an FCDA does not change supervisions if unset', async function () {
+      //       // turn off supervision modification
+      //       const button = plugin.settingsMenuExtRefPublisherButtonUI;
+      //       const fcdaListElement = plugin.fcdaListUI;
+
+      //       // first unsubscribe (we already have a supervision)
+      //       const fcda = getFcdaItem(
+      //         fcdaListElement,
+      //         'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2',
+      //         'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      //       );
+      //       await sendMouse({
+      //         type: 'click',
+      //         button: 'left',
+      //         position: midEl(fcda!),
+      //       });
+      //       await fcda!.updateComplete;
+      //       await fcdaListElement.updateComplete;
+      //       await plugin.updateComplete;
+
+      //       let extRefListElement = plugin.extRefListPublisherUI;
+      //       const extref = getExtRefItem(
+      //         extRefListElement!,
+      //         'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
+      //       );
+      //       extref?.scrollIntoView();
+
+      //       await sendMouse({
+      //         type: 'click',
+      //         button: 'left',
+      //         position: midEl(extref!),
+      //       });
+      //       await extref!.updateComplete;
+      //       await extRefListElement!.updateComplete;
+      //       await plugin.updateComplete;
+
+      //       // now set to not doing supervisions
+      //       await sendMouse({
+      //         type: 'click',
+      //         button: 'left',
+      //         position: midEl(button!),
+      //       });
+      //       await timeout(150); // menu must show
+
+      //       const settingsNoSupervisions = <CheckListItem>(
+      //         plugin.settingsMenuExtRefPublisherUI.querySelector('.no-supervisions')
+      //       );
+
+      //       await sendMouse({
+      //         type: 'click',
+      //         button: 'left',
+      //         position: midEl(settingsNoSupervisions!),
+      //       });
+      //       await timeout(150);
+      //       await settingsNoSupervisions!.updateComplete;
+      //       await plugin.settingsMenuExtRefPublisherUI.updateComplete;
+      //       await plugin.updateComplete;
+
+      //       // now do subscription which would normally result in supervision instantiation
+      //       extRefListElement = plugin.extRefListPublisherUI;
+      //       const extref2 = getExtRefItem(
+      //         extRefListElement!,
+      //         'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
+      //       );
+      //       extref2?.scrollIntoView();
+
+      //       await sendMouse({
+      //         type: 'click',
+      //         button: 'left',
+      //         position: midEl(extref2!),
+      //       });
+      //       await extref2!.updateComplete;
+      //       await extRefListElement!.updateComplete;
+      //       await plugin.updateComplete;
+
+      //       // increased timeout for webkit
+      //       await timeout(200); // selection
+      //       await visualDiff(plugin, testName(this));
+      //     });
+    });
+
+    it('changes to publisher view', async function () {
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(plugin.switchViewUI!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(150); // button selection
+      await visualDiff(plugin, testName(this));
+    });
+
+    it('changes to sampled values view', async function () {
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(plugin.switchControlTypeUI!),
+      });
+      await plugin.updateComplete;
+
+      await timeout(150); // button selection
       await visualDiff(plugin, testName(this));
     });
   });
