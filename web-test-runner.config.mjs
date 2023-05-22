@@ -197,5 +197,8 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   /** Browsers to run tests on */
   browsers,
 
+  // 4 minutes max test time allowed
+  testsFinishTimeout: 240000,
+
   // See documentation for all available options
 });
