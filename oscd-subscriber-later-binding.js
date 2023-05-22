@@ -17984,7 +17984,10 @@ class SubscriberLaterBinding extends s$1 {
         return this.supervisionData.get(`${iedName} ${cbRefKey}`);
     }
     updateExtRefFilter() {
-        const filterClassList = this.extRefListSubscriberUI.classList;
+        var _a;
+        const filterClassList = (_a = this.extRefListSubscriberUI) === null || _a === void 0 ? void 0 : _a.classList;
+        if (!filterClassList)
+            return;
         if (!this.hideBound) {
             filterClassList.add('show-bound');
         }
