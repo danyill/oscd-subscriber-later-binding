@@ -128,7 +128,11 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
     </style>
     <style>
     * { -webkit-font-smoothing: antialiased; 
-     font-kerning: normal; }
+     font-kerning: normal;
+     text-rendering: optimizeLegibility;
+     font-variant-ligatures: none;
+     letter-spacing: 0.01em;
+     }
     </style>
     <script>window.process = { env: ${JSON.stringify(process.env)} }</script>
     <script type="module" src="${testFramework}"></script>
