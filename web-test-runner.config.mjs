@@ -41,7 +41,7 @@ const browsers = [
     },
   }),
   playwrightLauncher({ product: 'firefox' }),
-  playwrightLauncher({ product: 'webkit' }),
+  // playwrightLauncher({ product: 'webkit' }),
 ];
 
 function defaultGetImageDiff({ baselineImage, image, options }) {

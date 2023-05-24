@@ -1060,128 +1060,614 @@ describe('goose', () => {
         await visualDiff(plugin, testName(this));
       });
 
-      // XXX
+      it('unsubscribing an FCDA with one supervision', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI;
+        const extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
+        );
+        extref?.scrollIntoView();
 
-      // it('unsubscribing an FCDA with one supervision', async function () {
-      //   const fcdaListElement = plugin.fcdaListUI;
-      //   const fcda = getFcdaItem(
-      //     fcdaListElement,
-      //     'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2',
-      //     'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
-      //   );
-      //   fcda?.scrollIntoView();
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
 
-      //   await sendMouse({
-      //     type: 'click',
-      //     button: 'left',
-      //     position: midEl(fcda!),
-      //   });
-      //   await fcda!.updateComplete;
-      //   await fcdaListElement.updateComplete;
-      //   await plugin.updateComplete;
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
 
-      //   const extRefListElement = plugin.extRefListPublisherUI!;
-      //   const extRefChosen = getExtRefItem(
-      //     extRefListElement!,
-      //     'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
-      //   );
-      //   extRefChosen?.scrollIntoView();
+      it('subscribing to an FCDA does not change supervisions if unset', async function () {
+        // first unsubscribe (we already have a supervision)
+        const extRefListElement = plugin.extRefListSubscriberUI;
+        const extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
+        );
+        extref?.scrollIntoView();
 
-      //   //  unsubscribe
-      //   await sendMouse({
-      //     type: 'click',
-      //     button: 'left',
-      //     position: midEl(extRefChosen!),
-      //   });
-      //   await extRefChosen!.updateComplete;
-      //   await extRefListElement!.updateComplete;
-      //   await plugin.updateComplete;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
 
-      //   // increased for webkit
-      //   await timeout(300); // selection
+        // turn off supervision modification
+        const button = plugin.settingsMenuExtRefSubscriberButtonUI;
 
-      //   await visualDiff(plugin, testName(this));
-      // });
+        // now set to not doing supervisions
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await timeout(150); // menu must show
 
-      //     it('subscribing to an FCDA does not change supervisions if unset', async function () {
-      //       // turn off supervision modification
-      //       const button = plugin.settingsMenuExtRefPublisherButtonUI;
-      //       const fcdaListElement = plugin.fcdaListUI;
+        const settingsNoSupervisions = <CheckListItem>(
+          plugin.settingsMenuExtRefSubscriberUI.querySelector(
+            '.no-supervisions'
+          )
+        );
 
-      //       // first unsubscribe (we already have a supervision)
-      //       const fcda = getFcdaItem(
-      //         fcdaListElement,
-      //         'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2',
-      //         'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
-      //       );
-      //       await sendMouse({
-      //         type: 'click',
-      //         button: 'left',
-      //         position: midEl(fcda!),
-      //       });
-      //       await fcda!.updateComplete;
-      //       await fcdaListElement.updateComplete;
-      //       await plugin.updateComplete;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(settingsNoSupervisions!),
+        });
+        await timeout(150);
+        await settingsNoSupervisions!.updateComplete;
+        await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
+        await plugin.updateComplete;
 
-      //       let extRefListElement = plugin.extRefListPublisherUI;
-      //       const extref = getExtRefItem(
-      //         extRefListElement!,
-      //         'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
-      //       );
-      //       extref?.scrollIntoView();
+        // now do subscription which would normally result in supervision instantiation
+        const fcdaListElement = plugin.fcdaListUI;
 
-      //       await sendMouse({
-      //         type: 'click',
-      //         button: 'left',
-      //         position: midEl(extref!),
-      //       });
-      //       await extref!.updateComplete;
-      //       await extRefListElement!.updateComplete;
-      //       await plugin.updateComplete;
+        const fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2',
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+        fcda?.scrollIntoView();
 
-      //       // now set to not doing supervisions
-      //       await sendMouse({
-      //         type: 'click',
-      //         button: 'left',
-      //         position: midEl(button!),
-      //       });
-      //       await timeout(150); // menu must show
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
 
-      //       const settingsNoSupervisions = <CheckListItem>(
-      //         plugin.settingsMenuExtRefPublisherUI.querySelector('.no-supervisions')
-      //       );
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
 
-      //       await sendMouse({
-      //         type: 'click',
-      //         button: 'left',
-      //         position: midEl(settingsNoSupervisions!),
-      //       });
-      //       await timeout(150);
-      //       await settingsNoSupervisions!.updateComplete;
-      //       await plugin.settingsMenuExtRefPublisherUI.updateComplete;
-      //       await plugin.updateComplete;
+      describe('auto-incrementing', () => {
+        it('increments after a subscription', async function () {
+          const extRefListElement = plugin.extRefListSubscriberUI!;
+          const extref = getExtRefItem(
+            extRefListElement,
+            'GOOSE_Subscriber1>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]'
+          )!;
+          extref.scrollIntoView();
 
-      //       // now do subscription which would normally result in supervision instantiation
-      //       extRefListElement = plugin.extRefListPublisherUI;
-      //       const extref2 = getExtRefItem(
-      //         extRefListElement!,
-      //         'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
-      //       );
-      //       extref2?.scrollIntoView();
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extref!),
+          });
+          await extref.updateComplete;
+          await extRefListElement.updateComplete;
+          await plugin.updateComplete;
 
-      //       await sendMouse({
-      //         type: 'click',
-      //         button: 'left',
-      //         position: midEl(extref2!),
-      //       });
-      //       await extref2!.updateComplete;
-      //       await extRefListElement!.updateComplete;
-      //       await plugin.updateComplete;
+          const fcdaListElement = plugin.fcdaListUI;
 
-      //       // increased timeout for webkit
-      //       await timeout(200); // selection
-      //       await visualDiff(plugin, testName(this));
-      //     });
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          fcda?.scrollIntoView();
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+
+          await fcda!.updateComplete;
+          await fcdaListElement.updateComplete;
+          await extRefListElement.updateComplete;
+          await plugin.updateComplete;
+
+          await timeout(150); // unsure why this is required for Firefox
+          // perhaps because auto-incrementing triggers additional update cycle?
+
+          await timeout(150); // selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('does not increment if auto-increment is off', async function () {
+          // turn off autoincrement
+          const button = plugin.settingsMenuExtRefSubscriberButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(150); // menu must show
+
+          const autoIncrement = <CheckListItem>(
+            plugin.settingsMenuExtRefSubscriberUI.querySelector(
+              '.auto-increment'
+            )
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(autoIncrement!),
+          });
+          await timeout(150);
+          await autoIncrement!.updateComplete;
+          await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
+          await plugin.updateComplete;
+
+          // do subscription
+          const extRefListElement = plugin.extRefListSubscriberUI!;
+          const extref = getExtRefItem(
+            extRefListElement,
+            'GOOSE_Subscriber1>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]'
+          )!;
+          extref.scrollIntoView();
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extref!),
+          });
+          await extref.updateComplete;
+          await extRefListElement.updateComplete;
+          await plugin.updateComplete;
+
+          const fcdaListElement = plugin.fcdaListUI;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+
+          await fcda!.updateComplete;
+          await fcdaListElement.updateComplete;
+          await extRefListElement.updateComplete;
+          await plugin.updateComplete;
+
+          await timeout(150); // unsure why this is required for Firefox
+
+          await timeout(150); // selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('jumps over IEDs', async function () {
+          const extRefListElement = plugin.extRefListSubscriberUI!;
+          const extref = getExtRefItem(
+            extRefListElement,
+            'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+          )!;
+          extref.scrollIntoView();
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extref!),
+          });
+          await extref.updateComplete;
+          await extRefListElement.updateComplete;
+          await plugin.updateComplete;
+
+          const fcdaListElement = plugin.fcdaListUI;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          fcda?.scrollIntoView;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+
+          await fcda!.updateComplete;
+          await fcdaListElement.updateComplete;
+          await extRefListElement.updateComplete;
+          await plugin.updateComplete;
+
+          await timeout(150); // unsure why this is required for Firefox
+          // perhaps because auto-incrementing triggers additional update cycle?
+
+          await timeout(150); // selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('stops when it reaches a bound ExtRef', async function () {
+          const extRefListElement = plugin.extRefListSubscriberUI!;
+          const extref = getExtRefItem(
+            extRefListElement,
+            'GOOSE_Subscriber1>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/q[0]'
+          )!;
+          extref.scrollIntoView();
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extref!),
+          });
+          await extref.updateComplete;
+          await extRefListElement.updateComplete;
+          await plugin.updateComplete;
+
+          const fcdaListElement = plugin.fcdaListUI;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE1',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos q (ST)'
+          );
+          fcda?.scrollIntoView();
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+
+          await fcda!.updateComplete;
+          await fcdaListElement.updateComplete;
+          await extRefListElement.updateComplete;
+          await plugin.updateComplete;
+
+          await timeout(150); // selection
+          await visualDiff(plugin, testName(this));
+        });
+      });
+    });
+
+    describe('has filters', () => {
+      beforeEach(async function () {
+        localStorage.clear();
+        await tryViewportSet();
+        resetMouse();
+
+        doc = await fetch('/test/fixtures/GOOSE-2007B4-filter-test.scd')
+          .then(response => response.text())
+          .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+        editor.docName = 'GOOSE-2007B4-filter-test.scd';
+        editor.docs[editor.docName] = doc;
+
+        await editor.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(500); // plugin loading and initial render?
+      });
+
+      afterEach(async () => {
+        localStorage.clear();
+      });
+
+      it('it shows FCDA filter options defaulting to on', async function () {
+        const button = plugin.filterMenuFcdaButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await plugin.filterMenuFcdaUI.updateComplete;
+
+        await timeout(150); // opening dialog
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('filters only subscribed FCDAs', async function () {
+        const button = plugin.filterMenuFcdaButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await timeout(150); // opening dialog
+
+        const filterNotSubscribed = plugin.filterMenuFcdaUI.querySelector(
+          '.filter-not-subscribed'
+        );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterNotSubscribed!),
+        });
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('filters only not subscribed FCDAs', async function () {
+        const button = plugin.filterMenuFcdaButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await timeout(150); // opening dialog
+
+        const filterSubscribed =
+          plugin.filterMenuFcdaUI.querySelector('.filter-subscribed');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterSubscribed!),
+        });
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and can filter out data objects', async function () {
+        const fcdaListElement = plugin.fcdaListUI;
+
+        const fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher>>QB2_Disconnector>GOOSE1',
+          'GOOSE_Publisher>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos q (ST)'
+        );
+        // get near
+        fcda?.scrollIntoView();
+
+        const button = plugin.filterMenuFcdaButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await timeout(150); // opening dialog
+
+        const filterSubscribed =
+          plugin.filterMenuFcdaUI.querySelector('.filter-subscribed');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterSubscribed!),
+        });
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
+        await plugin.updateComplete;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await timeout(150); // opening dialog
+
+        const filterDataObjects = plugin.filterMenuFcdaUI.querySelector(
+          '.filter-data-objects'
+        );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterDataObjects!),
+        });
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and can filter out non-matching pre-configured', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+        )!;
+        extref.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        const button = plugin.filterMenuFcdaButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await timeout(150); // opening dialog
+
+        const filterSubscribed = plugin.filterMenuFcdaUI.querySelector(
+          '.filter-preconfigured'
+        );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterSubscribed!),
+        });
+        await timeout(150); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('shows ExtRef filter options defaulting to on', async function () {
+        const extRefFilterMenu = plugin.filterMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extRefFilterMenu!),
+        });
+        await timeout(150); // opening dialog
+
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and filters out subscribed items', async function () {
+        const extRefFilterMenu = plugin.filterMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extRefFilterMenu!),
+        });
+        await timeout(150); // opening dialog
+
+        const filterBound =
+          plugin.filterMenuExtRefSubscriberUI.querySelector('.show-bound');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterBound!),
+        });
+        await plugin.filterMenuExtRefSubscriberUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and filters out not-subscribed items', async function () {
+        const extRefFilterMenu = plugin.filterMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extRefFilterMenu!),
+        });
+        await timeout(150); // opening dialog
+
+        const filterNotBound =
+          plugin.filterMenuExtRefSubscriberUI.querySelector('.show-not-bound');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterNotBound!),
+        });
+        await plugin.filterMenuExtRefSubscriberUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and filters out unspecified service types', async function () {
+        const extRefFilterMenu = plugin.filterMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extRefFilterMenu!),
+        });
+        await timeout(150); // opening dialog
+
+        const filterUnspecifiedServiceTypes =
+          plugin.filterMenuExtRefSubscriberUI.querySelector(
+            '.show-unspecified-service-types'
+          );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterUnspecifiedServiceTypes!),
+        });
+        await plugin.filterMenuExtRefSubscriberUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+    });
+
+    describe('can search', () => {
+      it('in FCDAs with a string', async function () {
+        const fcdaTextInput =
+          plugin.fcdaListUI!.shadowRoot!.querySelector('mwc-textfield');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcdaTextInput!),
+        });
+        sendKeys({ type: 'QB1' });
+        await plugin.fcdaListUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150);
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('in ExtRefs with a string', async function () {
+        // TODO: Discuss with Christian regarding "double handlings for IEDs and subitems"
+        // Putting all the processing logic in two places makes no sense but then searching
+        // is inadequate for the children. Would be better for the filtered list to have
+        // an understanding of the object hierarchy.
+        // search ExtRefs
+        const extRefTextInput =
+          plugin.extRefListSubscriberUI!.shadowRoot!.querySelector(
+            'mwc-textfield'
+          );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extRefTextInput!),
+        });
+        sendKeys({ type: 'Thing' });
+        await plugin.extRefListSubscriberUI?.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150);
+        await visualDiff(plugin, testName(this));
+      });
     });
 
     it('changes to publisher view', async function () {
