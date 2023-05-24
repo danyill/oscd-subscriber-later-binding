@@ -33,7 +33,7 @@ export default class SubscriberLaterBinding extends LitElement {
     filterMenuFcdaButtonUI: Icon;
     filterMenuExtRefSubscriberUI: Menu;
     filterMenuExtRefPublisherUI: Menu;
-    filterMenuExtRefButtonUI: Icon;
+    filterMenuExtRefSubscriberButtonUI: Icon;
     filterMenuExtrefPublisherButtonUI: Icon;
     listContainerUI: HTMLDivElement;
     settingsMenuExtRefSubscriberUI: Menu;

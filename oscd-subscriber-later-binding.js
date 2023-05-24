@@ -17897,9 +17897,6 @@ class SubscriberLaterBinding extends s$1 {
             srcCBName: null,
         }));
         const subscriberIed = extRef.closest('IED');
-        if (!this.notChangeSupervisionLNs &&
-            canRemoveSubscriptionSupervision(extRef))
-            editActions.push(...removeSubscriptionSupervision(this.currentSelectedControlElement, subscriberIed));
         let controlBlockElement;
         let fcdaElement;
         if (this.subscriberView) {
@@ -17912,6 +17909,9 @@ class SubscriberLaterBinding extends s$1 {
             controlBlockElement = this.currentSelectedControlElement;
             fcdaElement = this.currentSelectedFcdaElement;
         }
+        if (!this.notChangeSupervisionLNs &&
+            canRemoveSubscriptionSupervision(extRef))
+            editActions.push(...removeSubscriptionSupervision(controlBlockElement, subscriberIed));
         if (controlBlockElement && fcdaElement) {
             const controlBlockFcdaId = `${identity(controlBlockElement)} ${identity(fcdaElement)}`;
             this.extRefCounters.delete(controlBlockFcdaId);
@@ -18029,7 +18029,7 @@ class SubscriberLaterBinding extends s$1 {
     updateView() {
         if (this.subscriberView) {
             this.listContainerUI.classList.add('subscriber-view');
-            this.filterMenuExtRefSubscriberUI.anchor = (this.filterMenuExtRefButtonUI);
+            this.filterMenuExtRefSubscriberUI.anchor = (this.filterMenuExtRefSubscriberButtonUI);
             this.filterMenuExtRefSubscriberUI.addEventListener('closed', () => {
                 this.hideBound = !(this.filterMenuExtRefSubscriberUI.index).has(0);
                 this.hideNotBound = !(this.filterMenuExtRefSubscriberUI.index).has(1);
@@ -18259,8 +18259,13 @@ Basic Type: ${spec.bType}"
             if (!(this.subscriberView &&
                 this.currentSelectedControlElement &&
                 this.currentSelectedFcdaElement &&
-                this.currentSelectedExtRefElement))
+                this.currentSelectedExtRefElement)) {
+                if (this.subscriberView) {
+                    selectedListItem.selected = false;
+                    selectedListItem.activated = false;
+                }
                 return;
+            }
             this.subscribe(this.currentSelectedExtRefElement);
             this.currentSelectedExtRefElement = undefined;
             // if incrementing, click on next ExtRef list item if not subscribed
@@ -18501,7 +18506,7 @@ Basic Type: ${spec.bType}"
         return x `<h1 class="subscriber-title">
       ${msg('Subscriber Inputs')}
       <mwc-icon-button
-        id="filterExtRefIcon"
+        id="filterExtRefSubscriberIcon"
         class="${o(menuClasses)}"
         title="${msg('Filter')}"
         icon="filter_list"
@@ -18925,7 +18930,7 @@ SubscriberLaterBinding.styles = i$5 `
     }
 
     #filterFcdaIcon,
-    #filterExtRefIcon,
+    #filterExtRefSubscriberIcon,
     #settingsExtRefSubscriberIcon,
     #settingsExtRefPublisherIcon,
     #filterExtRefPublisherIcon {
@@ -18933,7 +18938,7 @@ SubscriberLaterBinding.styles = i$5 `
     }
 
     #filterFcdaIcon.filter-off,
-    #filterExtRefIcon.filter-off,
+    #filterExtRefSubscriberIcon.filter-off,
     #filterExtRefPublisherIcon.filter-off {
       color: var(--mdc-theme-secondary, #018786);
       background-color: var(--mdc-theme-background);
@@ -19169,8 +19174,8 @@ __decorate([
     i$2('#filterExtRefMenuPublisher')
 ], SubscriberLaterBinding.prototype, "filterMenuExtRefPublisherUI", void 0);
 __decorate([
-    i$2('#filterExtRefIcon')
-], SubscriberLaterBinding.prototype, "filterMenuExtRefButtonUI", void 0);
+    i$2('#filterExtRefSubscriberIcon')
+], SubscriberLaterBinding.prototype, "filterMenuExtRefSubscriberButtonUI", void 0);
 __decorate([
     i$2('#filterExtRefPublisherIcon')
 ], SubscriberLaterBinding.prototype, "filterMenuExtrefPublisherButtonUI", void 0);
