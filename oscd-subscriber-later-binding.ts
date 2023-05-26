@@ -622,49 +622,6 @@ export default class SubscriberLaterBinding extends LitElement {
     return this.supervisionData.get(`${iedName} ${cbRefKey}`);
   }
 
-  private updateExtRefFilter(): void {
-    const filterClassList = this.extRefListSubscriberUI?.classList;
-    if (!filterClassList) return;
-
-    if (!this.hideBound) {
-      filterClassList.add('show-bound');
-    } else {
-      filterClassList.remove('show-bound');
-    }
-
-    if (!this.hideNotBound) {
-      filterClassList.add('show-not-bound');
-    } else {
-      filterClassList.remove('show-not-bound');
-    }
-
-    // force refresh for CSS style change
-    this.requestUpdate();
-  }
-
-  private updateFilterCSS(): void {
-    if (this.hideSubscribed) {
-      this.fcdaListUI?.classList.remove('show-subscribed');
-    } else {
-      this.fcdaListUI?.classList.add('show-subscribed');
-    }
-
-    if (this.hideNotSubscribed) {
-      this.fcdaListUI?.classList.remove('show-not-subscribed');
-    } else {
-      this.fcdaListUI?.classList.add('show-not-subscribde');
-    }
-
-    if (this.hidePreconfiguredNotMatching) {
-      this.extRefListPublisherUI?.classList.remove('show-pxx-mismatch');
-    } else {
-      this.extRefListPublisherUI?.classList.add('show-pxx-mismatch');
-    }
-
-    // force refresh for CSS style change
-    this.requestUpdate();
-  }
-
   private updateView(): void {
     if (this.subscriberView) {
       this.listContainerUI.classList.add('subscriber-view');
@@ -684,7 +641,6 @@ export default class SubscriberLaterBinding extends LitElement {
           this.filterMenuExtRefSubscriberUI.index
         )).has(2);
       });
-      this.updateExtRefFilter();
 
       this.settingsMenuExtRefSubscriberUI.anchor = <HTMLElement>(
         this.settingsMenuExtRefSubscriberButtonUI
@@ -723,14 +679,11 @@ export default class SubscriberLaterBinding extends LitElement {
           this.settingsMenuExtRefPublisherUI.index
         )).has(0);
       });
-
-      this.updateFilterCSS();
     }
   }
 
   protected async firstUpdated(): Promise<void> {
     this.restoreSettings();
-    this.updateFilterCSS();
 
     this.filterMenuFcdaUI.anchor = <HTMLElement>this.filterMenuFcdaButtonUI;
 
@@ -748,7 +701,6 @@ export default class SubscriberLaterBinding extends LitElement {
         this.hidePreconfiguredNotMatching = !(<Set<number>>(
           this.filterMenuFcdaUI.index
         )).has(3);
-      this.updateFilterCSS();
     });
 
     // TODO: Code duplication with the above
@@ -759,8 +711,6 @@ export default class SubscriberLaterBinding extends LitElement {
       this.hidePreconfiguredNotMatching = !(<Set<number>>(
         this.filterMenuExtRefPublisherUI.index
       )).has(1);
-
-      this.updateFilterCSS();
     });
 
     this.settingsMenuExtRefPublisherUI.anchor = <HTMLElement>(
@@ -1195,7 +1145,7 @@ Basic Type: ${spec.bType}"
                 : nothing}
               ${hasMissingMapping
                 ? html`<mwc-icon
-                    class="${hasMissingMapping ? 'missing-mapping' : ''}"
+                    class="missing-mapping"
                     title="${msg(
                       'The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.'
                     )}"
@@ -1249,7 +1199,6 @@ Basic Type: ${spec.bType}"
         @click=${() => {
           if (!this.filterMenuExtRefPublisherUI.open)
             this.filterMenuExtRefPublisherUI.show();
-          else this.filterMenuExtRefPublisherUI.close();
         }}
       ></mwc-icon-button>
       <mwc-icon-button
@@ -1259,7 +1208,6 @@ Basic Type: ${spec.bType}"
         @click=${() => {
           if (!this.settingsMenuExtRefPublisherUI.open)
             this.settingsMenuExtRefPublisherUI.show();
-          else this.settingsMenuExtRefPublisherUI.close();
         }}
       ></mwc-icon-button>
       <mwc-menu
@@ -1332,7 +1280,6 @@ Basic Type: ${spec.bType}"
         @click=${() => {
           if (!this.settingsMenuExtRefSubscriberUI.open)
             this.settingsMenuExtRefSubscriberUI.show();
-          else this.settingsMenuExtRefSubscriberUI.close();
         }}
       ></mwc-icon-button>
       <mwc-menu

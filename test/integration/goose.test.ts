@@ -956,6 +956,64 @@ describe('goose', () => {
         await visualDiff(plugin, testName(this));
       });
 
+      it('subscribing to an FCDA even if previously selected', async function () {
+        let fcdaListElement = plugin.fcdaListUI;
+
+        let fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1',
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+        fcda?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
+
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
+        await plugin.updateComplete;
+
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+        )!;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        fcdaListElement = plugin.fcdaListUI;
+
+        fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1',
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+        fcda?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
+
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(150); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
       it('subscribing and unsubscribing an FCDA without supervisions', async function () {
         const extRefListElement = plugin.extRefListSubscriberUI!;
         const extref = getExtRefItem(
