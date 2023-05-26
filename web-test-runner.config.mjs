@@ -41,6 +41,8 @@ const browsers = [
     },
   }),
   playwrightLauncher({ product: 'firefox' }),
+  // Webkit disabled as unable to get consistent screenshots between
+  // local and CI environment
   // playwrightLauncher({ product: 'webkit' }),
 ];
 

@@ -1,6 +1,13 @@
 import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
 import { OscdFilteredList } from '@openscd/oscd-filtered-list';
 
+import { setViewport } from '@web/test-runner-commands';
+
+export async function tryViewportSet(): Promise<void> {
+  // target 1920x1080 screen-resolution, giving typical browser size of...
+  await setViewport({ width: 1745, height: 845 });
+}
+
 export function midEl(element: Element): [number, number] {
   const { x, y, width, height } = element.getBoundingClientRect();
 
