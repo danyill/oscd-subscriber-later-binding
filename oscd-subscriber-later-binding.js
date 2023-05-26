@@ -17983,49 +17983,6 @@ class SubscriberLaterBinding extends s$1 {
         const cbRefKey = getCbReference(extRefElement);
         return this.supervisionData.get(`${iedName} ${cbRefKey}`);
     }
-    updateExtRefFilter() {
-        var _a;
-        const filterClassList = (_a = this.extRefListSubscriberUI) === null || _a === void 0 ? void 0 : _a.classList;
-        if (!filterClassList)
-            return;
-        if (!this.hideBound) {
-            filterClassList.add('show-bound');
-        }
-        else {
-            filterClassList.remove('show-bound');
-        }
-        if (!this.hideNotBound) {
-            filterClassList.add('show-not-bound');
-        }
-        else {
-            filterClassList.remove('show-not-bound');
-        }
-        // force refresh for CSS style change
-        this.requestUpdate();
-    }
-    updateFilterCSS() {
-        var _a, _b, _c, _d, _e, _f;
-        if (this.hideSubscribed) {
-            (_a = this.fcdaListUI) === null || _a === void 0 ? void 0 : _a.classList.remove('show-subscribed');
-        }
-        else {
-            (_b = this.fcdaListUI) === null || _b === void 0 ? void 0 : _b.classList.add('show-subscribed');
-        }
-        if (this.hideNotSubscribed) {
-            (_c = this.fcdaListUI) === null || _c === void 0 ? void 0 : _c.classList.remove('show-not-subscribed');
-        }
-        else {
-            (_d = this.fcdaListUI) === null || _d === void 0 ? void 0 : _d.classList.add('show-not-subscribde');
-        }
-        if (this.hidePreconfiguredNotMatching) {
-            (_e = this.extRefListPublisherUI) === null || _e === void 0 ? void 0 : _e.classList.remove('show-pxx-mismatch');
-        }
-        else {
-            (_f = this.extRefListPublisherUI) === null || _f === void 0 ? void 0 : _f.classList.add('show-pxx-mismatch');
-        }
-        // force refresh for CSS style change
-        this.requestUpdate();
-    }
     updateView() {
         if (this.subscriberView) {
             this.listContainerUI.classList.add('subscriber-view');
@@ -18035,7 +17992,6 @@ class SubscriberLaterBinding extends s$1 {
                 this.hideNotBound = !(this.filterMenuExtRefSubscriberUI.index).has(1);
                 this.strictServiceTypes = !(this.filterMenuExtRefSubscriberUI.index).has(2);
             });
-            this.updateExtRefFilter();
             this.settingsMenuExtRefSubscriberUI.anchor = (this.settingsMenuExtRefSubscriberButtonUI);
             this.settingsMenuExtRefSubscriberUI.addEventListener('closed', () => {
                 this.notAutoIncrement = !(this.settingsMenuExtRefSubscriberUI.index).has(0);
@@ -18053,12 +18009,10 @@ class SubscriberLaterBinding extends s$1 {
             this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
                 this.notChangeSupervisionLNs = !(this.settingsMenuExtRefPublisherUI.index).has(0);
             });
-            this.updateFilterCSS();
         }
     }
     async firstUpdated() {
         this.restoreSettings();
-        this.updateFilterCSS();
         this.filterMenuFcdaUI.anchor = this.filterMenuFcdaButtonUI;
         this.filterMenuExtRefPublisherUI.anchor = (this.filterMenuExtrefPublisherButtonUI);
         this.filterMenuFcdaUI.addEventListener('closed', () => {
@@ -18067,13 +18021,11 @@ class SubscriberLaterBinding extends s$1 {
             this.hideDataObjects = !this.filterMenuFcdaUI.index.has(2);
             if (this.subscriberView)
                 this.hidePreconfiguredNotMatching = !(this.filterMenuFcdaUI.index).has(3);
-            this.updateFilterCSS();
         });
         // TODO: Code duplication with the above
         this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
             this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
             this.hidePreconfiguredNotMatching = !(this.filterMenuExtRefPublisherUI.index).has(1);
-            this.updateFilterCSS();
         });
         this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
         this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
@@ -18419,7 +18371,7 @@ Basic Type: ${spec.bType}"
                     : A}
               ${hasMissingMapping
                     ? x `<mwc-icon
-                    class="${hasMissingMapping ? 'missing-mapping' : ''}"
+                    class="missing-mapping"
                     title="${msg('The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.')}"
                     slot="meta"
                     >warning</mwc-icon
@@ -18468,8 +18420,6 @@ Basic Type: ${spec.bType}"
         @click=${() => {
             if (!this.filterMenuExtRefPublisherUI.open)
                 this.filterMenuExtRefPublisherUI.show();
-            else
-                this.filterMenuExtRefPublisherUI.close();
         }}
       ></mwc-icon-button>
       <mwc-icon-button
@@ -18479,8 +18429,6 @@ Basic Type: ${spec.bType}"
         @click=${() => {
             if (!this.settingsMenuExtRefPublisherUI.open)
                 this.settingsMenuExtRefPublisherUI.show();
-            else
-                this.settingsMenuExtRefPublisherUI.close();
         }}
       ></mwc-icon-button>
       <mwc-menu
@@ -18551,8 +18499,6 @@ Basic Type: ${spec.bType}"
         @click=${() => {
             if (!this.settingsMenuExtRefSubscriberUI.open)
                 this.settingsMenuExtRefSubscriberUI.show();
-            else
-                this.settingsMenuExtRefSubscriberUI.close();
         }}
       ></mwc-icon-button>
       <mwc-menu

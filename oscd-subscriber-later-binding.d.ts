@@ -75,8 +75,6 @@ export default class SubscriberLaterBinding extends LitElement {
     private reCreateSupervisionCache;
     private getExtRefElementsByIED;
     private getCachedSupervision;
-    private updateExtRefFilter;
-    private updateFilterCSS;
     private updateView;
     protected firstUpdated(): Promise<void>;
     private renderSubscribedExtRefElement;
