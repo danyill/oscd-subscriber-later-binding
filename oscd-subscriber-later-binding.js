@@ -17103,10 +17103,7 @@ function isSubscribed(extRefElement) {
         extRefElement.hasAttribute('ldInst') &&
         extRefElement.hasAttribute('lnClass') &&
         extRefElement.hasAttribute('lnInst') &&
-        extRefElement.hasAttribute('doName')
-    // TODO: Late change, may cause breakages
-    // extRefElement.hasAttribute('daName')
-    );
+        extRefElement.hasAttribute('doName'));
 }
 /**
  * Check if the ExtRef is already partially subscribed to a FCDA Element.
@@ -17775,7 +17772,6 @@ function getLnTitle(childElement) {
 class SubscriberLaterBinding extends s$1 {
     constructor() {
         super(...arguments);
-        this.controlTag = 'SampledValueControl';
         this.extRefCounters = new Map();
         this.supervisionData = new Map();
     }
@@ -17796,18 +17792,16 @@ class SubscriberLaterBinding extends s$1 {
             hideNotBound: this.hideNotBound,
             strictServiceTypes: this.strictServiceTypes,
         };
-        localStorage.setItem('subscriber-later-binding', JSON.stringify(storedConfiguration));
+        localStorage.setItem('oscd-subscriber-later-binding', JSON.stringify(storedConfiguration));
     }
     restoreSettings() {
         var _a, _b, _c, _d, _e, _f, _g;
-        const storedSettings = localStorage.getItem('subscriber-later-binding');
+        const storedSettings = localStorage.getItem('oscd-subscriber-later-binding');
         const storedConfiguration = storedSettings
             ? JSON.parse(storedSettings)
             : undefined;
         this.subscriberView = (_a = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.subscriberView) !== null && _a !== void 0 ? _a : false;
-        this.switchViewUI.on = this.subscriberView;
         this.controlTag = (_b = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.controlTag) !== null && _b !== void 0 ? _b : 'GSEControl';
-        this.switchControlTypeUI.on = this.controlTag === 'GSEControl';
         this.hideSubscribed = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideSubscribed) || false;
         this.hideNotSubscribed = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideNotSubscribed) || false;
         this.hideDataObjects = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideDataObjects) || false;
@@ -17844,8 +17838,9 @@ class SubscriberLaterBinding extends s$1 {
     updated(_changedProperties) {
         super.updated(_changedProperties);
         // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
-        // TODO: Is this too broadly scoped?
-        if (_changedProperties.has('doc')) {
+        // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
+        // https://github.com/openscd/open-scd-core/issues/92
+        if (_changedProperties.has('docName')) {
             this.extRefCounters = new Map();
             this.currentSelectedControlElement = undefined;
             this.currentSelectedFcdaElement = undefined;
@@ -17861,15 +17856,14 @@ class SubscriberLaterBinding extends s$1 {
                 this.fcdaListSelectedUI.selected = false;
                 this.fcdaListSelectedUI.activated = false;
             }
+        }
+        if (_changedProperties.has('subscriberView')) {
+            // re-attach anchors
             this.updateView();
-            // force CSS refresh to remove selected/activated indication
-            this.requestUpdate();
         }
         const settingsUpdateRequired = Array.from(_changedProperties.keys()).some(r => storedProperties.includes(r.toString()));
         if (settingsUpdateRequired)
             this.storeSettings();
-        // TODO: If the same document is opened how do I force a change
-        // See: https://github.com/openscd/open-scd-core/issues/92
     }
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.
@@ -17925,18 +17919,14 @@ class SubscriberLaterBinding extends s$1 {
      *
      * @param extRef - The ExtRef Element to add the attributes to.
      */
-    subscribe(extRef) {
-        if (!this.currentSelectedFcdaElement ||
-            !this.currentSelectedControlElement) {
-            return;
-        }
-        const updateEdit = updateExtRefElement(extRef, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
+    subscribe(extRef, controlElement, fcdaElement) {
+        const updateEdit = updateExtRefElement(extRef, controlElement, fcdaElement);
         const subscriberIed = extRef.closest('IED');
         let supervisionActions = [];
         if (!this.notChangeSupervisionLNs)
-            supervisionActions = instantiateSubscriptionSupervision(this.currentSelectedControlElement, subscriberIed);
+            supervisionActions = instantiateSubscriptionSupervision(controlElement, subscriberIed);
         this.dispatchEvent(newEditEvent([updateEdit, ...supervisionActions]));
-        const controlBlockFcdaId = `${identity(this.currentSelectedControlElement)} ${identity(this.currentSelectedFcdaElement)}`;
+        const controlBlockFcdaId = `${identity(controlElement)} ${identity(fcdaElement)}`;
         this.extRefCounters.delete(controlBlockFcdaId);
         if (!this.notChangeSupervisionLNs)
             this.reCreateSupervisionCache();
@@ -17985,7 +17975,6 @@ class SubscriberLaterBinding extends s$1 {
     }
     updateView() {
         if (this.subscriberView) {
-            this.listContainerUI.classList.add('subscriber-view');
             this.filterMenuExtRefSubscriberUI.anchor = (this.filterMenuExtRefSubscriberButtonUI);
             this.filterMenuExtRefSubscriberUI.addEventListener('closed', () => {
                 this.hideBound = !(this.filterMenuExtRefSubscriberUI.index).has(0);
@@ -17999,7 +17988,6 @@ class SubscriberLaterBinding extends s$1 {
             });
         }
         else {
-            this.listContainerUI.classList.remove('subscriber-view');
             this.filterMenuExtRefPublisherUI.anchor = (this.filterMenuExtrefPublisherButtonUI);
             this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
                 this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
@@ -18011,10 +17999,12 @@ class SubscriberLaterBinding extends s$1 {
             });
         }
     }
-    async firstUpdated() {
+    connectedCallback() {
+        super.connectedCallback();
         this.restoreSettings();
+    }
+    async firstUpdated() {
         this.filterMenuFcdaUI.anchor = this.filterMenuFcdaButtonUI;
-        this.filterMenuExtRefPublisherUI.anchor = (this.filterMenuExtrefPublisherButtonUI);
         this.filterMenuFcdaUI.addEventListener('closed', () => {
             this.hideSubscribed = !this.filterMenuFcdaUI.index.has(0);
             this.hideNotSubscribed = !this.filterMenuFcdaUI.index.has(1);
@@ -18022,15 +18012,20 @@ class SubscriberLaterBinding extends s$1 {
             if (this.subscriberView)
                 this.hidePreconfiguredNotMatching = !(this.filterMenuFcdaUI.index).has(3);
         });
-        // TODO: Code duplication with the above
-        this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
-            this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
-            this.hidePreconfiguredNotMatching = !(this.filterMenuExtRefPublisherUI.index).has(1);
-        });
-        this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
-        this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
-            this.notChangeSupervisionLNs = !(this.settingsMenuExtRefPublisherUI.index).has(0);
-        });
+        if (this.filterMenuExtRefPublisherUI) {
+            this.filterMenuExtRefPublisherUI.anchor = (this.filterMenuExtrefPublisherButtonUI);
+            // TODO: Code duplication with the above
+            this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
+                this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
+                this.hidePreconfiguredNotMatching = !(this.filterMenuExtRefPublisherUI.index).has(1);
+            });
+        }
+        if (this.settingsMenuExtRefPublisherUI) {
+            this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
+            this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
+                this.notChangeSupervisionLNs = !(this.settingsMenuExtRefPublisherUI.index).has(0);
+            });
+        }
         this.requestUpdate();
         await this.updateComplete;
     }
@@ -18187,7 +18182,6 @@ Basic Type: ${spec.bType}"
             'show-pxx-mismatch': !this.hidePreconfiguredNotMatching,
             'show-data-objects': !this.hideDataObjects,
         };
-        // TODO: Activatable is not working correctly on very large files
         return x `<oscd-filtered-list
       id="fcdaList"
       ?activatable=${!this.subscriberView}
@@ -18218,7 +18212,7 @@ Basic Type: ${spec.bType}"
                 }
                 return;
             }
-            this.subscribe(this.currentSelectedExtRefElement);
+            this.subscribe(this.currentSelectedExtRefElement, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
             this.currentSelectedExtRefElement = undefined;
             // if incrementing, click on next ExtRef list item if not subscribed
             if (this.extRefListSubscriberSelectedUI && !this.notAutoIncrement) {
@@ -18701,7 +18695,7 @@ Basic Type: ${spec.bType}"
                         return;
                     if (!isSubscribed(selectedExtRefElement) ||
                         !findFCDAs$1(selectedExtRefElement).find(x => x !== undefined)) {
-                        this.subscribe(selectedExtRefElement);
+                        this.subscribe(selectedExtRefElement, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
                     }
                     else {
                         this.unsubscribe(selectedExtRefElement);
@@ -18760,12 +18754,15 @@ Basic Type: ${spec.bType}"
         return x `
       <mwc-icon-button-toggle
         id="switchControlType"
+        ?on=${this.controlTag === 'GSEControl'}
         title="${msg('Change between GOOSE and Sampled Value publishers')}"
         @click=${() => {
-            var _a;
-            this.controlTag = ((_a = this.switchControlTypeUI) === null || _a === void 0 ? void 0 : _a.on)
-                ? 'GSEControl'
-                : 'SampledValueControl';
+            if (this.controlTag === 'GSEControl') {
+                this.controlTag = 'SampledValueControl';
+            }
+            else {
+                this.controlTag = 'GSEControl';
+            }
             this.reCreateSupervisionCache();
         }}
       >
@@ -18789,6 +18786,7 @@ Basic Type: ${spec.bType}"
     renderSwitchView() {
         return x `<mwc-icon-button-toggle
       id="switchView"
+      ?on=${this.subscriberView}
       onIcon="swap_horiz"
       offIcon="swap_horiz"
       title="${msg('Switch between Publisher and Subscriber view')}"
@@ -18812,7 +18810,9 @@ Basic Type: ${spec.bType}"
     ></mwc-icon-button-toggle>`;
     }
     render() {
-        return x ` <div id="listContainer">
+        var _a;
+        const classList = { 'subscriber-view': (_a = this.subscriberView) !== null && _a !== void 0 ? _a : false };
+        return x `<div id="listContainer" class="${o(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
       </div>
       ${this.renderSwitchView()}`;
@@ -19069,7 +19069,7 @@ __decorate([
     e$4()
 ], SubscriberLaterBinding.prototype, "editCount", void 0);
 __decorate([
-    e$4()
+    e$4({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "controlTag", void 0);
 __decorate([
     e$4({ type: Boolean })
