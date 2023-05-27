@@ -16,7 +16,8 @@ import {
   getExtRefItem,
   getFcdaItem,
   midEl,
-  tryViewportSet,
+  resetMouseState,
+  setViewPort,
 } from './test-support.js';
 import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
@@ -28,6 +29,7 @@ function timeout(ms: number) {
   });
 }
 
+mocha.timeout(14000 * factor);
 const standardWait = 250;
 
 function testName(test: any): string {
@@ -111,7 +113,7 @@ describe('goose', () => {
   describe('publisher view', () => {
     beforeEach(async function () {
       localStorage.clear();
-      await tryViewportSet();
+      await setViewPort();
       resetMouse();
 
       doc = await fetch('/test/fixtures/GOOSE-2007B4-LGOS.scd')
@@ -124,7 +126,7 @@ describe('goose', () => {
       await editor.updateComplete;
       await plugin.updateComplete;
 
-      await timeout(500); // plugin loading and initial render?
+      await timeout(600); // plugin loading and initial render?
     });
 
     afterEach(async () => {
@@ -141,6 +143,7 @@ describe('goose', () => {
       // TODO: Does ca-d have any ideas about this?
       // webkit is especially fussy and appears to slowly change the layout?
       await timeout(300);
+      await resetMouseState();
       await visualDiff(plugin, testName(this));
     });
 
@@ -232,6 +235,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         await timeout(standardWait); // selection
+        await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
 
@@ -269,6 +273,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         await timeout(standardWait); // selection
+        await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
 
@@ -305,6 +310,7 @@ describe('goose', () => {
         await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -342,6 +348,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         await timeout(standardWait); // selection
+        await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
 
@@ -381,8 +388,8 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         // increased for webkit
+        await resetMouseState();
         await timeout(300); // selection
-
         await visualDiff(plugin, testName(this));
       });
 
@@ -462,6 +469,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         // increased timeout for webkit
+        await resetMouseState();
         await timeout(200); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -470,7 +478,7 @@ describe('goose', () => {
     describe('has filters', () => {
       beforeEach(async function () {
         localStorage.clear();
-        await tryViewportSet();
+        await setViewPort();
         resetMouse();
 
         doc = await fetch('/test/fixtures/GOOSE-2007B4-filter-test.scd')
@@ -528,6 +536,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         await timeout(standardWait); // rendering ?
+        await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
 
@@ -554,6 +563,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         await timeout(standardWait); // rendering ?
+        await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
 
@@ -600,6 +610,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         await timeout(standardWait); // rendering ?
+        await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
 
@@ -611,9 +622,9 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extRefFilterMenu!),
         });
-        await timeout(standardWait); // opening dialog
 
         await visualDiff(plugin, testName(this));
+        await timeout(standardWait); // opening dialog
       });
 
       it('and filters preconfigured items with non-matching pXX attributes', async function () {
@@ -658,6 +669,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         await timeout(200); // rendering ?
+        await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
     });
@@ -676,6 +688,8 @@ describe('goose', () => {
         await plugin.fcdaListUI.updateComplete;
 
         await visualDiff(plugin, testName(this));
+        await resetMouseState();
+        await timeout(standardWait); // de-selection
       });
 
       it('in ExtRefs with a string', async function () {
@@ -710,6 +724,7 @@ describe('goose', () => {
         await plugin.extRefListPublisherUI?.updateComplete;
 
         await timeout(standardWait); // de-selection
+        await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
     });
@@ -769,6 +784,7 @@ describe('goose', () => {
       await plugin.updateComplete;
 
       await timeout(standardWait); // button selection
+      await resetMouseState();
       await visualDiff(plugin, testName(this));
     });
 
@@ -798,6 +814,7 @@ describe('goose', () => {
       await plugin.updateComplete;
 
       await timeout(standardWait); // button selection
+      await resetMouseState();
       await visualDiff(plugin, testName(this));
     });
 
@@ -810,6 +827,7 @@ describe('goose', () => {
       await plugin.updateComplete;
 
       await timeout(standardWait); // button selection
+      await resetMouseState();
       await visualDiff(plugin, testName(this));
     });
 

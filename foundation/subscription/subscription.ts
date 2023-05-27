@@ -386,8 +386,6 @@ export function isSubscribed(extRefElement: Element): boolean {
     extRefElement.hasAttribute('lnClass') &&
     extRefElement.hasAttribute('lnInst') &&
     extRefElement.hasAttribute('doName')
-    // TODO: Late change, may cause breakages
-    // extRefElement.hasAttribute('daName')
   );
 }
 

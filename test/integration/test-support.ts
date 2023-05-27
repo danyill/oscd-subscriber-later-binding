@@ -1,9 +1,15 @@
 import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
 import { OscdFilteredList } from '@openscd/oscd-filtered-list';
 
-import { setViewport } from '@web/test-runner-commands';
+import { setViewport, resetMouse, sendMouse } from '@web/test-runner-commands';
 
-export async function tryViewportSet(): Promise<void> {
+function timeout(ms: number) {
+  return new Promise(res => {
+    setTimeout(res, ms);
+  });
+}
+
+export async function setViewPort(): Promise<void> {
   // target 1920x1080 screen-resolution, giving typical browser size of...
   await setViewport({ width: 1745, height: 845 });
 }
@@ -34,4 +40,14 @@ export function getExtRefItem(
   return listElement.querySelector(
     `mwc-list-item.extref[data-extref="${extRefId}"]`
   );
+}
+
+/**
+ * Avoids mouse being focussed or hovering over items during snapshots
+ * As this appears to make screenshots inconsistent between browsers and environments
+ */
+export async function resetMouseState(): Promise<void> {
+  await timeout(50);
+  await resetMouse();
+  await sendMouse({ type: 'click', position: [0, 0] });
 }

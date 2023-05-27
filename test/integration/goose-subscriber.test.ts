@@ -16,7 +16,8 @@ import {
   getExtRefItem,
   getFcdaItem,
   midEl,
-  tryViewportSet,
+  resetMouseState,
+  setViewPort,
 } from './test-support.js';
 import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
@@ -46,23 +47,23 @@ let editor: OpenSCD;
 let plugin: SubscriberLaterBinding;
 let script: HTMLScriptElement;
 
-beforeEach(async function () {
-  const plugins = {
-    editor: [
-      {
-        name: 'Subscriber Later Binding',
-        translations: {
-          de: 'Späte Bindung des Abonnenten',
-          pt: 'Associação Tardia de Assinante',
-        },
-        icon: 'link',
-        active: true,
-        requireDoc: true,
-        src: '/dist/oscd-subscriber-later-binding.js',
+const plugins = {
+  editor: [
+    {
+      name: 'Subscriber Later Binding',
+      translations: {
+        de: 'Späte Bindung des Abonnenten',
+        pt: 'Associação Tardia de Assinante',
       },
-    ],
-  };
+      icon: 'link',
+      active: true,
+      requireDoc: true,
+      src: '/dist/oscd-subscriber-later-binding.js',
+    },
+  ],
+};
 
+beforeEach(async function () {
   script = document.createElement('script');
   script.type = 'module';
 
@@ -113,7 +114,7 @@ describe('goose', () => {
   describe('subscriber view', () => {
     beforeEach(async function () {
       localStorage.clear();
-      await tryViewportSet();
+      await setViewPort();
       resetMouse();
 
       doc = await fetch('/test/fixtures/GOOSE-2007B4-LGOS.scd')
@@ -145,12 +146,13 @@ describe('goose', () => {
     });
 
     it('initially has no ExtRef selected', async function () {
-      // carrying out an action causes a content refresh somehow??
+      // carrying out a mouse move causes a content refresh somehow??
       await sendMouse({
         type: 'move',
         position: midEl(plugin!),
       });
 
+      await resetMouseState();
       await timeout(200);
       await visualDiff(plugin, testName(this));
     });
@@ -166,6 +168,8 @@ describe('goose', () => {
       await plugin.updateComplete;
       await timeout(500); // plugin loading and initial render?
 
+      await resetMouseState();
+      await timeout(standardWait); // selection
       await visualDiff(plugin, testName(this));
     });
 
@@ -185,6 +189,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -204,6 +209,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -243,6 +249,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -301,6 +308,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -347,6 +355,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -385,6 +394,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -405,6 +415,7 @@ describe('goose', () => {
         await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -426,6 +437,7 @@ describe('goose', () => {
         await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -491,6 +503,7 @@ describe('goose', () => {
           position: midEl(fcda!),
         });
 
+        await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, testName(this));
       });
@@ -533,9 +546,9 @@ describe('goose', () => {
           await extRefListElement.updateComplete;
           await plugin.updateComplete;
 
+          await resetMouseState();
           await timeout(standardWait); // unsure why this is required for Firefox
           // perhaps because auto-incrementing triggers additional update cycle?
-
           await timeout(standardWait); // selection
           await visualDiff(plugin, testName(this));
         });
@@ -603,8 +616,8 @@ describe('goose', () => {
           await extRefListElement.updateComplete;
           await plugin.updateComplete;
 
+          await resetMouseState();
           await timeout(standardWait); // unsure why this is required for Firefox
-
           await timeout(standardWait); // selection
           await visualDiff(plugin, testName(this));
         });
@@ -646,9 +659,9 @@ describe('goose', () => {
           await extRefListElement.updateComplete;
           await plugin.updateComplete;
 
+          await resetMouseState();
           await timeout(standardWait); // unsure why this is required for Firefox
           // perhaps because auto-incrementing triggers additional update cycle?
-
           await timeout(standardWait); // selection
           await visualDiff(plugin, testName(this));
         });
@@ -690,6 +703,7 @@ describe('goose', () => {
           await extRefListElement.updateComplete;
           await plugin.updateComplete;
 
+          await resetMouseState();
           await timeout(standardWait); // selection
           await visualDiff(plugin, testName(this));
         });
@@ -699,7 +713,7 @@ describe('goose', () => {
     describe('has filters', () => {
       beforeEach(async function () {
         localStorage.clear();
-        await tryViewportSet();
+        await setViewPort();
         resetMouse();
 
         doc = await fetch('/test/fixtures/GOOSE-2007B4-filter-test.scd')
@@ -756,6 +770,7 @@ describe('goose', () => {
         await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // rendering ?
         await visualDiff(plugin, testName(this));
       });
@@ -782,6 +797,7 @@ describe('goose', () => {
         await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // rendering ?
         await visualDiff(plugin, testName(this));
       });
@@ -838,6 +854,7 @@ describe('goose', () => {
         await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // rendering ?
         await visualDiff(plugin, testName(this));
       });
@@ -881,6 +898,7 @@ describe('goose', () => {
         await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // rendering ?
         await visualDiff(plugin, testName(this));
       });
@@ -893,8 +911,8 @@ describe('goose', () => {
           button: 'left',
           position: midEl(extRefFilterMenu!),
         });
-        await timeout(standardWait); // opening dialog
 
+        await timeout(standardWait); // opening dialog
         await visualDiff(plugin, testName(this));
       });
 
@@ -919,6 +937,7 @@ describe('goose', () => {
         await plugin.filterMenuExtRefSubscriberUI.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // rendering ?
         await visualDiff(plugin, testName(this));
       });
@@ -944,6 +963,7 @@ describe('goose', () => {
         await plugin.filterMenuExtRefSubscriberUI.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // rendering ?
         await visualDiff(plugin, testName(this));
       });
@@ -971,6 +991,7 @@ describe('goose', () => {
         await plugin.filterMenuExtRefSubscriberUI.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait); // rendering ?
         await visualDiff(plugin, testName(this));
       });
@@ -990,6 +1011,7 @@ describe('goose', () => {
         await plugin.fcdaListUI.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait);
         await visualDiff(plugin, testName(this));
       });
@@ -1014,9 +1036,45 @@ describe('goose', () => {
         await plugin.extRefListSubscriberUI?.updateComplete;
         await plugin.updateComplete;
 
+        await resetMouseState();
         await timeout(standardWait);
         await visualDiff(plugin, testName(this));
       });
+    });
+
+    it('deselects an ExtRef when a new document is opened', async function () {
+      const extRefListElement = plugin.extRefListSubscriberUI!;
+      const extref = getExtRefItem(
+        extRefListElement,
+        'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+      )!;
+      extref.scrollIntoView();
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(extref!),
+      });
+      await extref.updateComplete;
+      await extRefListElement.updateComplete;
+      await plugin.updateComplete;
+
+      // open new document
+      doc = await fetch('/test/fixtures/GOOSE-2007B4-filter-test.scd')
+        .then(response => response.text())
+        .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+      editor.docName = 'GOOSE-2007B4-filter-test.scd';
+      editor.docs[editor.docName] = doc;
+
+      await editor.updateComplete;
+      await plugin.updateComplete;
+
+      await timeout(500); // plugin loading and initial render?
+
+      await resetMouseState();
+      await timeout(standardWait);
+      await visualDiff(plugin, testName(this));
     });
 
     it('changes to publisher view', async function () {
@@ -1027,6 +1085,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
+      await resetMouseState();
       await timeout(standardWait); // button selection
       await visualDiff(plugin, testName(this));
     });
@@ -1039,6 +1098,7 @@ describe('goose', () => {
       });
       await plugin.updateComplete;
 
+      await resetMouseState();
       await timeout(standardWait); // button selection
       await visualDiff(plugin, testName(this));
     });
