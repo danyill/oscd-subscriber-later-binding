@@ -28,8 +28,6 @@ function timeout(ms: number) {
   });
 }
 
-mocha.timeout(14000 * factor);
-
 const standardWait = 250;
 
 function testName(test: any): string {
