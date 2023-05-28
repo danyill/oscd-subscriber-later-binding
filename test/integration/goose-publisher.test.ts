@@ -623,8 +623,8 @@ describe('goose', () => {
           position: midEl(extRefFilterMenu!),
         });
 
-        await visualDiff(plugin, testName(this));
         await timeout(standardWait); // opening dialog
+        await visualDiff(plugin, testName(this));
       });
 
       it('and filters preconfigured items with non-matching pXX attributes', async function () {
@@ -687,8 +687,8 @@ describe('goose', () => {
         sendKeys({ type: 'QB1' });
         await plugin.fcdaListUI.updateComplete;
 
-        await visualDiff(plugin, testName(this));
         await resetMouseState();
+        await visualDiff(plugin, testName(this));
         await timeout(standardWait); // de-selection
       });
 
