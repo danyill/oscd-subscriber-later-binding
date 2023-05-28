@@ -1632,7 +1632,9 @@ Basic Type: ${spec.bType}"
                 } else {
                   this.unsubscribe(selectedExtRefElement);
                 }
-
+                // without this statement, neither the ExtRef list or the FCDA list
+                // (with the count) update correctly. It is unclear why.
+                this.requestUpdate();
                 selectedListItem.selected = false;
               }}
             >

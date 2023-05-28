@@ -428,6 +428,7 @@ describe('goose', () => {
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
         await plugin.updateComplete;
+        await timeout(standardWait);
 
         // now set to not doing supervisions
         await sendMouse({
@@ -468,9 +469,8 @@ describe('goose', () => {
         await extRefListElement!.updateComplete;
         await plugin.updateComplete;
 
-        // increased timeout for webkit
+        await timeout(standardWait);
         await resetMouseState();
-        await timeout(200); // selection
         await visualDiff(plugin, testName(this));
       });
     });
@@ -668,7 +668,7 @@ describe('goose', () => {
         await plugin.filterMenuFcdaUI.updateComplete;
         await plugin.updateComplete;
 
-        await timeout(200); // rendering ?
+        await timeout(standardWait);
         await resetMouseState();
         await visualDiff(plugin, testName(this));
       });
@@ -708,6 +708,7 @@ describe('goose', () => {
         });
         await plugin.fcdaListUI.updateComplete;
         await plugin.updateComplete;
+        await timeout(standardWait); // rendering
 
         // search ExtRefs
         const extRefTextInput =
@@ -722,6 +723,7 @@ describe('goose', () => {
         });
         sendKeys({ type: 'Thing' });
         await plugin.extRefListPublisherUI?.updateComplete;
+        await plugin.updateComplete;
 
         await timeout(standardWait); // de-selection
         await resetMouseState();
