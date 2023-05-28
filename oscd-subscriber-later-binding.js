@@ -16808,21 +16808,6 @@ function minAvailableLogicalNodeInstance(lnElements) {
     const lnInsts = new Set(lnElements.map(ln => ln.getAttribute('inst') || ''));
     return lnInstRange.find(lnInst => !lnInsts.has(lnInst));
 }
-//* * return `Update` action for `element` adding `oldAttributes` */
-// export function createUpdateAction(
-//   element: Element,
-//   newAttributes: Record<string, string | null>
-// ): Update {
-//   const oldAttributes: Record<string, string | null> = {};
-//   Array.from(element.attributes).forEach(attr => {
-//     oldAttributes[attr.name] = attr.value;
-//   });
-//   return { element, oldAttributes, newAttributes };
-// }
-//* * return `Update` action for `element` adding `oldAttributes` */
-function createUpdateEdit(element, attributes) {
-    return { element, attributes };
-}
 /** Sorts selected `ListItem`s to the top and disabled ones to the bottom. */
 function compareNames(a, b) {
     var _a, _b, _c;
@@ -17067,8 +17052,6 @@ function isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement) 
 function getSubscribedExtRefElements(rootElement, controlTag, fcdaElement, controlElement, includeLaterBinding) {
     return getExtRefElements(rootElement, fcdaElement, includeLaterBinding).filter(extRefElement => isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement));
 }
-// TODO: FIXME -- This is only adequate for greater than edition 2 !
-// TODO: Do we need to include srcLNInst?
 function getCbReference(extRef) {
     var _a, _b;
     const extRefValues = ['iedName', 'srcPrefix', 'srcCBName'];
@@ -17366,7 +17349,6 @@ function instantiateSubscriptionSupervision(controlBlock, subscriberIED) {
     }
     return edits;
 }
-// TODO: Discuss with ca-d about changes to OpenSCD core for this with changes to update actions
 /**
  * Update the passed ExtRefElement and set the required attributes on the cloned element
  * depending on the Edition and type of Control Element.
@@ -17398,32 +17380,38 @@ function updateExtRefElement(extRefElement, controlElement, fcdaElement) {
     const schemaVersion = getSclSchemaVersion(fcdaElement.ownerDocument);
     if (schemaVersion === '2003') {
         // Edition 2003(1) does not define serviceType and its MCD attribute starting with srcXXX
-        return createUpdateEdit(extRefElement, {
-            intAddr,
-            desc,
-            iedName,
-            ldInst,
-            lnClass,
-            lnInst,
-            prefix,
-            doName,
-            daName,
-        });
+        return {
+            element: extRefElement,
+            attributes: {
+                intAddr,
+                desc,
+                iedName,
+                ldInst,
+                lnClass,
+                lnInst,
+                prefix,
+                doName,
+                daName,
+            },
+        };
     }
     if (!controlElement || !serviceTypes[controlElement.tagName]) {
         // for invalid control block tag name assume polling
-        return createUpdateEdit(extRefElement, {
-            intAddr,
-            desc,
-            iedName,
-            serviceType: 'Poll',
-            ldInst,
-            lnClass,
-            lnInst,
-            prefix,
-            doName,
-            daName,
-        });
+        return {
+            element: extRefElement,
+            attributes: {
+                intAddr,
+                desc,
+                iedName,
+                serviceType: 'Poll',
+                ldInst,
+                lnClass,
+                lnInst,
+                prefix,
+                doName,
+                daName,
+            },
+        };
     }
     const srcLDInst = (_d = (_c = controlElement.closest('LDevice')) === null || _c === void 0 ? void 0 : _c.getAttribute('inst')) !== null && _d !== void 0 ? _d : '';
     const srcPrefix = (_f = (_e = controlElement.closest('LN0,LN')) === null || _e === void 0 ? void 0 : _e.getAttribute('prefix')) !== null && _f !== void 0 ? _f : '';
@@ -17431,7 +17419,32 @@ function updateExtRefElement(extRefElement, controlElement, fcdaElement) {
     const srcLNInst = (_j = controlElement.closest('LN0,LN')) === null || _j === void 0 ? void 0 : _j.getAttribute('inst');
     const srcCBName = (_k = controlElement.getAttribute('name')) !== null && _k !== void 0 ? _k : '';
     if (schemaVersion === '2007B') {
-        return createUpdateEdit(extRefElement, {
+        return {
+            element: extRefElement,
+            attributes: {
+                intAddr,
+                desc,
+                iedName,
+                serviceType: serviceTypes[controlElement.tagName],
+                ldInst,
+                lnClass,
+                lnInst,
+                prefix,
+                doName,
+                daName,
+                srcLDInst,
+                srcPrefix,
+                srcLNClass,
+                ...(srcLNInst && { srcLNInst }),
+                srcCBName,
+            },
+        };
+    }
+    // We must be on schemaVersion 2007B4 or later
+    // We should ensure that that the pXX fields are transferred if present
+    return {
+        element: extRefElement,
+        attributes: {
             intAddr,
             desc,
             iedName,
@@ -17447,31 +17460,12 @@ function updateExtRefElement(extRefElement, controlElement, fcdaElement) {
             srcLNClass,
             ...(srcLNInst && { srcLNInst }),
             srcCBName,
-        });
-    }
-    // We must be on schemaVersion 2007B4 or later
-    // We should ensure that that the pXX fields are transferred if present
-    return createUpdateEdit(extRefElement, {
-        intAddr,
-        desc,
-        iedName,
-        serviceType: serviceTypes[controlElement.tagName],
-        ldInst,
-        lnClass,
-        lnInst,
-        prefix,
-        doName,
-        daName,
-        srcLDInst,
-        srcPrefix,
-        srcLNClass,
-        ...(srcLNInst && { srcLNInst }),
-        srcCBName,
-        ...(pLN && { pLN }),
-        ...(pDO && { pDO }),
-        ...(pDA && { pDA }),
-        ...(pServT && { pServT }),
-    });
+            ...(pLN && { pLN }),
+            ...(pDO && { pDO }),
+            ...(pDA && { pDA }),
+            ...(pServT && { pServT }),
+        },
+    };
 }
 function canRemoveSubscriptionSupervision(subscribedExtRef) {
     var _a, _b;
@@ -17896,24 +17890,26 @@ class SubscriberLaterBinding extends s$1 {
      */
     unsubscribe(extRef) {
         const editActions = [];
-        // TODO: Fix up for new core update API
-        editActions.push(createUpdateEdit(extRef, {
-            intAddr: extRef.getAttribute('intAddr'),
-            desc: extRef.getAttribute('desc'),
-            iedName: null,
-            ldInst: null,
-            prefix: null,
-            lnClass: null,
-            lnInst: null,
-            doName: null,
-            daName: null,
-            serviceType: extRef.getAttribute('serviceType'),
-            srcLDInst: null,
-            srcPrefix: null,
-            srcLNClass: null,
-            srcLNInst: null,
-            srcCBName: null,
-        }));
+        editActions.push({
+            element: extRef,
+            attributes: {
+                intAddr: extRef.getAttribute('intAddr'),
+                desc: extRef.getAttribute('desc'),
+                iedName: null,
+                ldInst: null,
+                prefix: null,
+                lnClass: null,
+                lnInst: null,
+                doName: null,
+                daName: null,
+                serviceType: extRef.getAttribute('serviceType'),
+                srcLDInst: null,
+                srcPrefix: null,
+                srcLNClass: null,
+                srcLNInst: null,
+                srcCBName: null,
+            },
+        });
         const subscriberIed = extRef.closest('IED');
         let controlBlockElement;
         let fcdaElement;
@@ -18035,20 +18031,33 @@ class SubscriberLaterBinding extends s$1 {
             if (this.subscriberView)
                 this.hidePreconfiguredNotMatching = !(this.filterMenuFcdaUI.index).has(3);
         });
-        if (this.filterMenuExtRefPublisherUI) {
-            this.filterMenuExtRefPublisherUI.anchor = (this.filterMenuExtrefPublisherButtonUI);
-            // TODO: Code duplication with the above
-            this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
-                this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
-                this.hidePreconfiguredNotMatching = !(this.filterMenuExtRefPublisherUI.index).has(1);
-            });
-        }
-        if (this.settingsMenuExtRefPublisherUI) {
-            this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
-            this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
-                this.notChangeSupervisionLNs = !(this.settingsMenuExtRefPublisherUI.index).has(0);
-            });
-        }
+        // update other anchors, especially filterMenuExtRefPublisherUI and
+        // settingsMenuExtRefPublisherUI
+        this.updateView();
+        // if (this.filterMenuExtRefPublisherUI) {
+        //   this.filterMenuExtRefPublisherUI.anchor = <HTMLElement>(
+        //     this.filterMenuExtrefPublisherButtonUI
+        //   );
+        //   // TODO: Code duplication with the above
+        //   this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
+        //     this.strictServiceTypes = !(<Set<number>>(
+        //       this.filterMenuExtRefPublisherUI.index
+        //     )).has(0);
+        //     this.hidePreconfiguredNotMatching = !(<Set<number>>(
+        //       this.filterMenuExtRefPublisherUI.index
+        //     )).has(1);
+        //   });
+        // }
+        // if (this.settingsMenuExtRefPublisherUI) {
+        //   this.settingsMenuExtRefPublisherUI.anchor = <HTMLElement>(
+        //     this.settingsMenuExtRefPublisherButtonUI
+        //   );
+        //   this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
+        //     this.notChangeSupervisionLNs = !(<Set<number>>(
+        //       this.settingsMenuExtRefPublisherUI.index
+        //     )).has(0);
+        //   });
+        // }
         this.requestUpdate();
         await this.updateComplete;
     }
@@ -18253,20 +18262,18 @@ Basic Type: ${spec.bType}"
                 (_a = this.doc.querySelector(selector(this.controlTag, control !== null && control !== void 0 ? control : 'Unknown'))) !== null && _a !== void 0 ? _a : undefined;
             this.currentSelectedFcdaElement =
                 (_b = this.doc.querySelector(selector('FCDA', fcda !== null && fcda !== void 0 ? fcda : 'Unknown'))) !== null && _b !== void 0 ? _b : undefined;
-            // force update of text filter - breaks abstraction
-            // TODO: FIXME
-            // this.requestUpdate();
-            // await this.updateComplete;
-            // this.extRefListPublisherUI?.onFilterInput();
             // only continue if conditions for subscription met
             if (!(this.subscriberView &&
                 this.currentSelectedControlElement &&
                 this.currentSelectedFcdaElement &&
                 this.currentSelectedExtRefElement)) {
+                // in the subscriber view if an FCDA is selected, deactivate it
+                // so that when it is re-selected it will trigger an event
                 if (this.subscriberView) {
                     selectedListItem.selected = false;
                     selectedListItem.activated = false;
                 }
+                // conditions for a subscription have not been met
                 return;
             }
             this.subscribe(this.currentSelectedExtRefElement, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
@@ -19036,7 +19043,7 @@ SubscriberLaterBinding.styles = i$5 `
       background-color: var(--mdc-theme-surface);
     }
 
-    /* TODO: Can we do better than a hard-code max-height */
+    /* TODO: Can we do better than a hard-coded max-height */
     .styled-scrollbars {
       max-height: 78vh;
       overflow: auto;

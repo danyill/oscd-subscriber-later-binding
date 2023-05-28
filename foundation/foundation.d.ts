@@ -1,4 +1,3 @@
-import { Update } from '@openscd/open-scd-core';
 export declare type SclEdition = '2003' | '2007B' | '2007B4';
 export declare function getSclSchemaVersion(doc: Document): SclEdition;
 export declare const serviceTypes: Partial<Record<string, string>>;
@@ -21,7 +20,6 @@ export declare function isPublic(element: Element): boolean;
  * @returns first available inst value for LN or undefined if no inst is available
  */
 export declare function minAvailableLogicalNodeInstance(lnElements: Element[]): string | undefined;
-export declare function createUpdateEdit(element: Element, attributes: Record<string, string | null>): Update;
 /** Sorts selected `ListItem`s to the top and disabled ones to the bottom. */
 export declare function compareNames(a: Element | string, b: Element | string): number;
 export declare function findFCDAs(extRef: Element): Element[];
