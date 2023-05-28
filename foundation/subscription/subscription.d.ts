@@ -21,19 +21,6 @@ export declare function fcdaSpecification(fcda: Element): {
     cdc: string | null;
     bType: string | null;
 };
-/**
- * Check data consistency of source `FCDA` and sink `ExtRef` based on
- * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
- * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.
- * In case
- *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
- *  - no CDC or bType can be extracted, do not allow subscribing
- *
- * @param extRef - The `ExtRef` Element to check against
- * @param fcdaElement - The SCL `FCDA` element within the DataSet
- * @param controlElement - The control element associated with the `FCDA` `DataSet`
- */
-export declare function unsupportedExtRefElement(extRef: Element | undefined, fcdaElement: Element | undefined, controlElement: Element | undefined): boolean;
 export declare function getExtRefElements(rootElement: Element, fcdaElement: Element | undefined, includeLaterBinding: boolean): Element[];
 /**
  * Simple function to check if the attribute of the Left Side has the same value as the attribute of the Right Element.

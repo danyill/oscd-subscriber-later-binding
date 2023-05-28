@@ -12,6 +12,19 @@ import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import type { Menu } from '@material/mwc-menu';
 import type { OscdFilteredList } from '@openscd/oscd-filtered-list';
 declare type controlTagType = 'SampledValueControl' | 'GSEControl';
+declare type fcdaInfo = {
+    spec: {
+        cdc: string | null;
+        bType: string | null;
+    };
+    desc: string[];
+};
+declare type extRefInfo = {
+    spec: {
+        cdc: string | null;
+        bType: string | null;
+    };
+};
 export default class SubscriberLaterBinding extends LitElement {
     doc: XMLDocument;
     docName: string;
@@ -46,16 +59,20 @@ export default class SubscriberLaterBinding extends LitElement {
     extRefListSubscriberUI?: OscdFilteredList;
     extRefListSubscriberSelectedUI?: ListItem;
     fcdaListSelectedUI?: ListItem;
-    private extRefCounters;
     currentSelectedControlElement: Element | undefined;
     currentSelectedFcdaElement: Element | undefined;
     currentIedElement: Element | undefined;
     currentSelectedExtRefElement: Element | undefined;
+    controlBlockFcdaInfo: Map<string, number>;
+    fcdaInfo: Map<string, fcdaInfo>;
+    extRefInfo: Map<string, extRefInfo>;
     private supervisionData;
     protected storeSettings(): void;
     protected restoreSettings(): void;
     private getControlElements;
     private getExtRefCount;
+    private getFcdaInfo;
+    private getExtRefInfo;
     protected updated(_changedProperties: PropertyValues): void;
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.
@@ -79,6 +96,19 @@ export default class SubscriberLaterBinding extends LitElement {
     connectedCallback(): void;
     protected firstUpdated(): Promise<void>;
     private renderSubscribedExtRefElement;
+    /**
+     * Check data consistency of source `FCDA` and sink `ExtRef` based on
+     * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
+     * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.
+     * In case
+     *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
+     *  - no CDC or bType can be extracted, do not allow subscribing
+     *
+     * @param extRef - The `ExtRef` Element to check against
+     * @param fcdaElement - The SCL `FCDA` element within the DataSet
+     * @param controlElement - The control element associated with the `FCDA` `DataSet`
+     */
+    nonMatchingExtRefElement(extRef: Element | undefined, fcdaElement: Element | undefined, controlElement: Element | undefined): boolean;
     private isFcdaDisabled;
     renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult;
     renderFCDAListTitle(): TemplateResult;
