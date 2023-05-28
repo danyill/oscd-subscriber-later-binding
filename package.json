@@ -41,7 +41,6 @@
     "@material/mwc-textfield": "^0.27.0",
     "@openscd/open-scd-core": "^0.0.1-rc2.8",
     "@openscd/oscd-filtered-list": "^1.0.1",
-    "@web/test-runner-commands": "^0.6.6",
     "lit": "^2.4.0"
   },
   "devDependencies": {
@@ -57,6 +56,7 @@
     "@typescript-eslint/parser": "^5.41.0",
     "@web/dev-server": "^0.1.35",
     "@web/test-runner": "^0.15.0",
+    "@web/test-runner-commands": "^0.6.6",
     "@web/test-runner-playwright": "^0.9.0",
     "@web/test-runner-visual-regression": "^0.7.0",
     "concurrently": "^7.5.0",

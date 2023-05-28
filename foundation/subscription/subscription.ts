@@ -2,7 +2,6 @@ import { Insert, Remove, Update } from '@openscd/open-scd-core';
 
 import {
   compareNames,
-  createUpdateEdit,
   getSclSchemaVersion,
   isPublic,
   minAvailableLogicalNodeInstance,
@@ -331,8 +330,6 @@ export function getSubscribedExtRefElements(
   );
 }
 
-// TODO: FIXME -- This is only adequate for greater than edition 2 !
-// TODO: Do we need to include srcLNInst?
 export function getCbReference(extRef: Element): string {
   const extRefValues = ['iedName', 'srcPrefix', 'srcCBName'];
   const [srcIedName, srcPrefix, srcCBName] = extRefValues.map(
@@ -763,8 +760,6 @@ export function instantiateSubscriptionSupervision(
   return edits;
 }
 
-// TODO: Discuss with ca-d about changes to OpenSCD core for this with changes to update actions
-
 /**
  * Update the passed ExtRefElement and set the required attributes on the cloned element
  * depending on the Edition and type of Control Element.
@@ -802,33 +797,39 @@ export function updateExtRefElement(
   const schemaVersion = getSclSchemaVersion(fcdaElement.ownerDocument);
   if (schemaVersion === '2003') {
     // Edition 2003(1) does not define serviceType and its MCD attribute starting with srcXXX
-    return createUpdateEdit(extRefElement, {
-      intAddr,
-      desc,
-      iedName,
-      ldInst,
-      lnClass,
-      lnInst,
-      prefix,
-      doName,
-      daName,
-    });
+    return {
+      element: extRefElement,
+      attributes: {
+        intAddr,
+        desc,
+        iedName,
+        ldInst,
+        lnClass,
+        lnInst,
+        prefix,
+        doName,
+        daName,
+      },
+    };
   }
 
   if (!controlElement || !serviceTypes[controlElement.tagName]) {
     // for invalid control block tag name assume polling
-    return createUpdateEdit(extRefElement, {
-      intAddr,
-      desc,
-      iedName,
-      serviceType: 'Poll',
-      ldInst,
-      lnClass,
-      lnInst,
-      prefix,
-      doName,
-      daName,
-    });
+    return {
+      element: extRefElement,
+      attributes: {
+        intAddr,
+        desc,
+        iedName,
+        serviceType: 'Poll',
+        ldInst,
+        lnClass,
+        lnInst,
+        prefix,
+        doName,
+        daName,
+      },
+    };
   }
 
   const srcLDInst =
@@ -841,7 +842,34 @@ export function updateExtRefElement(
   const srcCBName = controlElement.getAttribute('name') ?? '';
 
   if (schemaVersion === '2007B') {
-    return createUpdateEdit(extRefElement, {
+    return {
+      element: extRefElement,
+      attributes: {
+        intAddr,
+        desc,
+        iedName,
+        serviceType: serviceTypes[controlElement.tagName]!,
+        ldInst,
+        lnClass,
+        lnInst,
+        prefix,
+        doName,
+        daName,
+        srcLDInst,
+        srcPrefix,
+        srcLNClass,
+        ...(srcLNInst && { srcLNInst }),
+        srcCBName,
+      },
+    };
+  }
+
+  // We must be on schemaVersion 2007B4 or later
+  // We should ensure that that the pXX fields are transferred if present
+
+  return {
+    element: extRefElement,
+    attributes: {
       intAddr,
       desc,
       iedName,
@@ -857,33 +885,12 @@ export function updateExtRefElement(
       srcLNClass,
       ...(srcLNInst && { srcLNInst }),
       srcCBName,
-    });
-  }
-
-  // We must be on schemaVersion 2007B4 or later
-  // We should ensure that that the pXX fields are transferred if present
-
-  return createUpdateEdit(extRefElement, {
-    intAddr,
-    desc,
-    iedName,
-    serviceType: serviceTypes[controlElement.tagName]!,
-    ldInst,
-    lnClass,
-    lnInst,
-    prefix,
-    doName,
-    daName,
-    srcLDInst,
-    srcPrefix,
-    srcLNClass,
-    ...(srcLNInst && { srcLNInst }),
-    srcCBName,
-    ...(pLN && { pLN }),
-    ...(pDO && { pDO }),
-    ...(pDA && { pDA }),
-    ...(pServT && { pServT }),
-  });
+      ...(pLN && { pLN }),
+      ...(pDO && { pDO }),
+      ...(pDA && { pDA }),
+      ...(pServT && { pServT }),
+    },
+  };
 }
 
 export function canRemoveSubscriptionSupervision(

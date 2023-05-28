@@ -54,7 +54,6 @@ import {
   updateExtRefElement,
 } from './foundation/subscription/subscription.js';
 import {
-  createUpdateEdit,
   findFCDAs,
   getDescriptionAttribute,
   getNameAttribute,
@@ -491,9 +490,9 @@ export default class SubscriberLaterBinding extends LitElement {
   private unsubscribe(extRef: Element): void {
     const editActions: Edit[] = [];
 
-    // TODO: Fix up for new core update API
-    editActions.push(
-      createUpdateEdit(extRef, {
+    editActions.push({
+      element: extRef,
+      attributes: {
         intAddr: extRef.getAttribute('intAddr'),
         desc: extRef.getAttribute('desc'),
         iedName: null,
@@ -509,8 +508,8 @@ export default class SubscriberLaterBinding extends LitElement {
         srcLNClass: null,
         srcLNInst: null,
         srcCBName: null,
-      })
-    );
+      },
+    });
 
     const subscriberIed = extRef.closest('IED')!;
 
@@ -730,33 +729,37 @@ export default class SubscriberLaterBinding extends LitElement {
         )).has(3);
     });
 
-    if (this.filterMenuExtRefPublisherUI) {
-      this.filterMenuExtRefPublisherUI.anchor = <HTMLElement>(
-        this.filterMenuExtrefPublisherButtonUI
-      );
+    // update other anchors, especially filterMenuExtRefPublisherUI and
+    // settingsMenuExtRefPublisherUI
+    this.updateView();
 
-      // TODO: Code duplication with the above
-      this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
-        this.strictServiceTypes = !(<Set<number>>(
-          this.filterMenuExtRefPublisherUI.index
-        )).has(0);
-        this.hidePreconfiguredNotMatching = !(<Set<number>>(
-          this.filterMenuExtRefPublisherUI.index
-        )).has(1);
-      });
-    }
+    // if (this.filterMenuExtRefPublisherUI) {
+    //   this.filterMenuExtRefPublisherUI.anchor = <HTMLElement>(
+    //     this.filterMenuExtrefPublisherButtonUI
+    //   );
 
-    if (this.settingsMenuExtRefPublisherUI) {
-      this.settingsMenuExtRefPublisherUI.anchor = <HTMLElement>(
-        this.settingsMenuExtRefPublisherButtonUI
-      );
+    //   // TODO: Code duplication with the above
+    //   this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
+    //     this.strictServiceTypes = !(<Set<number>>(
+    //       this.filterMenuExtRefPublisherUI.index
+    //     )).has(0);
+    //     this.hidePreconfiguredNotMatching = !(<Set<number>>(
+    //       this.filterMenuExtRefPublisherUI.index
+    //     )).has(1);
+    //   });
+    // }
 
-      this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
-        this.notChangeSupervisionLNs = !(<Set<number>>(
-          this.settingsMenuExtRefPublisherUI.index
-        )).has(0);
-      });
-    }
+    // if (this.settingsMenuExtRefPublisherUI) {
+    //   this.settingsMenuExtRefPublisherUI.anchor = <HTMLElement>(
+    //     this.settingsMenuExtRefPublisherButtonUI
+    //   );
+
+    //   this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
+    //     this.notChangeSupervisionLNs = !(<Set<number>>(
+    //       this.settingsMenuExtRefPublisherUI.index
+    //     )).has(0);
+    //   });
+    // }
 
     this.requestUpdate();
     await this.updateComplete;
@@ -1008,12 +1011,6 @@ Basic Type: ${spec.bType}"
           this.doc.querySelector(selector('FCDA', fcda ?? 'Unknown')) ??
           undefined;
 
-        // force update of text filter - breaks abstraction
-        // TODO: FIXME
-        // this.requestUpdate();
-        // await this.updateComplete;
-        // this.extRefListPublisherUI?.onFilterInput();
-
         // only continue if conditions for subscription met
         if (
           !(
@@ -1023,10 +1020,14 @@ Basic Type: ${spec.bType}"
             this.currentSelectedExtRefElement
           )
         ) {
+          // in the subscriber view if an FCDA is selected, deactivate it
+          // so that when it is re-selected it will trigger an event
           if (this.subscriberView) {
             selectedListItem.selected = false;
             selectedListItem.activated = false;
           }
+
+          // conditions for a subscription have not been met
           return;
         }
 
@@ -1933,7 +1934,7 @@ Basic Type: ${spec.bType}"
       background-color: var(--mdc-theme-surface);
     }
 
-    /* TODO: Can we do better than a hard-code max-height */
+    /* TODO: Can we do better than a hard-coded max-height */
     .styled-scrollbars {
       max-height: 78vh;
       overflow: auto;

@@ -1,5 +1,3 @@
-import { Update } from '@openscd/open-scd-core';
-
 export type SclEdition = '2003' | '2007B' | '2007B4';
 export function getSclSchemaVersion(doc: Document): SclEdition {
   const scl: Element = doc.documentElement;
@@ -56,27 +54,6 @@ export function minAvailableLogicalNodeInstance(
 ): string | undefined {
   const lnInsts = new Set(lnElements.map(ln => ln.getAttribute('inst') || ''));
   return lnInstRange.find(lnInst => !lnInsts.has(lnInst));
-}
-
-//* * return `Update` action for `element` adding `oldAttributes` */
-// export function createUpdateAction(
-//   element: Element,
-//   newAttributes: Record<string, string | null>
-// ): Update {
-//   const oldAttributes: Record<string, string | null> = {};
-//   Array.from(element.attributes).forEach(attr => {
-//     oldAttributes[attr.name] = attr.value;
-//   });
-
-//   return { element, oldAttributes, newAttributes };
-// }
-
-//* * return `Update` action for `element` adding `oldAttributes` */
-export function createUpdateEdit(
-  element: Element,
-  attributes: Record<string, string | null>
-): Update {
-  return { element, attributes };
 }
 
 /** Sorts selected `ListItem`s to the top and disabled ones to the bottom. */

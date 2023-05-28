@@ -127,10 +127,8 @@ describe('goose', () => {
       await editor.updateComplete;
       await plugin.updateComplete;
 
-      await timeout(1000); // plugin loading and initial render?
+      await timeout(1200); // plugin loading and initial render?
 
-      // TODO: Why can't I do this?
-      // plugin.setAttribute('subscriberview', '');
       await sendMouse({
         type: 'click',
         button: 'left',
