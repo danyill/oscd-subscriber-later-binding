@@ -17,7 +17,7 @@ export default {
     nodeResolve(),
     typescript(),
     copy({
-      targets: [{ src: 'demo/index.deploy.html', dest: 'dist' }],
+      targets: [{ src: 'index.html', dest: 'dist' }],
     }),
   ],
 };
