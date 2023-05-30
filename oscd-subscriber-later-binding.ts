@@ -11,6 +11,7 @@ import { msg } from '@lit/localize';
 import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
+import { unsubscribe } from '@openenergytools/scl-lib';
 
 import '@material/mwc-fab';
 import '@material/mwc-icon';
@@ -44,7 +45,6 @@ import type { TextField } from '@material/mwc-textfield';
 import { identity } from './foundation/identities/identity.js';
 import { selector } from './foundation/identities/selector.js';
 import {
-  canRemoveSubscriptionSupervision,
   checkEditionSpecificRequirements,
   fcdaSpecification,
   findControlBlock,
@@ -62,7 +62,6 @@ import {
   instantiateSubscriptionSupervision,
   isPartiallyConfigured,
   isSubscribed,
-  removeSubscriptionSupervision,
   updateExtRefElement,
 } from './foundation/subscription/subscription.js';
 import {
@@ -833,7 +832,7 @@ export default class SubscriberLaterBinding extends LitElement {
    *
    * @param extRef - The Ext Ref Element to clean from attributes.
    */
-  private unsubscribe(extRef: Element): void {
+  private unsubscribeExtRef(extRef: Element): void {
     const editActions: Edit[] = [];
 
     editActions.push({
@@ -2215,10 +2214,10 @@ Basic Type: ${spec.bType}"
                       this.currentSelectedFcdaElement!
                     );
                   } else {
-                    this.unsubscribe(selectedExtRefElement);
+                    this.unsubscribeExtRef(selectedExtRefElement);
                   }
                   // without this statement, neither the ExtRef list or the FCDA list
-                  // (with the count) update correctly.
+                  // (with the count) update correctly. It is unclear why.
                   this.requestUpdate();
                   selectedListItem.selected = false;
                 }}
@@ -2226,7 +2225,7 @@ Basic Type: ${spec.bType}"
                 ${this.renderPublisherViewSubscribedExtRefs()}
                 ${this.renderPublisherViewAvailableExtRefs()}
               </mwc-list>`
-          : html`<h3>${msg('No published item selected')}</h3>`}
+          : html`>${msg('No published item selected')}</h3>`}
       </section>`;
     }
 
@@ -2280,7 +2279,7 @@ Basic Type: ${spec.bType}"
                   isSubscribed(selectedExtRefElement) ||
                   isPartiallyConfigured(selectedExtRefElement)
                 ) {
-                  this.unsubscribe(selectedExtRefElement);
+                  this.unsubscribeExtRef(selectedExtRefElement);
 
                   // deselect in UI
                   // list item is left selected to allow further subscription

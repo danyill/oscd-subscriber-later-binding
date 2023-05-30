@@ -347,6 +347,7 @@ export function getSubscribedExtRefElements(
   );
 }
 
+// TODO: scl-lib export
 export function getCbReference(extRef: Element): string {
   const extRefValues = ['iedName', 'srcPrefix', 'srcCBName'];
   const [srcIedName, srcPrefix, srcCBName] = extRefValues.map(
@@ -443,6 +444,8 @@ function getSupervisionCbRefs(ied: Element, cbTagName: string): Element[] {
   const selectorString = `LN[lnClass="${supervisionType}"]>DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]>Val,LN0[lnClass="${supervisionType}"]>DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]>Val`;
   return Array.from(ied.querySelectorAll(selectorString));
 }
+
+// Internal API in scl-lib
 
 /**
  * Creates a string pointer to the control block element.
