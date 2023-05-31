@@ -520,12 +520,12 @@ export default class SubscriberLaterBinding extends LitElement {
     )} ${fcdaDesc} ${extRefPathValue} ${extRefCBPath}`;
   }
 
-  private getFcdaSearchString(fcda: Element, control: Element): string {
+  private getFcdaSearchString(control: Element, fcda: Element): string {
     return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(
       fcda
     )} ${getFcdaOrExtRefTitleValue(fcda)} ${getFcdaOrExtRefSubtitleValue(
       fcda
-    )} ${this.getFcdaInfo(fcda).desc}`;
+    )} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
   }
 
   protected updated(_changedProperties: PropertyValues): void {
