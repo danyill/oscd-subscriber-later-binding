@@ -107,7 +107,7 @@ export declare function getOrderedIeds(doc: XMLDocument): Element[];
  * @returns - array of Elements of supervision LN instances.
  */
 export declare function getUsedSupervisionInstances(doc: Document, serviceType: string): Element[];
-export declare function getFcdaSrcControlBlockDescription(extRefElement: Element): string;
+export declare function getExtRefControlBlockPath(extRefElement: Element): string;
 export declare function findFCDAs(extRef: Element): Element[];
 export declare function getFcdaElements(controlElement: Element): Element[];
 /**

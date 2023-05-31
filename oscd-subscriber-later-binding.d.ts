@@ -5,12 +5,13 @@ import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item';
 import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
-import '@openscd/oscd-filtered-list';
+import '@material/mwc-textfield';
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
+import type { List } from '@material/mwc-list';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import type { Menu } from '@material/mwc-menu';
-import type { OscdFilteredList } from '@openscd/oscd-filtered-list';
+import type { TextField } from '@material/mwc-textfield';
 declare type controlTagType = 'SampledValueControl' | 'GSEControl';
 declare type fcdaInfo = {
     spec: {
@@ -40,10 +41,16 @@ export default class SubscriberLaterBinding extends LitElement {
     hideBound: boolean;
     hideNotBound: boolean;
     strictServiceTypes: boolean;
+    filterFcdaRegex: RegExp;
+    filterExtRefPublisherRegex: RegExp;
+    filterExtRefSubscriberRegex: RegExp;
     switchViewUI?: IconButtonToggle;
     switchControlTypeUI?: IconButtonToggle;
     filterMenuFcdaUI: Menu;
     filterMenuFcdaButtonUI: Icon;
+    filterFcdaInputUI: TextField;
+    filterExtRefPublisherInputUI: TextField;
+    filterExtRefSubscriberInputUI: TextField;
     filterMenuExtRefSubscriberUI: Menu;
     filterMenuExtRefPublisherUI: Menu;
     filterMenuExtRefSubscriberButtonUI: Icon;
@@ -53,10 +60,10 @@ export default class SubscriberLaterBinding extends LitElement {
     settingsMenuExtRefPublisherUI: Menu;
     settingsMenuExtRefSubscriberButtonUI: Icon;
     settingsMenuExtRefPublisherButtonUI: Icon;
-    fcdaListUI: OscdFilteredList;
-    extRefListPublisherUI?: OscdFilteredList;
+    fcdaListUI: List;
+    extRefListPublisherUI?: List;
     publisherExtRefSectionUI?: HTMLElement;
-    extRefListSubscriberUI?: OscdFilteredList;
+    extRefListSubscriberUI?: List;
     extRefListSubscriberSelectedUI?: ListItem;
     fcdaListSelectedUI?: ListItem;
     currentSelectedControlElement: Element | undefined;
@@ -73,6 +80,8 @@ export default class SubscriberLaterBinding extends LitElement {
     private getExtRefCount;
     private getFcdaInfo;
     private getExtRefInfo;
+    private getExtRefSubscriberSearchString;
+    private getFcdaSearchString;
     protected updated(_changedProperties: PropertyValues): void;
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.
