@@ -10169,8 +10169,8 @@ class SubscriberLaterBinding extends s$1 {
         const extRefCBPath = getExtRefControlBlockPath(extRef);
         return `${iedInfo} ${identity(extRef)} ${identity((_a = this.getCachedSupervision(extRef)) !== null && _a !== void 0 ? _a : null)} ${getDescriptionAttribute(extRef)} ${identity(subscriberFCDA !== null && subscriberFCDA !== void 0 ? subscriberFCDA : null)} ${fcdaDesc} ${extRefPathValue} ${extRefCBPath}`;
     }
-    getFcdaSearchString(fcda, control) {
-        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${getFcdaOrExtRefTitleValue(fcda)} ${getFcdaOrExtRefSubtitleValue(fcda)} ${this.getFcdaInfo(fcda).desc}`;
+    getFcdaSearchString(control, fcda) {
+        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${getFcdaOrExtRefTitleValue(fcda)} ${getFcdaOrExtRefSubtitleValue(fcda)} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
     }
     updated(_changedProperties) {
         super.updated(_changedProperties);
