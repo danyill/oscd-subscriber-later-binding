@@ -994,9 +994,7 @@ export function getUsedSupervisionInstances(
   return supervisionInstances;
 }
 
-export function getFcdaSrcControlBlockDescription(
-  extRefElement: Element
-): string {
+export function getExtRefControlBlockPath(extRefElement: Element): string {
   const [srcPrefix, srcLDInst, srcLNClass, srcCBName] = [
     'srcPrefix',
     'srcLDInst',

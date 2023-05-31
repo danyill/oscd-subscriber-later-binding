@@ -801,16 +801,6 @@ describe('goose', () => {
       });
 
       it('and can filter out data objects', async function () {
-        const fcdaListElement = plugin.fcdaListUI;
-
-        const fcda = getFcdaItem(
-          fcdaListElement,
-          'GOOSE_Publisher>>QB2_Disconnector>GOOSE1',
-          'GOOSE_Publisher>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos q (ST)'
-        );
-        // get near
-        fcda?.scrollIntoView();
-
         const button = plugin.filterMenuFcdaButtonUI;
 
         await sendMouse({
@@ -997,8 +987,7 @@ describe('goose', () => {
 
     describe('can search', () => {
       it('in FCDAs with a string', async function () {
-        const fcdaTextInput =
-          plugin.fcdaListUI!.shadowRoot!.querySelector('mwc-textfield');
+        const fcdaTextInput = plugin.filterFcdaInputUI;
 
         await sendMouse({
           type: 'click',
@@ -1008,6 +997,7 @@ describe('goose', () => {
         sendKeys({ type: 'QB1' });
         await plugin.fcdaListUI.updateComplete;
         await plugin.updateComplete;
+        fcdaTextInput.scrollIntoView();
 
         await resetMouseState();
         await timeout(standardWait);
@@ -1015,15 +1005,7 @@ describe('goose', () => {
       });
 
       it('in ExtRefs with a string', async function () {
-        // TODO: Discuss with Christian regarding "double handlings for IEDs and subitems"
-        // Putting all the processing logic in two places makes no sense but then searching
-        // is inadequate for the children. Would be better for the filtered list to have
-        // an understanding of the object hierarchy.
-        // search ExtRefs
-        const extRefTextInput =
-          plugin.extRefListSubscriberUI!.shadowRoot!.querySelector(
-            'mwc-textfield'
-          );
+        const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
 
         await sendMouse({
           type: 'click',
@@ -1033,6 +1015,7 @@ describe('goose', () => {
         sendKeys({ type: 'Thing' });
         await plugin.extRefListSubscriberUI?.updateComplete;
         await plugin.updateComplete;
+        extRefTextInput.scrollIntoView();
 
         await resetMouseState();
         await timeout(standardWait);

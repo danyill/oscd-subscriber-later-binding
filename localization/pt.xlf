@@ -94,6 +94,10 @@
         <source>No published items</source>
         <target>Keine veröffentlichten Artikel</target>
       </trans-unit>
+      <trans-unit id="s5d929ff1619ac0c9">
+        <source>Search</source>
+        <target>Pesquisa</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

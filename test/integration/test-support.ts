@@ -1,5 +1,5 @@
+import { List } from '@material/mwc-list';
 import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
-import { OscdFilteredList } from '@openscd/oscd-filtered-list';
 
 import { setViewport, resetMouse, sendMouse } from '@web/test-runner-commands';
 
@@ -24,7 +24,7 @@ export function midEl(element: Element): [number, number] {
 }
 
 export function getFcdaItem(
-  listElement: OscdFilteredList,
+  listElement: List,
   controlIdentity: string,
   fcdaIdentity: string
 ): ListItemBase | null {
@@ -34,7 +34,7 @@ export function getFcdaItem(
 }
 
 export function getExtRefItem(
-  listElement: OscdFilteredList,
+  listElement: List,
   extRefId: string
 ): ListItemBase | null {
   return listElement.querySelector(
