@@ -10138,45 +10138,47 @@ class SubscriberLaterBinding extends s$1 {
     buildExtRefCount() {
         if (!this.doc)
             return;
-        // get all document extrefs
-        const extRefs = Array.from(this.doc.querySelectorAll(':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'));
+        const dsToCb = new Map();
         // get only the FCDAs relevant to the current view
         const fcdaData = new Map();
         const fcdaCompare = new Map();
         Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(cb => {
             var _a;
-            const dsToCb = new Map();
             const isReferencedDs = (_a = cb.parentElement) === null || _a === void 0 ? void 0 : _a.querySelector(`DataSet[name="${cb.getAttribute('datSet')}"]`);
             if (isReferencedDs) {
                 dsToCb.set(identity(isReferencedDs), cb);
             }
-            this.doc.querySelectorAll('DataSet').forEach(dataSet => {
-                if (dsToCb.has(identity(dataSet))) {
-                    const thisCb = dsToCb.get(identity(dataSet));
-                    dataSet.querySelectorAll('FCDA').forEach(fcda => {
-                        var _a;
-                        const key = `${identity(thisCb)} ${identity(fcda)}`;
-                        fcdaData.set(fcda, {
-                            key,
-                            cb: dsToCb.get(identity(dataSet)),
-                        });
-                        this.controlBlockFcdaInfo.set(key, 0);
-                        const iedName = (_a = fcda.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
-                        const fcdaMatcher = `${iedName} ${[
-                            'ldInst',
-                            'prefix',
-                            'lnClass',
-                            'lnInst',
-                            'doName',
-                            'daName',
-                        ]
-                            .map(attr => fcda.getAttribute(attr))
-                            .join(' ')}`;
-                        fcdaCompare.set(fcdaMatcher, fcda);
-                    });
-                }
-            });
         });
+        this.doc
+            .querySelectorAll(':root > IED > AccessPoint > Server > LDevice > LN > DataSet, :root > IED > AccessPoint > Server > LDevice > LN0 > DataSet')
+            .forEach(dataSet => {
+            if (dsToCb.has(identity(dataSet))) {
+                const thisCb = dsToCb.get(identity(dataSet));
+                dataSet.querySelectorAll('FCDA').forEach(fcda => {
+                    var _a;
+                    const key = `${identity(thisCb)} ${identity(fcda)}`;
+                    fcdaData.set(fcda, {
+                        key,
+                        cb: dsToCb.get(identity(dataSet)),
+                    });
+                    this.controlBlockFcdaInfo.set(key, 0);
+                    const iedName = (_a = fcda.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
+                    const fcdaMatcher = `${iedName} ${[
+                        'ldInst',
+                        'prefix',
+                        'lnClass',
+                        'lnInst',
+                        'doName',
+                        'daName',
+                    ]
+                        .map(attr => fcda.getAttribute(attr))
+                        .join(' ')}`;
+                    fcdaCompare.set(fcdaMatcher, fcda);
+                });
+            }
+        });
+        // get all document extrefs
+        const extRefs = Array.from(this.doc.querySelectorAll(':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'));
         // match the extrefs
         extRefs
             .filter(extRef => isSubscribed(extRef))
