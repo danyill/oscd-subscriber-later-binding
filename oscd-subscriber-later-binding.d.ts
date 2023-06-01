@@ -78,10 +78,12 @@ export default class SubscriberLaterBinding extends LitElement {
     protected restoreSettings(): void;
     private getControlElements;
     private getExtRefCount;
+    private buildExtRefCount;
     private getFcdaInfo;
     private getExtRefInfo;
     private getExtRefSubscriberSearchString;
     private getFcdaSearchString;
+    protected resetCaching(): void;
     protected updated(_changedProperties: PropertyValues): void;
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.

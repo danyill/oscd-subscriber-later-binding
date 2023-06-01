@@ -31,6 +31,14 @@ export declare function getExtRefElements(rootElement: Element, fcdaElement: Ele
  * @param rightAttributeName - The name of the attribute (right) to check.
  */
 export declare function sameAttributeValueDiffName(leftElement: Element | undefined, leftAttributeName: string, rightElement: Element | undefined, rightAttributeName: string): boolean;
+/**
+ * If needed check version specific attributes against FCDA Element.
+ *
+ * @param controlTag     - Indicates which type of control element.
+ * @param controlElement - The Control Element to check against.
+ * @param extRefElement  - The Ext Ref Element to check.
+ */
+export declare function checkEditionSpecificRequirements(controlTag: 'SampledValueControl' | 'GSEControl', controlElement: Element | undefined, extRefElement: Element): boolean;
 export declare function getSubscribedExtRefElements(rootElement: Element, controlTag: 'SampledValueControl' | 'GSEControl', fcdaElement: Element | undefined, controlElement: Element | undefined, includeLaterBinding: boolean): Element[];
 export declare function getCbReference(extRef: Element): string;
 /** Returns the subscriber's supervision LN for a given control block and extRef element

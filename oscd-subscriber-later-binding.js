@@ -10133,6 +10133,76 @@ class SubscriberLaterBinding extends s$1 {
         }
         return this.controlBlockFcdaInfo.get(controlBlockFcdaId);
     }
+    // This does the initial build of the ExtRef count is and is targeting
+    // high performance on large files
+    buildExtRefCount() {
+        if (!this.doc)
+            return;
+        // get all document extrefs
+        const extRefs = Array.from(this.doc.querySelectorAll(':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'));
+        // get only the FCDAs relevant to the current view
+        const fcdaData = new Map();
+        const fcdaCompare = new Map();
+        Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(cb => {
+            var _a;
+            const dsToCb = new Map();
+            const isReferencedDs = (_a = cb.parentElement) === null || _a === void 0 ? void 0 : _a.querySelector(`DataSet[name="${cb.getAttribute('datSet')}"]`);
+            if (isReferencedDs) {
+                dsToCb.set(identity(isReferencedDs), cb);
+            }
+            this.doc.querySelectorAll('DataSet').forEach(dataSet => {
+                if (dsToCb.has(identity(dataSet))) {
+                    const thisCb = dsToCb.get(identity(dataSet));
+                    dataSet.querySelectorAll('FCDA').forEach(fcda => {
+                        var _a;
+                        const key = `${identity(thisCb)} ${identity(fcda)}`;
+                        fcdaData.set(fcda, {
+                            key,
+                            cb: dsToCb.get(identity(dataSet)),
+                        });
+                        this.controlBlockFcdaInfo.set(key, 0);
+                        const iedName = (_a = fcda.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
+                        const fcdaMatcher = `${iedName} ${[
+                            'ldInst',
+                            'prefix',
+                            'lnClass',
+                            'lnInst',
+                            'doName',
+                            'daName',
+                        ]
+                            .map(attr => fcda.getAttribute(attr))
+                            .join(' ')}`;
+                        fcdaCompare.set(fcdaMatcher, fcda);
+                    });
+                }
+            });
+        });
+        // match the extrefs
+        extRefs
+            .filter(extRef => isSubscribed(extRef))
+            .forEach(extRef => {
+            var _a;
+            const extRefMatcher = [
+                'iedName',
+                'ldInst',
+                'prefix',
+                'lnClass',
+                'lnInst',
+                'doName',
+                'daName',
+            ]
+                .map(attr => extRef.getAttribute(attr))
+                .join(' ');
+            if (fcdaCompare.has(extRefMatcher)) {
+                const fcda = fcdaCompare.get(extRefMatcher);
+                const { key, cb } = fcdaData.get(fcda);
+                if (checkEditionSpecificRequirements(this.controlTag, cb, extRef)) {
+                    const currentCountValue = (_a = this.controlBlockFcdaInfo.get(key)) !== null && _a !== void 0 ? _a : 0;
+                    this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
+                }
+            }
+        });
+    }
     getFcdaInfo(fcdaElement) {
         const id = `${identity(fcdaElement)}`;
         if (!this.fcdaInfo.has(id)) {
@@ -10172,21 +10242,25 @@ class SubscriberLaterBinding extends s$1 {
     getFcdaSearchString(control, fcda) {
         return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${getFcdaOrExtRefTitleValue(fcda)} ${getFcdaOrExtRefSubtitleValue(fcda)} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
     }
+    resetCaching() {
+        // reset caching
+        this.controlBlockFcdaInfo = new Map();
+        this.fcdaInfo = new Map();
+        this.extRefInfo = new Map();
+        // reset supervision cache
+        this.reCreateSupervisionCache();
+    }
     updated(_changedProperties) {
         super.updated(_changedProperties);
         // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
         // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
         // https://github.com/openscd/open-scd-core/issues/92
+        // I think this causes multiple update cycles -- can we do this earlier?
         if (_changedProperties.has('docName')) {
-            // reset caching
-            this.controlBlockFcdaInfo = new Map();
-            this.fcdaInfo = new Map();
-            this.extRefInfo = new Map();
             this.currentSelectedControlElement = undefined;
             this.currentSelectedFcdaElement = undefined;
             this.currentSelectedExtRefElement = undefined;
-            // reset supervision cache
-            this.reCreateSupervisionCache();
+            this.resetCaching();
             // deselect in UI
             if (this.extRefListSubscriberSelectedUI) {
                 this.extRefListSubscriberSelectedUI.selected = false;
@@ -10380,8 +10454,8 @@ class SubscriberLaterBinding extends s$1 {
         //     )).has(0);
         //   });
         // }
-        this.requestUpdate();
-        await this.updateComplete;
+        // this.requestUpdate();
+        // await this.updateComplete;
     }
     // eslint-disable-next-line class-methods-use-this
     renderSubscribedExtRefElement(extRefElement) {
@@ -11151,7 +11225,7 @@ Basic Type: ${spec.bType}"
             else {
                 this.controlTag = 'GSEControl';
             }
-            this.reCreateSupervisionCache();
+            this.resetCaching();
         }}
       >
         ${gooseActionIcon} ${smvActionIcon}
@@ -11199,6 +11273,9 @@ Basic Type: ${spec.bType}"
     }
     render() {
         var _a;
+        // initial information caching
+        if (this.controlBlockFcdaInfo.size === 0)
+            this.buildExtRefCount();
         const classList = { 'subscriber-view': (_a = this.subscriberView) !== null && _a !== void 0 ? _a : false };
         return x `<div id="listContainer" class="${o(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
