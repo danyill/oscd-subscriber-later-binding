@@ -240,7 +240,7 @@ export function sameAttributeValueDiffName(
  * @param controlElement - The Control Element to check against.
  * @param extRefElement  - The Ext Ref Element to check.
  */
-function checkEditionSpecificRequirements(
+export function checkEditionSpecificRequirements(
   controlTag: 'SampledValueControl' | 'GSEControl',
   controlElement: Element | undefined,
   extRefElement: Element

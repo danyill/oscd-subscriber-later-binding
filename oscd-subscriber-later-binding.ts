@@ -33,6 +33,7 @@ import type { TextField } from '@material/mwc-textfield';
 import { identity } from './foundation/identities/identity.js';
 import {
   canRemoveSubscriptionSupervision,
+  checkEditionSpecificRequirements,
   fcdaSpecification,
   findControlBlock,
   findFCDA,
@@ -469,6 +470,86 @@ export default class SubscriberLaterBinding extends LitElement {
     return this.controlBlockFcdaInfo.get(controlBlockFcdaId)!;
   }
 
+  // This does the initial build of the ExtRef count is and is targeting
+  // high performance on large files
+  private buildExtRefCount(): void {
+    if (!this.doc) return;
+
+    // get all document extrefs
+    const extRefs = Array.from(
+      this.doc.querySelectorAll(
+        ':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+      )
+    );
+
+    // get only the FCDAs relevant to the current view
+    const fcdaData = new Map();
+    const fcdaCompare = new Map();
+    Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(
+      cb => {
+        const dsToCb = new Map();
+        const isReferencedDs = cb.parentElement?.querySelector(
+          `DataSet[name="${cb.getAttribute('datSet')}"]`
+        );
+
+        if (isReferencedDs) {
+          dsToCb.set(identity(isReferencedDs), cb);
+        }
+
+        this.doc.querySelectorAll('DataSet').forEach(dataSet => {
+          if (dsToCb.has(identity(dataSet))) {
+            const thisCb = dsToCb.get(identity(dataSet));
+            dataSet.querySelectorAll('FCDA').forEach(fcda => {
+              const key = `${identity(thisCb)} ${identity(fcda)}`;
+              fcdaData.set(fcda, {
+                key,
+                cb: dsToCb.get(identity(dataSet)),
+              });
+              this.controlBlockFcdaInfo.set(key, 0);
+              const iedName = fcda.closest('IED')?.getAttribute('name');
+              const fcdaMatcher = `${iedName} ${[
+                'ldInst',
+                'prefix',
+                'lnClass',
+                'lnInst',
+                'doName',
+                'daName',
+              ]
+                .map(attr => fcda.getAttribute(attr))
+                .join(' ')}`;
+              fcdaCompare.set(fcdaMatcher, fcda);
+            });
+          }
+        });
+      }
+    );
+
+    // match the extrefs
+    extRefs
+      .filter(extRef => isSubscribed(extRef))
+      .forEach(extRef => {
+        const extRefMatcher = [
+          'iedName',
+          'ldInst',
+          'prefix',
+          'lnClass',
+          'lnInst',
+          'doName',
+          'daName',
+        ]
+          .map(attr => extRef.getAttribute(attr))
+          .join(' ');
+        if (fcdaCompare.has(extRefMatcher)) {
+          const fcda = fcdaCompare.get(extRefMatcher);
+          const { key, cb } = fcdaData.get(fcda);
+          if (checkEditionSpecificRequirements(this.controlTag, cb, extRef)) {
+            const currentCountValue = this.controlBlockFcdaInfo.get(key) ?? 0;
+            this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
+          }
+        }
+      });
+  }
+
   private getFcdaInfo(fcdaElement: Element): fcdaInfo {
     const id = `${identity(fcdaElement)}`;
     if (!this.fcdaInfo.has(id)) {
@@ -528,24 +609,29 @@ export default class SubscriberLaterBinding extends LitElement {
     )} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
   }
 
+  protected resetCaching(): void {
+    // reset caching
+    this.controlBlockFcdaInfo = new Map();
+    this.fcdaInfo = new Map();
+    this.extRefInfo = new Map();
+
+    // reset supervision cache
+    this.reCreateSupervisionCache();
+  }
+
   protected updated(_changedProperties: PropertyValues): void {
     super.updated(_changedProperties);
 
     // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
     // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
     // https://github.com/openscd/open-scd-core/issues/92
+    // I think this causes multiple update cycles -- can we do this earlier?
     if (_changedProperties.has('docName')) {
-      // reset caching
-      this.controlBlockFcdaInfo = new Map();
-      this.fcdaInfo = new Map();
-      this.extRefInfo = new Map();
-
       this.currentSelectedControlElement = undefined;
       this.currentSelectedFcdaElement = undefined;
       this.currentSelectedExtRefElement = undefined;
 
-      // reset supervision cache
-      this.reCreateSupervisionCache();
+      this.resetCaching();
 
       // deselect in UI
       if (this.extRefListSubscriberSelectedUI) {
@@ -849,8 +935,8 @@ export default class SubscriberLaterBinding extends LitElement {
     //   });
     // }
 
-    this.requestUpdate();
-    await this.updateComplete;
+    // this.requestUpdate();
+    // await this.updateComplete;
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -1822,7 +1908,7 @@ Basic Type: ${spec.bType}"
           } else {
             this.controlTag = 'GSEControl';
           }
-          this.reCreateSupervisionCache();
+          this.resetCaching();
         }}
       >
         ${gooseActionIcon} ${smvActionIcon}
@@ -1875,6 +1961,9 @@ Basic Type: ${spec.bType}"
   }
 
   render(): TemplateResult {
+    // initial information caching
+    if (this.controlBlockFcdaInfo.size === 0) this.buildExtRefCount();
+
     const classList = { 'subscriber-view': this.subscriberView ?? false };
     return html`<div id="listContainer" class="${classMap(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
