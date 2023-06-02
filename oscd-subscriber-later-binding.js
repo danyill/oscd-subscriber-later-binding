@@ -10178,7 +10178,7 @@ class SubscriberLaterBinding extends s$1 {
             }
         });
         // get all document extrefs
-        const extRefs = Array.from(this.doc.querySelectorAll(':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef')).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
+        const extRefs = Array.from(this.doc.querySelectorAll(':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef')).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
         // match the extrefs
         extRefs.forEach(extRef => {
             var _a;
