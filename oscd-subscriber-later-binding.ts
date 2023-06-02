@@ -520,7 +520,7 @@ export default class SubscriberLaterBinding extends LitElement {
     // get all document extrefs
     const extRefs = Array.from(
       this.doc.querySelectorAll(
-        ':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+        ':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
       )
     ).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
 
