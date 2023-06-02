@@ -373,16 +373,12 @@ export default class SubscriberLaterBinding extends LitElement {
   @state()
   currentSelectedExtRefElement: Element | undefined;
 
-  @state()
-  controlBlockFcdaInfo = new Map<string, number>();
+  private controlBlockFcdaInfo = new Map<string, number>();
 
-  @state()
-  fcdaInfo = new Map<string, fcdaInfo>();
+  private fcdaInfo = new Map<string, fcdaInfo>();
 
-  @state()
-  extRefInfo = new Map<string, extRefInfo>();
+  private extRefInfo = new Map<string, extRefInfo>();
 
-  @state()
   private supervisionData = new Map();
 
   protected storeSettings(): void {
@@ -625,6 +621,8 @@ export default class SubscriberLaterBinding extends LitElement {
 
   protected updated(_changedProperties: PropertyValues): void {
     super.updated(_changedProperties);
+
+    console.log(_changedProperties);
 
     // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
     // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
@@ -1965,14 +1963,17 @@ Basic Type: ${spec.bType}"
   }
 
   render(): TemplateResult {
+    console.time('render');
     // initial information caching
     if (this.controlBlockFcdaInfo.size === 0) this.buildExtRefCount();
 
     const classList = { 'subscriber-view': this.subscriberView ?? false };
-    return html`<div id="listContainer" class="${classMap(classList)}">
+    const result = html`<div id="listContainer" class="${classMap(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
       </div>
       ${this.renderSwitchView()}`;
+    console.timeEnd('render');
+    return result;
   }
 
   static styles = css`
