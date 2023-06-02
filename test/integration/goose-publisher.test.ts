@@ -723,7 +723,7 @@ describe('goose', () => {
 
         await plugin.extRefListPublisherUI?.updateComplete;
         await plugin.updateComplete;
-        extRefTextInput.scrollIntoView();
+        extRefTextInput!.scrollIntoView();
 
         await resetMouseState();
         await timeout(standardWait); // de-selection

@@ -37,7 +37,9 @@ function dataAttributeSpecification(
 ): { cdc: string | null; bType: string | null } {
   const doc = anyLn.ownerDocument;
   const lNodeType = doc.querySelector(
-    `LNodeType[id="${anyLn.getAttribute('lnType')}"]`
+    `:root > DataTypeTemplates > LNodeType[id="${anyLn.getAttribute(
+      'lnType'
+    )}"]`
   );
 
   const doNames = doName.split('.');
@@ -46,7 +48,9 @@ function dataAttributeSpecification(
     const dO: Element | null | undefined = leaf?.querySelector(
       `DO[name="${doN}"], SDO[name="${doN}"]`
     );
-    leaf = doc.querySelector(`DOType[id="${dO?.getAttribute('type')}"]`);
+    leaf = doc.querySelector(
+      `:root > DataTypeTemplates > DOType[id="${dO?.getAttribute('type')}"]`
+    );
   }
   if (!leaf || !leaf.getAttribute('cdc')) return { cdc: null, bType: null };
 
@@ -59,7 +63,11 @@ function dataAttributeSpecification(
     );
     leaf =
       daNames.indexOf(daN) < daNames.length - 1
-        ? doc.querySelector(`DAType[id="${dA?.getAttribute('type')}"]`)
+        ? doc.querySelector(
+            `root > DataTypeTemplates > DAType[id="${dA?.getAttribute(
+              'type'
+            )}"]`
+          )
         : dA;
   }
   if (!leaf || !leaf.getAttribute('bType')) return { cdc, bType: null };
@@ -88,7 +96,7 @@ export function inputRestriction(extRef: Element): {
 
   const anyLns = Array.from(
     extRef.ownerDocument.querySelectorAll(
-      `LN[lnClass="${pLN}"],LN0[lnClass="${pLN}"]`
+      `:root > IED > AccessPoint > Server > LDevice > LN[lnClass="${pLN}"], :root > IED > AccessPoint > Server > LDevice > LN0[lnClass="${pLN}"]`
     ) ?? []
   );
 
@@ -120,9 +128,11 @@ export function fcdaSpecification(fcda: Element): {
 
   const anyLn = Array.from(
     ied?.querySelectorAll(
-      `LDevice[inst="${fcda.getAttribute(
+      `:root > IED > AccessPoint > Server > LDevice[inst="${fcda.getAttribute(
         'ldInst'
-      )}"] > LN, LDevice[inst="${fcda.getAttribute('ldInst')}"] LN0`
+      )}"] > LN, :root > IED > AccessPoint > Server > LDevice[inst="${fcda.getAttribute(
+        'ldInst'
+      )}"] > LN0`
     ) ?? []
   ).find(
     aLn =>

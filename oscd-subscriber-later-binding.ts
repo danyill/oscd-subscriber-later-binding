@@ -311,10 +311,10 @@ export default class SubscriberLaterBinding extends LitElement {
   filterFcdaInputUI!: TextField;
 
   @query('#filterExtRefPublisherInput')
-  filterExtRefPublisherInputUI!: TextField;
+  filterExtRefPublisherInputUI?: TextField;
 
   @query('#filterExtRefSubscriberInput')
-  filterExtRefSubscriberInputUI!: TextField;
+  filterExtRefSubscriberInputUI?: TextField;
 
   @query('#filterExtRefMenuSubscriber')
   filterMenuExtRefSubscriberUI!: Menu;
@@ -604,7 +604,7 @@ export default class SubscriberLaterBinding extends LitElement {
   private getFcdaSearchString(control: Element, fcda: Element): string {
     return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(
       fcda
-    )} ${getFcdaOrExtRefTitleValue(fcda)} ${getFcdaOrExtRefSubtitleValue(
+    )} ${getFcdaOrExtRefSubtitleValue(fcda)} ${getFcdaOrExtRefTitleValue(
       fcda
     )} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
   }
@@ -626,6 +626,12 @@ export default class SubscriberLaterBinding extends LitElement {
     // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
     // https://github.com/openscd/open-scd-core/issues/92
     if (_changedProperties.has('docName')) {
+      if (this.filterExtRefPublisherInputUI)
+        this.filterExtRefPublisherInputUI.value = '';
+      if (this.filterExtRefSubscriberInputUI)
+        this.filterExtRefSubscriberInputUI.value = '';
+      this.filterFcdaInputUI.value = '';
+
       this.currentSelectedControlElement = undefined;
       this.currentSelectedFcdaElement = undefined;
       this.currentSelectedExtRefElement = undefined;
@@ -914,7 +920,7 @@ export default class SubscriberLaterBinding extends LitElement {
     const desc = getDescriptionAttribute(extRefElement);
     const iedName = extRefElement.closest('IED')?.getAttribute('name');
 
-    return html` <mwc-list-item
+    return html`<mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
       ?twoline=${desc || supervisionNode}
@@ -1233,8 +1239,8 @@ Basic Type: ${spec.bType}"
           this.currentSelectedFcdaElement = undefined;
         }}"
       >
-        ${controlElements
-          .filter(controlElement => {
+        ${repeat(
+          controlElements.filter(controlElement => {
             const fcdaElements = getFcdaElements(controlElement);
             // if disabled (non-matching pXX or DOs) are filtered
             // then don't show them
@@ -1253,9 +1259,17 @@ Basic Type: ${spec.bType}"
             return (
               isWithinSearch && fcdaElements.length && !onlyHasDisabledItems
             );
-          })
-          .map(controlElement => {
-            const fcdaElements = getFcdaElements(controlElement);
+          }),
+          i => identity(i),
+          controlElement => {
+            const fcdaElements = getFcdaElements(controlElement).filter(
+              fcda =>
+                !this.filterFcdaRegex ||
+                this.filterFcdaRegex.test(
+                  `${this.getFcdaSearchString(controlElement, fcda)}`
+                )
+            );
+
             const someSubscribed = fcdaElements.some(
               fcda => this.getExtRefCount(fcda, controlElement) !== 0
             );
@@ -1271,8 +1285,7 @@ Basic Type: ${spec.bType}"
             const iedName = controlElement.closest('IED')?.getAttribute('name');
 
             // TODO: Restore wizard editing functionality
-            return html`
-              <mwc-list-item
+            return html`<mwc-list-item
                 noninteractive
                 class="control ${classMap(filterClasses)}"
                 graphic="icon"
@@ -1290,19 +1303,13 @@ Basic Type: ${spec.bType}"
                   >${iconControlLookup[this.controlTag]}</mwc-icon
                 >
               </mwc-list-item>
-              ${fcdaElements
-                .filter(
-                  fcda =>
-                    !this.filterFcdaRegex ||
-                    this.filterFcdaRegex.test(
-                      `${this.getFcdaSearchString(controlElement, fcda)}`
-                    )
-                )
-                .map(fcdaElement =>
-                  this.renderFCDA(controlElement, fcdaElement)
-                )}
-            `;
-          })}
+              ${repeat(
+                fcdaElements,
+                i => `${identity(controlElement)} ${identity(i)}`,
+                fcdaElement => this.renderFCDA(controlElement, fcdaElement)
+              )}`;
+          }
+        )}
       </mwc-list>`;
   }
 
@@ -1632,7 +1639,7 @@ Basic Type: ${spec.bType}"
           : nothing}
       </span>
       <span slot="secondary"
-        >${extRefDescription ? html` ${extRefDescription}` : nothing}
+        >${extRefDescription ? html`${extRefDescription}` : nothing}
         ${extRefDescription && fcdaDesc && fcdaDesc !== ''
           ? `🡄 ${fcdaDesc}`
           : nothing}
@@ -1745,7 +1752,7 @@ Basic Type: ${spec.bType}"
                     outlined
                     @input=${debounce(() => {
                       this.filterExtRefPublisherRegex = getFilterRegex(
-                        this.filterExtRefPublisherInputUI.value
+                        this.filterExtRefPublisherInputUI!.value
                       );
                     })}
                   ></mwc-textfield
@@ -1786,7 +1793,7 @@ Basic Type: ${spec.bType}"
                     this.unsubscribe(selectedExtRefElement);
                   }
                   // without this statement, neither the ExtRef list or the FCDA list
-                  // (with the count) update correctly. It is unclear why.
+                  // (with the count) update correctly.
                   this.requestUpdate();
                   selectedListItem.selected = false;
                 }}
@@ -1819,7 +1826,7 @@ Basic Type: ${spec.bType}"
                   outlined
                   @input=${debounce(() => {
                     this.filterExtRefSubscriberRegex = getFilterRegex(
-                      this.filterExtRefSubscriberInputUI.value
+                      this.filterExtRefSubscriberInputUI!.value
                     );
                   })}
                 ></mwc-textfield

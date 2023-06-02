@@ -1015,7 +1015,7 @@ describe('goose', () => {
         sendKeys({ type: 'Thing' });
         await plugin.extRefListSubscriberUI?.updateComplete;
         await plugin.updateComplete;
-        extRefTextInput.scrollIntoView();
+        extRefTextInput!.scrollIntoView();
 
         await resetMouseState();
         await timeout(standardWait);
