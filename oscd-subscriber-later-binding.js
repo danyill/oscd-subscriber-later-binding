@@ -10178,11 +10178,9 @@ class SubscriberLaterBinding extends s$1 {
             }
         });
         // get all document extrefs
-        const extRefs = Array.from(this.doc.querySelectorAll(':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'));
+        const extRefs = Array.from(this.doc.querySelectorAll(':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef')).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
         // match the extrefs
-        extRefs
-            .filter(extRef => isSubscribed(extRef))
-            .forEach(extRef => {
+        extRefs.forEach(extRef => {
             var _a;
             const extRefMatcher = [
                 'iedName',
@@ -10257,7 +10255,6 @@ class SubscriberLaterBinding extends s$1 {
         // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
         // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
         // https://github.com/openscd/open-scd-core/issues/92
-        // I think this causes multiple update cycles -- can we do this earlier?
         if (_changedProperties.has('docName')) {
             this.currentSelectedControlElement = undefined;
             this.currentSelectedFcdaElement = undefined;
@@ -10429,42 +10426,15 @@ class SubscriberLaterBinding extends s$1 {
             if (this.subscriberView)
                 this.hidePreconfiguredNotMatching = !(this.filterMenuFcdaUI.index).has(3);
         });
-        // update other anchors, especially filterMenuExtRefPublisherUI and
-        // settingsMenuExtRefPublisherUI
         this.updateView();
-        // if (this.filterMenuExtRefPublisherUI) {
-        //   this.filterMenuExtRefPublisherUI.anchor = <HTMLElement>(
-        //     this.filterMenuExtrefPublisherButtonUI
-        //   );
-        //   // TODO: Code duplication with the above
-        //   this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
-        //     this.strictServiceTypes = !(<Set<number>>(
-        //       this.filterMenuExtRefPublisherUI.index
-        //     )).has(0);
-        //     this.hidePreconfiguredNotMatching = !(<Set<number>>(
-        //       this.filterMenuExtRefPublisherUI.index
-        //     )).has(1);
-        //   });
-        // }
-        // if (this.settingsMenuExtRefPublisherUI) {
-        //   this.settingsMenuExtRefPublisherUI.anchor = <HTMLElement>(
-        //     this.settingsMenuExtRefPublisherButtonUI
-        //   );
-        //   this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
-        //     this.notChangeSupervisionLNs = !(<Set<number>>(
-        //       this.settingsMenuExtRefPublisherUI.index
-        //     )).has(0);
-        //   });
-        // }
-        // this.requestUpdate();
-        // await this.updateComplete;
     }
     // eslint-disable-next-line class-methods-use-this
     renderSubscribedExtRefElement(extRefElement) {
-        var _a, _b;
+        var _a, _b, _c;
         const supervisionNode = getExistingSupervision(extRefElement);
         const { spec } = this.getExtRefInfo(extRefElement);
         const desc = getDescriptionAttribute(extRefElement);
+        const iedName = (_a = extRefElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
         return x ` <mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
@@ -10472,11 +10442,11 @@ class SubscriberLaterBinding extends s$1 {
       class="extref"
       data-extref="${identity(extRefElement)}"
       title="${spec.cdc && spec.bType
-            ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
+            ? `CDC: ${(_b = spec.cdc) !== null && _b !== void 0 ? _b : '?'}\nBasic Type: ${(_c = spec.bType) !== null && _c !== void 0 ? _c : '?'}`
             : ''}"
     >
       <span
-        >${identity(extRefElement.parentElement)}
+        >${iedName} > ${extRefPath(extRefElement)}:
         ${extRefElement.getAttribute('intAddr')}
       </span>
       <span slot="secondary"
@@ -10790,26 +10760,27 @@ Basic Type: ${spec.bType}"
       <li divider role="separator"></li>
       ${availableExtRefs.length > 0
             ? x `${availableExtRefs.map(extRefElement => {
-                var _a, _b;
+                var _a, _b, _c;
                 const hasMissingMapping = isSubscribed(extRefElement) &&
                     !findFCDAs$1(extRefElement).find(x => x !== undefined);
                 const { spec } = this.getExtRefInfo(extRefElement);
                 const desc = getDescriptionAttribute(extRefElement);
                 const disabledExtRef = this.nonMatchingExtRefElement(extRefElement, this.currentSelectedFcdaElement, this.currentSelectedControlElement);
+                const iedName = (_a = extRefElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
                 return x `<mwc-list-item
               graphic="large"
               ?disabled=${disabledExtRef}
               ?hasMeta=${isPartiallyConfigured(extRefElement) ||
                     hasMissingMapping}
-              ?twoline=${desc}
+              ?twoline=${!!desc}
               class="extref ${disabledExtRef ? 'show-pxx-mismatch' : ''}"
               data-extref="${identity(extRefElement)}"
               title="${spec.cdc && spec.bType
-                    ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
+                    ? `CDC: ${(_b = spec.cdc) !== null && _b !== void 0 ? _b : '?'}\nBasic Type: ${(_c = spec.bType) !== null && _c !== void 0 ? _c : '?'}`
                     : ''}"
             >
               <span>
-                ${identity(extRefElement.parentElement)}
+                ${iedName} > ${extRefPath(extRefElement)}:
                 ${extRefElement.getAttribute('intAddr')}
               </span>
               <span slot="secondary">${desc}</span>
@@ -11279,10 +11250,11 @@ Basic Type: ${spec.bType}"
         if (this.controlBlockFcdaInfo.size === 0)
             this.buildExtRefCount();
         const classList = { 'subscriber-view': (_a = this.subscriberView) !== null && _a !== void 0 ? _a : false };
-        return x `<div id="listContainer" class="${o(classList)}">
+        const result = x `<div id="listContainer" class="${o(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
       </div>
       ${this.renderSwitchView()}`;
+        return result;
     }
 }
 SubscriberLaterBinding.styles = i$5 `
@@ -11673,18 +11645,6 @@ __decorate([
 __decorate([
     t$1()
 ], SubscriberLaterBinding.prototype, "currentSelectedExtRefElement", void 0);
-__decorate([
-    t$1()
-], SubscriberLaterBinding.prototype, "controlBlockFcdaInfo", void 0);
-__decorate([
-    t$1()
-], SubscriberLaterBinding.prototype, "fcdaInfo", void 0);
-__decorate([
-    t$1()
-], SubscriberLaterBinding.prototype, "extRefInfo", void 0);
-__decorate([
-    t$1()
-], SubscriberLaterBinding.prototype, "supervisionData", void 0);
 
 export { SubscriberLaterBinding as default };
 //# sourceMappingURL=oscd-subscriber-later-binding.js.map

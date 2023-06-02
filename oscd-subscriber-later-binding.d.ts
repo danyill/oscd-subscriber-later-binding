@@ -13,19 +13,6 @@ import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import type { Menu } from '@material/mwc-menu';
 import type { TextField } from '@material/mwc-textfield';
 declare type controlTagType = 'SampledValueControl' | 'GSEControl';
-declare type fcdaInfo = {
-    spec: {
-        cdc: string | null;
-        bType: string | null;
-    };
-    desc: string[];
-};
-declare type extRefInfo = {
-    spec: {
-        cdc: string | null;
-        bType: string | null;
-    };
-};
 export default class SubscriberLaterBinding extends LitElement {
     doc: XMLDocument;
     docName: string;
@@ -70,9 +57,9 @@ export default class SubscriberLaterBinding extends LitElement {
     currentSelectedFcdaElement: Element | undefined;
     currentIedElement: Element | undefined;
     currentSelectedExtRefElement: Element | undefined;
-    controlBlockFcdaInfo: Map<string, number>;
-    fcdaInfo: Map<string, fcdaInfo>;
-    extRefInfo: Map<string, extRefInfo>;
+    private controlBlockFcdaInfo;
+    private fcdaInfo;
+    private extRefInfo;
     private supervisionData;
     protected storeSettings(): void;
     protected restoreSettings(): void;
