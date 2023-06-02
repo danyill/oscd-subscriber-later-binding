@@ -10,15 +10,7 @@ import {
 
 export const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
 
-export function getFcdaOrExtRefTitleValue(fcdaElement: Element): string {
-  return `${fcdaElement.getAttribute('doName') ?? ''}${
-    fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
-      ? `.`
-      : ``
-  }${fcdaElement.getAttribute('daName') ?? ''}`;
-}
-
-export function getFcdaOrExtRefSubtitleValue(fcdaElement: Element): string {
+export function getFcdaOrExtRefTitle(fcdaElement: Element): string {
   return `${fcdaElement.getAttribute('ldInst')} ${
     fcdaElement.hasAttribute('ldInst') ? `/` : ''
   }${
@@ -27,7 +19,11 @@ export function getFcdaOrExtRefSubtitleValue(fcdaElement: Element): string {
       : ''
   } ${fcdaElement.getAttribute('lnClass') ?? ''} ${
     fcdaElement.getAttribute('lnInst') ?? ''
-  }`;
+  } ${fcdaElement.getAttribute('doName') ?? ''}${
+    fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
+      ? `.`
+      : ``
+  }${fcdaElement.getAttribute('daName') ?? ''}`;
 }
 
 function dataAttributeSpecification(
@@ -374,7 +370,7 @@ export function getExistingSupervision(extRef: Element | null): Element | null {
     extRef.ownerDocument
       .querySelector(`IED[name="${iedName}"]`)!
       .querySelectorAll(
-        `LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
+        `:root > IED > AccessPoint > Server > LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
       )
   ).find(val => val.textContent === getCbReference(extRef));
 
@@ -995,7 +991,7 @@ export function getUsedSupervisionInstances(
 
   const supervisionInstances = Array.from(
     doc!.querySelectorAll(
-      `IED LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
+      `:root > IED > AccessPoint > Server > LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
     )
   )
     .filter(val => val.textContent !== '')

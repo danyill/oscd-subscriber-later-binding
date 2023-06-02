@@ -31,6 +31,7 @@ import type { Menu } from '@material/mwc-menu';
 import type { TextField } from '@material/mwc-textfield';
 
 import { identity } from './foundation/identities/identity.js';
+import { selector } from './foundation/identities/selector.js';
 import {
   canRemoveSubscriptionSupervision,
   checkEditionSpecificRequirements,
@@ -42,8 +43,7 @@ import {
   getExtRefElements,
   getFcdaElements,
   getExtRefControlBlockPath,
-  getFcdaOrExtRefSubtitleValue,
-  getFcdaOrExtRefTitleValue,
+  getFcdaOrExtRefTitle,
   getOrderedIeds,
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
@@ -65,8 +65,6 @@ import {
   gooseActionIcon,
   smvActionIcon,
 } from './foundation/icons.js';
-
-import { selector } from './foundation/identities/selector.js';
 
 type controlTagType = 'SampledValueControl' | 'GSEControl';
 
@@ -584,9 +582,7 @@ export default class SubscriberLaterBinding extends LitElement {
       subscriberFCDA = findFCDAs(extRef).find(x => x !== undefined);
       extRefPathValue = `${extRef.getAttribute(
         'iedName'
-      )} ${getFcdaOrExtRefSubtitleValue(extRef)} ${getFcdaOrExtRefTitleValue(
-        extRef
-      )}`;
+      )} ${getFcdaOrExtRefTitle(extRef)}`;
       fcdaDesc = subscriberFCDA
         ? this.getFcdaInfo(subscriberFCDA).desc.join('>')
         : null;
@@ -604,9 +600,7 @@ export default class SubscriberLaterBinding extends LitElement {
   private getFcdaSearchString(control: Element, fcda: Element): string {
     return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(
       fcda
-    )} ${getFcdaOrExtRefSubtitleValue(fcda)} ${getFcdaOrExtRefTitleValue(
-      fcda
-    )} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
+    )} ${getFcdaOrExtRefTitle(fcda)} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
   }
 
   protected resetCaching(): void {
@@ -1053,10 +1047,7 @@ export default class SubscriberLaterBinding extends LitElement {
       title="CDC: ${spec.cdc ?? '?'}
 Basic Type: ${spec.bType}"
     >
-      <span
-        >${getFcdaOrExtRefSubtitleValue(fcdaElement)}
-        ${getFcdaOrExtRefTitleValue(fcdaElement)}
-      </span>
+      <span>${getFcdaOrExtRefTitle(fcdaElement)} </span>
       <span slot="secondary"> ${fcdaDesc}</span>
       <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
       ${fcdaCount !== 0 ? html`<span slot="meta">${fcdaCount}</span>` : nothing}
@@ -1594,9 +1585,7 @@ Basic Type: ${spec.bType}"
       subscribed || hasMissingMapping
         ? `${
             extRefElement.getAttribute('iedName') ?? 'Unknown'
-          } > ${getFcdaOrExtRefSubtitleValue(
-            extRefElement
-          )} ${getFcdaOrExtRefTitleValue(extRefElement)} `
+          } > ${getFcdaOrExtRefTitle(extRefElement)}`
         : '';
     const fcdaDesc = subscriberFCDA
       ? this.getFcdaInfo(subscriberFCDA).desc.join('>')
@@ -1811,7 +1800,7 @@ Basic Type: ${spec.bType}"
     };
 
     const hasExtRefs = this.doc?.querySelector(
-      'IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+      ':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
     );
 
     return html`<section class="column extref">
