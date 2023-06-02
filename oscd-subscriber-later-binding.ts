@@ -582,9 +582,11 @@ export default class SubscriberLaterBinding extends LitElement {
 
     if (subscribed) {
       subscriberFCDA = findFCDAs(extRef).find(x => x !== undefined);
-      extRefPathValue = `${getFcdaOrExtRefSubtitleValue(
+      extRefPathValue = `${extRef.getAttribute(
+        'iedName'
+      )} ${getFcdaOrExtRefSubtitleValue(extRef)} ${getFcdaOrExtRefTitleValue(
         extRef
-      )} ${getFcdaOrExtRefTitleValue(extRef)}`;
+      )}`;
       fcdaDesc = subscriberFCDA
         ? this.getFcdaInfo(subscriberFCDA).desc.join('>')
         : null;
