@@ -10231,7 +10231,7 @@ class SubscriberLaterBinding extends s$1 {
         let fcdaDesc;
         if (subscribed) {
             subscriberFCDA = findFCDAs$1(extRef).find(x => x !== undefined);
-            extRefPathValue = `${getFcdaOrExtRefSubtitleValue(extRef)} ${getFcdaOrExtRefTitleValue(extRef)}`;
+            extRefPathValue = `${extRef.getAttribute('iedName')} ${getFcdaOrExtRefSubtitleValue(extRef)} ${getFcdaOrExtRefTitleValue(extRef)}`;
             fcdaDesc = subscriberFCDA
                 ? this.getFcdaInfo(subscriberFCDA).desc.join('>')
                 : null;
