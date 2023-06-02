@@ -36,8 +36,8 @@ export default class SubscriberLaterBinding extends LitElement {
     filterMenuFcdaUI: Menu;
     filterMenuFcdaButtonUI: Icon;
     filterFcdaInputUI: TextField;
-    filterExtRefPublisherInputUI: TextField;
-    filterExtRefSubscriberInputUI: TextField;
+    filterExtRefPublisherInputUI?: TextField;
+    filterExtRefSubscriberInputUI?: TextField;
     filterMenuExtRefSubscriberUI: Menu;
     filterMenuExtRefPublisherUI: Menu;
     filterMenuExtRefSubscriberButtonUI: Icon;

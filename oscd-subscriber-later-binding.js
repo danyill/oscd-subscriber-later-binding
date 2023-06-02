@@ -9139,12 +9139,12 @@ function getFcdaOrExtRefSubtitleValue(fcdaElement) {
 }
 function dataAttributeSpecification(anyLn, doName, daName) {
     const doc = anyLn.ownerDocument;
-    const lNodeType = doc.querySelector(`LNodeType[id="${anyLn.getAttribute('lnType')}"]`);
+    const lNodeType = doc.querySelector(`:root > DataTypeTemplates > LNodeType[id="${anyLn.getAttribute('lnType')}"]`);
     const doNames = doName.split('.');
     let leaf = lNodeType;
     for (const doN of doNames) {
         const dO = leaf === null || leaf === void 0 ? void 0 : leaf.querySelector(`DO[name="${doN}"], SDO[name="${doN}"]`);
-        leaf = doc.querySelector(`DOType[id="${dO === null || dO === void 0 ? void 0 : dO.getAttribute('type')}"]`);
+        leaf = doc.querySelector(`:root > DataTypeTemplates > DOType[id="${dO === null || dO === void 0 ? void 0 : dO.getAttribute('type')}"]`);
     }
     if (!leaf || !leaf.getAttribute('cdc'))
         return { cdc: null, bType: null };
@@ -9154,7 +9154,7 @@ function dataAttributeSpecification(anyLn, doName, daName) {
         const dA = leaf === null || leaf === void 0 ? void 0 : leaf.querySelector(`DA[name="${daN}"], BDA[name="${daN}"]`);
         leaf =
             daNames.indexOf(daN) < daNames.length - 1
-                ? doc.querySelector(`DAType[id="${dA === null || dA === void 0 ? void 0 : dA.getAttribute('type')}"]`)
+                ? doc.querySelector(`root > DataTypeTemplates > DAType[id="${dA === null || dA === void 0 ? void 0 : dA.getAttribute('type')}"]`)
                 : dA;
     }
     if (!leaf || !leaf.getAttribute('bType'))
@@ -9175,7 +9175,7 @@ function inputRestriction(extRef) {
     const [pLN, pDO, pDA] = ['pLN', 'pDO', 'pDA'].map(attr => extRef.getAttribute(attr));
     if (!pLN || !pDO || !pDA)
         return { cdc: null, bType: null };
-    const anyLns = Array.from((_a = extRef.ownerDocument.querySelectorAll(`LN[lnClass="${pLN}"],LN0[lnClass="${pLN}"]`)) !== null && _a !== void 0 ? _a : []);
+    const anyLns = Array.from((_a = extRef.ownerDocument.querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN[lnClass="${pLN}"], :root > IED > AccessPoint > Server > LDevice > LN0[lnClass="${pLN}"]`)) !== null && _a !== void 0 ? _a : []);
     for (const anyLn of anyLns) {
         const dataSpec = dataAttributeSpecification(anyLn, pDO, pDA);
         if (dataSpec.cdc !== null && dataSpec.bType !== null)
@@ -9196,7 +9196,7 @@ function fcdaSpecification(fcda) {
     if (!doName || !daName)
         return { cdc: null, bType: null };
     const ied = fcda.closest('IED');
-    const anyLn = Array.from((_a = ied === null || ied === void 0 ? void 0 : ied.querySelectorAll(`LDevice[inst="${fcda.getAttribute('ldInst')}"] > LN, LDevice[inst="${fcda.getAttribute('ldInst')}"] LN0`)) !== null && _a !== void 0 ? _a : []).find(aLn => {
+    const anyLn = Array.from((_a = ied === null || ied === void 0 ? void 0 : ied.querySelectorAll(`:root > IED > AccessPoint > Server > LDevice[inst="${fcda.getAttribute('ldInst')}"] > LN, :root > IED > AccessPoint > Server > LDevice[inst="${fcda.getAttribute('ldInst')}"] > LN0`)) !== null && _a !== void 0 ? _a : []).find(aLn => {
         var _a, _b, _c, _d, _e, _f;
         return ((_a = aLn.getAttribute('prefix')) !== null && _a !== void 0 ? _a : '') ===
             ((_b = fcda.getAttribute('prefix')) !== null && _b !== void 0 ? _b : '') &&
@@ -10240,7 +10240,7 @@ class SubscriberLaterBinding extends s$1 {
         return `${iedInfo} ${identity(extRef)} ${identity((_a = this.getCachedSupervision(extRef)) !== null && _a !== void 0 ? _a : null)} ${getDescriptionAttribute(extRef)} ${identity(subscriberFCDA !== null && subscriberFCDA !== void 0 ? subscriberFCDA : null)} ${fcdaDesc} ${extRefPathValue} ${extRefCBPath}`;
     }
     getFcdaSearchString(control, fcda) {
-        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${getFcdaOrExtRefTitleValue(fcda)} ${getFcdaOrExtRefSubtitleValue(fcda)} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
+        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${getFcdaOrExtRefSubtitleValue(fcda)} ${getFcdaOrExtRefTitleValue(fcda)} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
     }
     resetCaching() {
         // reset caching
@@ -10256,6 +10256,11 @@ class SubscriberLaterBinding extends s$1 {
         // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
         // https://github.com/openscd/open-scd-core/issues/92
         if (_changedProperties.has('docName')) {
+            if (this.filterExtRefPublisherInputUI)
+                this.filterExtRefPublisherInputUI.value = '';
+            if (this.filterExtRefSubscriberInputUI)
+                this.filterExtRefSubscriberInputUI.value = '';
+            this.filterFcdaInputUI.value = '';
             this.currentSelectedControlElement = undefined;
             this.currentSelectedFcdaElement = undefined;
             this.currentSelectedExtRefElement = undefined;
@@ -10435,7 +10440,7 @@ class SubscriberLaterBinding extends s$1 {
         const { spec } = this.getExtRefInfo(extRefElement);
         const desc = getDescriptionAttribute(extRefElement);
         const iedName = (_a = extRefElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
-        return x ` <mwc-list-item
+        return x `<mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
       ?twoline=${desc || supervisionNode}
@@ -10688,8 +10693,7 @@ Basic Type: ${spec.bType}"
             this.currentSelectedFcdaElement = undefined;
         }}"
       >
-        ${controlElements
-            .filter(controlElement => {
+        ${c(controlElements.filter(controlElement => {
             const fcdaElements = getFcdaElements(controlElement);
             // if disabled (non-matching pXX or DOs) are filtered
             // then don't show them
@@ -10698,10 +10702,10 @@ Basic Type: ${spec.bType}"
                 fcdaElements.some(fcda => !this.filterFcdaRegex ||
                     this.filterFcdaRegex.test(`${this.getFcdaSearchString(controlElement, fcda)}`));
             return (isWithinSearch && fcdaElements.length && !onlyHasDisabledItems);
-        })
-            .map(controlElement => {
+        }), i => identity(i), controlElement => {
             var _a;
-            const fcdaElements = getFcdaElements(controlElement);
+            const fcdaElements = getFcdaElements(controlElement).filter(fcda => !this.filterFcdaRegex ||
+                this.filterFcdaRegex.test(`${this.getFcdaSearchString(controlElement, fcda)}`));
             const someSubscribed = fcdaElements.some(fcda => this.getExtRefCount(fcda, controlElement) !== 0);
             const someNotSubscribed = fcdaElements.some(fcda => this.getExtRefCount(fcda, controlElement) === 0);
             const filterClasses = {
@@ -10710,8 +10714,7 @@ Basic Type: ${spec.bType}"
             };
             const iedName = (_a = controlElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
             // TODO: Restore wizard editing functionality
-            return x `
-              <mwc-list-item
+            return x `<mwc-list-item
                 noninteractive
                 class="control ${o(filterClasses)}"
                 graphic="icon"
@@ -10729,11 +10732,7 @@ Basic Type: ${spec.bType}"
                   >${iconControlLookup[this.controlTag]}</mwc-icon
                 >
               </mwc-list-item>
-              ${fcdaElements
-                .filter(fcda => !this.filterFcdaRegex ||
-                this.filterFcdaRegex.test(`${this.getFcdaSearchString(controlElement, fcda)}`))
-                .map(fcdaElement => this.renderFCDA(controlElement, fcdaElement))}
-            `;
+              ${c(fcdaElements, i => `${identity(controlElement)} ${identity(i)}`, fcdaElement => this.renderFCDA(controlElement, fcdaElement))}`;
         })}
       </mwc-list>`;
     }
@@ -11013,7 +11012,7 @@ Basic Type: ${spec.bType}"
             : A}
       </span>
       <span slot="secondary"
-        >${extRefDescription ? x ` ${extRefDescription}` : A}
+        >${extRefDescription ? x `${extRefDescription}` : A}
         ${extRefDescription && fcdaDesc && fcdaDesc !== ''
             ? `🡄 ${fcdaDesc}`
             : A}
@@ -11127,7 +11126,7 @@ Basic Type: ${spec.bType}"
                         this.unsubscribe(selectedExtRefElement);
                     }
                     // without this statement, neither the ExtRef list or the FCDA list
-                    // (with the count) update correctly. It is unclear why.
+                    // (with the count) update correctly.
                     this.requestUpdate();
                     selectedListItem.selected = false;
                 }}
