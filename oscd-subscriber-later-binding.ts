@@ -522,32 +522,30 @@ export default class SubscriberLaterBinding extends LitElement {
       this.doc.querySelectorAll(
         ':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
       )
-    );
+    ).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
 
     // match the extrefs
-    extRefs
-      .filter(extRef => isSubscribed(extRef))
-      .forEach(extRef => {
-        const extRefMatcher = [
-          'iedName',
-          'ldInst',
-          'prefix',
-          'lnClass',
-          'lnInst',
-          'doName',
-          'daName',
-        ]
-          .map(attr => extRef.getAttribute(attr))
-          .join(' ');
-        if (fcdaCompare.has(extRefMatcher)) {
-          const fcda = fcdaCompare.get(extRefMatcher);
-          const { key, cb } = fcdaData.get(fcda);
-          if (checkEditionSpecificRequirements(this.controlTag, cb, extRef)) {
-            const currentCountValue = this.controlBlockFcdaInfo.get(key) ?? 0;
-            this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
-          }
+    extRefs.forEach(extRef => {
+      const extRefMatcher = [
+        'iedName',
+        'ldInst',
+        'prefix',
+        'lnClass',
+        'lnInst',
+        'doName',
+        'daName',
+      ]
+        .map(attr => extRef.getAttribute(attr))
+        .join(' ');
+      if (fcdaCompare.has(extRefMatcher)) {
+        const fcda = fcdaCompare.get(extRefMatcher);
+        const { key, cb } = fcdaData.get(fcda);
+        if (checkEditionSpecificRequirements(this.controlTag, cb, extRef)) {
+          const currentCountValue = this.controlBlockFcdaInfo.get(key) ?? 0;
+          this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
         }
-      });
+      }
+    });
   }
 
   private getFcdaInfo(fcdaElement: Element): fcdaInfo {
@@ -622,12 +620,9 @@ export default class SubscriberLaterBinding extends LitElement {
   protected updated(_changedProperties: PropertyValues): void {
     super.updated(_changedProperties);
 
-    console.log(_changedProperties);
-
     // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
     // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
     // https://github.com/openscd/open-scd-core/issues/92
-    // I think this causes multiple update cycles -- can we do this earlier?
     if (_changedProperties.has('docName')) {
       this.currentSelectedControlElement = undefined;
       this.currentSelectedFcdaElement = undefined;
@@ -905,40 +900,7 @@ export default class SubscriberLaterBinding extends LitElement {
         )).has(3);
     });
 
-    // update other anchors, especially filterMenuExtRefPublisherUI and
-    // settingsMenuExtRefPublisherUI
     this.updateView();
-
-    // if (this.filterMenuExtRefPublisherUI) {
-    //   this.filterMenuExtRefPublisherUI.anchor = <HTMLElement>(
-    //     this.filterMenuExtrefPublisherButtonUI
-    //   );
-
-    //   // TODO: Code duplication with the above
-    //   this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
-    //     this.strictServiceTypes = !(<Set<number>>(
-    //       this.filterMenuExtRefPublisherUI.index
-    //     )).has(0);
-    //     this.hidePreconfiguredNotMatching = !(<Set<number>>(
-    //       this.filterMenuExtRefPublisherUI.index
-    //     )).has(1);
-    //   });
-    // }
-
-    // if (this.settingsMenuExtRefPublisherUI) {
-    //   this.settingsMenuExtRefPublisherUI.anchor = <HTMLElement>(
-    //     this.settingsMenuExtRefPublisherButtonUI
-    //   );
-
-    //   this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
-    //     this.notChangeSupervisionLNs = !(<Set<number>>(
-    //       this.settingsMenuExtRefPublisherUI.index
-    //     )).has(0);
-    //   });
-    // }
-
-    // this.requestUpdate();
-    // await this.updateComplete;
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -948,6 +910,7 @@ export default class SubscriberLaterBinding extends LitElement {
     const supervisionNode = getExistingSupervision(extRefElement);
     const { spec } = this.getExtRefInfo(extRefElement);
     const desc = getDescriptionAttribute(extRefElement);
+    const iedName = extRefElement.closest('IED')?.getAttribute('name');
 
     return html` <mwc-list-item
       graphic="large"
@@ -960,7 +923,7 @@ export default class SubscriberLaterBinding extends LitElement {
         : ''}"
     >
       <span
-        >${identity(extRefElement.parentElement)}
+        >${iedName} > ${extRefPath(extRefElement)}:
         ${extRefElement.getAttribute('intAddr')}
       </span>
       <span slot="secondary"
@@ -1386,13 +1349,14 @@ Basic Type: ${spec.bType}"
               this.currentSelectedFcdaElement,
               this.currentSelectedControlElement
             );
+            const iedName = extRefElement.closest('IED')?.getAttribute('name');
 
             return html`<mwc-list-item
               graphic="large"
               ?disabled=${disabledExtRef}
               ?hasMeta=${isPartiallyConfigured(extRefElement) ||
               hasMissingMapping}
-              ?twoline=${desc}
+              ?twoline=${!!desc}
               class="extref ${disabledExtRef ? 'show-pxx-mismatch' : ''}"
               data-extref="${identity(extRefElement)}"
               title="${spec.cdc && spec.bType
@@ -1400,7 +1364,7 @@ Basic Type: ${spec.bType}"
                 : ''}"
             >
               <span>
-                ${identity(extRefElement.parentElement)}
+                ${iedName} > ${extRefPath(extRefElement)}:
                 ${extRefElement.getAttribute('intAddr')}
               </span>
               <span slot="secondary">${desc}</span>
@@ -1963,7 +1927,6 @@ Basic Type: ${spec.bType}"
   }
 
   render(): TemplateResult {
-    console.time('render');
     // initial information caching
     if (this.controlBlockFcdaInfo.size === 0) this.buildExtRefCount();
 
@@ -1972,7 +1935,6 @@ Basic Type: ${spec.bType}"
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
       </div>
       ${this.renderSwitchView()}`;
-    console.timeEnd('render');
     return result;
   }
 
