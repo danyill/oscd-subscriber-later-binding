@@ -1,7 +1,6 @@
 import { Insert, Remove, Update } from '@openscd/open-scd-core';
 export declare const SCL_NAMESPACE = "http://www.iec.ch/61850/2003/SCL";
-export declare function getFcdaOrExtRefTitleValue(fcdaElement: Element): string;
-export declare function getFcdaOrExtRefSubtitleValue(fcdaElement: Element): string;
+export declare function getFcdaOrExtRefTitle(fcdaElement: Element): string;
 /**
  * Edition 2 and later SCL files allow to restrict subscription on
  * later binding type inputs (`ExtRef` elements) based on a `CDC` and

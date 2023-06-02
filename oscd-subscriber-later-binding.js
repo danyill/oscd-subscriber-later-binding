@@ -9125,17 +9125,13 @@ function findFCDAs$1(extRef) {
 }
 
 const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
-function getFcdaOrExtRefTitleValue(fcdaElement) {
-    var _a, _b;
-    return `${(_a = fcdaElement.getAttribute('doName')) !== null && _a !== void 0 ? _a : ''}${fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
-        ? `.`
-        : ``}${(_b = fcdaElement.getAttribute('daName')) !== null && _b !== void 0 ? _b : ''}`;
-}
-function getFcdaOrExtRefSubtitleValue(fcdaElement) {
-    var _a, _b;
+function getFcdaOrExtRefTitle(fcdaElement) {
+    var _a, _b, _c, _d;
     return `${fcdaElement.getAttribute('ldInst')} ${fcdaElement.hasAttribute('ldInst') ? `/` : ''}${fcdaElement.getAttribute('prefix')
         ? ` ${fcdaElement.getAttribute('prefix')}`
-        : ''} ${(_a = fcdaElement.getAttribute('lnClass')) !== null && _a !== void 0 ? _a : ''} ${(_b = fcdaElement.getAttribute('lnInst')) !== null && _b !== void 0 ? _b : ''}`;
+        : ''} ${(_a = fcdaElement.getAttribute('lnClass')) !== null && _a !== void 0 ? _a : ''} ${(_b = fcdaElement.getAttribute('lnInst')) !== null && _b !== void 0 ? _b : ''} ${(_c = fcdaElement.getAttribute('doName')) !== null && _c !== void 0 ? _c : ''}${fcdaElement.hasAttribute('doName') && fcdaElement.hasAttribute('daName')
+        ? `.`
+        : ``}${(_d = fcdaElement.getAttribute('daName')) !== null && _d !== void 0 ? _d : ''}`;
 }
 function dataAttributeSpecification(anyLn, doName, daName) {
     const doc = anyLn.ownerDocument;
@@ -9351,7 +9347,7 @@ function getExistingSupervision(extRef) {
     const iedName = (_a = extRef.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
     const candidates = Array.from(extRef.ownerDocument
         .querySelector(`IED[name="${iedName}"]`)
-        .querySelectorAll(`LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`)).find(val => val.textContent === getCbReference(extRef));
+        .querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`)).find(val => val.textContent === getCbReference(extRef));
     return candidates !== undefined ? candidates.closest('LN') : null;
 }
 /**
@@ -9815,7 +9811,7 @@ function getUsedSupervisionInstances(doc, serviceType) {
         return [];
     const supervisionType = serviceType === 'GOOSE' ? 'LGOS' : 'LSVS';
     const refSelector = supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
-    const supervisionInstances = Array.from(doc.querySelectorAll(`IED LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`))
+    const supervisionInstances = Array.from(doc.querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`))
         .filter(val => val.textContent !== '')
         .map(val => val.closest('LN'));
     return supervisionInstances;
@@ -10231,7 +10227,7 @@ class SubscriberLaterBinding extends s$1 {
         let fcdaDesc;
         if (subscribed) {
             subscriberFCDA = findFCDAs$1(extRef).find(x => x !== undefined);
-            extRefPathValue = `${extRef.getAttribute('iedName')} ${getFcdaOrExtRefSubtitleValue(extRef)} ${getFcdaOrExtRefTitleValue(extRef)}`;
+            extRefPathValue = `${extRef.getAttribute('iedName')} ${getFcdaOrExtRefTitle(extRef)}`;
             fcdaDesc = subscriberFCDA
                 ? this.getFcdaInfo(subscriberFCDA).desc.join('>')
                 : null;
@@ -10240,7 +10236,7 @@ class SubscriberLaterBinding extends s$1 {
         return `${iedInfo} ${identity(extRef)} ${identity((_a = this.getCachedSupervision(extRef)) !== null && _a !== void 0 ? _a : null)} ${getDescriptionAttribute(extRef)} ${identity(subscriberFCDA !== null && subscriberFCDA !== void 0 ? subscriberFCDA : null)} ${fcdaDesc} ${extRefPathValue} ${extRefCBPath}`;
     }
     getFcdaSearchString(control, fcda) {
-        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${getFcdaOrExtRefSubtitleValue(fcda)} ${getFcdaOrExtRefTitleValue(fcda)} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
+        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${getFcdaOrExtRefTitle(fcda)} ${this.getFcdaInfo(fcda).desc.join(' ')}`;
     }
     resetCaching() {
         // reset caching
@@ -10538,10 +10534,7 @@ class SubscriberLaterBinding extends s$1 {
       title="CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}
 Basic Type: ${spec.bType}"
     >
-      <span
-        >${getFcdaOrExtRefSubtitleValue(fcdaElement)}
-        ${getFcdaOrExtRefTitleValue(fcdaElement)}
-      </span>
+      <span>${getFcdaOrExtRefTitle(fcdaElement)} </span>
       <span slot="secondary"> ${fcdaDesc}</span>
       <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
       ${fcdaCount !== 0 ? x `<span slot="meta">${fcdaCount}</span>` : A}
@@ -10978,7 +10971,7 @@ Basic Type: ${spec.bType}"
         // this fcda name is taken from the ExtRef so even if an FCDA
         // cannot be located we can "show" the subscription
         const fcdaName = subscribed || hasMissingMapping
-            ? `${(_a = extRefElement.getAttribute('iedName')) !== null && _a !== void 0 ? _a : 'Unknown'} > ${getFcdaOrExtRefSubtitleValue(extRefElement)} ${getFcdaOrExtRefTitleValue(extRefElement)} `
+            ? `${(_a = extRefElement.getAttribute('iedName')) !== null && _a !== void 0 ? _a : 'Unknown'} > ${getFcdaOrExtRefTitle(extRefElement)}`
             : '';
         const fcdaDesc = subscriberFCDA
             ? this.getFcdaInfo(subscriberFCDA).desc.join('>')
@@ -11141,7 +11134,7 @@ Basic Type: ${spec.bType}"
             'show-bound': !this.hideBound,
             'show-not-bound': !this.hideNotBound,
         };
-        const hasExtRefs = (_a = this.doc) === null || _a === void 0 ? void 0 : _a.querySelector('IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef');
+        const hasExtRefs = (_a = this.doc) === null || _a === void 0 ? void 0 : _a.querySelector(':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef');
         return x `<section class="column extref">
       ${this.renderSubscriberViewExtRefListTitle()}
       ${!hasExtRefs
