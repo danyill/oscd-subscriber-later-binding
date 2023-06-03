@@ -1,4 +1,5 @@
 import { LitElement, PropertyValues, TemplateResult } from 'lit';
+import '@material/mwc-fab';
 import '@material/mwc-icon';
 import '@material/mwc-icon-button-toggle';
 import '@material/mwc-list';
@@ -35,7 +36,7 @@ export default class SubscriberLaterBinding extends LitElement {
     switchControlTypeUI?: IconButtonToggle;
     filterMenuFcdaUI: Menu;
     filterMenuFcdaButtonUI: Icon;
-    filterFcdaInputUI: TextField;
+    filterFcdaInputUI?: TextField;
     filterExtRefPublisherInputUI?: TextField;
     filterExtRefSubscriberInputUI?: TextField;
     filterMenuExtRefSubscriberUI: Menu;
@@ -47,7 +48,7 @@ export default class SubscriberLaterBinding extends LitElement {
     settingsMenuExtRefPublisherUI: Menu;
     settingsMenuExtRefSubscriberButtonUI: Icon;
     settingsMenuExtRefPublisherButtonUI: Icon;
-    fcdaListUI: List;
+    fcdaListUI?: List;
     extRefListPublisherUI?: List;
     publisherExtRefSectionUI?: HTMLElement;
     extRefListSubscriberUI?: List;
@@ -71,7 +72,8 @@ export default class SubscriberLaterBinding extends LitElement {
     private getExtRefSubscriberSearchString;
     private getFcdaSearchString;
     protected resetCaching(): void;
-    protected updated(_changedProperties: PropertyValues): void;
+    resetSearchFields(): void;
+    protected updated(changedProperties: PropertyValues): void;
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.
      *
