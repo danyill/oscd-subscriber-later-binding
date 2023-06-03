@@ -12,6 +12,7 @@ import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
 
+import '@material/mwc-fab';
 import '@material/mwc-icon';
 import '@material/mwc-icon-button-toggle';
 import '@material/mwc-list';
@@ -229,7 +230,7 @@ function getFilterRegex(searchText: string): RegExp {
   return new RegExp(`${regexString.join('')}.*`, 'i');
 }
 
-function debounce(callback: any, delay = 250) {
+function debounce(callback: any, delay = 100) {
   let timeout: any;
 
   return (...args: any) => {
@@ -306,7 +307,7 @@ export default class SubscriberLaterBinding extends LitElement {
   filterMenuFcdaButtonUI!: Icon;
 
   @query('#filterFcdaInput')
-  filterFcdaInputUI!: TextField;
+  filterFcdaInputUI?: TextField;
 
   @query('#filterExtRefPublisherInput')
   filterExtRefPublisherInputUI?: TextField;
@@ -342,7 +343,7 @@ export default class SubscriberLaterBinding extends LitElement {
   settingsMenuExtRefPublisherButtonUI!: Icon;
 
   @query('#fcdaList')
-  fcdaListUI!: List;
+  fcdaListUI?: List;
 
   @query('#publisherExtRefList')
   extRefListPublisherUI?: List;
@@ -381,7 +382,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
   protected storeSettings(): void {
     const storedConfiguration = {
-      subscriberView: this.switchViewUI!.on,
+      subscriberView: this.subscriberView,
       controlTag: this.switchControlTypeUI!.on
         ? 'GSEControl'
         : 'SampledValueControl',
@@ -487,7 +488,8 @@ export default class SubscriberLaterBinding extends LitElement {
 
     this.doc
       .querySelectorAll(
-        ':root > IED > AccessPoint > Server > LDevice > LN > DataSet, :root > IED > AccessPoint > Server > LDevice > LN0 > DataSet'
+        `:root > IED > AccessPoint > Server > LDevice > LN > DataSet, 
+         :root > IED > AccessPoint > Server > LDevice > LN0 > DataSet`
       )
       .forEach(dataSet => {
         if (dsToCb.has(identity(dataSet))) {
@@ -518,7 +520,8 @@ export default class SubscriberLaterBinding extends LitElement {
     // get all document extrefs
     const extRefs = Array.from(
       this.doc.querySelectorAll(
-        ':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+        `:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
+         :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`
       )
     ).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
 
@@ -613,18 +616,28 @@ export default class SubscriberLaterBinding extends LitElement {
     this.reCreateSupervisionCache();
   }
 
-  protected updated(_changedProperties: PropertyValues): void {
-    super.updated(_changedProperties);
+  resetSearchFields(): void {
+    if (this.filterExtRefPublisherInputUI) {
+      this.filterExtRefPublisherInputUI.value = '';
+      this.filterFcdaRegex = /.*/i;
+    }
+    if (this.filterExtRefSubscriberInputUI) {
+      this.filterExtRefSubscriberInputUI.value = '';
+      this.filterExtRefSubscriberRegex = /.*/i;
+    }
+
+    if (this.filterFcdaInputUI) this.filterFcdaInputUI.value = '';
+    this.filterFcdaRegex = /.*/i;
+  }
+
+  protected updated(changedProperties: PropertyValues): void {
+    super.updated(changedProperties);
 
     // When a new document is loaded or we do a subscription/we will reset the Map to clear old entries.
     // TODO: Be able to detect the same document loaded twice, currently lack a way to check for this
     // https://github.com/openscd/open-scd-core/issues/92
-    if (_changedProperties.has('docName')) {
-      if (this.filterExtRefPublisherInputUI)
-        this.filterExtRefPublisherInputUI.value = '';
-      if (this.filterExtRefSubscriberInputUI)
-        this.filterExtRefSubscriberInputUI.value = '';
-      this.filterFcdaInputUI.value = '';
+    if (changedProperties.has('docName')) {
+      this.resetSearchFields();
 
       this.currentSelectedControlElement = undefined;
       this.currentSelectedFcdaElement = undefined;
@@ -644,12 +657,12 @@ export default class SubscriberLaterBinding extends LitElement {
       }
     }
 
-    if (_changedProperties.has('subscriberView')) {
+    if (changedProperties.has('subscriberView')) {
       // re-attach anchors
       this.updateView();
     }
 
-    const settingsUpdateRequired = Array.from(_changedProperties.keys()).some(
+    const settingsUpdateRequired = Array.from(changedProperties.keys()).some(
       r => storedProperties.includes(r.toString())
     );
     if (settingsUpdateRequired) this.storeSettings();
@@ -815,7 +828,8 @@ export default class SubscriberLaterBinding extends LitElement {
   private getExtRefElementsByIED(ied: Element): Element[] {
     return Array.from(
       ied.querySelectorAll(
-        ':scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+        `:scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef,
+         :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`
       )
     ).filter(extRefElement => this.isExtRefViewable(extRefElement));
   }
@@ -1135,7 +1149,7 @@ Basic Type: ${spec.bType}"
             outlined
             @input=${debounce(() => {
               this.filterFcdaRegex = getFilterRegex(
-                this.filterFcdaInputUI.value
+                this.filterFcdaInputUI?.value ?? ''
               );
             })}
           ></mwc-textfield
@@ -1144,7 +1158,7 @@ Basic Type: ${spec.bType}"
       <mwc-list
         id="fcdaList"
         ?activatable=${!this.subscriberView}
-        class="styled-scrollbars ${classMap(filteredListClasses)}"
+        class="main-list ${classMap(filteredListClasses)}"
         @selected="${async (ev: SingleSelectedEvent) => {
           const selectedListItem = (<ListItemBase>(
             (<unknown>(<List>ev.target).selected)
@@ -1749,7 +1763,7 @@ Basic Type: ${spec.bType}"
               </div>
               <mwc-list
                 id="publisherExtRefList"
-                class="styled-scrollbars ${!this.hidePreconfiguredNotMatching
+                class="main-list ${!this.hidePreconfiguredNotMatching
                   ? 'show-pxx-mismatch'
                   : ''}"
                 @selected=${(ev: SingleSelectedEvent) => {
@@ -1800,7 +1814,8 @@ Basic Type: ${spec.bType}"
     };
 
     const hasExtRefs = this.doc?.querySelector(
-      ':root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
+      `:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
+       :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`
     );
 
     return html`<section class="column extref">
@@ -1823,7 +1838,7 @@ Basic Type: ${spec.bType}"
             </div>
             <mwc-list
               id="subscriberExtRefList"
-              class="styled-scrollbars ${classMap(filteredListClasses)}"
+              class="main-list ${classMap(filteredListClasses)}"
               activatable
               @selected=${(ev: SingleSelectedEvent) => {
                 const selectedListItem = (<ListItemBase>(
@@ -1872,6 +1887,7 @@ Basic Type: ${spec.bType}"
           } else {
             this.controlTag = 'GSEControl';
           }
+          this.resetSearchFields();
           this.resetCaching();
         }}
       >
@@ -1895,14 +1911,15 @@ Basic Type: ${spec.bType}"
   }
 
   renderSwitchView(): TemplateResult {
-    return html`<mwc-icon-button-toggle
+    return html` <mwc-fab
+      mini
       id="switchView"
+      icon="swap_horiz"
+      label="Add to cart"
       ?on=${this.subscriberView}
-      onIcon="swap_horiz"
-      offIcon="swap_horiz"
       title="${msg('Switch between Publisher and Subscriber view')}"
       @click=${async () => {
-        this.subscriberView = this.switchViewUI?.on ?? false;
+        this.subscriberView = !this.subscriberView;
 
         // deselect in UI
         if (this.fcdaListSelectedUI) {
@@ -1914,14 +1931,15 @@ Basic Type: ${spec.bType}"
         this.currentSelectedControlElement = undefined;
         this.currentSelectedFcdaElement = undefined;
 
-        // required to update CSS state for filter buttons?
-        this.requestUpdate();
+        this.resetSearchFields();
+
         await this.updateComplete;
 
         // await for regeneration of UI and then attach anchors
         this.updateView();
       }}
-    ></mwc-icon-button-toggle>`;
+    >
+    </mwc-fab>`;
   }
 
   render(): TemplateResult {
@@ -1946,6 +1964,10 @@ Basic Type: ${spec.bType}"
     }
 
     @media (min-width: 700px) {
+      #listContainer {
+        height: calc(100vh - 128px);
+      }
+
       #listContainer.subscriber-view {
         flex: auto;
       }
@@ -1958,6 +1980,10 @@ Basic Type: ${spec.bType}"
 
       #listContainer.subscriber-view .column.fcda {
         width: auto;
+      }
+
+      .main-list {
+        height: calc(100vh - 240px);
       }
     }
 
@@ -2100,26 +2126,25 @@ Basic Type: ${spec.bType}"
       background-color: var(--mdc-theme-surface);
     }
 
-    /* TODO: Can we do better than a hard-coded max-height */
-    .styled-scrollbars {
-      max-height: 78vh;
+    .main-list {
+      height: calc(100vh - 232px);
       overflow: auto;
     }
 
-    .styled-scrollbars {
+    .main-list {
       scrollbar-width: auto;
       scrollbar-color: var(--thumbBG) var(--scrollbarBG);
     }
 
-    .styled-scrollbars::-webkit-scrollbar {
+    .main-list::-webkit-scrollbar {
       width: 6px;
     }
 
-    .styled-scrollbars::-webkit-scrollbar-track {
+    .main-list::-webkit-scrollbar-track {
       background: var(--scrollbarBG);
     }
 
-    .styled-scrollbars::-webkit-scrollbar-thumb {
+    .main-list::-webkit-scrollbar-thumb {
       background: var(--thumbBG);
       border-radius: 6px;
     }
@@ -2161,14 +2186,14 @@ Basic Type: ${spec.bType}"
     }
 
     #switchView {
-      z-index: 1;
+      /* z-index: 1; */
       position: absolute;
       bottom: 16px;
       right: 16px;
+      --mdc-theme-secondary: var(--mdc-theme-on-secondary, #018786);
     }
 
-    #switchControlType,
-    #switchView {
+    #switchControlType {
       --mdc-icon-size: 32px;
     }
 
@@ -2193,6 +2218,12 @@ Basic Type: ${spec.bType}"
     .searchField mwc-textfield {
       width: 100%;
       --mdc-shape-small: 28px;
+    }
+
+    #switchView > svg {
+      border-radius: 24px;
+      background-color: var(--mdc-theme-secondary, #018786);
+      color: white;
     }
   `;
 }

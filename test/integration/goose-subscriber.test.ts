@@ -227,7 +227,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -253,7 +253,7 @@ describe('goose', () => {
       });
 
       it('subscribing to an FCDA even if previously selected', async function () {
-        let fcdaListElement = plugin.fcdaListUI;
+        let fcdaListElement = plugin.fcdaListUI!;
 
         let fcda = getFcdaItem(
           fcdaListElement,
@@ -286,7 +286,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
-        fcdaListElement = plugin.fcdaListUI;
+        fcdaListElement = plugin.fcdaListUI!;
 
         fcda = getFcdaItem(
           fcdaListElement,
@@ -326,7 +326,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
         const fcda = getFcdaItem(
           fcdaListElement,
           'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1',
@@ -373,7 +373,7 @@ describe('goose', () => {
         await extRefListElement.updateComplete;
         await plugin.updateComplete;
 
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -486,7 +486,7 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         // now do subscription which would normally result in supervision instantiation
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -524,7 +524,7 @@ describe('goose', () => {
           await extRefListElement.updateComplete;
           await plugin.updateComplete;
 
-          const fcdaListElement = plugin.fcdaListUI;
+          const fcdaListElement = plugin.fcdaListUI!;
 
           const fcda = getFcdaItem(
             fcdaListElement,
@@ -595,7 +595,7 @@ describe('goose', () => {
           await extRefListElement.updateComplete;
           await plugin.updateComplete;
 
-          const fcdaListElement = plugin.fcdaListUI;
+          const fcdaListElement = plugin.fcdaListUI!;
 
           const fcda = getFcdaItem(
             fcdaListElement,
@@ -637,7 +637,7 @@ describe('goose', () => {
           await extRefListElement.updateComplete;
           await plugin.updateComplete;
 
-          const fcdaListElement = plugin.fcdaListUI;
+          const fcdaListElement = plugin.fcdaListUI!;
 
           const fcda = getFcdaItem(
             fcdaListElement,
@@ -681,7 +681,7 @@ describe('goose', () => {
           await extRefListElement.updateComplete;
           await plugin.updateComplete;
 
-          const fcdaListElement = plugin.fcdaListUI;
+          const fcdaListElement = plugin.fcdaListUI!;
 
           const fcda = getFcdaItem(
             fcdaListElement,
@@ -987,7 +987,7 @@ describe('goose', () => {
 
     describe('can search', () => {
       it('in FCDAs with a string', async function () {
-        const fcdaTextInput = plugin.filterFcdaInputUI;
+        const fcdaTextInput = plugin.filterFcdaInputUI!;
 
         await sendMouse({
           type: 'click',
@@ -995,7 +995,7 @@ describe('goose', () => {
           position: midEl(fcdaTextInput!),
         });
         sendKeys({ type: 'QB1' });
-        await plugin.fcdaListUI.updateComplete;
+        await plugin.fcdaListUI!.updateComplete;
         await plugin.updateComplete;
         fcdaTextInput.scrollIntoView();
 

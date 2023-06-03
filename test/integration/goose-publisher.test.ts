@@ -148,7 +148,7 @@ describe('goose', () => {
     });
 
     it('shows subscriptions for an FCDA including LGOS', async function () {
-      const fcdaListElement = plugin.fcdaListUI;
+      const fcdaListElement = plugin.fcdaListUI!;
 
       const fcda = getFcdaItem(
         fcdaListElement,
@@ -179,7 +179,7 @@ describe('goose', () => {
       await plugin.updateComplete;
       await timeout(500); // plugin loading and initial render?
 
-      const fcdaListElement = plugin.fcdaListUI;
+      const fcdaListElement = plugin.fcdaListUI!;
 
       const fcda = getFcdaItem(
         fcdaListElement,
@@ -202,7 +202,7 @@ describe('goose', () => {
 
     describe('can change subscriptions by', () => {
       it('subscribing to an FCDA without supervisions', async function () {
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -240,7 +240,7 @@ describe('goose', () => {
       });
 
       it('unsubscribing an FCDA without supervisions', async function () {
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -278,7 +278,7 @@ describe('goose', () => {
       });
 
       it('subscribing to an FCDA with supervisions', async function () {
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -316,7 +316,7 @@ describe('goose', () => {
       });
 
       it('unsubscribing an FCDA with supervisions', async function () {
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -353,7 +353,7 @@ describe('goose', () => {
       });
 
       it('unsubscribing an FCDA with one supervision', async function () {
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
         const fcda = getFcdaItem(
           fcdaListElement,
           'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2',
@@ -396,7 +396,7 @@ describe('goose', () => {
       it('subscribing to an FCDA does not change supervisions if unset', async function () {
         // turn off supervision modification
         const button = plugin.settingsMenuExtRefPublisherButtonUI;
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         // first unsubscribe (we already have a supervision)
         const fcda = getFcdaItem(
@@ -628,7 +628,7 @@ describe('goose', () => {
       });
 
       it('and filters preconfigured items with non-matching pXX attributes', async function () {
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -676,7 +676,7 @@ describe('goose', () => {
 
     describe('can search', () => {
       it('in FCDAs with a string', async function () {
-        const fcdaTextInput = plugin.filterFcdaInputUI;
+        const fcdaTextInput = plugin.filterFcdaInputUI!;
 
         await sendMouse({
           type: 'click',
@@ -684,7 +684,7 @@ describe('goose', () => {
           position: midEl(fcdaTextInput!),
         });
         sendKeys({ type: 'QB1' });
-        await plugin.fcdaListUI.updateComplete;
+        await plugin.fcdaListUI!.updateComplete;
         await plugin.updateComplete;
         fcdaTextInput.scrollIntoView();
 
@@ -695,7 +695,7 @@ describe('goose', () => {
 
       it('in ExtRefs with a string', async function () {
         // select fcda
-        const fcdaListElement = plugin.fcdaListUI;
+        const fcdaListElement = plugin.fcdaListUI!;
 
         const fcda = getFcdaItem(
           fcdaListElement,
@@ -732,7 +732,7 @@ describe('goose', () => {
     });
 
     it('for an FCDA shows a tooltip with cdc and basic type', async function () {
-      const fcdaListElement = plugin.fcdaListUI;
+      const fcdaListElement = plugin.fcdaListUI!;
 
       const fcda = getFcdaItem(
         fcdaListElement,
@@ -748,7 +748,7 @@ describe('goose', () => {
     });
 
     it('for an ExtRef with pXX attrs shows a tooltip with cdc and basic type', async function () {
-      const fcdaListElement = plugin.fcdaListUI;
+      const fcdaListElement = plugin.fcdaListUI!;
 
       const fcda = getFcdaItem(
         fcdaListElement,
@@ -761,7 +761,7 @@ describe('goose', () => {
         button: 'left',
         position: midEl(fcda!),
       });
-      await plugin.fcdaListUI.updateComplete;
+      await plugin.fcdaListUI!.updateComplete;
       await plugin.updateComplete;
       await timeout(standardWait); // selection
 
@@ -791,7 +791,7 @@ describe('goose', () => {
     });
 
     it('changes to subscriber view and deselects any FCDAs', async function () {
-      const fcdaListElement = plugin.fcdaListUI;
+      const fcdaListElement = plugin.fcdaListUI!;
 
       const fcda = getFcdaItem(
         fcdaListElement,
@@ -804,7 +804,7 @@ describe('goose', () => {
         position: midEl(fcda),
       });
       await fcda.updateComplete;
-      await plugin.fcdaListUI.updateComplete;
+      await plugin.fcdaListUI!.updateComplete;
       await plugin.updateComplete;
       await timeout(standardWait); // selection
 
@@ -835,7 +835,7 @@ describe('goose', () => {
 
     it('resets selection when a new document is opened', async function () {
       // make selection
-      const fcdaListElement = plugin.fcdaListUI;
+      const fcdaListElement = plugin.fcdaListUI!;
 
       const fcda = getFcdaItem(
         fcdaListElement,
@@ -848,7 +848,7 @@ describe('goose', () => {
         position: midEl(fcda),
       });
       await fcda.updateComplete;
-      await plugin.fcdaListUI.updateComplete;
+      await plugin.fcdaListUI!.updateComplete;
       await plugin.updateComplete;
       await timeout(standardWait); // selection
 
