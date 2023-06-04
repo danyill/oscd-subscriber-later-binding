@@ -476,7 +476,7 @@ export default class SubscriberLaterBinding extends LitElement {
     const fcdaCompare = new Map();
     Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(
       cb => {
-        const isReferencedDs = cb.parentElement?.querySelector(
+        const isReferencedDs = cb.parentElement!.querySelector(
           `DataSet[name="${cb.getAttribute('datSet')}"]`
         );
 
@@ -501,7 +501,7 @@ export default class SubscriberLaterBinding extends LitElement {
               cb: dsToCb.get(identity(dataSet)),
             });
             this.controlBlockFcdaInfo.set(key, 0);
-            const iedName = fcda.closest('IED')?.getAttribute('name');
+            const iedName = fcda.closest('IED')!.getAttribute('name');
             const fcdaMatcher = `${iedName} ${[
               'ldInst',
               'prefix',
@@ -542,7 +542,7 @@ export default class SubscriberLaterBinding extends LitElement {
         const fcda = fcdaCompare.get(extRefMatcher);
         const { key, cb } = fcdaData.get(fcda);
         if (checkEditionSpecificRequirements(this.controlTag, cb, extRef)) {
-          const currentCountValue = this.controlBlockFcdaInfo.get(key) ?? 0;
+          const currentCountValue = this.controlBlockFcdaInfo.get(key)!;
           this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
         }
       }
@@ -926,7 +926,7 @@ export default class SubscriberLaterBinding extends LitElement {
     const supervisionNode = getExistingSupervision(extRefElement);
     const { spec } = this.getExtRefInfo(extRefElement);
     const desc = getDescriptionAttribute(extRefElement);
-    const iedName = extRefElement.closest('IED')?.getAttribute('name');
+    const iedName = extRefElement.closest('IED')!.getAttribute('name');
 
     return html`<mwc-list-item
       graphic="large"
@@ -1149,7 +1149,7 @@ Basic Type: ${spec.bType}"
             outlined
             @input=${debounce(() => {
               this.filterFcdaRegex = getFilterRegex(
-                this.filterFcdaInputUI?.value ?? ''
+                this.filterFcdaInputUI!.value
               );
             })}
           ></mwc-textfield
@@ -1636,7 +1636,7 @@ Basic Type: ${spec.bType}"
       <span class="extref-firstline">
         ${extRefPath(extRefElement)}: ${extRefElement.getAttribute('intAddr')}
         ${subscribed || hasInvalidMapping
-          ? html`<mwc-icon class="left-inline-arrow">arrow_back</mwc-icon>
+          ? html`<mwc-icon id="leftArrow">arrow_back</mwc-icon>
               ${subscribed ? `${fcdaName}` : ''}
               ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
           : nothing}
@@ -1915,7 +1915,6 @@ Basic Type: ${spec.bType}"
       mini
       id="switchView"
       icon="swap_horiz"
-      label="Add to cart"
       ?on=${this.subscriberView}
       title="${msg('Switch between Publisher and Subscriber view')}"
       @click=${async () => {
@@ -1946,7 +1945,7 @@ Basic Type: ${spec.bType}"
     // initial information caching
     if (this.controlBlockFcdaInfo.size === 0) this.buildExtRefCount();
 
-    const classList = { 'subscriber-view': this.subscriberView ?? false };
+    const classList = { 'subscriber-view': this.subscriberView };
     const result = html`<div id="listContainer" class="${classMap(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
       </div>
@@ -1959,6 +1958,7 @@ Basic Type: ${spec.bType}"
       width: 100vw;
       display: flex;
 
+      --secondaryThemeFallback: #018786;
       --scrollbarBG: var(--mdc-theme-background, #cfcfcf00);
       --thumbBG: var(--mdc-button-disabled-ink-color, #996cd8cc);
     }
@@ -2154,6 +2154,24 @@ Basic Type: ${spec.bType}"
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     }
 
+    .searchField {
+      display: flex;
+      flex: auto;
+    }
+
+    .searchField abbr {
+      display: flex;
+      flex: auto;
+      margin: 8px;
+      text-decoration: none;
+      border-bottom: none;
+    }
+
+    .searchField mwc-textfield {
+      width: 100%;
+      --mdc-shape-small: 28px;
+    }
+
     /* Filtering rules for ExtRefs end up implementing logic to allow
     very fast CSS response. The following rules appear to be minimal but can be
     hard to understand intuitively for the multiple conditions. If modifying,
@@ -2190,40 +2208,21 @@ Basic Type: ${spec.bType}"
       position: absolute;
       bottom: 16px;
       right: 16px;
-      --mdc-theme-secondary: var(--mdc-theme-on-secondary, #018786);
+    }
+
+    #leftArrow {
+      position: relative;
+      top: 5px;
     }
 
     #switchControlType {
       --mdc-icon-size: 32px;
     }
 
-    .left-inline-arrow {
-      position: relative;
-      top: 5px;
-    }
-
-    .searchField {
-      display: flex;
-      flex: auto;
-    }
-
-    .searchField abbr {
-      display: flex;
-      flex: auto;
-      margin: 8px;
-      text-decoration: none;
-      border-bottom: none;
-    }
-
-    .searchField mwc-textfield {
-      width: 100%;
-      --mdc-shape-small: 28px;
-    }
-
-    #switchView > svg {
+    #switchControlType > svg {
       border-radius: 24px;
       background-color: var(--mdc-theme-secondary, #018786);
-      color: white;
+      color: var(--mdc-theme-on-secondary, white);
     }
   `;
 }
