@@ -10319,8 +10319,7 @@ class SubscriberLaterBinding extends s$1 {
         const fcdaData = new Map();
         const fcdaCompare = new Map();
         Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(cb => {
-            var _a;
-            const isReferencedDs = (_a = cb.parentElement) === null || _a === void 0 ? void 0 : _a.querySelector(`DataSet[name="${cb.getAttribute('datSet')}"]`);
+            const isReferencedDs = cb.parentElement.querySelector(`DataSet[name="${cb.getAttribute('datSet')}"]`);
             if (isReferencedDs) {
                 dsToCb.set(identity(isReferencedDs), cb);
             }
@@ -10332,14 +10331,13 @@ class SubscriberLaterBinding extends s$1 {
             if (dsToCb.has(identity(dataSet))) {
                 const thisCb = dsToCb.get(identity(dataSet));
                 dataSet.querySelectorAll('FCDA').forEach(fcda => {
-                    var _a;
                     const key = `${identity(thisCb)} ${identity(fcda)}`;
                     fcdaData.set(fcda, {
                         key,
                         cb: dsToCb.get(identity(dataSet)),
                     });
                     this.controlBlockFcdaInfo.set(key, 0);
-                    const iedName = (_a = fcda.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
+                    const iedName = fcda.closest('IED').getAttribute('name');
                     const fcdaMatcher = `${iedName} ${[
                         'ldInst',
                         'prefix',
@@ -10359,7 +10357,6 @@ class SubscriberLaterBinding extends s$1 {
          :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`)).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
         // match the extrefs
         extRefs.forEach(extRef => {
-            var _a;
             const extRefMatcher = [
                 'iedName',
                 'ldInst',
@@ -10375,7 +10372,7 @@ class SubscriberLaterBinding extends s$1 {
                 const fcda = fcdaCompare.get(extRefMatcher);
                 const { key, cb } = fcdaData.get(fcda);
                 if (checkEditionSpecificRequirements(this.controlTag, cb, extRef)) {
-                    const currentCountValue = (_a = this.controlBlockFcdaInfo.get(key)) !== null && _a !== void 0 ? _a : 0;
+                    const currentCountValue = this.controlBlockFcdaInfo.get(key);
                     this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
                 }
             }
@@ -10623,11 +10620,11 @@ class SubscriberLaterBinding extends s$1 {
     }
     // eslint-disable-next-line class-methods-use-this
     renderSubscribedExtRefElement(extRefElement) {
-        var _a, _b, _c;
+        var _a, _b;
         const supervisionNode = getExistingSupervision(extRefElement);
         const { spec } = this.getExtRefInfo(extRefElement);
         const desc = getDescriptionAttribute(extRefElement);
-        const iedName = (_a = extRefElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
+        const iedName = extRefElement.closest('IED').getAttribute('name');
         return x `<mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
@@ -10635,7 +10632,7 @@ class SubscriberLaterBinding extends s$1 {
       class="extref"
       data-extref="${identity(extRefElement)}"
       title="${spec.cdc && spec.bType
-            ? `CDC: ${(_b = spec.cdc) !== null && _b !== void 0 ? _b : '?'}\nBasic Type: ${(_c = spec.bType) !== null && _c !== void 0 ? _c : '?'}`
+            ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             : ''}"
     >
       <span
@@ -10810,8 +10807,7 @@ Basic Type: ${spec.bType}"
             iconTrailing="search"
             outlined
             @input=${debounce(() => {
-            var _a, _b;
-            this.filterFcdaRegex = getFilterRegex((_b = (_a = this.filterFcdaInputUI) === null || _a === void 0 ? void 0 : _a.value) !== null && _b !== void 0 ? _b : '');
+            this.filterFcdaRegex = getFilterRegex(this.filterFcdaInputUI.value);
         })}
           ></mwc-textfield
         ></abbr>
@@ -11192,7 +11188,7 @@ Basic Type: ${spec.bType}"
       <span class="extref-firstline">
         ${extRefPath(extRefElement)}: ${extRefElement.getAttribute('intAddr')}
         ${subscribed || hasInvalidMapping
-            ? x `<mwc-icon class="left-inline-arrow">arrow_back</mwc-icon>
+            ? x `<mwc-icon id="leftArrow">arrow_back</mwc-icon>
               ${subscribed ? `${fcdaName}` : ''}
               ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
             : A}
@@ -11410,7 +11406,6 @@ Basic Type: ${spec.bType}"
       mini
       id="switchView"
       icon="swap_horiz"
-      label="Add to cart"
       ?on=${this.subscriberView}
       title="${msg('Switch between Publisher and Subscriber view')}"
       @click=${async () => {
@@ -11432,11 +11427,10 @@ Basic Type: ${spec.bType}"
     </mwc-fab>`;
     }
     render() {
-        var _a;
         // initial information caching
         if (this.controlBlockFcdaInfo.size === 0)
             this.buildExtRefCount();
-        const classList = { 'subscriber-view': (_a = this.subscriberView) !== null && _a !== void 0 ? _a : false };
+        const classList = { 'subscriber-view': this.subscriberView };
         const result = x `<div id="listContainer" class="${o(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
       </div>
@@ -11449,6 +11443,7 @@ SubscriberLaterBinding.styles = i$5 `
       width: 100vw;
       display: flex;
 
+      --secondaryThemeFallback: #018786;
       --scrollbarBG: var(--mdc-theme-background, #cfcfcf00);
       --thumbBG: var(--mdc-button-disabled-ink-color, #996cd8cc);
     }
@@ -11644,6 +11639,24 @@ SubscriberLaterBinding.styles = i$5 `
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     }
 
+    .searchField {
+      display: flex;
+      flex: auto;
+    }
+
+    .searchField abbr {
+      display: flex;
+      flex: auto;
+      margin: 8px;
+      text-decoration: none;
+      border-bottom: none;
+    }
+
+    .searchField mwc-textfield {
+      width: 100%;
+      --mdc-shape-small: 28px;
+    }
+
     /* Filtering rules for ExtRefs end up implementing logic to allow
     very fast CSS response. The following rules appear to be minimal but can be
     hard to understand intuitively for the multiple conditions. If modifying,
@@ -11680,40 +11693,21 @@ SubscriberLaterBinding.styles = i$5 `
       position: absolute;
       bottom: 16px;
       right: 16px;
-      --mdc-theme-secondary: var(--mdc-theme-on-secondary, #018786);
+    }
+
+    #leftArrow {
+      position: relative;
+      top: 5px;
     }
 
     #switchControlType {
       --mdc-icon-size: 32px;
     }
 
-    .left-inline-arrow {
-      position: relative;
-      top: 5px;
-    }
-
-    .searchField {
-      display: flex;
-      flex: auto;
-    }
-
-    .searchField abbr {
-      display: flex;
-      flex: auto;
-      margin: 8px;
-      text-decoration: none;
-      border-bottom: none;
-    }
-
-    .searchField mwc-textfield {
-      width: 100%;
-      --mdc-shape-small: 28px;
-    }
-
-    #switchView > svg {
+    #switchControlType > svg {
       border-radius: 24px;
       background-color: var(--mdc-theme-secondary, #018786);
-      color: white;
+      color: var(--mdc-theme-on-secondary, white);
     }
   `;
 __decorate([
