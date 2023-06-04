@@ -986,6 +986,8 @@ describe('goose', () => {
     });
 
     describe('can search', () => {
+      // we don't repeat all the FCDA tests for the publisher view
+      // as this is the same code
       it('in FCDAs with a string', async function () {
         const fcdaTextInput = plugin.filterFcdaInputUI!;
 
@@ -1004,22 +1006,24 @@ describe('goose', () => {
         await visualDiff(plugin, testName(this));
       });
 
-      it('in ExtRefs with a string', async function () {
-        const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+      describe('in Extrefs', async function () {
+        it('for an IED name', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
 
-        await sendMouse({
-          type: 'click',
-          button: 'left',
-          position: midEl(extRefTextInput!),
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'GOOSE_Subscriber1' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
         });
-        sendKeys({ type: 'Thing' });
-        await plugin.extRefListSubscriberUI?.updateComplete;
-        await plugin.updateComplete;
-        extRefTextInput!.scrollIntoView();
-
-        await resetMouseState();
-        await timeout(standardWait);
-        await visualDiff(plugin, testName(this));
       });
     });
 

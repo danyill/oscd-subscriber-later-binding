@@ -47,7 +47,7 @@ export function getExtRefItem(
  * As this appears to make screenshots inconsistent between browsers and environments
  */
 export async function resetMouseState(): Promise<void> {
-  await timeout(50);
+  await timeout(70);
   await resetMouse();
   await sendMouse({ type: 'click', position: [0, 0] });
 }

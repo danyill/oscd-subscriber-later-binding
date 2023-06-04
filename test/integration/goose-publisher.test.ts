@@ -676,6 +676,49 @@ describe('goose', () => {
 
     describe('can search', () => {
       describe('in FCDAs', () => {
+        it('even when a string is removed', async function () {
+          // mostly to ensure code coverage of edge case
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'G' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait);
+
+          sendKeys({ press: 'Backspace' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait);
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('when there is no match', async function () {
+          // mostly to ensure code coverage of edge case
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'Xyzzy' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait);
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
         it('for an IED name', async function () {
           const fcdaTextInput = plugin.filterFcdaInputUI!;
 
@@ -689,7 +732,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -706,7 +749,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -723,7 +766,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -740,7 +783,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -765,7 +808,7 @@ describe('goose', () => {
           fcda?.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -782,7 +825,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -799,7 +842,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -816,7 +859,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -833,7 +876,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -850,7 +893,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -867,7 +910,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -884,7 +927,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -901,7 +944,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -918,7 +961,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
       });
@@ -957,7 +1000,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -994,7 +1037,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -1031,7 +1074,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -1068,7 +1111,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -1105,7 +1148,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -1142,7 +1185,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -1179,7 +1222,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -1216,7 +1259,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
 
@@ -1253,7 +1296,7 @@ describe('goose', () => {
           extRefTextInput!.scrollIntoView();
 
           await resetMouseState();
-          await timeout(standardWait); // de-selection
+          await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
       });

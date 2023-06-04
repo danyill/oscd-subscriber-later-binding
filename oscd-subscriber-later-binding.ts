@@ -133,14 +133,13 @@ function trimIdentityParent(idString: string): string {
 }
 
 function extRefPath(extRef: Element): string {
-  if (!extRef) return 'Unknown';
   const lN = extRef.closest('LN') ?? extRef.closest('LN0');
-  const lDevice = lN!.closest('LDevice');
+  const lDevice = lN!.closest('LDevice')!;
 
-  const ldInst = lDevice?.getAttribute('inst');
-  const lnPrefix = lN?.getAttribute('prefix');
-  const lnClass = lN?.getAttribute('lnClass');
-  const lnInst = lN?.getAttribute('inst');
+  const ldInst = lDevice.getAttribute('inst');
+  const lnPrefix = lN!.getAttribute('prefix') ?? '';
+  const lnClass = lN!.getAttribute('lnClass');
+  const lnInst = lN!.getAttribute('inst');
 
   return [ldInst, '/', lnPrefix, lnClass, lnInst].filter(a => !!a).join(' ');
 }
@@ -151,20 +150,19 @@ function getFcdaInstDesc(fcda: Element, includeDai: boolean): string[] {
     fcda.getAttribute(attr)
   );
 
-  const ied = fcda.closest('IED');
+  const ied = fcda.closest('IED')!;
 
   const anyLn = Array.from(
-    ied?.querySelectorAll(
+    ied.querySelectorAll(
       `LDevice[inst="${fcda.getAttribute(
         'ldInst'
       )}"] > LN, LDevice[inst="${fcda.getAttribute('ldInst')}"] LN0`
-    ) ?? []
+    )
   ).find(
     lN =>
       (lN.getAttribute('prefix') ?? '') ===
         (fcda.getAttribute('prefix') ?? '') &&
-      (lN.getAttribute('lnClass') ?? '') ===
-        (fcda.getAttribute('lnClass') ?? '') &&
+      lN.getAttribute('lnClass') === (fcda.getAttribute('lnClass') ?? '') &&
       (lN.getAttribute('inst') ?? '') === (fcda.getAttribute('lnInst') ?? '')
   );
 
@@ -172,7 +170,7 @@ function getFcdaInstDesc(fcda: Element, includeDai: boolean): string[] {
 
   const descs: (string | null | undefined)[] = [];
 
-  descs.push(anyLn.closest('LDevice')?.getAttribute('desc'));
+  descs.push(anyLn.closest('LDevice')!.getAttribute('desc'));
   descs.push(anyLn.getAttribute('desc'));
 
   const doNames = doName!.split('.');
@@ -203,12 +201,12 @@ function getFcdaInstDesc(fcda: Element, includeDai: boolean): string[] {
 function getLnTitle(childElement: Element): string {
   if (!childElement) return 'Unknown';
   const lN = childElement.closest('LN') ?? childElement.closest('LN0');
-  const lDevice = lN!.closest('LDevice');
+  const lDevice = lN!.closest('LDevice')!;
 
-  const ldInst = lDevice?.getAttribute('inst');
-  const lnPrefix = lN?.getAttribute('prefix');
-  const lnClass = lN?.getAttribute('lnClass');
-  const lnInst = lN?.getAttribute('inst');
+  const ldInst = lDevice.getAttribute('inst');
+  const lnPrefix = lN!.getAttribute('prefix') ?? '';
+  const lnClass = lN!.getAttribute('lnClass');
+  const lnInst = lN!.getAttribute('inst');
 
   return [ldInst, '/', lnPrefix, lnClass, lnInst]
     .filter(a => a !== null)
@@ -1258,12 +1256,10 @@ Basic Type: ${spec.bType}"
             );
             const isWithinSearch =
               this.filterFcdaRegex &&
-              fcdaElements.some(
-                fcda =>
-                  !this.filterFcdaRegex ||
-                  this.filterFcdaRegex.test(
-                    `${this.getFcdaSearchString(controlElement, fcda)}`
-                  )
+              fcdaElements.some(fcda =>
+                this.filterFcdaRegex.test(
+                  `${this.getFcdaSearchString(controlElement, fcda)}`
+                )
               );
             return (
               isWithinSearch && fcdaElements.length && !onlyHasDisabledItems
@@ -1271,12 +1267,10 @@ Basic Type: ${spec.bType}"
           }),
           i => identity(i),
           controlElement => {
-            const fcdaElements = getFcdaElements(controlElement).filter(
-              fcda =>
-                !this.filterFcdaRegex ||
-                this.filterFcdaRegex.test(
-                  `${this.getFcdaSearchString(controlElement, fcda)}`
-                )
+            const fcdaElements = getFcdaElements(controlElement).filter(fcda =>
+              this.filterFcdaRegex.test(
+                `${this.getFcdaSearchString(controlElement, fcda)}`
+              )
             );
 
             const someSubscribed = fcdaElements.some(
