@@ -675,59 +675,587 @@ describe('goose', () => {
     });
 
     describe('can search', () => {
-      it('in FCDAs with a string', async function () {
-        const fcdaTextInput = plugin.filterFcdaInputUI!;
+      describe('in FCDAs', () => {
+        it('for an IED name', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
 
-        await sendMouse({
-          type: 'click',
-          button: 'left',
-          position: midEl(fcdaTextInput!),
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'GOOSE_Publisher2' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
         });
-        sendKeys({ type: 'QB1' });
-        await plugin.fcdaListUI!.updateComplete;
-        await plugin.updateComplete;
-        fcdaTextInput.scrollIntoView();
 
-        await resetMouseState();
-        await timeout(standardWait); // de-selection
-        await visualDiff(plugin, testName(this));
+        it('for a control block name', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'GOOSE2' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for an IED and control block name', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'GOOSE_Publisher GOOSE2' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a control block description', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'Botany1' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for an LDevice name', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'QB2_Disconnector' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          const fcdaListElement = plugin.fcdaListUI!;
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1',
+            'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          fcda?.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for an LDevice description', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'Animalia' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a Data Object', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'CSWI' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a Data Object description', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'Birch' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a Data Attribute', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'stVal' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a combination of items', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'Botany GOOSE1 stVal' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('With a wildcard question mark', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'QB?_Dis' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('With a wildcard asterisk', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: 'Anim*al' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('With double quoted text', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: '"CSWI 1"' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('With single quoted text', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!),
+          });
+          sendKeys({ type: "'CSWI 1'" });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
       });
 
-      it('in ExtRefs with a string', async function () {
-        // select fcda
-        const fcdaListElement = plugin.fcdaListUI!;
+      describe('in ExtRefs', async function () {
+        it('for an intAddr', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
 
-        const fcda = getFcdaItem(
-          fcdaListElement,
-          'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
-          'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
-        );
-        await sendMouse({
-          type: 'click',
-          button: 'left',
-          position: midEl(fcda!),
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Thing' });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
         });
-        await plugin.extRefListPublisherUI!.updateComplete;
-        await plugin.updateComplete;
-        await timeout(standardWait); // rendering
 
-        // search ExtRefs
-        const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+        it('for a description', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
 
-        await sendMouse({
-          type: 'click',
-          button: 'left',
-          position: midEl(extRefTextInput!),
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Bind' });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
         });
-        sendKeys({ type: 'Thing' });
 
-        await plugin.extRefListPublisherUI?.updateComplete;
-        await plugin.updateComplete;
-        extRefTextInput!.scrollIntoView();
+        it('for a supervision node', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
 
-        await resetMouseState();
-        await timeout(standardWait); // de-selection
-        await visualDiff(plugin, testName(this));
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'LGOS' });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for double quoted text', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: '"A Place To Bind"' });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for single quoted text', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: "'A Place To Bind'" });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for single quoted text', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: "'A Place To Bind'" });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('with multiple terms', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'LGOS 1 Input' });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for wildcard asterisks', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Miss*e' });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for wildcard question mark', async function () {
+          // select fcda
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await plugin.extRefListPublisherUI!.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // rendering
+
+          // search ExtRefs
+          const extRefTextInput = plugin.filterExtRefPublisherInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Missing ?tt' });
+
+          await plugin.extRefListPublisherUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait); // de-selection
+          await visualDiff(plugin, testName(this));
+        });
       });
     });
 

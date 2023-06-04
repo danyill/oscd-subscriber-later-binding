@@ -125,7 +125,11 @@ const storedProperties: string[] = [
 ];
 
 function trimIdentityParent(idString: string): string {
-  return idString.split('>').slice(1).join('>').trim().slice(1);
+  return idString
+    .split('>')
+    .filter(s => s !== '')
+    .slice(1)
+    .join(' > ');
 }
 
 function extRefPath(extRef: Element): string {
@@ -944,7 +948,7 @@ export default class SubscriberLaterBinding extends LitElement {
       </span>
       <span slot="secondary"
         >${desc}${supervisionNode !== null
-          ? ` (${identity(supervisionNode)})`
+          ? ` (${trimIdentityParent(`${identity(supervisionNode)}`)})`
           : ''}</span
       >
       <mwc-icon slot="graphic">link</mwc-icon>
@@ -1320,10 +1324,14 @@ Basic Type: ${spec.bType}"
 
   private renderPublisherViewSubscribedExtRefs(): TemplateResult {
     const subscribedExtRefs = this.getSubscribedExtRefElements().filter(
-      extRef =>
-        this.filterExtRefPublisherRegex.test(
-          `${identity(extRef)} ${getDescriptionAttribute(extRef)}`
-        )
+      extRef => {
+        const supervisionNode = getExistingSupervision(extRef);
+        return this.filterExtRefPublisherRegex.test(
+          `${identity(extRef)} ${getDescriptionAttribute(extRef)} ${identity(
+            supervisionNode
+          )}`
+        );
+      }
     );
     return html`
       <mwc-list-item noninteractive>
@@ -1570,7 +1578,7 @@ Basic Type: ${spec.bType}"
 
     if (supervisionNode) {
       supervisionDescription = trimIdentityParent(
-        <string>identity(supervisionNode)
+        `${identity(supervisionNode)}`
       );
     }
 

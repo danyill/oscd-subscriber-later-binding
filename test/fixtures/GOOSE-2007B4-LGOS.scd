@@ -77,7 +77,7 @@
 			</ConnectedAP>
 		</SubNetwork>
 	</Communication>
-	<IED name="GOOSE_Subscriber" desc="GOOSE subscriber" manufacturer="Dummy">
+	<IED name="GOOSE_Subscriber" manufacturer="Dummy">
 		<AccessPoint name="AP1">
 			<Server>
 				<Authentication/>
@@ -356,7 +356,7 @@
 		<AccessPoint name="AP1">
 			<Server>
 				<Authentication/>
-				<LDevice inst="QB2_Disconnector">
+				<LDevice inst="QB2_Disconnector" desc="Animalia">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0">
 						<DataSet name="GOOSE2sDataSet">
 							<FCDA ldInst="QB2_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="stVal" fc="ST"/>
@@ -369,9 +369,9 @@
 						<GSEControl name="GOOSE2" type="GOOSE" appID="GOOSE2" confRev="1" datSet="GOOSE2sDataSet"/>
 						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet"/>
 					</LN0>
-					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO"/>
-					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI"/>
-					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
+					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="Chordata"/>
+					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="Arthropoda"/>
+					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI" desc="Nematoda"/>
 				</LDevice>
 				<LDevice inst="QB1_Disconnector">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
@@ -382,7 +382,7 @@
 			</Server>
 		</AccessPoint>
 	</IED>
-	<IED name="GOOSE_Publisher2" desc="GOOSE publisher" manufacturer="Dummy">
+	<IED name="GOOSE_Publisher2" manufacturer="Dummy">
 		<AccessPoint name="AP1">
 			<Server>
 				<Authentication/>
@@ -396,18 +396,18 @@
 							<FCDA ldInst="QB1_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="stVal" fc="ST"/>
 							<FCDA ldInst="QB1_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="q" fc="ST"/>
 						</DataSet>
-						<GSEControl name="GOOSE2" type="GOOSE" appID="GOOSE2" confRev="1" datSet="GOOSE2sDataSet"/>
-						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet"/>
+						<GSEControl name="GOOSE2" type="GOOSE" appID="GOOSE2" confRev="1" datSet="GOOSE2sDataSet" desc="Botany1"/>
+						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet" desc="Botany2"/>
 					</LN0>
 					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO"/>
 					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI"/>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
 				</LDevice>
-				<LDevice inst="QB1_Disconnector">
+				<LDevice inst="QB1_Disconnector" desc="Tree">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
-					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO"/>
-					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI"/>
-					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
+					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="Chestnut"/>
+					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="Birch"/>
+					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI" desc="Pine"/>
 				</LDevice>
 			</Server>
 		</AccessPoint>
