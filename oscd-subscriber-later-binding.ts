@@ -820,7 +820,7 @@ export default class SubscriberLaterBinding extends LitElement {
       const iedName = supervisionLN.closest('IED')!.getAttribute('name');
       if (cbRef)
         this.supervisionData.set(
-          `${iedName} ${cbRef.textContent ?? ''}`,
+          `${iedName} ${cbRef.textContent}`,
           supervisionLN
         );
     });
@@ -1172,9 +1172,9 @@ Basic Type: ${spec.bType}"
             this.doc.querySelector(
               selector(this.controlTag, control ?? 'Unknown')
             ) ?? undefined;
-          this.currentSelectedFcdaElement =
-            this.doc.querySelector(selector('FCDA', fcda ?? 'Unknown')) ??
-            undefined;
+          this.currentSelectedFcdaElement = this.doc.querySelector(
+            selector('FCDA', fcda!)
+          )!;
 
           // only continue if conditions for subscription met
           if (
@@ -1285,7 +1285,7 @@ Basic Type: ${spec.bType}"
               'show-not-subscribed': someNotSubscribed,
             };
 
-            const iedName = controlElement.closest('IED')?.getAttribute('name');
+            const iedName = controlElement.closest('IED')!.getAttribute('name');
 
             // TODO: Restore wizard editing functionality
             return html`<mwc-list-item
@@ -1365,7 +1365,7 @@ Basic Type: ${spec.bType}"
               this.currentSelectedFcdaElement,
               this.currentSelectedControlElement
             );
-            const iedName = extRefElement.closest('IED')?.getAttribute('name');
+            const iedName = extRefElement.closest('IED')!.getAttribute('name');
 
             return html`<mwc-list-item
               graphic="large"
@@ -1663,7 +1663,7 @@ Basic Type: ${spec.bType}"
         : nothing}
       ${hasInvalidMapping
         ? html`<mwc-icon
-            class="${hasInvalidMapping ? 'invalid-mapping' : ''}"
+            class="invalid-mapping"
             title="${msg('Invalid Mapping')}"
             slot="meta"
             >error</mwc-icon
@@ -1671,7 +1671,7 @@ Basic Type: ${spec.bType}"
         : nothing}
       ${hasMissingMapping
         ? html`<mwc-icon
-            class="${hasMissingMapping ? 'missing-mapping' : ''}"
+            class="missing-mapping"
             title="${msg(
               'The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.'
             )}"
@@ -1780,10 +1780,8 @@ Basic Type: ${spec.bType}"
                   // same desc and intAddr.
                   // See: https://github.com/openscd/open-scd/issues/1214
                   const selectedExtRefElement = this.doc.querySelector(
-                    selector('ExtRef', extref ?? 'Unknown ExtRef')
-                  );
-
-                  if (!selectedExtRefElement) return;
+                    selector('ExtRef', extref!)
+                  )!;
 
                   if (
                     !isSubscribed(selectedExtRefElement) ||
@@ -1851,9 +1849,7 @@ Basic Type: ${spec.bType}"
 
                 const { extref } = selectedListItem.dataset;
                 const selectedExtRefElement = <Element>(
-                  this.doc.querySelector(
-                    selector('ExtRef', extref ?? 'Unknown ExtRef')
-                  )
+                  this.doc.querySelector(selector('ExtRef', extref!))
                 );
 
                 if (!selectedExtRefElement) return;
