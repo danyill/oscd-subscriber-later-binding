@@ -41,7 +41,6 @@
     "@material/mwc-menu": "^0.27.0",
     "@material/mwc-textfield": "^0.27.0",
     "@openscd/open-scd-core": "^0.0.1-rc2.8",
-    "@openscd/oscd-filtered-list": "^1.0.1",
     "lit": "^2.4.0"
   },
   "devDependencies": {

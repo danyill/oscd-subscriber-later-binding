@@ -2081,13 +2081,11 @@ Basic Type: ${spec.bType}"
     }
 
     .invalid-mapping {
-      color: var(--mdc-theme-error, red);
+      color: var(--oscd-theme-state-error, red);
     }
 
-    /* TODO: OpenSCD currently doesn't have "warning" or "invalid" colours 
-    outside of logging but these may be generally useful to plugin authors */
     .missing-mapping {
-      color: var(--mdc-theme-error, orange);
+      color: var(--oscd-theme-state-warning, orange);
     }
 
     #listContainer {
