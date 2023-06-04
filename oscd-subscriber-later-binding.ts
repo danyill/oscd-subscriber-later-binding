@@ -2204,8 +2204,8 @@ Basic Type: ${spec.bType}"
     #switchView {
       /* z-index: 1; */
       position: absolute;
-      bottom: 16px;
-      right: 16px;
+      bottom: 24px;
+      right: 20px;
     }
 
     #leftArrow {
