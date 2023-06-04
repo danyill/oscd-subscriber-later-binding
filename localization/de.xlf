@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+<xliff version="1.2"
+  xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file target-language="de" source-language="en" original="lit-localize-inputs" datatype="plaintext">
     <body>
       <trans-unit id="s7b172c6f7ac1cb0c">
@@ -70,14 +71,6 @@
         <source>Unspecified Service Types</source>
         <target>Nicht spezifizierte Diensttypen</target>
       </trans-unit>
-      <trans-unit id="s9e7b27be6840c6f0">
-        <source>Show Data Objects</source>
-        <target>Zeige Datenobjekte</target>
-      </trans-unit>
-      <trans-unit id="sf6b6ae7ea93ccb14">
-        <source>Show Non-Matching Preconfigured</source>
-        <target>Zeige nicht übereinstimmende vorkonfigurierte</target>
-      </trans-unit>
       <trans-unit id="s22a10e043800c031">
         <source>Change Supervision LNs</source>
         <target>Ändere Überwachungs-LNs</target>
@@ -97,6 +90,14 @@
       <trans-unit id="s5d929ff1619ac0c9">
         <source>Search</source>
         <target>Suche</target>
+      </trans-unit>
+      <trans-unit id="s83b4689aeee7103d">
+        <source>Data Objects</source>
+        <target>Datenobjekte</target>
+      </trans-unit>
+      <trans-unit id="sa31e300fdb94e50d">
+        <source>Non-Matching Preconfigured</source>
+        <target>Nicht übereinstimmende vorkonfigurierte</target>
       </trans-unit>
     </body>
   </file>

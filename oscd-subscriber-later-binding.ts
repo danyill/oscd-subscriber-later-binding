@@ -1115,7 +1115,7 @@ Basic Type: ${spec.bType}"
             left
             ?selected=${!this.hideDataObjects}
           >
-            <span>${msg('Show Data Objects')}</span>
+            <span>${msg('Data Objects')}</span>
           </mwc-check-list-item>
           ${this.subscriberView
             ? html`<mwc-check-list-item
@@ -1124,7 +1124,7 @@ Basic Type: ${spec.bType}"
                 ?selected=${!this.hidePreconfiguredNotMatching}
               >
                 <span
-                  >${msg('Show Non-Matching Preconfigured')}</span
+                  >${msg('Non-Matching Preconfigured')}</span
                 ></mwc-check-list-item
               >`
             : nothing}
@@ -1436,7 +1436,7 @@ Basic Type: ${spec.bType}"
           left
           ?selected=${!this.hidePreconfiguredNotMatching}
         >
-          <span>${msg('Show Non-Matching Preconfigured')}</span>
+          <span>${msg('Non-Matching Preconfigured')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
