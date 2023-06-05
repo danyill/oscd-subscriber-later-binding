@@ -1024,6 +1024,396 @@ describe('goose', () => {
           await timeout(standardWait);
           await visualDiff(plugin, testName(this));
         });
+
+        it('for an IED manufacturer', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Dummy' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for an IED type', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Taxonomist' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a logical device', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Earth_Switch' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a logical node', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'CILO' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for an internal address', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'someRestrictedExtRef' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for an ExtRef description', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Restricted' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for an ExtRef description', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Restricted' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a subscriber supervision node', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'LGOS' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a subscriber control block', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'GOOSE2' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a subscribed FCDA IED', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'GOOSE_Publisher2' });
+          await timeout(70); // takes a little longer with more text
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a subscribed FCDA logical device', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'QB1_Disconnector' });
+          await timeout(70); // takes a little longer with more text
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a subscribed FCDA logical device', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'QB1_Disconnector' });
+          await timeout(70); // takes a little longer with more text
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a subscribed FCDA logical node', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'GOOSE_Subscriber3 CSWI' });
+          await timeout(70); // takes a little longer with more text
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a subscribed FCDAs logical device description', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Animalia' });
+          await timeout(70); // takes a little longer with more text
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a subscribed FCDAs logical node description', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'Arthropoda' });
+          await timeout(70); // takes a little longer with more text
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for multiple terms', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({
+            type: 'GOOSE_Subscriber Dummy Earth_Switch Arthropoda LGOS',
+          });
+          await timeout(70); // takes a little longer with more text
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a double quoted term', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({
+            type: 'GOOSE_Subscriber Dummy Earth_Switch Arthropoda LGOS',
+          });
+          await timeout(70); // takes a little longer with more text
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a double quoted term', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: '"LGOS 1"' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a single quoted term', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: "'LGOS 1'" });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a wildcard with question mark', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'An??alia' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a wildcard with an asterisk', async function () {
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          sendKeys({ type: 'A*poda' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
       });
     });
 
@@ -1088,4 +1478,6 @@ describe('goose', () => {
       await visualDiff(plugin, testName(this));
     });
   });
+
+  // TODO: Test undo and redo once core is updated
 });

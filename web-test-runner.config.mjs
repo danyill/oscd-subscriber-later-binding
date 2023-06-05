@@ -41,7 +41,7 @@ const browsers = [
     },
   }),
   playwrightLauncher({ product: 'firefox' }),
-  // Webkit disabled as unable to get consistent screenshots between
+  // TODO: Webkit disabled as unable to get consistent screenshots between
   // local and CI environment
   // playwrightLauncher({ product: 'webkit' }),
 ];
@@ -202,8 +202,8 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   /** Browsers to run tests on */
   browsers,
 
-  // 10 minutes max test time allowed
-  testsFinishTimeout: 10 * 60 * 1000,
+  // 20 minutes max test time allowed
+  testsFinishTimeout: 20 * 60 * 1000,
 
   // See documentation for all available options
 });

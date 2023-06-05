@@ -352,67 +352,6 @@
 			</Server>
 		</AccessPoint>
 	</IED>
-	<!-- <IED name="GOOSE_Trapper" type="BeepBeep">
-		<Services>
-			<SupSubscription maxGo="4" maxSv="0"/>
-		</Services>
-		<AccessPoint name="AP1">
-			<Server>
-				<Authentication/>
-				<LDevice inst="Earth_Switch">
-					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0">
-						<Inputs>
-							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="q" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-							<ExtRef iedName="GOOSE_Publisher2" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-							<ExtRef iedName="GOOSE_Publisher2" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="q" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
-						</Inputs>
-					</LN0>
-					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO">
-						<Inputs>
-							<ExtRef intAddr="Pos;CSWI1/Pos/stVal" desc="Interlocking.Input"/>
-							<ExtRef intAddr="Pos;CSWI1/Pos/q" desc="Interlocking.Input"/>
-						</Inputs>
-					</LN>
-					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI">
-						<Inputs>
-							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2" intAddr="Pos;CSWI1/Pos/stVal" desc="Interlocking.Input2"/>
-							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="q" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2" intAddr="Pos;CSWI1/Pos/q" desc="Interlocking.Input2"/>
-							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To Pos" pLN="CSWI" pDO="Pos" pDA="stVal"/>
-							<ExtRef intAddr="someWeirdAnalogue" serviceType="SMV"/>
-						</Inputs>
-					</LN>
-					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
-				</LDevice>
-				<LDevice inst="GOOSE_supervision">
-					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
-					<LN lnClass="LGOS" inst="1" lnType="Dummy.LGOS">
-						<DOI name="GoCBRef">
-							<DAI name="setSrcRef">
-								<Val>GOOSE_PublisherQB2_Disconnector/LLN0.GOOSE2</Val>
-							</DAI>
-						</DOI>
-					</LN>
-					<LN lnClass="LGOS" inst="2" lnType="Dummy.LGOS">
-						<Private type="OpenSCD.create"/>
-						<DOI name="GoCBRef">
-							<DAI name="setSrcRef">
-								<Val>GOOSE_Publisher2QB2_Disconnector/LLN0.GOOSE2</Val>
-							</DAI>
-						</DOI>
-					</LN>
-					<LN lnClass="LGOS" inst="3" lnType="Dummy.LGOS">
-						<Private type="OpenSCD.create"/>
-						<DOI name="GoCBRef">
-							<DAI name="setSrcRef">
-								<Val>GOOSE_PublisherQB2_Disconnector/LLN0.GOOSE1</Val>
-							</DAI>
-						</DOI>
-					</LN>
-				</LDevice>
-			</Server>
-		</AccessPoint>
-	</IED> -->
 	<IED name="GOOSE_Publisher" desc="GOOSE publisher" manufacturer="Dummy">
 		<AccessPoint name="AP1">
 			<Server>

@@ -728,6 +728,7 @@ describe('goose', () => {
             position: midEl(fcdaTextInput!),
           });
           sendKeys({ type: 'GOOSE_Publisher2' });
+          await timeout(70); // takes a little longer with more text
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -762,6 +763,7 @@ describe('goose', () => {
             position: midEl(fcdaTextInput!),
           });
           sendKeys({ type: 'GOOSE_Publisher GOOSE2' });
+          await timeout(70); // takes a little longer with more text
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -796,6 +798,7 @@ describe('goose', () => {
             position: midEl(fcdaTextInput!),
           });
           sendKeys({ type: 'QB2_Disconnector' });
+          await timeout(70); // takes a little longer with more text
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -889,6 +892,7 @@ describe('goose', () => {
             position: midEl(fcdaTextInput!),
           });
           sendKeys({ type: 'Botany GOOSE1 stVal' });
+          await timeout(70); // takes a little longer with more text
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -1435,4 +1439,6 @@ describe('goose', () => {
       await timeout(500); // plugin loading and initial render?
     });
   });
+
+  // TODO: Test undo and redo once core is updated
 });
