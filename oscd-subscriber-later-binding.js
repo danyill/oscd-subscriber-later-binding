@@ -11194,7 +11194,7 @@ Basic Type: ${spec.bType}"
       <span slot="secondary"
         >${extRefDescription ? x `${extRefDescription}` : A}
         ${extRefDescription && fcdaDesc && fcdaDesc !== ''
-            ? `🡄 ${fcdaDesc}`
+            ? x `<mwc-icon id="leftArrowSmall">arrow_left</mwc-icon>${fcdaDesc}`
             : A}
         ${extRefDescription && supAndctrlDescription !== A
             ? `(${supAndctrlDescription})`
@@ -11591,18 +11591,16 @@ SubscriberLaterBinding.styles = i$5 `
       position: relative;
     }
 
-    mwc-list-item {
-      --mdc-list-item-meta-size: 48px;
-    }
-
-    mwc-list-item.hidden[noninteractive] + li[divider] {
-      display: none;
-    }
-
-    section {
+    #leftArrow {
       position: relative;
-      max-height: 100%;
-      background-color: var(--mdc-theme-surface);
+      top: 5px;
+    }
+
+    #leftArrowSmall {
+      position: relative;
+      top: 7px;
+      width: 20px;
+      left: -3px;
     }
 
     .main-list {
@@ -11633,6 +11631,14 @@ SubscriberLaterBinding.styles = i$5 `
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     }
 
+    mwc-list-item {
+      --mdc-list-item-meta-size: 48px;
+    }
+
+    mwc-list-item.hidden[noninteractive] + li[divider] {
+      display: none;
+    }
+
     .searchField {
       display: flex;
       flex: auto;
@@ -11649,6 +11655,12 @@ SubscriberLaterBinding.styles = i$5 `
     .searchField mwc-textfield {
       width: 100%;
       --mdc-shape-small: 28px;
+    }
+
+    section {
+      position: relative;
+      max-height: 100%;
+      background-color: var(--mdc-theme-surface);
     }
 
     /* Filtering rules for ExtRefs end up implementing logic to allow
@@ -11687,11 +11699,6 @@ SubscriberLaterBinding.styles = i$5 `
       position: absolute;
       bottom: 24px;
       right: 20px;
-    }
-
-    #leftArrow {
-      position: relative;
-      top: 5px;
     }
 
     #switchControlType {
