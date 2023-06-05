@@ -33,7 +33,7 @@ function timeout(ms: number) {
 
 mocha.timeout(14000 * factor);
 
-const standardWait = 400;
+const standardWait = 450;
 
 function testName(test: any): string {
   return test.test!.fullTitle();

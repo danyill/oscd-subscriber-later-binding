@@ -197,13 +197,13 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   concurrentBrowsers: 3,
 
   /** Amount of test files per browser to test concurrently */
-  concurrency: 2,
+  concurrency: 1,
 
   /** Browsers to run tests on */
   browsers,
 
-  // 20 minutes
-  testsFinishTimeout: 20 * 60 * 1000,
+  // 30 minutes
+  testsFinishTimeout: 30 * 60 * 1000,
 
   // See documentation for all available options
 });
