@@ -1115,10 +1115,9 @@ Basic Type: ${spec.bType}"
           if (!selectedListItem) return;
 
           const { control, fcda } = (<ListItem>selectedListItem).dataset;
-          this.currentSelectedControlElement =
-            this.doc.querySelector(
-              selector(this.controlTag, control ?? 'Unknown')
-            ) ?? undefined;
+          this.currentSelectedControlElement = this.doc.querySelector(
+            selector(this.controlTag, control!)
+          )!;
           this.currentSelectedFcdaElement = this.doc.querySelector(
             selector('FCDA', fcda!)
           )!;

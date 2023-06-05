@@ -247,8 +247,8 @@ TIP: This repository uses Git LFS so ensure this is is installed on your system 
 (on Debian based systems `sudo apt install git-lfs`). 
 Then clone this repository using:
 
+[subs=+attributes]
  $ git clone {uri-plugin}
-
 
 Now, install dependencies
 

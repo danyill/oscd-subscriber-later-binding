@@ -10,6 +10,7 @@ import { expect, fixture, html } from '@open-wc/testing';
 import '@openscd/open-scd-core/open-scd.js';
 
 import { LitElement } from 'lit';
+
 import type { CheckListItem } from '@material/mwc-list/mwc-check-list-item.js';
 
 import {
@@ -19,6 +20,7 @@ import {
   resetMouseState,
   setViewPort,
 } from './test-support.js';
+
 import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
 const factor = window.process && process.env.CI ? 4 : 2;
@@ -1110,6 +1112,7 @@ describe('goose', () => {
           });
           sendKeys({ type: '"A Place To Bind"' });
 
+          await timeout(100); // takes a little longer with more text
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1147,6 +1150,7 @@ describe('goose', () => {
           });
           sendKeys({ type: "'A Place To Bind'" });
 
+          await timeout(100); // takes a little longer with more text
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1184,6 +1188,7 @@ describe('goose', () => {
           });
           sendKeys({ type: "'A Place To Bind'" });
 
+          await timeout(100); // takes a little longer with more text
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1221,6 +1226,7 @@ describe('goose', () => {
           });
           sendKeys({ type: 'LGOS 1 Input' });
 
+          await timeout(100); // takes a little longer with more text
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();

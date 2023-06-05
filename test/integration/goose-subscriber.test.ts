@@ -10,6 +10,7 @@ import { fixture, html } from '@open-wc/testing';
 import '@openscd/open-scd-core/open-scd.js';
 
 import { LitElement } from 'lit';
+
 import type { CheckListItem } from '@material/mwc-list/mwc-check-list-item.js';
 
 import {
@@ -19,6 +20,7 @@ import {
   resetMouseState,
   setViewPort,
 } from './test-support.js';
+
 import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
 const factor = window.process && process.env.CI ? 4 : 2;
@@ -1016,6 +1018,8 @@ describe('goose', () => {
             position: midEl(extRefTextInput!),
           });
           sendKeys({ type: 'GOOSE_Subscriber1' });
+
+          await timeout(70); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1052,6 +1056,7 @@ describe('goose', () => {
             position: midEl(extRefTextInput!),
           });
           sendKeys({ type: 'Taxonomist' });
+          await timeout(70); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1070,6 +1075,7 @@ describe('goose', () => {
             position: midEl(extRefTextInput!),
           });
           sendKeys({ type: 'Earth_Switch' });
+          await timeout(70); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1106,6 +1112,7 @@ describe('goose', () => {
             position: midEl(extRefTextInput!),
           });
           sendKeys({ type: 'someRestrictedExtRef' });
+          await timeout(100); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1124,6 +1131,7 @@ describe('goose', () => {
             position: midEl(extRefTextInput!),
           });
           sendKeys({ type: 'Restricted' });
+          await timeout(70); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1142,6 +1150,7 @@ describe('goose', () => {
             position: midEl(extRefTextInput!),
           });
           sendKeys({ type: 'Restricted' });
+          await timeout(70); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1215,7 +1224,7 @@ describe('goose', () => {
             position: midEl(extRefTextInput!),
           });
           sendKeys({ type: 'QB1_Disconnector' });
-          await timeout(70); // takes a little longer with more text
+          await timeout(100); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
