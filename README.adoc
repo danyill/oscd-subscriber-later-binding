@@ -20,7 +20,7 @@
 :uri-material-icons: https://fonts.google.com/icons
 :uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
 
-image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[Build Status]
+image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[title='Build Status']
 image:https://img.shields.io/badge/built%20with-open--wc-blue.svg[link=https://github.com/open-wc,title='Built with open-wc recommendations']
 image:https://img.shields.io/badge/LF%20Energy%20Slack-%20%23OpenSCD%20chat-purple?logo=slack&color=2aa198&labelColor=6c71c4[link=https://lfenergy.slack.com/archives/C03LH7EUP34,title='Slack LF Energy']
 
