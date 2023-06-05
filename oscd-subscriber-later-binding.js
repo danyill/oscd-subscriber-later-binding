@@ -10817,13 +10817,12 @@ Basic Type: ${spec.bType}"
         ?activatable=${!this.subscriberView}
         class="main-list ${o(filteredListClasses)}"
         @selected="${async (ev) => {
-            var _a, _b;
+            var _a;
             const selectedListItem = ev.target.selected;
             if (!selectedListItem)
                 return;
             const { control, fcda } = selectedListItem.dataset;
-            this.currentSelectedControlElement =
-                (_a = this.doc.querySelector(selector(this.controlTag, control !== null && control !== void 0 ? control : 'Unknown'))) !== null && _a !== void 0 ? _a : undefined;
+            this.currentSelectedControlElement = this.doc.querySelector(selector(this.controlTag, control));
             this.currentSelectedFcdaElement = this.doc.querySelector(selector('FCDA', fcda));
             // only continue if conditions for subscription met
             if (!(this.subscriberView &&
@@ -10846,7 +10845,7 @@ Basic Type: ${spec.bType}"
                 const nextActivatableItem = (this.extRefListSubscriberUI.querySelector('mwc-list-item[activated].extref ~ mwc-list-item.extref'));
                 if (nextActivatableItem) {
                     const { extref } = nextActivatableItem.dataset;
-                    const nextExtRef = (_b = this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown'))) !== null && _b !== void 0 ? _b : undefined;
+                    const nextExtRef = (_a = this.doc.querySelector(selector('ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown'))) !== null && _a !== void 0 ? _a : undefined;
                     if (nextExtRef && !isSubscribed(nextExtRef)) {
                         nextActivatableItem.click();
                     }
