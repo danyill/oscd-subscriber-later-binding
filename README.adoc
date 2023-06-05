@@ -14,8 +14,12 @@
 :uri-openscd-core-app: https://openscd.github.io/open-scd/
 :uri-openscd-core-plugin: pass:v[https://openscd.github.io/open-scd/?plugins=%7B%22menu%22:%5B%7B%22name%22:%22Open%20File%22,%22translations%22:%7B%22de%22:%22Datei%20%C3%B6ffnen%22%7D,%22icon%22:%22folder_open%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-open/oscd-open.js%22%7D,%7B%22name%22:%22Save%20File%22,%22translations%22:%7B%22de%22:%22Datei%20speichern%22%7D,%22icon%22:%22save%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-save/oscd-save.js%22%7D%5D,%22editor%22:%5B%7B%22name%22:%22Subscriber%20Later%20Binding%22,%22translations%22:%7B%22de%22:%22Sp%C3%A4te%20Bindung%20des%20Abonnenten%22,%22pt%22:%22Associa%C3%A7%C3%A3o%20Tardia%20de%20Assinante%22%7D,%22icon%22:%22link%22,%22active%22:true,%22requireDoc%22:false,%22src%22:%22https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js%22%7D%5D%7D]
 // TIP:
-// the above URI is done by taking the plugins object from demo.html and updating to the correct {uri-ci-bundle} value and then in the browser calling:
-// console.log(`https://openscd.github.io/open-scd/?plugins=${encodeURI(JSON.stringify(plugins))}`)
+// the above URI is done by taking the plugins object from demo.html and updating to 
+// the correct {uri-ci-bundle} value and then in the browser calling:
+// 
+//   console.log(`https://openscd.github.io/open-scd/?plugins=${encodeURI(JSON.stringify(plugins))}`)
+// 
+// Don't forget the last bracket in the attribute definition.
 :uri-openwc: https://github.com/open-wc/open-wc
 :uri-plugin: https://github.com/danyill/oscd-subscriber-later-binding
 :uri-ci-bundle: https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js
@@ -24,7 +28,7 @@
 
 // badges
 image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[title='Build Status']
-image:https://img.shields.io/badge/built%20with-open--wc-blue.svg[link=https://github.com/open-wc,title='Built with open-wc recommendations']
+image:https://img.shields.io/badge/built%20with-open--wc-blue.svg[link={uri-openwc},title='Built with open-wc recommendations']
 image:https://img.shields.io/badge/LF%20Energy%20Slack-%20%23OpenSCD%20chat-purple?logo=slack&color=2aa198&labelColor=6c71c4[link=https://lfenergy.slack.com/archives/C03LH7EUP34,title='Slack LF Energy']
 
 toc::[]
@@ -243,6 +247,8 @@ Once you've installed nvm, open a *new* terminal and install the active Node.js 
 
 Now that you have Node.js installed, you can install this plugin.
 
+=== Cloning and Demo Server
+
 TIP: This repository uses Git LFS so ensure this is is installed on your system prior 
 (on Debian based systems `sudo apt install git-lfs`). 
 Then clone this repository using:
@@ -264,48 +270,27 @@ Now open in your browser locally to http://localhost:8000/demo/ to use the plugi
 
 To scan the project for linting and formatting errors, run
 
-[source,bash]
-----
-npm run lint
-----
+ $ npm run lint
 
 To automatically fix linting and formatting errors, run
 
-[source,bash]
-----
-npm run format
-----
+ $ npm run format
 
 === Testing with Web Test Runner
 
 To execute a single test run:
 
-[source,bash]
-----
-npm run test
-----
+ $ npm run test
 
 To run the tests in interactive watch mode run:
 
-[source,bash]
-----
-npm run test:watch
-----
+ $ npm run test:watch
 
 === Tooling configs
 
 For most of the tools, the configuration is in the `package.json` to reduce the number of files in your project.
 
 If you customize the configuration a lot, you can consider moving them to individual files.
-
-=== Local Demo with `web-dev-server`
-
-To run a local development server that serves the basic demo located in `demo/index.html`
-
-[source,bash]
-----
-npm start
-----
 
 == Credit
 
