@@ -687,12 +687,12 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'G' });
+          await sendKeys({ type: 'G' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
           await timeout(standardWait);
 
-          sendKeys({ press: 'Backspace' });
+          await sendKeys({ press: 'Backspace' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
           await timeout(standardWait);
@@ -711,7 +711,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'Xyzzy' });
+          await sendKeys({ type: 'Xyzzy' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
           await timeout(standardWait);
@@ -729,8 +729,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'GOOSE_Publisher2' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'GOOSE_Publisher2' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -747,7 +746,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'GOOSE2' });
+          await sendKeys({ type: 'GOOSE2' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -764,8 +763,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'GOOSE_Publisher GOOSE2' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'GOOSE_Publisher GOOSE2' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -782,7 +780,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'Botany1' });
+          await sendKeys({ type: 'Botany1' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -799,8 +797,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'QB2_Disconnector' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'QB2_Disconnector' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -825,7 +822,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'Animalia' });
+          await sendKeys({ type: 'Animalia' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -842,7 +839,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'CSWI' });
+          await sendKeys({ type: 'CSWI' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -859,7 +856,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'Birch' });
+          await sendKeys({ type: 'Birch' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -876,7 +873,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'stVal' });
+          await sendKeys({ type: 'stVal' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -893,8 +890,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'Botany GOOSE1 stVal' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'Botany GOOSE1 stVal' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -911,7 +907,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'QB?_Dis' });
+          await sendKeys({ type: 'QB?_Dis' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -928,7 +924,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: 'Anim*al' });
+          await sendKeys({ type: 'Anim*al' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -945,7 +941,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: '"CSWI 1"' });
+          await sendKeys({ type: '"CSWI 1"' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -962,7 +958,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(fcdaTextInput!),
           });
-          sendKeys({ type: "'CSWI 1'" });
+          await sendKeys({ type: "'CSWI 1'" });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
@@ -999,7 +995,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Thing' });
+          await sendKeys({ type: 'Thing' });
 
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
@@ -1036,7 +1032,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Bind' });
+          await sendKeys({ type: 'Bind' });
 
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
@@ -1073,7 +1069,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'LGOS' });
+          await sendKeys({ type: 'LGOS' });
 
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
@@ -1110,9 +1106,8 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: '"A Place To Bind"' });
+          await sendKeys({ type: '"A Place To Bind"' });
 
-          await timeout(100); // takes a little longer with more text
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1148,9 +1143,8 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: "'A Place To Bind'" });
+          await sendKeys({ type: "'A Place To Bind'" });
 
-          await timeout(100); // takes a little longer with more text
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1186,9 +1180,8 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: "'A Place To Bind'" });
+          await sendKeys({ type: "'A Place To Bind'" });
 
-          await timeout(100); // takes a little longer with more text
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1224,9 +1217,8 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'LGOS 1 Input' });
+          await sendKeys({ type: 'LGOS 1 Input' });
 
-          await timeout(100); // takes a little longer with more text
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1262,7 +1254,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Miss*e' });
+          await sendKeys({ type: 'Miss*e' });
 
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;
@@ -1299,7 +1291,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Missing ?tt' });
+          await sendKeys({ type: 'Missing ?tt' });
 
           await plugin.extRefListPublisherUI?.updateComplete;
           await plugin.updateComplete;

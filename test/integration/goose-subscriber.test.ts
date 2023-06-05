@@ -998,7 +998,7 @@ describe('goose', () => {
           button: 'left',
           position: midEl(fcdaTextInput!),
         });
-        sendKeys({ type: 'QB1' });
+        await sendKeys({ type: 'QB1' });
         await plugin.fcdaListUI!.updateComplete;
         await plugin.updateComplete;
         fcdaTextInput.scrollIntoView();
@@ -1017,9 +1017,8 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'GOOSE_Subscriber1' });
+          await sendKeys({ type: 'GOOSE_Subscriber1' });
 
-          await timeout(70); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1037,7 +1036,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Dummy' });
+          await sendKeys({ type: 'Dummy' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1055,8 +1054,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Taxonomist' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'Taxonomist' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1074,8 +1072,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Earth_Switch' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'Earth_Switch' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1093,7 +1090,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'CILO' });
+          await sendKeys({ type: 'CILO' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1111,8 +1108,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'someRestrictedExtRef' });
-          await timeout(100); // takes a little longer with more text
+          await sendKeys({ type: 'someRestrictedExtRef' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1130,8 +1126,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Restricted' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'Restricted' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1149,8 +1144,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Restricted' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'Restricted' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1168,7 +1162,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'LGOS' });
+          await sendKeys({ type: 'LGOS' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1186,7 +1180,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'GOOSE2' });
+          await sendKeys({ type: 'GOOSE2' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1204,8 +1198,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'GOOSE_Publisher2' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'GOOSE_Publisher2' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1223,8 +1216,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'QB1_Disconnector' });
-          await timeout(100); // takes a little longer with more text
+          await sendKeys({ type: 'QB1_Disconnector' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1242,8 +1234,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'QB1_Disconnector' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'QB1_Disconnector' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1261,8 +1252,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'GOOSE_Subscriber3 CSWI' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'GOOSE_Subscriber3 CSWI' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1280,8 +1270,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Animalia' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'Animalia' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1299,8 +1288,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'Arthropoda' });
-          await timeout(70); // takes a little longer with more text
+          await sendKeys({ type: 'Arthropoda' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1318,10 +1306,9 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({
+          await sendKeys({
             type: 'GOOSE_Subscriber Dummy Earth_Switch Arthropoda LGOS',
           });
-          await timeout(70); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1339,10 +1326,9 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({
+          await sendKeys({
             type: 'GOOSE_Subscriber Dummy Earth_Switch Arthropoda LGOS',
           });
-          await timeout(70); // takes a little longer with more text
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1360,7 +1346,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: '"LGOS 1"' });
+          await sendKeys({ type: '"LGOS 1"' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1378,7 +1364,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: "'LGOS 1'" });
+          await sendKeys({ type: "'LGOS 1'" });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1396,7 +1382,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'An??alia' });
+          await sendKeys({ type: 'An??alia' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
@@ -1414,7 +1400,7 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          sendKeys({ type: 'A*poda' });
+          await sendKeys({ type: 'A*poda' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
           extRefTextInput!.scrollIntoView();
