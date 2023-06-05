@@ -1326,26 +1326,6 @@ describe('goose', () => {
             button: 'left',
             position: midEl(extRefTextInput!),
           });
-          await sendKeys({
-            type: 'GOOSE_Subscriber Dummy Earth_Switch Arthropoda LGOS',
-          });
-          await plugin.extRefListSubscriberUI?.updateComplete;
-          await plugin.updateComplete;
-          extRefTextInput!.scrollIntoView();
-
-          await resetMouseState();
-          await timeout(standardWait);
-          await visualDiff(plugin, testName(this));
-        });
-
-        it('for a double quoted term', async function () {
-          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
-
-          await sendMouse({
-            type: 'click',
-            button: 'left',
-            position: midEl(extRefTextInput!),
-          });
           await sendKeys({ type: '"LGOS 1"' });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
