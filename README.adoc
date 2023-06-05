@@ -5,6 +5,8 @@
 :imagesdir: docs/media
 :icons: font
 :experimental:
+:uri-nvm: https://github.com/creationix/nvm
+:uri-nvm-install: {uri-nvm}#installation
 :uri-action-translate-ci-bundle: https://jakobvogelsang.github.io/oscd-action-translate/oscd-action-translate.js
 :uri-openscd-core: https://github.com/openscd/open-scd-core#readme
 :uri-openscd: https://github.com/openscd
@@ -20,6 +22,7 @@
 :uri-material-icons: https://fonts.google.com/icons
 :uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
 
+// badges
 image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[title='Build Status']
 image:https://img.shields.io/badge/built%20with-open--wc-blue.svg[link=https://github.com/open-wc,title='Built with open-wc recommendations']
 image:https://img.shields.io/badge/LF%20Energy%20Slack-%20%23OpenSCD%20chat-purple?logo=slack&color=2aa198&labelColor=6c71c4[link=https://lfenergy.slack.com/archives/C03LH7EUP34,title='Slack LF Energy']
@@ -98,22 +101,7 @@ image::screenshot-openscd-core-add.png[width=250]
 
 === Locally for testing
 
-. Clone this project:
-+
-[subs=+attributes]
-....
-$ git clone {uri-plugin}
-....
-
-. Install dependencies
-
-  $ npm i
-
-. Start up a demo server 
-
-  $ npm run start
-
-. Open in your browser locally at http://localhost:8000/demo/
+See <<Development>>
 
 === As part of the OpenSCD distribution
 
@@ -234,6 +222,43 @@ In this case what is shown is loading a plugin from the internet using the conti
 . If you are building locally you likely need to run an `npm run bundle` command in each plugin to make the `dist` folder, containing a single JavaScript file with the plugin available to OpenSCD.
 
 == Development
+
+=== Prerequisites
+
+This plugin uses Node.js and the npm package ecosystem and is verified to work on Linux.
+
+For development, you'll need Node.js (including npm, which is bundled with Node.js) on your system.
+
+To check whether you have Node.js installed, and which version, open a terminal and type:
+
+ $ node -v
+
+A good way to install Node.js is to use {uri-nvm}[nvm] (Node Version Manager), however system-wide installations may also work.
+
+If you're using Linux or macOS, follow {uri-nvm-install}[the nvm installation instructions] to set up nvm on your machine.
+
+Once you've installed nvm, open a *new* terminal and install the active Node.js LTS release using:
+
+ $ nvm install --lts
+
+Now that you have Node.js installed, you can install this plugin.
+
+TIP: This repository uses Git LFS so ensure this is is installed on your system prior 
+(on Debian based systems `sudo apt install git-lfs`). 
+Then clone this repository using:
+
+ $ git clone {uri-plugin}
+
+
+Now, install dependencies
+
+ $ npm i
+
+Start up a demo server 
+
+ $ npm run start
+
+Now open in your browser locally to http://localhost:8000/demo/ to use the plugin.
 
 === Linting and formatting
 
