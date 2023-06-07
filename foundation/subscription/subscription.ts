@@ -660,7 +660,7 @@ function isSupervisionModificationAllowed(
 export function instantiateSubscriptionSupervision(
   controlBlock: Element | undefined,
   subscriberIED: Element | undefined
-): Insert[] {
+): (Insert | Remove)[] {
   const supervisionType =
     controlBlock?.tagName === 'GSEControl' ? 'LGOS' : 'LSVS';
   if (
@@ -680,7 +680,7 @@ export function instantiateSubscriptionSupervision(
   )
     return [];
 
-  const edits: Insert[] = [];
+  const edits: (Insert | Remove)[] = [];
   // If creating new LN element
   if (!availableLN.parentElement) {
     const parent = subscriberIED.querySelector(
@@ -742,26 +742,29 @@ export function instantiateSubscriptionSupervision(
   }
 
   const valTextContent = controlBlockReference(controlBlock);
-  let valElement = daiElement.querySelector(`Val`);
-  if (!valElement) {
-    valElement = subscriberIED.ownerDocument.createElementNS(
-      SCL_NAMESPACE,
-      'Val'
-    );
-    valElement.textContent = valTextContent;
+  const valElement = daiElement.querySelector('Val');
+  let newValElement: Element;
 
+  if (valElement) {
+    newValElement = <Element>valElement.cloneNode(true);
+    // remove old element
     edits.push({
-      parent: daiElement!,
-      reference: null,
       node: valElement,
     });
   } else {
-    edits.push({
-      parent: valElement!,
-      reference: null,
-      node: new Text(valTextContent ?? 'Unknown Control Block'),
-    });
+    newValElement = subscriberIED.ownerDocument.createElementNS(
+      SCL_NAMESPACE,
+      'Val'
+    );
   }
+  newValElement.textContent = valTextContent;
+
+  // add new element
+  edits.push({
+    parent: daiElement!,
+    reference: null,
+    node: newValElement,
+  });
 
   return edits;
 }
