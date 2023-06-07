@@ -82,7 +82,7 @@ export declare function findOrCreateAvailableLNInst(controlBlock: Element, subsc
  * @param subscriberIED The subscriber IED
  * @returns an empty array if instantiation is not possible or an array with a single Create action
  */
-export declare function instantiateSubscriptionSupervision(controlBlock: Element | undefined, subscriberIED: Element | undefined): Insert[];
+export declare function instantiateSubscriptionSupervision(controlBlock: Element | undefined, subscriberIED: Element | undefined): (Insert | Remove)[];
 /**
  * Update the passed ExtRefElement and set the required attributes on the cloned element
  * depending on the Edition and type of Control Element.

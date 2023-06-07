@@ -9781,23 +9781,25 @@ function instantiateSubscriptionSupervision(controlBlock, subscriberIED) {
         });
     }
     const valTextContent = controlBlockReference(controlBlock);
-    let valElement = daiElement.querySelector(`Val`);
-    if (!valElement) {
-        valElement = subscriberIED.ownerDocument.createElementNS(SCL_NAMESPACE, 'Val');
-        valElement.textContent = valTextContent;
+    const valElement = daiElement.querySelector(`Val`);
+    let newValElement;
+    if (valElement) {
+        // remove old element
         edits.push({
-            parent: daiElement,
-            reference: null,
             node: valElement,
         });
+        newValElement = valElement.cloneNode(true);
     }
     else {
-        edits.push({
-            parent: valElement,
-            reference: null,
-            node: new Text(valTextContent !== null && valTextContent !== void 0 ? valTextContent : 'Unknown Control Block'),
-        });
+        newValElement = subscriberIED.ownerDocument.createElementNS(SCL_NAMESPACE, 'Val');
     }
+    newValElement.textContent = valTextContent;
+    // add new element
+    edits.push({
+        parent: daiElement,
+        reference: null,
+        node: newValElement,
+    });
     return edits;
 }
 /**
