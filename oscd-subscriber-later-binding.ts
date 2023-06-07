@@ -21,7 +21,7 @@ import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
 import '@material/mwc-textfield';
 
-import { Edit, Insert, newEditEvent } from '@openscd/open-scd-core';
+import { Edit, Insert, newEditEvent, Remove } from '@openscd/open-scd-core';
 
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
@@ -694,7 +694,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
     const subscriberIed = extRef.closest('IED')!;
 
-    let supervisionActions: Insert[] = [];
+    let supervisionActions: (Insert | Remove)[] = [];
 
     if (!this.notChangeSupervisionLNs)
       supervisionActions = instantiateSubscriptionSupervision(
