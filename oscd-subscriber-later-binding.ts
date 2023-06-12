@@ -21,7 +21,16 @@ import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
 import '@material/mwc-textfield';
 
-import { Edit, Insert, newEditEvent, Remove } from '@openscd/open-scd-core';
+import {
+  Edit,
+  EditEvent,
+  Insert,
+  isInsert,
+  isRemove,
+  isUpdate,
+  newEditEvent,
+  Remove,
+} from '@openscd/open-scd-core';
 
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
@@ -329,6 +338,89 @@ export default class SubscriberLaterBinding extends LitElement {
 
   private supervisionData = new Map();
 
+  constructor() {
+    super();
+
+    // before edit occurs
+    window.addEventListener(
+      'oscd-edit',
+      event => this.updateCaching(event as EditEvent),
+      { capture: true }
+    );
+
+    // after edit occurs
+    window.addEventListener('oscd-edit', event =>
+      this.updateCaching(event as EditEvent)
+    );
+  }
+
+  protected updateCaching(event: EditEvent): void {
+    // Infinity as 1 due to error type instantiation error
+    // https://github.com/microsoft/TypeScript/issues/49280
+    const flatEdits = [event.detail].flat(Infinity as 1);
+
+    const handleExtRef = (extRef: Element) => {
+      if (!isSubscribed(extRef)) return;
+      this.extRefInfo.delete(`${identity(extRef)}`);
+
+      const controlElement = findControlBlock(extRef);
+      let fcdaElement;
+      if (controlElement) fcdaElement = findFCDA(extRef, controlElement);
+      if (controlElement && fcdaElement) {
+        const controlBlockFcdaId = `${identity(controlElement)} ${identity(
+          fcdaElement
+        )}`;
+        this.controlBlockFcdaInfo.delete(controlBlockFcdaId);
+      }
+    };
+
+    const handleFCDA = (fcda: Element) => {
+      this.fcdaInfo.delete(`${identity(fcda)}`);
+    };
+
+    const isSupervision = (element: Element) => {
+      if (['LN', 'DOI', 'DAI', 'Val'].includes(element.tagName)) {
+        return (
+          (element.tagName === 'LN' &&
+            ['LGOS', 'LSVS'].includes(element.getAttribute('lnClass') ?? '')) ||
+          ['LGOS', 'LSVS'].includes(
+            element.closest('LN')?.getAttribute('lnClass') ?? ''
+          )
+        );
+      }
+      return false;
+    };
+
+    const handleSupervision = (supElement: Element) => {
+      let supLn: Element | null;
+      if (supElement.tagName === 'LN') {
+        supLn = supElement;
+      } else {
+        supLn = supElement.closest('LN');
+      }
+      // always remove supervision data and allow it to be re-built as required
+      if (supLn) this.updateSupervision(supLn, true);
+    };
+
+    flatEdits.forEach(edit => {
+      let element: Element | undefined;
+      if (isUpdate(edit)) {
+        element = edit.element;
+      } else if (
+        (isRemove(edit) || isInsert(edit)) &&
+        edit.node.nodeType === Node.ELEMENT_NODE
+      ) {
+        element = edit.node as Element;
+      }
+
+      if (element) {
+        if (element.tagName === 'ExtRef') handleExtRef(element);
+        if (element.tagName === 'FCDA') handleFCDA(element);
+        if (isSupervision(element)) handleSupervision(element);
+      }
+    });
+  }
+
   protected storeSettings(): void {
     const storedConfiguration = {
       subscriberView: this.subscriberView,
@@ -410,6 +502,7 @@ export default class SubscriberLaterBinding extends LitElement {
         true // TODO: do we need this?
       ).length;
       this.controlBlockFcdaInfo.set(controlBlockFcdaId, extRefCount);
+      // this.controlBlockFcdaInfo = new Map(this.controlBlockFcdaInfo);
     }
     return this.controlBlockFcdaInfo.get(controlBlockFcdaId)!;
   }
@@ -568,8 +661,9 @@ export default class SubscriberLaterBinding extends LitElement {
   resetSearchFields(): void {
     if (this.filterExtRefPublisherInputUI) {
       this.filterExtRefPublisherInputUI.value = '';
-      this.filterFcdaRegex = /.*/i;
+      this.filterExtRefPublisherRegex = /.*/i;
     }
+
     if (this.filterExtRefSubscriberInputUI) {
       this.filterExtRefSubscriberInputUI.value = '';
       this.filterExtRefSubscriberRegex = /.*/i;
@@ -646,38 +740,26 @@ export default class SubscriberLaterBinding extends LitElement {
       },
     });
 
-    const subscriberIed = extRef.closest('IED')!;
-
     let controlBlockElement;
-    let fcdaElement;
+
     if (this.subscriberView) {
       controlBlockElement = findControlBlock(extRef);
-      // invalid mappings may not have a control block but can still be removed
-      if (controlBlockElement)
-        fcdaElement = findFCDA(extRef, controlBlockElement);
     } else {
       controlBlockElement = this.currentSelectedControlElement;
-      fcdaElement = this.currentSelectedFcdaElement!;
     }
 
     if (
       !this.notChangeSupervisionLNs &&
-      canRemoveSubscriptionSupervision(extRef)
-    )
+      canRemoveSubscriptionSupervision(extRef) &&
+      controlBlockElement
+    ) {
+      const subscriberIed = extRef.closest('IED')!;
       editActions.push(
         ...removeSubscriptionSupervision(controlBlockElement, subscriberIed)
       );
-
-    if (controlBlockElement && fcdaElement) {
-      const controlBlockFcdaId = `${identity(controlBlockElement!)} ${identity(
-        fcdaElement
-      )}`;
-      this.controlBlockFcdaInfo.delete(controlBlockFcdaId);
     }
 
     this.dispatchEvent(newEditEvent(editActions));
-
-    if (!this.notChangeSupervisionLNs) this.reCreateSupervisionCache();
   }
 
   /**
@@ -692,24 +774,17 @@ export default class SubscriberLaterBinding extends LitElement {
   ): void {
     const updateEdit = updateExtRefElement(extRef, controlElement, fcdaElement);
 
-    const subscriberIed = extRef.closest('IED')!;
-
     let supervisionActions: (Insert | Remove)[] = [];
 
-    if (!this.notChangeSupervisionLNs)
+    if (!this.notChangeSupervisionLNs) {
+      const subscriberIed = extRef.closest('IED')!;
       supervisionActions = instantiateSubscriptionSupervision(
         controlElement,
         subscriberIed
       );
+    }
 
     this.dispatchEvent(newEditEvent([updateEdit, ...supervisionActions]));
-
-    const controlBlockFcdaId = `${identity(controlElement)} ${identity(
-      fcdaElement
-    )}`;
-    this.controlBlockFcdaInfo.delete(controlBlockFcdaId);
-
-    if (!this.notChangeSupervisionLNs) this.reCreateSupervisionCache();
   }
 
   public getSubscribedExtRefElements(): Element[] {
@@ -748,8 +823,11 @@ export default class SubscriberLaterBinding extends LitElement {
     );
   }
 
-  private reCreateSupervisionCache() {
-    this.supervisionData = new Map();
+  private updateSupervision(supLn: Element, remove: boolean = false) {
+    // supervision could be removed leaving no information in the document
+    // if via an event
+    if (!supLn.closest('IED')) return;
+
     const supervisionType =
       serviceTypeLookup[this.controlTag] === 'GOOSE' ? 'LGOS' : 'LSVS';
     const refSelector =
@@ -757,20 +835,24 @@ export default class SubscriberLaterBinding extends LitElement {
         ? 'DOI[name="GoCBRef"]'
         : 'DOI[name="SvCBRef"]';
 
+    const cbRef = supLn!.querySelector(
+      `${refSelector}>DAI[name="setSrcRef"]>Val`
+    );
+
+    const iedName = supLn.closest('IED')!.getAttribute('name');
+    if (cbRef && !remove)
+      this.supervisionData.set(`${iedName} ${cbRef.textContent}`, supLn);
+    if (cbRef && remove)
+      this.supervisionData.delete(`${iedName} ${cbRef.textContent}`);
+  }
+
+  private reCreateSupervisionCache() {
+    this.supervisionData = new Map();
+
     getUsedSupervisionInstances(
       this.doc,
       serviceTypeLookup[this.controlTag]
-    ).forEach(supervisionLN => {
-      const cbRef = supervisionLN!.querySelector(
-        `${refSelector}>DAI[name="setSrcRef"]>Val`
-      );
-      const iedName = supervisionLN.closest('IED')!.getAttribute('name');
-      if (cbRef)
-        this.supervisionData.set(
-          `${iedName} ${cbRef.textContent}`,
-          supervisionLN
-        );
-    });
+    ).forEach(supervisionLN => this.updateSupervision(supervisionLN));
   }
 
   // eslint-disable-next-line class-methods-use-this
