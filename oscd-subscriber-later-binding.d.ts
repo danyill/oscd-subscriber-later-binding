@@ -7,6 +7,7 @@ import '@material/mwc-list/mwc-list-item';
 import '@material/mwc-list/mwc-check-list-item';
 import '@material/mwc-menu';
 import '@material/mwc-textfield';
+import { EditEvent } from '@openscd/open-scd-core';
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
 import type { List } from '@material/mwc-list';
@@ -62,6 +63,8 @@ export default class SubscriberLaterBinding extends LitElement {
     private fcdaInfo;
     private extRefInfo;
     private supervisionData;
+    constructor();
+    protected updateCaching(event: EditEvent): void;
     protected storeSettings(): void;
     protected restoreSettings(): void;
     private getControlElements;
@@ -89,6 +92,7 @@ export default class SubscriberLaterBinding extends LitElement {
     getSubscribedExtRefElements(): Element[];
     private isExtRefViewable;
     getAvailableExtRefElements(): Element[];
+    private updateSupervision;
     private reCreateSupervisionCache;
     private getExtRefElementsByIED;
     private getCachedSupervision;
