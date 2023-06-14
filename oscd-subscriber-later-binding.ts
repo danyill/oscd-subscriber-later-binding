@@ -2208,7 +2208,7 @@ Basic Type: ${spec.bType}"
                 ${this.renderPublisherViewSubscribedExtRefs()}
                 ${this.renderPublisherViewAvailableExtRefs()}
               </mwc-list>`
-          : html`${msg('No published item selected')}</h3>`}
+          : html`<h3>${msg('No published item selected')}</h3>`}
       </section>`;
     }
 
