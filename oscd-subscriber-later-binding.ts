@@ -63,6 +63,8 @@ import {
   isPartiallyConfigured,
   isSubscribed,
   updateExtRefElement,
+  canRemoveSubscriptionSupervision,
+  removeSubscriptionSupervision,
 } from './foundation/subscription/subscription.js';
 import {
   findFCDAs,
@@ -835,26 +837,7 @@ export default class SubscriberLaterBinding extends LitElement {
   private unsubscribeExtRef(extRef: Element): void {
     const editActions: Edit[] = [];
 
-    editActions.push({
-      element: extRef,
-      attributes: {
-        intAddr: extRef.getAttribute('intAddr'),
-        desc: extRef.getAttribute('desc'),
-        iedName: null,
-        ldInst: null,
-        prefix: null,
-        lnClass: null,
-        lnInst: null,
-        doName: null,
-        daName: null,
-        serviceType: extRef.getAttribute('serviceType'),
-        srcLDInst: null,
-        srcPrefix: null,
-        srcLNClass: null,
-        srcLNInst: null,
-        srcCBName: null,
-      },
-    });
+    editActions.push(...unsubscribe([extRef], { ignoreSupervision: true }));
 
     let controlBlockElement;
 
@@ -2225,7 +2208,7 @@ Basic Type: ${spec.bType}"
                 ${this.renderPublisherViewSubscribedExtRefs()}
                 ${this.renderPublisherViewAvailableExtRefs()}
               </mwc-list>`
-          : html`>${msg('No published item selected')}</h3>`}
+          : html`${msg('No published item selected')}</h3>`}
       </section>`;
     }
 
