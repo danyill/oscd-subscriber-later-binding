@@ -2,14 +2,6 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
   <file target-language="pt" source-language="en" original="lit-localize-inputs" datatype="plaintext">
     <body>
-      <trans-unit id="s7b172c6f7ac1cb0c">
-        <source>Publisher Sampled Value Messages</source>
-        <target>Mensagens de valor amostrado do publicador</target>
-      </trans-unit>
-      <trans-unit id="s337459c5378dc0dc">
-        <source>Publisher GOOSE Messages</source>
-        <target>Mensagens GOOSE do publicador</target>
-      </trans-unit>
       <trans-unit id="s54431d00a8030125">
         <source>Subscribed</source>
         <target>Inscrito</target>
@@ -29,10 +21,6 @@
       <trans-unit id="s94915263ea5e8caf">
         <source>No available inputs to subscribe</source>
         <target>Sem entradas disponíveis para inscrição</target>
-      </trans-unit>
-      <trans-unit id="s182ac4e81ae15024">
-        <source>Subscriber Inputs</source>
-        <target>Entradas do inscrito</target>
       </trans-unit>
       <trans-unit id="s7c95876637f6a9d7">
         <source>Filter</source>
@@ -97,6 +85,18 @@
       <trans-unit id="sa31e300fdb94e50d">
         <source>Non-Matching Preconfigured</source>
         <target>Pré-configurados Não Correspondentes</target>
+      </trans-unit>
+      <trans-unit id="s7b45ec25bda765ae">
+        <source>Select SV</source>
+        <target>Selecionar SV</target>
+      </trans-unit>
+      <trans-unit id="s0df58b351dfdde3e">
+        <source>Select GOOSE</source>
+        <target>Selecionar GOOSE</target>
+      </trans-unit>
+      <trans-unit id="s62577ba24e6c7d95">
+        <source>Select Input</source>
+        <target>Selecionar Entrada</target>
       </trans-unit>
     </body>
   </file>

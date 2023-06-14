@@ -1101,18 +1101,40 @@ Basic Type: ${spec.bType}"
 
   renderFCDAListTitle(): TemplateResult {
     const menuClasses = {
+      'title-element': true,
       'filter-off':
         this.hideSubscribed ||
         this.hideNotSubscribed ||
         this.hideDataObjects ||
         (this.hidePreconfiguredNotMatching && this.subscriberView),
     };
+    const selectedFcdaTitle =
+      this.currentSelectedControlElement &&
+      this.currentSelectedFcdaElement &&
+      !this.subscriberView
+        ? `${getNameAttribute(
+            this.currentSelectedFcdaElement.closest('IED')!
+          )} > ${getNameAttribute(
+            this.currentSelectedControlElement
+          )} : ${getFcdaOrExtRefTitle(this.currentSelectedFcdaElement)}`
+        : '';
+
     return html`
-      <h1>
+      <h1 class="fcda-title">
         ${this.renderControlTypeSelector()}
-        ${this.controlTag === 'SampledValueControl'
-          ? msg('Publisher Sampled Value Messages')
-          : msg('Publisher GOOSE Messages')}
+        ${this.currentSelectedControlElement &&
+        this.currentSelectedFcdaElement &&
+        !this.subscriberView
+          ? html`<span
+              class="selected title-element text"
+              title="${selectedFcdaTitle}"
+              >${selectedFcdaTitle}</span
+            >`
+          : html`<span class="title-element text"
+              >${this.controlTag === 'SampledValueControl'
+                ? msg('Select SV')
+                : msg('Select GOOSE')}</span
+            >`}
         <mwc-icon-button
           id="filterFcdaIcon"
           class="${classMap(menuClasses)}"
@@ -1446,7 +1468,7 @@ Basic Type: ${spec.bType}"
     };
 
     return html`<h1>
-      ${msg('Subscriber Inputs')}
+      ${msg('Select Input')}
       <mwc-menu
         id="filterExtRefMenuPublisher"
         multi
@@ -1510,8 +1532,24 @@ Basic Type: ${spec.bType}"
       'filter-off':
         this.hideBound || this.hideNotBound || this.strictServiceTypes,
     };
+
+    const selectedExtRefTitle = this.currentSelectedExtRefElement
+      ? `${getNameAttribute(
+          this.currentSelectedExtRefElement?.closest('IED')!
+        )} > ${extRefPath(
+          this.currentSelectedExtRefElement
+        )}: ${this.currentSelectedExtRefElement.getAttribute('intAddr')}`
+      : '';
+
     return html`<h1 class="subscriber-title">
-      ${msg('Subscriber Inputs')}
+      ${this.currentSelectedExtRefElement
+        ? html`<span
+            class="selected title-element text"
+            title="${selectedExtRefTitle}"
+            >${selectedExtRefTitle}</span
+          >`
+        : html`<span class="title-element text">${msg('Select Input')}</span>`}
+
       <mwc-icon-button
         id="filterExtRefSubscriberIcon"
         class="${classMap(menuClasses)}"
@@ -1905,6 +1943,7 @@ Basic Type: ${spec.bType}"
     return html`
       <mwc-icon-button-toggle
         id="switchControlType"
+        class="title-element"
         ?on=${this.controlTag === 'GSEControl'}
         title="${msg('Change between GOOSE and Sampled Value publishers')}"
         @click=${() => {
@@ -1913,6 +1952,18 @@ Basic Type: ${spec.bType}"
           } else {
             this.controlTag = 'GSEControl';
           }
+
+          // deselect in UI
+          if (this.fcdaListSelectedUI) {
+            this.fcdaListSelectedUI.selected = false;
+            this.fcdaListSelectedUI.activated = false;
+          }
+
+          // reset state
+          this.currentSelectedControlElement = undefined;
+          this.currentSelectedFcdaElement = undefined;
+          this.currentSelectedExtRefElement = undefined;
+
           this.resetSearchFields();
           this.resetCaching();
         }}
@@ -1955,6 +2006,7 @@ Basic Type: ${spec.bType}"
         // reset state
         this.currentSelectedControlElement = undefined;
         this.currentSelectedFcdaElement = undefined;
+        this.currentSelectedExtRefElement = undefined;
 
         this.resetSearchFields();
 
@@ -2027,6 +2079,27 @@ Basic Type: ${spec.bType}"
       padding-left: 0.3em;
     }
 
+    h1 {
+      font-size: 20px;
+    }
+
+    h1.fcda-title,
+    h1.subscriber-title {
+      display: flex;
+    }
+
+    h1 .title-element.text {
+      flex: 1 1 auto;
+      min-width: 0px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    h1 .selected {
+      font-weight: 400;
+      color: var(--mdc-theme-primary, #6200ee);
+    }
+
     h3 {
       margin: 4px 8px 16px;
     }
@@ -2045,7 +2118,6 @@ Basic Type: ${spec.bType}"
       padding-left: var(--mdc-list-side-padding, 16px);
     }
 
-    #filterFcdaIcon,
     #filterExtRefSubscriberIcon,
     #settingsExtRefSubscriberIcon,
     #settingsExtRefPublisherIcon,
@@ -2205,7 +2277,7 @@ Basic Type: ${spec.bType}"
     section {
       position: relative;
       max-height: 100%;
-      background-color: var(--mdc-theme-surface);
+      background-color: var(--mdc-theme-surface, #fafafa);
     }
 
     /* Filtering rules for ExtRefs end up implementing logic to allow
