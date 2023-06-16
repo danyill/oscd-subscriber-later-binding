@@ -64,7 +64,7 @@ export default class SubscriberLaterBinding extends LitElement {
     private extRefInfo;
     private supervisionData;
     constructor();
-    protected updateCaching(event: EditEvent): void;
+    protected updateCaching(event: EditEvent, when: 'before' | 'after'): void;
     protected storeSettings(): void;
     protected restoreSettings(): void;
     private getControlElements;

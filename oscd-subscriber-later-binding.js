@@ -9990,6 +9990,15 @@ function getOrderedIeds(doc) {
         ? Array.from(doc.querySelectorAll(':root > IED')).sort((a, b) => compareNames(a, b))
         : [];
 }
+// export function getSupervisionCbRef(ln: Element): string | null {
+//   const supervisionType = ln.getAttribute('lnClass');
+//   const refSelector =
+//     supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
+//   const cbRef =
+//     ln!.querySelector(`:scope > ${refSelector}>DAI[name="setSrcRef"]>Val`)
+//       ?.textContent ?? null;
+//   return cbRef;
+// }
 /**
  * Returns the used supervision LN instances for a given service type.
  *
@@ -10262,11 +10271,11 @@ class SubscriberLaterBinding extends s$1 {
         this.extRefInfo = new Map();
         this.supervisionData = new Map();
         // before edit occurs
-        window.addEventListener('oscd-edit', event => this.updateCaching(event), { capture: true });
+        window.addEventListener('oscd-edit', event => this.updateCaching(event, 'before'), { capture: true });
         // after edit occurs
-        window.addEventListener('oscd-edit', event => this.updateCaching(event));
+        window.addEventListener('oscd-edit', event => this.updateCaching(event, 'after'));
     }
-    updateCaching(event) {
+    updateCaching(event, when) {
         // Infinity as 1 due to error type instantiation error
         // https://github.com/microsoft/TypeScript/issues/49280
         const flatEdits = [event.detail].flat(Infinity);
@@ -10295,7 +10304,7 @@ class SubscriberLaterBinding extends s$1 {
             }
             return false;
         };
-        const handleSupervision = (supElement) => {
+        const handleSupervision = (supElement, remove = false) => {
             let supLn;
             if (supElement.tagName === 'LN') {
                 supLn = supElement;
@@ -10304,8 +10313,13 @@ class SubscriberLaterBinding extends s$1 {
                 supLn = supElement.closest('LN');
             }
             // always remove supervision data and allow it to be re-built as required
-            if (supLn)
-                this.updateSupervision(supLn, true);
+            if (supLn) {
+                // const hasCbRef = getSupervisionCbRef(supLn);
+                if (!remove)
+                    this.updateSupervision(supLn);
+                if (remove)
+                    this.updateSupervision(supLn, true);
+            }
         };
         flatEdits.forEach(edit => {
             let element;
@@ -10321,7 +10335,9 @@ class SubscriberLaterBinding extends s$1 {
                     handleExtRef(element);
                 if (element.tagName === 'FCDA')
                     handleFCDA(element);
-                if (isSupervision(element))
+                if (isSupervision(element) && when === 'before' && isRemove(edit))
+                    handleSupervision(element, true);
+                if (isSupervision(element) && when === 'after' && !isRemove(edit))
                     handleSupervision(element);
             }
         });
