@@ -13,6 +13,7 @@ import { LitElement } from 'lit';
 
 import type { CheckListItem } from '@material/mwc-list/mwc-check-list-item.js';
 
+import type { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
 import {
   getExtRefItem,
   getFcdaItem,
@@ -502,6 +503,144 @@ describe('goose', () => {
           button: 'left',
           position: midEl(fcda!),
         });
+
+        await resetMouseState();
+        await timeout(standardWait); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('unsubscribing multiple ExtRefs with multiple supervision removal', async function () {
+        // first unsubscribe all ExtRefs
+        // first
+        const extRefListElement = plugin.extRefListSubscriberUI;
+        let extref!: ListItemBase | null;
+
+        extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing[0]'
+        );
+        extref?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
+
+        // second
+        extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing2[0]'
+        );
+        extref?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
+
+        // third
+        extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing3[0]'
+        );
+        extref?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(standardWait);
+
+        // now subscribe
+
+        // first
+        // click on extref
+        extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing[0]'
+        );
+        extref?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
+
+        // click on FCDA
+        let fcdaListElement;
+        fcdaListElement = plugin.fcdaListUI!;
+
+        let fcda;
+        fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher>>QB2_Disconnector>GOOSE1',
+          'GOOSE_Publisher>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+        fcda?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
+        await fcdaListElement!.updateComplete;
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
+
+        // second
+        // click on extref
+        extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber3>>Earth_Switch> CILO 1>ESW_Thing2[0]'
+        );
+        extref?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
+
+        // click on FCDA
+        fcdaListElement = plugin.fcdaListUI!;
+
+        fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2',
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+        fcda?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
+        await fcdaListElement!.updateComplete;
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
 
         await resetMouseState();
         await timeout(standardWait); // selection

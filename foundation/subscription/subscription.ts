@@ -976,6 +976,17 @@ export function getOrderedIeds(doc: XMLDocument): Element[] {
     : [];
 }
 
+// export function getSupervisionCbRef(ln: Element): string | null {
+//   const supervisionType = ln.getAttribute('lnClass');
+//   const refSelector =
+//     supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
+
+//   const cbRef =
+//     ln!.querySelector(`:scope > ${refSelector}>DAI[name="setSrcRef"]>Val`)
+//       ?.textContent ?? null;
+//   return cbRef;
+// }
+
 /**
  * Returns the used supervision LN instances for a given service type.
  *

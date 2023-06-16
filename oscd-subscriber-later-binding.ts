@@ -344,17 +344,17 @@ export default class SubscriberLaterBinding extends LitElement {
     // before edit occurs
     window.addEventListener(
       'oscd-edit',
-      event => this.updateCaching(event as EditEvent),
+      event => this.updateCaching(event as EditEvent, 'before'),
       { capture: true }
     );
 
     // after edit occurs
     window.addEventListener('oscd-edit', event =>
-      this.updateCaching(event as EditEvent)
+      this.updateCaching(event as EditEvent, 'after')
     );
   }
 
-  protected updateCaching(event: EditEvent): void {
+  protected updateCaching(event: EditEvent, when: 'before' | 'after'): void {
     // Infinity as 1 due to error type instantiation error
     // https://github.com/microsoft/TypeScript/issues/49280
     const flatEdits = [event.detail].flat(Infinity as 1);
@@ -391,7 +391,10 @@ export default class SubscriberLaterBinding extends LitElement {
       return false;
     };
 
-    const handleSupervision = (supElement: Element) => {
+    const handleSupervision = (
+      supElement: Element,
+      remove: boolean = false
+    ) => {
       let supLn: Element | null;
       if (supElement.tagName === 'LN') {
         supLn = supElement;
@@ -399,7 +402,11 @@ export default class SubscriberLaterBinding extends LitElement {
         supLn = supElement.closest('LN');
       }
       // always remove supervision data and allow it to be re-built as required
-      if (supLn) this.updateSupervision(supLn, true);
+      if (supLn) {
+        // const hasCbRef = getSupervisionCbRef(supLn);
+        if (!remove) this.updateSupervision(supLn);
+        if (remove) this.updateSupervision(supLn, true);
+      }
     };
 
     flatEdits.forEach(edit => {
@@ -415,8 +422,13 @@ export default class SubscriberLaterBinding extends LitElement {
 
       if (element) {
         if (element.tagName === 'ExtRef') handleExtRef(element);
+
         if (element.tagName === 'FCDA') handleFCDA(element);
-        if (isSupervision(element)) handleSupervision(element);
+
+        if (isSupervision(element) && when === 'before' && isRemove(edit))
+          handleSupervision(element, true);
+        if (isSupervision(element) && when === 'after' && !isRemove(edit))
+          handleSupervision(element);
       }
     });
   }
