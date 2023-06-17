@@ -1,5 +1,8 @@
 // TODO: This needs careful review!
-export function getFcdaInstDesc(fcda: Element, includeDai: boolean): string[] {
+export function getFcdaInstDesc(
+  fcda: Element,
+  includeDai: boolean
+): Record<string, string> {
   const [doName, daName] = ['doName', 'daName'].map(attr =>
     fcda.getAttribute(attr)
   );
@@ -20,34 +23,40 @@ export function getFcdaInstDesc(fcda: Element, includeDai: boolean): string[] {
       (lN.getAttribute('inst') ?? '') === (fcda.getAttribute('lnInst') ?? '')
   );
 
-  if (!anyLn) return [];
+  if (!anyLn) return {};
 
-  const descs: (string | null | undefined)[] = [];
+  let descs = {};
 
-  descs.push(anyLn.closest('LDevice')!.getAttribute('desc'));
-  descs.push(anyLn.getAttribute('desc'));
+  const ldDesc = anyLn.closest('LDevice')!.getAttribute('desc');
+  const lnDesc = anyLn.getAttribute('desc');
+  descs = { ...descs, ...(ldDesc && { LDevice: ldDesc }) };
+  descs = { ...descs, ...(lnDesc && { LN: lnDesc }) };
 
   const doNames = doName!.split('.');
 
   const doi = anyLn.querySelector(`DOI[name="${doNames[0]}"`);
 
-  if (!doi) return descs.filter(d => d !== null && d !== undefined) as string[];
+  if (!doi) return descs;
 
-  descs.push(doi?.getAttribute('desc'));
+  const doiDesc = doi?.getAttribute('desc');
+  descs = { ...descs, ...(doiDesc && { DOI: doiDesc }) };
 
   let previousDI: Element = doi;
   doNames.slice(1).forEach(sdiName => {
     const sdi = previousDI.querySelector(`SDI[name="${sdiName}"]`);
     if (sdi) previousDI = sdi;
-    descs.push(sdi?.getAttribute('desc'));
+    const sdiDesc = sdi?.getAttribute('desc');
+    descs = { ...descs, ...(sdiDesc && { SDI: sdiDesc }) };
   });
 
-  if (!includeDai || !daName)
-    return descs.filter(d => d !== null && d !== undefined) as string[];
+  if (!includeDai || !daName) return descs;
 
   const daNames = daName?.split('.');
+  // TODO: Finish this!
   const dai = previousDI.querySelector(`DAI[name="${daNames[0]}"]`);
-  descs.push(dai?.getAttribute('desc'));
 
-  return descs.filter(d => d !== null && d !== undefined) as string[];
+  const daiDesc = dai?.getAttribute('desc');
+  descs = { ...descs, ...(daiDesc && { DAI: daiDesc }) };
+
+  return descs;
 }

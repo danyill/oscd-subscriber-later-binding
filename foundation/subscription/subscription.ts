@@ -8,6 +8,16 @@ import {
   serviceTypes,
 } from '../foundation.js';
 
+type specificationFcda = {
+  cdc: string | null;
+  bType: string | null;
+};
+
+export type fcdaData = {
+  spec: specificationFcda;
+  desc: Record<string, string>;
+};
+
 export const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
 
 export function getFcdaOrExtRefTitle(fcdaElement: Element): string {

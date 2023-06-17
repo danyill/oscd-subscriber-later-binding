@@ -98,6 +98,33 @@
         <source>Select Input</source>
         <target>Selecionar Entrada</target>
       </trans-unit>
+<trans-unit id="s8a7bee24f1eeaff1">
+  <source>Sort</source>
+</trans-unit>
+<trans-unit id="sf662655f1f2b699c">
+  <source>Data Model</source>
+</trans-unit>
+<trans-unit id="sd69d6529db90631b">
+  <source>Object Reference</source>
+</trans-unit>
+<trans-unit id="sd806f84a0c37fffe">
+  <source>Full Description</source>
+</trans-unit>
+<trans-unit id="s9f414b2a098ea073">
+  <source>Data Object and Attribute Description</source>
+</trans-unit>
+<trans-unit id="sc36093724a2669c3">
+  <source>Data Attribute Description</source>
+</trans-unit>
+<trans-unit id="s22b07ec8ef21ae60">
+  <source>Internal Address</source>
+</trans-unit>
+<trans-unit id="s63d894b1ddb06289">
+  <source>Description</source>
+</trans-unit>
+<trans-unit id="s39a7098397887dc3">
+  <source>Mapped Reference</source>
+</trans-unit>
     </body>
   </file>
 </xliff>
