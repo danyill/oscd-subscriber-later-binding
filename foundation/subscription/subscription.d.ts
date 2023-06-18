@@ -1,4 +1,13 @@
 import { Insert, Remove, Update } from '@openscd/open-scd-core';
+import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
+declare type specificationFcda = {
+    cdc: string | null;
+    bType: string | null;
+};
+export declare type fcdaData = {
+    spec: specificationFcda;
+    desc: fcdaDesc;
+};
 export declare const SCL_NAMESPACE = "http://www.iec.ch/61850/2003/SCL";
 export declare function getFcdaOrExtRefTitle(fcdaElement: Element): string;
 /**
@@ -131,3 +140,4 @@ export declare function findControlBlock(extRef: Element): Element;
  * @returns - SCL FCDA element
  */
 export declare function findFCDA(extRef: Element, controlBlock: Element): Element | null;
+export {};

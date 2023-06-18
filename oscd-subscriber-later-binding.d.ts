@@ -5,6 +5,7 @@ import '@material/mwc-icon-button-toggle';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item';
 import '@material/mwc-list/mwc-check-list-item';
+import '@material/mwc-list/mwc-radio-list-item';
 import '@material/mwc-menu';
 import '@material/mwc-textfield';
 import { EditEvent } from '@openscd/open-scd-core';
@@ -15,6 +16,19 @@ import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import type { Menu } from '@material/mwc-menu';
 import type { TextField } from '@material/mwc-textfield';
 declare type controlTagType = 'SampledValueControl' | 'GSEControl';
+declare enum FcdaSortOrder {
+    DataModel = 0,
+    Path = 1,
+    FullDescription = 2,
+    DODescription = 3,
+    DADescription = 4
+}
+declare enum ExtRefSortOrder {
+    DataModel = 0,
+    InternalAddress = 1,
+    Description = 2,
+    MappedReference = 3
+}
 export default class SubscriberLaterBinding extends LitElement {
     doc: XMLDocument;
     docName: string;
@@ -30,9 +44,20 @@ export default class SubscriberLaterBinding extends LitElement {
     hideBound: boolean;
     hideNotBound: boolean;
     strictServiceTypes: boolean;
+    sortExtRefPublisher: ExtRefSortOrder;
+    sortExtRefSubscriber: ExtRefSortOrder;
+    sortFcda: FcdaSortOrder;
     filterFcdaRegex: RegExp;
     filterExtRefPublisherRegex: RegExp;
     filterExtRefSubscriberRegex: RegExp;
+    currentSelectedControlElement: Element | undefined;
+    currentSelectedFcdaElement: Element | undefined;
+    currentIedElement: Element | undefined;
+    currentSelectedExtRefElement: Element | undefined;
+    private controlBlockFcdaInfo;
+    private fcdaInfo;
+    private extRefInfo;
+    private supervisionData;
     switchViewUI?: IconButtonToggle;
     switchControlTypeUI?: IconButtonToggle;
     filterMenuFcdaUI: Menu;
@@ -49,20 +74,18 @@ export default class SubscriberLaterBinding extends LitElement {
     settingsMenuExtRefPublisherUI: Menu;
     settingsMenuExtRefSubscriberButtonUI: Icon;
     settingsMenuExtRefPublisherButtonUI: Icon;
+    sortMenuExtRefPublisherButtonUI: Icon;
+    sortMenuExtRefPublisherUI: Menu;
+    sortMenuExtRefSubscriberButtonUI: Icon;
+    sortMenuExtRefSubscriberUI: Menu;
+    sortMenuFcdaButtonUI: Menu;
+    sortMenuFcdaUI: Menu;
     fcdaListUI?: List;
     extRefListPublisherUI?: List;
     publisherExtRefSectionUI?: HTMLElement;
     extRefListSubscriberUI?: List;
     extRefListSubscriberSelectedUI?: ListItem;
     fcdaListSelectedUI?: ListItem;
-    currentSelectedControlElement: Element | undefined;
-    currentSelectedFcdaElement: Element | undefined;
-    currentIedElement: Element | undefined;
-    currentSelectedExtRefElement: Element | undefined;
-    private controlBlockFcdaInfo;
-    private fcdaInfo;
-    private extRefInfo;
-    private supervisionData;
     constructor();
     protected updateCaching(event: EditEvent, when: 'before' | 'after'): void;
     protected storeSettings(): void;
@@ -116,6 +139,7 @@ export default class SubscriberLaterBinding extends LitElement {
     private isFcdaDisabled;
     renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult;
     renderFCDAListTitle(): TemplateResult;
+    private sortFcdaSubscriberItems;
     renderControlList(controlElements: Element[]): TemplateResult;
     private renderPublisherViewSubscribedExtRefs;
     private renderPublisherViewAvailableExtRefs;
