@@ -468,7 +468,7 @@ export function ixNamingSelector(
         ? ixNamingSelector(parentTag, parentIdentity, depth - 1).split(',')
         : selector(parentTag, parentIdentity).split(',')
     )
-    // eslint-disable-next-line no-shadow
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     .filter(selector => !selector.startsWith(voidSelector));
 
   if (parentSelectors.length === 0) return voidSelector;
@@ -631,7 +631,7 @@ export function namingSelector(
         ? namingSelector(parentTag, parentIdentity, depth - 1).split(',')
         : selector(parentTag, parentIdentity).split(',')
     )
-    // eslint-disable-next-line no-shadow
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     .filter(selector => !selector.startsWith(voidSelector));
 
   if (parentSelectors.length === 0) return voidSelector;
@@ -648,7 +648,7 @@ export function singletonSelector(tagName: SCLTag, identity: string): string {
 
   const parentSelectors = parents
     .flatMap(parentTag => selector(parentTag, identity).split(','))
-    // eslint-disable-next-line no-shadow
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     .filter(selector => !selector.startsWith(voidSelector));
 
   if (parentSelectors.length === 0) return voidSelector;
