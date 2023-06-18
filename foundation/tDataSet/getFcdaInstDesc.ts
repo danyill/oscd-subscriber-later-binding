@@ -6,7 +6,7 @@ export type fcdaDesc = {
   DAI?: string | null;
 };
 
-export function getFcdaInstDesc(fcda: Element, includeDai: boolean): fcdaDesc {
+export function getFcdaInstDesc(fcda: Element): fcdaDesc {
   const [doName, daName] = ['doName', 'daName'].map(attr =>
     fcda.getAttribute(attr)
   );
@@ -55,7 +55,7 @@ export function getFcdaInstDesc(fcda: Element, includeDai: boolean): fcdaDesc {
     } else if (sdiDesc) descs.SDI!.push(sdiDesc);
   });
 
-  if (!includeDai || !daName) return descs;
+  if (!daName) return descs;
 
   const daNames = daName?.split('.');
   const dai = previousDI.querySelector(`DAI[name="${daNames[0]}"]`);

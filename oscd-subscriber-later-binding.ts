@@ -696,7 +696,7 @@ export default class SubscriberLaterBinding extends LitElement {
     const id = `${identity(fcdaElement)}`;
     if (!this.fcdaInfo.has(id)) {
       const spec = fcdaSpecification(fcdaElement);
-      const desc = getFcdaInstDesc(fcdaElement, true);
+      const desc = getFcdaInstDesc(fcdaElement);
       this.fcdaInfo.set(id, { spec, desc });
     }
     return this.fcdaInfo.get(id)!;
@@ -1415,7 +1415,7 @@ Basic Type: ${spec.bType}"
 
     if (this.sortFcda === FcdaSortOrder.DADescription) {
       const aInfo = this.getFcdaInfo(aFcda).desc.DAI ?? '';
-      const bInfo = this.getFcdaInfo(aFcda).desc.DAI ?? '';
+      const bInfo = this.getFcdaInfo(bFcda).desc.DAI ?? '';
 
       return aInfo.localeCompare(bInfo);
     }
@@ -1998,7 +1998,7 @@ Basic Type: ${spec.bType}"
           } > ${getFcdaOrExtRefTitle(extRefElement)}`
         : '';
     const fcdaDesc = subscriberFCDA
-      ? Object.values(this.getFcdaInfo(subscriberFCDA).desc).join('>')
+      ? Object.values(this.getFcdaInfo(subscriberFCDA).desc).join(' > ')
       : null;
 
     const specExtRefText =
