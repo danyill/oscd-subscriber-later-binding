@@ -76,8 +76,10 @@ import {
   gooseActionIcon,
   smvActionIcon,
 } from './foundation/icons.js';
+
 import { getFcdaInstDesc } from './foundation/tDataSet/getFcdaInstDesc.js';
 
+import type { fcdaDesc } from './foundation/tDataSet/getFcdaInstDesc.js';
 import type { fcdaData } from './foundation/subscription/subscription.js';
 
 type controlTagType = 'SampledValueControl' | 'GSEControl';
@@ -89,7 +91,7 @@ type fcdaInfo = {
     cdc: string | null;
     bType: string | null;
   };
-  desc: Record<string, string>;
+  desc: fcdaDesc;
 };
 
 type extRefInfo = {
@@ -136,6 +138,7 @@ type StoredConfiguration = {
   hideBound: boolean;
   hideNotBound: boolean;
   strictServiceTypes: boolean;
+  sortExtRefPublisher: ExtRefSortOrder;
   sortExtRefSubscriber: ExtRefSortOrder;
   sortFcda: FcdaSortOrder;
 };
@@ -152,6 +155,7 @@ const storedProperties: string[] = [
   'hideBound',
   'hideNotBound',
   'strictServiceTypes',
+  'sortExtRefPublisher',
   'sortExtRefSubscriber',
   'sortFcda',
 ];
@@ -162,6 +166,33 @@ function trimIdentityParent(idString: string): string {
     .filter(s => s !== '')
     .slice(1)
     .join(' > ');
+}
+
+function sortSubscriberItems(
+  sortSetting: ExtRefSortOrder,
+  aExtRef: Element,
+  bExtRef: Element
+): number {
+  if (sortSetting === ExtRefSortOrder.InternalAddress)
+    return (aExtRef.getAttribute('intAddr') ?? '').localeCompare(
+      bExtRef.getAttribute('intAddr') ?? ''
+    );
+
+  if (sortSetting === ExtRefSortOrder.Description)
+    return (aExtRef.getAttribute('desc') ?? '').localeCompare(
+      bExtRef.getAttribute('desc') ?? ''
+    );
+
+  const getFcdaName = (ext: Element) =>
+    `${ext.getAttribute('iedName') ?? 'Unknown'} > ${getFcdaOrExtRefTitle(
+      ext
+    )}`;
+
+  if (sortSetting === ExtRefSortOrder.MappedReference)
+    return getFcdaName(aExtRef).localeCompare(getFcdaName(bExtRef));
+
+  // data model order
+  return 0;
 }
 
 function extRefPath(extRef: Element): string {
@@ -266,6 +297,9 @@ export default class SubscriberLaterBinding extends LitElement {
   strictServiceTypes!: boolean;
 
   @property({ type: String })
+  sortExtRefPublisher!: ExtRefSortOrder;
+
+  @property({ type: String })
   sortExtRefSubscriber!: ExtRefSortOrder;
 
   @property({ type: String })
@@ -279,6 +313,26 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @property({ type: String })
   filterExtRefSubscriberRegex: RegExp = /.*/i;
+
+  @state()
+  currentSelectedControlElement: Element | undefined;
+
+  @state()
+  currentSelectedFcdaElement: Element | undefined;
+
+  @state()
+  currentIedElement: Element | undefined;
+
+  @state()
+  currentSelectedExtRefElement: Element | undefined;
+
+  private controlBlockFcdaInfo = new Map<string, number>();
+
+  private fcdaInfo = new Map<string, fcdaData>();
+
+  private extRefInfo = new Map<string, extRefInfo>();
+
+  private supervisionData = new Map();
 
   @query('#switchView')
   switchViewUI?: IconButtonToggle;
@@ -328,6 +382,12 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#settingsExtRefPublisherIcon')
   settingsMenuExtRefPublisherButtonUI!: Icon;
 
+  @query('#sortExtRefPublisherIcon')
+  sortMenuExtRefPublisherButtonUI!: Icon;
+
+  @query('#sortExtRefPublisherMenu')
+  sortMenuExtRefPublisherUI!: Menu;
+
   @query('#sortExtRefSubscriberIcon')
   sortMenuExtRefSubscriberButtonUI!: Icon;
 
@@ -357,26 +417,6 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @query('#fcdaList mwc-list-item[selected]')
   fcdaListSelectedUI?: ListItem;
-
-  @state()
-  currentSelectedControlElement: Element | undefined;
-
-  @state()
-  currentSelectedFcdaElement: Element | undefined;
-
-  @state()
-  currentIedElement: Element | undefined;
-
-  @state()
-  currentSelectedExtRefElement: Element | undefined;
-
-  private controlBlockFcdaInfo = new Map<string, number>();
-
-  private fcdaInfo = new Map<string, fcdaData>();
-
-  private extRefInfo = new Map<string, extRefInfo>();
-
-  private supervisionData = new Map();
 
   constructor() {
     super();
@@ -488,6 +528,7 @@ export default class SubscriberLaterBinding extends LitElement {
       hideBound: this.hideBound,
       hideNotBound: this.hideNotBound,
       strictServiceTypes: this.strictServiceTypes,
+      sortExtRefPublisher: this.sortExtRefPublisher,
       sortExtRefSubscriber: this.sortExtRefSubscriber,
       sortFcda: this.sortFcda,
     };
@@ -524,6 +565,8 @@ export default class SubscriberLaterBinding extends LitElement {
     this.hideNotBound = storedConfiguration?.hideNotBound ?? false;
     this.strictServiceTypes = storedConfiguration?.strictServiceTypes ?? false;
 
+    this.sortExtRefPublisher =
+      storedConfiguration?.sortExtRefPublisher ?? ExtRefSortOrder.DataModel;
     this.sortExtRefSubscriber =
       storedConfiguration?.sortExtRefSubscriber ?? ExtRefSortOrder.DataModel;
     this.sortFcda = storedConfiguration?.sortFcda ?? FcdaSortOrder.DataModel;
@@ -687,7 +730,9 @@ export default class SubscriberLaterBinding extends LitElement {
         'iedName'
       )} ${getFcdaOrExtRefTitle(extRef)}`;
       fcdaDesc = subscriberFCDA
-        ? Object.values(this.getFcdaInfo(subscriberFCDA).desc).join('>')
+        ? Object.values(this.getFcdaInfo(subscriberFCDA).desc)
+            .flat(Infinity as 1)
+            .join('>')
         : null;
     }
 
@@ -705,7 +750,9 @@ export default class SubscriberLaterBinding extends LitElement {
       fcda
     )} ${getFcdaOrExtRefTitle(fcda)} ${Object.values(
       this.getFcdaInfo(fcda).desc
-    ).join(' ')}`;
+    )
+      .flat(Infinity as 1)
+      .join(' ')}`;
   }
 
   protected resetCaching(): void {
@@ -986,6 +1033,17 @@ export default class SubscriberLaterBinding extends LitElement {
         )).has(1);
       });
 
+      this.sortMenuExtRefPublisherUI.anchor = <HTMLElement>(
+        this.sortMenuExtRefPublisherButtonUI
+      );
+
+      this.sortMenuExtRefPublisherUI.addEventListener('closed', () => {
+        this.sortExtRefPublisher =
+          <number>this.sortMenuExtRefPublisherUI.index === -1
+            ? ExtRefSortOrder.DataModel
+            : <number>this.sortMenuExtRefPublisherUI.index;
+      });
+
       this.settingsMenuExtRefPublisherUI.anchor = <HTMLElement>(
         this.settingsMenuExtRefPublisherButtonUI
       );
@@ -1042,7 +1100,7 @@ export default class SubscriberLaterBinding extends LitElement {
     return html`<mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
-      ?twoline=${desc || supervisionNode}
+      ?twoline=${!!desc || supervisionNode !== null}
       class="extref"
       data-extref="${identity(extRefElement)}"
       title="${spec.cdc && spec.bType
@@ -1159,7 +1217,9 @@ export default class SubscriberLaterBinding extends LitElement {
     };
 
     const { spec, desc } = this.getFcdaInfo(fcdaElement);
-    const fcdaDesc = Object.values(desc).join(' > ');
+    const fcdaDesc = Object.values(desc)
+      .flat(Infinity as 1)
+      .join(' > ');
 
     return html`<mwc-list-item
       graphic="large"
@@ -1329,48 +1389,35 @@ Basic Type: ${spec.bType}"
 
     if (this.sortFcda === FcdaSortOrder.FullDescription)
       return Object.values(this.getFcdaInfo(aFcda).desc)
+        .flat(Infinity as 1)
         .join('>')
-        .localeCompare(Object.values(this.getFcdaInfo(bFcda).desc).join('>'));
-
-    // const getFcdaName = (ext: Element) =>
-    //   `${ext.getAttribute('iedName') ?? 'Unknown'} > ${getFcdaOrExtRefTitle(
-    //     ext
-    //   )}`;
+        .localeCompare(
+          Object.values(this.getFcdaInfo(bFcda).desc)
+            .flat(Infinity as 1)
+            .join('>')
+        );
 
     if (this.sortFcda === FcdaSortOrder.DODescription) {
-      const aInfo = this.getFcdaInfo(aFcda).desc;
-      const aCmp = Object.values(
-        Object.fromEntries(
-          Object.entries(aInfo).filter(([key]) =>
-            ['DOI', 'SDI', 'DAI'].includes(key)
-          )
-        )
-      ).join('>');
-      const bInfo = this.getFcdaInfo(bFcda).desc;
-      const bCmp = Object.values(
-        Object.fromEntries(
-          Object.entries(bInfo).filter(([key]) =>
-            ['DOI', 'SDI', 'DAI'].includes(key)
-          )
-        )
-      ).join('>');
-      return aCmp.localeCompare(bCmp);
+      const getDODesc = (fcda: Element) =>
+        [
+          this.getFcdaInfo(fcda).desc.DOI,
+          this.getFcdaInfo(fcda).desc.SDI,
+          this.getFcdaInfo(fcda).desc.DAI,
+        ]
+          .flat(Infinity as 1)
+          .join('>');
+
+      const aInfo = getDODesc(aFcda);
+      const bInfo = getDODesc(bFcda);
+
+      return aInfo.localeCompare(bInfo);
     }
 
     if (this.sortFcda === FcdaSortOrder.DADescription) {
-      const aInfo = this.getFcdaInfo(aFcda).desc;
-      const aCmp = Object.values(
-        Object.fromEntries(
-          Object.entries(aInfo).filter(([key]) => ['DAI'].includes(key))
-        )
-      ).join('>');
-      const bInfo = this.getFcdaInfo(bFcda).desc;
-      const bCmp = Object.values(
-        Object.fromEntries(
-          Object.entries(bInfo).filter(([key]) => ['DAI'].includes(key))
-        )
-      ).join('>');
-      return aCmp.localeCompare(bCmp);
+      const aInfo = this.getFcdaInfo(aFcda).desc.DAI ?? '';
+      const bInfo = this.getFcdaInfo(aFcda).desc.DAI ?? '';
+
+      return aInfo.localeCompare(bInfo);
     }
     // data model order
     return 0;
@@ -1559,16 +1606,16 @@ Basic Type: ${spec.bType}"
   }
 
   private renderPublisherViewSubscribedExtRefs(): TemplateResult {
-    const subscribedExtRefs = this.getSubscribedExtRefElements().filter(
-      extRef => {
+    const subscribedExtRefs = this.getSubscribedExtRefElements()
+      .filter(extRef => {
         const supervisionNode = getExistingSupervision(extRef);
         return this.filterExtRefPublisherRegex.test(
           `${identity(extRef)} ${getDescriptionAttribute(extRef)} ${identity(
             supervisionNode
           )}`
         );
-      }
-    );
+      })
+      .sort((a, b) => sortSubscriberItems(this.sortExtRefPublisher, a, b));
     return html`
       <mwc-list-item noninteractive>
         <span>${msg('Subscribed')}</span>
@@ -1585,11 +1632,13 @@ Basic Type: ${spec.bType}"
   }
 
   private renderPublisherViewAvailableExtRefs(): TemplateResult {
-    const availableExtRefs = this.getAvailableExtRefElements().filter(extRef =>
-      this.filterExtRefPublisherRegex.test(
-        `${identity(extRef)} ${getDescriptionAttribute(extRef)}`
+    const availableExtRefs = this.getAvailableExtRefElements()
+      .filter(extRef =>
+        this.filterExtRefPublisherRegex.test(
+          `${identity(extRef)} ${getDescriptionAttribute(extRef)}`
+        )
       )
-    );
+      .sort((a, b) => sortSubscriberItems(this.sortExtRefPublisher, a, b));
     return html`
       <mwc-list-item noninteractive>
         <span> ${msg('Available to subscribe')} </span>
@@ -1654,13 +1703,24 @@ Basic Type: ${spec.bType}"
   }
 
   private renderPublisherViewExtRefListTitle(): TemplateResult {
-    const menuClasses = {
+    const filterMenuClasses = {
       'filter-off':
         this.strictServiceTypes || this.hidePreconfiguredNotMatching,
+      'title-element': true,
     };
 
-    return html`<h1>
-      ${msg('Select Input')}
+    return html`<h1 class="fcda-title">
+      <span class="title-element text">${msg('Select Input')}</span>
+      <mwc-icon-button
+        id="filterExtRefPublisherIcon"
+        class="${classMap(filterMenuClasses)}"
+        title="${msg('Filter')}"
+        icon="filter_list"
+        @click=${() => {
+          if (!this.filterMenuExtRefPublisherUI.open)
+            this.filterMenuExtRefPublisherUI.show();
+        }}
+      ></mwc-icon-button>
       <mwc-menu
         id="filterExtRefMenuPublisher"
         multi
@@ -1684,17 +1744,47 @@ Basic Type: ${spec.bType}"
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
-        id="filterExtRefPublisherIcon"
-        class="${classMap(menuClasses)}"
-        title="${msg('Filter')}"
-        icon="filter_list"
+        id="sortExtRefPublisherIcon"
+        class="title-element"
+        title="${msg('Sort')}"
+        icon="sort"
         @click=${() => {
-          if (!this.filterMenuExtRefPublisherUI.open)
-            this.filterMenuExtRefPublisherUI.show();
+          if (!this.sortMenuExtRefPublisherUI.open)
+            this.sortMenuExtRefPublisherUI.show();
         }}
       ></mwc-icon-button>
+      <mwc-menu
+        id="sortExtRefPublisherMenu"
+        class="sort-menu"
+        corner="BOTTOM_RIGHT"
+        menuCorner="END"
+      >
+        <mwc-list-item
+          graphic="icon"
+          ?selected=${this.sortExtRefPublisher === ExtRefSortOrder.DataModel}
+        >
+          <span>${msg('Data Model')}</span>
+          <mwc-icon slot="graphic">check</mwc-icon>
+        </mwc-list-item>
+        <mwc-list-item
+          graphic="icon"
+          ?selected=${this.sortExtRefPublisher ===
+          ExtRefSortOrder.InternalAddress}
+        >
+          <span>${msg('Internal Address')}</span>
+          <mwc-icon slot="graphic">check</mwc-icon>
+        </mwc-list-item>
+        <mwc-list-item
+          graphic="icon"
+          ?selected=${this.sortExtRefPublisher === ExtRefSortOrder.Description}
+        >
+          <span>${msg('Description')}</span>
+          <mwc-icon slot="graphic">check</mwc-icon>
+        </mwc-list-item>
+      </mwc-menu>
       <mwc-icon-button
         id="settingsExtRefPublisherIcon"
+        class="title-element"
         title="${msg('Settings')}"
         icon="settings"
         @click=${() => {
@@ -1986,31 +2076,6 @@ Basic Type: ${spec.bType}"
     </mwc-list-item>`;
   }
 
-  private sortExtRefSubscriberItems(
-    aExtRef: Element,
-    bExtRef: Element
-  ): number {
-    if (this.sortExtRefSubscriber === ExtRefSortOrder.Description)
-      return (aExtRef.getAttribute('desc') ?? '').localeCompare(
-        bExtRef.getAttribute('desc') ?? ''
-      );
-    if (this.sortExtRefSubscriber === ExtRefSortOrder.InternalAddress)
-      return (aExtRef.getAttribute('intAddr') ?? '').localeCompare(
-        bExtRef.getAttribute('intAddr') ?? ''
-      );
-
-    const getFcdaName = (ext: Element) =>
-      `${ext.getAttribute('iedName') ?? 'Unknown'} > ${getFcdaOrExtRefTitle(
-        ext
-      )}`;
-
-    if (this.sortExtRefSubscriber === ExtRefSortOrder.MappedReference)
-      return getFcdaName(aExtRef).localeCompare(getFcdaName(bExtRef));
-
-    // data model order
-    return 0;
-  }
-
   private renderSubscriberViewExtRefs(): TemplateResult {
     if (this.supervisionData.size === 0) this.reCreateSupervisionCache();
     const ieds = getOrderedIeds(this.doc).filter(ied => {
@@ -2049,7 +2114,7 @@ Basic Type: ${spec.bType}"
         return html`
           <mwc-list-item
             class="ied ${classMap(filterClasses)}"
-            ?twoline=${iedDesc || iedType || iedMfg}
+            ?twoline=${!!iedDesc || !!iedType || !!iedMfg}
             noninteractive
             graphic="icon"
           >
@@ -2065,7 +2130,9 @@ Basic Type: ${spec.bType}"
                     this.getExtRefSubscriberSearchString(extRef)
                   )
                 )
-                .sort((a, b) => this.sortExtRefSubscriberItems(a, b))
+                .sort((a, b) =>
+                  sortSubscriberItems(this.sortExtRefSubscriber, a, b)
+                )
             ),
             exId => `${identity(exId)} ${this.controlTag}`,
             extRef => this.renderSubscriberViewExtRef(extRef)
@@ -2308,7 +2375,7 @@ Basic Type: ${spec.bType}"
 
     @media (min-width: 700px) {
       #listContainer {
-        height: calc(100vh - 128px);
+        height: calc(100vh - 110px);
       }
 
       #listContainer.subscriber-view {
@@ -2371,7 +2438,7 @@ Basic Type: ${spec.bType}"
 
     .column {
       flex: 50%;
-      margin: 0px 6px 0px;
+      /* margin: 0px 6px 0px; */
       min-width: 300px;
       height: 100%;
       overflow-y: clip;
@@ -2380,7 +2447,7 @@ Basic Type: ${spec.bType}"
 
     .fcda,
     .extref {
-      padding-left: var(--mdc-list-side-padding, 16px);
+      padding-left: var(--mdc-list-side-padding, 6px);
     }
 
     #filterExtRefSubscriberIcon,
@@ -2454,8 +2521,8 @@ Basic Type: ${spec.bType}"
     #listContainer {
       width: 100%;
       display: flex;
-      padding: 8px 6px 16px;
-      height: calc(100vh - 136px);
+      /* padding: 8px 3px 8px; */
+      height: calc(100vh - 118px);
     }
 
     #listContainer:not(.subscriber-view) {
@@ -2543,6 +2610,7 @@ Basic Type: ${spec.bType}"
       position: relative;
       max-height: 100%;
       background-color: var(--mdc-theme-surface, #fafafa);
+      padding: 3px;
     }
 
     /* Hide the icon of unselected menu items that are in a group */
@@ -2582,10 +2650,9 @@ Basic Type: ${spec.bType}"
     }
 
     #switchView {
-      /* z-index: 1; */
       position: absolute;
-      bottom: 24px;
-      right: 20px;
+      bottom: 20px;
+      right: 28px;
     }
 
     #switchControlType {

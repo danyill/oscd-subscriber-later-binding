@@ -1,8 +1,12 @@
-// TODO: This needs careful review!
-export function getFcdaInstDesc(
-  fcda: Element,
-  includeDai: boolean
-): Record<string, string> {
+export type fcdaDesc = {
+  LDevice?: string | null;
+  LN?: string | null;
+  DOI?: string | null;
+  SDI?: string[];
+  DAI?: string | null;
+};
+
+export function getFcdaInstDesc(fcda: Element, includeDai: boolean): fcdaDesc {
   const [doName, daName] = ['doName', 'daName'].map(attr =>
     fcda.getAttribute(attr)
   );
@@ -25,7 +29,7 @@ export function getFcdaInstDesc(
 
   if (!anyLn) return {};
 
-  let descs = {};
+  let descs: fcdaDesc = {};
 
   const ldDesc = anyLn.closest('LDevice')!.getAttribute('desc');
   const lnDesc = anyLn.getAttribute('desc');
@@ -46,13 +50,14 @@ export function getFcdaInstDesc(
     const sdi = previousDI.querySelector(`SDI[name="${sdiName}"]`);
     if (sdi) previousDI = sdi;
     const sdiDesc = sdi?.getAttribute('desc');
-    descs = { ...descs, ...(sdiDesc && { SDI: sdiDesc }) };
+    if (!('SDI' in descs)) {
+      descs = { ...descs, ...(sdiDesc && { SDI: [sdiDesc] }) };
+    } else if (sdiDesc) descs.SDI!.push(sdiDesc);
   });
 
   if (!includeDai || !daName) return descs;
 
   const daNames = daName?.split('.');
-  // TODO: Finish this!
   const dai = previousDI.querySelector(`DAI[name="${daNames[0]}"]`);
 
   const daiDesc = dai?.getAttribute('desc');

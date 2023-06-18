@@ -7,6 +7,7 @@ import {
   minAvailableLogicalNodeInstance,
   serviceTypes,
 } from '../foundation.js';
+import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
 
 type specificationFcda = {
   cdc: string | null;
@@ -15,7 +16,7 @@ type specificationFcda = {
 
 export type fcdaData = {
   spec: specificationFcda;
-  desc: Record<string, string>;
+  desc: fcdaDesc;
 };
 
 export const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
