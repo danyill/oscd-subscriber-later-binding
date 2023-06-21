@@ -10940,14 +10940,14 @@ function getFcdaInstDesc(fcda) {
     let descs = {};
     const ldDesc = anyLn.closest('LDevice').getAttribute('desc');
     const lnDesc = anyLn.getAttribute('desc');
-    descs = { ...descs, ...(ldDesc && { LDevice: ldDesc }) };
-    descs = { ...descs, ...(lnDesc && { LN: lnDesc }) };
+    descs = { ...descs, ...(ldDesc && ldDesc !== '' && { LDevice: ldDesc }) };
+    descs = { ...descs, ...(lnDesc && lnDesc !== '' && { LN: lnDesc }) };
     const doNames = doName.split('.');
     const doi = anyLn.querySelector(`DOI[name="${doNames[0]}"`);
     if (!doi)
         return descs;
     const doiDesc = doi === null || doi === void 0 ? void 0 : doi.getAttribute('desc');
-    descs = { ...descs, ...(doiDesc && { DOI: doiDesc }) };
+    descs = { ...descs, ...(doiDesc && doiDesc !== '' && { DOI: doiDesc }) };
     let previousDI = doi;
     doNames.slice(1).forEach(sdiName => {
         const sdi = previousDI.querySelector(`SDI[name="${sdiName}"]`);
@@ -10955,7 +10955,10 @@ function getFcdaInstDesc(fcda) {
             previousDI = sdi;
         const sdiDesc = sdi === null || sdi === void 0 ? void 0 : sdi.getAttribute('desc');
         if (!('SDI' in descs)) {
-            descs = { ...descs, ...(sdiDesc && { SDI: [sdiDesc] }) };
+            descs = {
+                ...descs,
+                ...(sdiDesc && sdiDesc !== '' && { SDI: [sdiDesc] }),
+            };
         }
         else if (sdiDesc)
             descs.SDI.push(sdiDesc);
@@ -10965,7 +10968,7 @@ function getFcdaInstDesc(fcda) {
     const daNames = daName === null || daName === void 0 ? void 0 : daName.split('.');
     const dai = previousDI.querySelector(`DAI[name="${daNames[0]}"]`);
     const daiDesc = dai === null || dai === void 0 ? void 0 : dai.getAttribute('desc');
-    descs = { ...descs, ...(daiDesc && { DAI: daiDesc }) };
+    descs = { ...descs, ...(daiDesc && daiDesc !== '' && { DAI: daiDesc }) };
     return descs;
 }
 
@@ -11015,12 +11018,21 @@ function trimIdentityParent(idString) {
         .slice(1)
         .join(' > ');
 }
-function sortSubscriberItems(sortSetting, aExtRef, bExtRef) {
+function sortExtRefItems(sortSetting, aExtRef, bExtRef) {
     var _a, _b, _c, _d;
     if (sortSetting === ExtRefSortOrder.InternalAddress)
         return ((_a = aExtRef.getAttribute('intAddr')) !== null && _a !== void 0 ? _a : '').localeCompare((_b = bExtRef.getAttribute('intAddr')) !== null && _b !== void 0 ? _b : '');
-    if (sortSetting === ExtRefSortOrder.Description)
+    if (sortSetting === ExtRefSortOrder.Description) {
+        const hasDescFirstnotSecond = (a, b) => (!b.hasAttribute('desc') || b.getAttribute('desc') === '') &&
+            a.hasAttribute('desc') &&
+            a.getAttribute('desc') !== '';
+        // descriptions always come first
+        if (hasDescFirstnotSecond(aExtRef, bExtRef))
+            return -1;
+        if (hasDescFirstnotSecond(bExtRef, aExtRef))
+            return 1;
         return ((_c = aExtRef.getAttribute('desc')) !== null && _c !== void 0 ? _c : '').localeCompare((_d = bExtRef.getAttribute('desc')) !== null && _d !== void 0 ? _d : '');
+    }
     const getFcdaName = (ext) => {
         var _a;
         return `${(_a = ext.getAttribute('iedName')) !== null && _a !== void 0 ? _a : 'Unknown'} > ${getFcdaOrExtRefTitle(ext)}`;
@@ -11807,13 +11819,20 @@ Basic Type: ${spec.bType}"
         var _a, _b;
         if (this.sortFcda === FcdaSortOrder.Path)
             return getFcdaOrExtRefTitle(aFcda).localeCompare(getFcdaOrExtRefTitle(bFcda));
-        if (this.sortFcda === FcdaSortOrder.FullDescription)
-            return Object.values(this.getFcdaInfo(aFcda).desc)
+        if (this.sortFcda === FcdaSortOrder.FullDescription) {
+            const aFcdaDesc = Object.values(this.getFcdaInfo(aFcda).desc)
                 .flat(Infinity)
-                .join('>')
-                .localeCompare(Object.values(this.getFcdaInfo(bFcda).desc)
+                .join('>');
+            const bFcdaDesc = Object.values(this.getFcdaInfo(bFcda).desc)
                 .flat(Infinity)
-                .join('>'));
+                .join('>');
+            // descriptions always come first
+            if (aFcdaDesc !== '' && bFcdaDesc === '')
+                return -1;
+            if (bFcdaDesc !== '' && aFcdaDesc === '')
+                return 1;
+            return aFcdaDesc.localeCompare(bFcdaDesc);
+        }
         if (this.sortFcda === FcdaSortOrder.DODescription) {
             const getDODesc = (fcda) => [
                 this.getFcdaInfo(fcda).desc.DOI,
@@ -11821,15 +11840,26 @@ Basic Type: ${spec.bType}"
                 this.getFcdaInfo(fcda).desc.DAI,
             ]
                 .flat(Infinity)
+                .filter(item => !!item)
                 .join('>');
             const aInfo = getDODesc(aFcda);
             const bInfo = getDODesc(bFcda);
+            // descriptions always come first
+            if (aInfo !== '' && bInfo === '')
+                return -1;
+            if (aInfo === '' && bInfo !== '')
+                return 1;
             return aInfo.localeCompare(bInfo);
         }
         if (this.sortFcda === FcdaSortOrder.DADescription) {
-            const aInfo = (_a = this.getFcdaInfo(aFcda).desc.DAI) !== null && _a !== void 0 ? _a : '';
-            const bInfo = (_b = this.getFcdaInfo(bFcda).desc.DAI) !== null && _b !== void 0 ? _b : '';
-            return aInfo.localeCompare(bInfo);
+            const aFcdaDesc = (_a = this.getFcdaInfo(aFcda).desc.DAI) !== null && _a !== void 0 ? _a : '';
+            const bFcdaDesc = (_b = this.getFcdaInfo(bFcda).desc.DAI) !== null && _b !== void 0 ? _b : '';
+            // descriptions always come first
+            if (aFcdaDesc !== '' && bFcdaDesc === '')
+                return -1;
+            if (bFcdaDesc !== '' && aFcdaDesc === '')
+                return 1;
+            return aFcdaDesc.localeCompare(bFcdaDesc);
         }
         // data model order
         return 0;
@@ -11962,7 +11992,7 @@ Basic Type: ${spec.bType}"
             const supervisionNode = getExistingSupervision(extRef);
             return this.filterExtRefPublisherRegex.test(`${identity(extRef)} ${getDescriptionAttribute(extRef)} ${identity(supervisionNode)}`);
         })
-            .sort((a, b) => sortSubscriberItems(this.sortExtRefPublisher, a, b));
+            .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
         return x `
       <mwc-list-item noninteractive>
         <span>${msg('Subscribed')}</span>
@@ -11978,7 +12008,7 @@ Basic Type: ${spec.bType}"
     renderPublisherViewAvailableExtRefs() {
         const availableExtRefs = this.getAvailableExtRefElements()
             .filter(extRef => this.filterExtRefPublisherRegex.test(`${identity(extRef)} ${getDescriptionAttribute(extRef)}`))
-            .sort((a, b) => sortSubscriberItems(this.sortExtRefPublisher, a, b));
+            .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
         return x `
       <mwc-list-item noninteractive>
         <span> ${msg('Available to subscribe')} </span>
@@ -12407,7 +12437,7 @@ Basic Type: ${spec.bType}"
           </mwc-list-item>
           ${c(Array.from(this.getExtRefElementsByIED(ied)
                 .filter(extRef => this.filterExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)))
-                .sort((a, b) => sortSubscriberItems(this.sortExtRefSubscriber, a, b))), exId => `${identity(exId)} ${this.controlTag}`, extRef => this.renderSubscriberViewExtRef(extRef))}
+                .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b))), exId => `${identity(exId)} ${this.controlTag}`, extRef => this.renderSubscriberViewExtRef(extRef))}
         `;
         })}`;
     }
