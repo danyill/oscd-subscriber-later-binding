@@ -676,6 +676,336 @@ describe('goose', () => {
       });
     });
 
+    describe('can sort', () => {
+      beforeEach(async function () {
+        localStorage.clear();
+        await setViewPort();
+        resetMouse();
+
+        doc = await fetch('/test/fixtures/GOOSE-2007B4-LGOS-sorting.scd')
+          .then(response => response.text())
+          .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+        editor.docName = 'GOOSE-2007B4-LGOS-sorting.scd';
+        editor.docs[editor.docName] = doc;
+
+        await editor.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(500); // plugin loading and initial render?
+      });
+
+      afterEach(async () => {
+        localStorage.clear();
+      });
+
+      describe('with FCDAs', async function () {
+        it('shows sort options defaulting to data model', async function () {
+          const button = plugin.sortMenuFcdaButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await plugin.sortMenuFcdaButtonUI.updateComplete;
+
+          await timeout(standardWait); // opening dialog
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('by data model as default', async function () {
+          const button = plugin.sortMenuFcdaButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortObjectReference = plugin.sortMenuFcdaUI.querySelector(
+            'mwc-list-item:nth-child(1)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortObjectReference!),
+          });
+          await timeout(standardWait); // selection
+          await plugin.sortMenuFcdaUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // rendering ?
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('by object reference', async function () {
+          const button = plugin.sortMenuFcdaButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortObjectReference = plugin.sortMenuFcdaUI.querySelector(
+            'mwc-list-item:nth-child(2)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortObjectReference!),
+          });
+          await timeout(standardWait); // selection
+          await plugin.sortMenuFcdaUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // rendering ?
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('by full description', async function () {
+          const button = plugin.sortMenuFcdaButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortObjectReference = plugin.sortMenuFcdaUI.querySelector(
+            'mwc-list-item:nth-child(3)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortObjectReference!),
+          });
+          await timeout(standardWait); // selection
+          await plugin.sortMenuFcdaUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // rendering ?
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('by data object and attribute description', async function () {
+          const button = plugin.sortMenuFcdaButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortObjectReference = plugin.sortMenuFcdaUI.querySelector(
+            'mwc-list-item:nth-child(4)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortObjectReference!),
+          });
+          await timeout(standardWait); // selection
+          await plugin.sortMenuFcdaUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // rendering ?
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('by data attribute description', async function () {
+          const button = plugin.sortMenuFcdaButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortObjectReference = plugin.sortMenuFcdaUI.querySelector(
+            'mwc-list-item:nth-child(5)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortObjectReference!),
+          });
+          await timeout(standardWait); // selection
+          await plugin.sortMenuFcdaUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait); // rendering ?
+          await visualDiff(plugin, testName(this));
+        });
+      });
+
+      describe('with ExtRefs', async function () {
+        it('shows sort options defaulting to data model', async function () {
+          const button = plugin.sortMenuExtRefPublisherButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+
+          await timeout(standardWait); // opening dialog
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('sorts by data model by default', async function () {
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await fcda?.updateComplete;
+          await fcdaListElement.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // selection
+
+          const button = plugin.sortMenuExtRefPublisherButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortItem = plugin.sortMenuExtRefPublisherUI.querySelector(
+            'mwc-list-item:nth-child(1)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortItem!),
+          });
+          await plugin.sortMenuFcdaUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('sorts by internal address', async function () {
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await fcda?.updateComplete;
+          await fcdaListElement.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // selection
+
+          const button = plugin.sortMenuExtRefPublisherButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortItem = plugin.sortMenuExtRefPublisherUI.querySelector(
+            'mwc-list-item:nth-child(1)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortItem!),
+          });
+          await plugin.sortMenuFcdaUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('sorts by description', async function () {
+          const fcdaListElement = plugin.fcdaListUI!;
+
+          const fcda = getFcdaItem(
+            fcdaListElement,
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+            'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcda!),
+          });
+          await fcda?.updateComplete;
+          await fcdaListElement.updateComplete;
+          await plugin.updateComplete;
+          await timeout(standardWait); // selection
+
+          const button = plugin.sortMenuExtRefPublisherButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortItem = plugin.sortMenuExtRefPublisherUI.querySelector(
+            'mwc-list-item:nth-child(3)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortItem!),
+          });
+          await plugin.sortMenuFcdaUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+      });
+    });
+
     describe('can search', () => {
       describe('in FCDAs', () => {
         it('even when a string is removed', async function () {

@@ -168,7 +168,7 @@ function trimIdentityParent(idString: string): string {
     .join(' > ');
 }
 
-function sortSubscriberItems(
+function sortExtRefItems(
   sortSetting: ExtRefSortOrder,
   aExtRef: Element,
   bExtRef: Element
@@ -178,10 +178,20 @@ function sortSubscriberItems(
       bExtRef.getAttribute('intAddr') ?? ''
     );
 
-  if (sortSetting === ExtRefSortOrder.Description)
+  if (sortSetting === ExtRefSortOrder.Description) {
+    const hasDescFirstnotSecond = (a: Element, b: Element) =>
+      (!b.hasAttribute('desc') || b.getAttribute('desc') === '') &&
+      a.hasAttribute('desc') &&
+      a.getAttribute('desc') !== '';
+
+    // descriptions always come first
+    if (hasDescFirstnotSecond(aExtRef, bExtRef)) return -1;
+    if (hasDescFirstnotSecond(bExtRef, aExtRef)) return 1;
+
     return (aExtRef.getAttribute('desc') ?? '').localeCompare(
       bExtRef.getAttribute('desc') ?? ''
     );
+  }
 
   const getFcdaName = (ext: Element) =>
     `${ext.getAttribute('iedName') ?? 'Unknown'} > ${getFcdaOrExtRefTitle(
@@ -1387,15 +1397,20 @@ Basic Type: ${spec.bType}"
         getFcdaOrExtRefTitle(bFcda)
       );
 
-    if (this.sortFcda === FcdaSortOrder.FullDescription)
-      return Object.values(this.getFcdaInfo(aFcda).desc)
+    if (this.sortFcda === FcdaSortOrder.FullDescription) {
+      const aFcdaDesc = Object.values(this.getFcdaInfo(aFcda).desc)
         .flat(Infinity as 1)
-        .join('>')
-        .localeCompare(
-          Object.values(this.getFcdaInfo(bFcda).desc)
-            .flat(Infinity as 1)
-            .join('>')
-        );
+        .join('>');
+      const bFcdaDesc = Object.values(this.getFcdaInfo(bFcda).desc)
+        .flat(Infinity as 1)
+        .join('>');
+
+      // descriptions always come first
+      if (aFcdaDesc !== '' && bFcdaDesc === '') return -1;
+      if (bFcdaDesc !== '' && aFcdaDesc === '') return 1;
+
+      return aFcdaDesc.localeCompare(bFcdaDesc);
+    }
 
     if (this.sortFcda === FcdaSortOrder.DODescription) {
       const getDODesc = (fcda: Element) =>
@@ -1405,19 +1420,28 @@ Basic Type: ${spec.bType}"
           this.getFcdaInfo(fcda).desc.DAI,
         ]
           .flat(Infinity as 1)
+          .filter(item => !!item)
           .join('>');
 
       const aInfo = getDODesc(aFcda);
       const bInfo = getDODesc(bFcda);
 
+      // descriptions always come first
+      if (aInfo !== '' && bInfo === '') return -1;
+      if (aInfo === '' && bInfo !== '') return 1;
+
       return aInfo.localeCompare(bInfo);
     }
 
     if (this.sortFcda === FcdaSortOrder.DADescription) {
-      const aInfo = this.getFcdaInfo(aFcda).desc.DAI ?? '';
-      const bInfo = this.getFcdaInfo(bFcda).desc.DAI ?? '';
+      const aFcdaDesc = this.getFcdaInfo(aFcda).desc.DAI ?? '';
+      const bFcdaDesc = this.getFcdaInfo(bFcda).desc.DAI ?? '';
 
-      return aInfo.localeCompare(bInfo);
+      // descriptions always come first
+      if (aFcdaDesc !== '' && bFcdaDesc === '') return -1;
+      if (bFcdaDesc !== '' && aFcdaDesc === '') return 1;
+
+      return aFcdaDesc.localeCompare(bFcdaDesc);
     }
     // data model order
     return 0;
@@ -1615,7 +1639,7 @@ Basic Type: ${spec.bType}"
           )}`
         );
       })
-      .sort((a, b) => sortSubscriberItems(this.sortExtRefPublisher, a, b));
+      .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
     return html`
       <mwc-list-item noninteractive>
         <span>${msg('Subscribed')}</span>
@@ -1638,7 +1662,7 @@ Basic Type: ${spec.bType}"
           `${identity(extRef)} ${getDescriptionAttribute(extRef)}`
         )
       )
-      .sort((a, b) => sortSubscriberItems(this.sortExtRefPublisher, a, b));
+      .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
     return html`
       <mwc-list-item noninteractive>
         <span> ${msg('Available to subscribe')} </span>
@@ -2131,7 +2155,7 @@ Basic Type: ${spec.bType}"
                   )
                 )
                 .sort((a, b) =>
-                  sortSubscriberItems(this.sortExtRefSubscriber, a, b)
+                  sortExtRefItems(this.sortExtRefSubscriber, a, b)
                 )
             ),
             exId => `${identity(exId)} ${this.controlTag}`,

@@ -84,6 +84,8 @@
 				<LDevice inst="Earth_Switch">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0">
 						<Inputs>
+							<ExtRef serviceType="GOOSE" intAddr="NoDesc1"/>
+							<ExtRef serviceType="GOOSE" intAddr="NoDesc2"/>
 							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
 							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="q" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2"/>
 						</Inputs>
@@ -99,6 +101,8 @@
 							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="stVal" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2" intAddr="Pos;CSWI1/Pos/stVal" desc="Interlocking.Input2"/>
 							<ExtRef iedName="GOOSE_Publisher" serviceType="GOOSE" ldInst="QB2_Disconnector" lnClass="CSWI" lnInst="1" prefix="" doName="Pos" daName="q" srcLDInst="QB2_Disconnector" srcPrefix="" srcLNClass="LLN0" srcCBName="GOOSE2" intAddr="Pos;CSWI1/Pos/q" desc="Interlocking.Input2"/>
 							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To Pos" pLN="CSWI" pDO="Pos" pDA="stVal" pServT="GOOSE"/>
+							<ExtRef serviceType="GOOSE" intAddr="NoDesc3"/>
+							<ExtRef serviceType="GOOSE" intAddr="NoDesc4"/>
 						</Inputs>
 					</LN>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
@@ -356,7 +360,7 @@
 		<AccessPoint name="AP1">
 			<Server>
 				<Authentication/>
-				<LDevice inst="QB2_Disconnector" desc="Animalia">
+				<LDevice inst="QB2_Disconnector" desc="LDeviceDesc">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0">
 						<DataSet name="GOOSE2sDataSet">
 							<FCDA ldInst="QB2_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="stVal" fc="ST"/>
@@ -373,21 +377,21 @@
 						<GSEControl name="GOOSE2" type="GOOSE" appID="GOOSE2" confRev="1" datSet="GOOSE2sDataSet"/>
 						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet"/>
 					</LN0>
-					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="Chordata"/>
-					<LN lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="Arthropoda">
-						<DOI name="Pos" desc="Segments">
-							<DAI name="stVal" desc="Thorax"></DAI>
-							<DAI name="q" desc="Head"></DAI>
+					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="LNDesc3"/>
+					<LN lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="LNDesc">
+						<DOI name="Pos" desc="DOIDescZ">
+							<DAI name="stVal" desc="DAIDesc B"></DAI>
+							<DAI name="q" desc="DAIDesc A"></DAI>
 						</DOI>
 					</LN>
-					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="Chordata">
-						<DOI name="EnaCls" desc="YYY">
-							<DAI name="stVal" desc="Exopod"></DAI>
-							<DAI name="q" desc="Endopod"></DAI>
+					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="LNDesc2">
+						<DOI name="EnaCls" desc="DOIDesc2">
+							<DAI name="stVal" desc="DAIDesc4"></DAI>
+							<DAI name="q" desc="DAIDesc3"></DAI>
 						</DOI>
-						<DOI name="EnaOpn" desc="XXX">
-							<DAI name="stVal" desc="Exopod"></DAI>
-							<DAI name="q" desc="Endopod"></DAI>
+						<DOI name="EnaOpn" desc="DOIDesc1">
+							<DAI name="stVal" desc="DAIDesc2"></DAI>
+							<DAI name="q" desc="DAIDesc1"></DAI>
 						</DOI>
 					</LN>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI" desc="Nematoda"/>
@@ -395,19 +399,19 @@
 				<LDevice inst="QB1_Disconnector">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
 					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO">
-						<DOI name="EnaCls" desc="YYY">
-							<DAI name="stVal" desc="Exopod"></DAI>
-							<DAI name="q" desc="Endopod"></DAI>
+						<DOI name="EnaCls" desc="DOIDesc4">
+							<DAI name="stVal" desc="DAIDesc X"></DAI>
+							<DAI name="q" desc="DAIDesc X+1"></DAI>
 						</DOI>
-						<DOI name="EnaOpn" desc="XXX">
-							<DAI name="stVal" desc="Exopod"></DAI>
-							<DAI name="q" desc="Endopod"></DAI>
+						<DOI name="EnaOpn" desc="DOIDesc3">
+							<DAI name="stVal" desc="DAIDesc X+2"></DAI>
+							<DAI name="q" desc="DAIDesc X-1"></DAI>
 						</DOI>
 					</LN>
-					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="Arthropoda">
+					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="LNDesc">
 						<DOI name="Pos">
-							<DAI name="stVal" desc="Exopod"></DAI>
-							<DAI name="q" desc="Endopod"></DAI>
+							<DAI name="stVal" desc="DAIDesc Y"></DAI>
+							<DAI name="q" desc="DAIDesc Z"></DAI>
 						</DOI>
 					</LN>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
@@ -422,6 +426,8 @@
 				<LDevice inst="QB2_Disconnector">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0">
 						<DataSet name="GOOSE2sDataSet">
+							<FCDA ldInst="QB1_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="stVal" fc="ST"/>
+							<FCDA ldInst="QB1_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="q" fc="ST"/>
 							<FCDA ldInst="QB2_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="stVal" fc="ST"/>
 							<FCDA ldInst="QB2_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="q" fc="ST"/>
 						</DataSet>
@@ -429,18 +435,18 @@
 							<FCDA ldInst="QB1_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="stVal" fc="ST"/>
 							<FCDA ldInst="QB1_Disconnector" prefix="" lnClass="CSWI" lnInst="1" doName="Pos" daName="q" fc="ST"/>
 						</DataSet>
-						<GSEControl name="GOOSE2" type="GOOSE" appID="GOOSE2" confRev="1" datSet="GOOSE2sDataSet" desc="Botany1"/>
-						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet" desc="Botany2"/>
+						<GSEControl name="GOOSE2" type="GOOSE" appID="GOOSE2" confRev="1" datSet="GOOSE2sDataSet" desc="GSEDesc2"/>
+						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet" desc="GSEDesc1"/>
 					</LN0>
 					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO"/>
 					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI"/>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
 				</LDevice>
-				<LDevice inst="QB1_Disconnector" desc="Tree">
+				<LDevice inst="QB1_Disconnector" desc="LDeviceDescX">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
-					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="Chestnut"/>
-					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="Birch"/>
-					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI" desc="Pine"/>
+					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="LNDesc2"/>
+					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="LNDesc1"/>
+					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI" desc="LNDesc3"/>
 				</LDevice>
 			</Server>
 		</AccessPoint>

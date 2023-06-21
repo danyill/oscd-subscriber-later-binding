@@ -1126,6 +1126,153 @@ describe('goose', () => {
       });
     });
 
+    describe('can sort', () => {
+      beforeEach(async function () {
+        localStorage.clear();
+        await setViewPort();
+        resetMouse();
+
+        doc = await fetch('/test/fixtures/GOOSE-2007B4-LGOS-sorting.scd')
+          .then(response => response.text())
+          .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+        editor.docName = 'GOOSE-2007B4-LGOS-sorting.scd';
+        editor.docs[editor.docName] = doc;
+
+        await editor.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(500); // plugin loading and initial render?
+      });
+
+      afterEach(async () => {
+        localStorage.clear();
+      });
+
+      describe('with ExtRefs', async function () {
+        it('shows sort options defaulting to data model', async function () {
+          const button = plugin.sortMenuExtRefSubscriberButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+
+          await timeout(standardWait); // opening dialog
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('sorts by data model by default', async function () {
+          const button = plugin.sortMenuExtRefSubscriberButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortItem = plugin.sortMenuExtRefSubscriberUI.querySelector(
+            'mwc-list-item:nth-child(1)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortItem!),
+          });
+          await plugin.sortMenuExtRefSubscriberUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('sorts by internal address', async function () {
+          const button = plugin.sortMenuExtRefSubscriberButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortItem = plugin.sortMenuExtRefSubscriberUI.querySelector(
+            'mwc-list-item:nth-child(2)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortItem!),
+          });
+          await plugin.sortMenuExtRefSubscriberUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('sorts by description', async function () {
+          const button = plugin.sortMenuExtRefSubscriberButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortItem = plugin.sortMenuExtRefSubscriberUI.querySelector(
+            'mwc-list-item:nth-child(3)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortItem!),
+          });
+          await plugin.sortMenuExtRefSubscriberUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('sorts by mapped reference', async function () {
+          const button = plugin.sortMenuExtRefSubscriberButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(button!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const sortItem = plugin.sortMenuExtRefSubscriberUI.querySelector(
+            'mwc-list-item:nth-child(4)'
+          );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(sortItem!),
+          });
+          await plugin.sortMenuExtRefSubscriberUI.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+      });
+    });
+
     describe('can search', () => {
       // we don't repeat all the FCDA tests for the publisher view
       // as this is the same code
