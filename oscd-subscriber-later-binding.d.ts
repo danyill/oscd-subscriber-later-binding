@@ -105,7 +105,7 @@ export default class SubscriberLaterBinding extends LitElement {
      *
      * @param extRef - The Ext Ref Element to clean from attributes.
      */
-    private unsubscribe;
+    private unsubscribeExtRef;
     /**
      * Subscribing means copying a list of attributes from the FCDA Element (and others) to the ExtRef Element.
      *

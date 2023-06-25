@@ -261,6 +261,1056 @@ const t={ATTRIBUTE:1,CHILD:2,PROPERTY:3,BOOLEAN_ATTRIBUTE:4,EVENT:5,ELEMENT:6},e
  */
 const u=(e,s,t)=>{const r=new Map;for(let l=s;l<=t;l++)r.set(e[l],l);return r},c=e$1(class extends i$1{constructor(e){if(super(e),e.type!==t.CHILD)throw Error("repeat() can only be used in text expressions")}ht(e,s,t){let r;void 0===t?t=s:void 0!==s&&(r=s);const l=[],o=[];let i=0;for(const s of e)l[i]=r?r(s,i):i,o[i]=t(s,i),i++;return {values:o,keys:l}}render(e,s,t){return this.ht(e,s,t).values}update(s$1,[t,r$1,c]){var d;const a=m(s$1),{values:p$1,keys:v}=this.ht(t,r$1,c);if(!Array.isArray(a))return this.ut=v,p$1;const h=null!==(d=this.ut)&&void 0!==d?d:this.ut=[],m$1=[];let y,x,j=0,k=a.length-1,w=0,A=p$1.length-1;for(;j<=k&&w<=A;)if(null===a[j])j++;else if(null===a[k])k--;else if(h[j]===v[w])m$1[w]=u$1(a[j],p$1[w]),j++,w++;else if(h[k]===v[A])m$1[A]=u$1(a[k],p$1[A]),k--,A--;else if(h[j]===v[A])m$1[A]=u$1(a[j],p$1[A]),r(s$1,m$1[A+1],a[j]),j++,A--;else if(h[k]===v[w])m$1[w]=u$1(a[k],p$1[w]),r(s$1,a[j],a[k]),k--,w++;else if(void 0===y&&(y=u(v,w,A),x=u(h,j,k)),y.has(h[j]))if(y.has(h[k])){const e=x.get(v[w]),t=void 0!==e?a[e]:null;if(null===t){const e=r(s$1,a[j]);u$1(e,p$1[w]),m$1[w]=e;}else m$1[w]=u$1(t,p$1[w]),r(s$1,a[j],t),a[e]=null;w++;}else p(a[k]),k--;else p(a[j]),j++;for(;w<=A;){const e=r(s$1,m$1[A+1]);u$1(e,p$1[w]),m$1[w++]=e;}for(;j<=k;){const e=a[j++];null!==e&&p(e);}return this.ut=v,s(s$1,m$1),T}});
 
+const maxGseMacAddress = 0x010ccd0101ff;
+const minGseMacAddress = 0x010ccd010000;
+const maxSmvMacAddress = 0x010ccd0401ff;
+const minSmvMacAddress = 0x010ccd040000;
+function convertToMac(mac) {
+    const str = 0 + mac.toString(16).toUpperCase();
+    const arr = str.match(/.{1,2}/g);
+    return arr.join("-");
+}
+Array(maxGseMacAddress - minGseMacAddress)
+    .fill(1)
+    .map((_, i) => convertToMac(minGseMacAddress + i));
+Array(maxSmvMacAddress - minSmvMacAddress)
+    .fill(1)
+    .map((_, i) => convertToMac(minSmvMacAddress + i));
+
+const maxGseAppId = 0x3fff;
+const minGseAppId = 0x0000;
+// APPID range for Type1A(Trip) GOOSE acc. IEC 61850-8-1
+const maxGseTripAppId = 0xbfff;
+const minGseTripAppId = 0x8000;
+const maxSmvAppId = 0x7fff;
+const minSmvAppId = 0x4000;
+Array(maxGseAppId - minGseAppId)
+    .fill(1)
+    .map((_, i) => (minGseAppId + i).toString(16).toUpperCase().padStart(4, "0"));
+Array(maxGseTripAppId - minGseTripAppId)
+    .fill(1)
+    .map((_, i) => (minGseTripAppId + i).toString(16).toUpperCase().padStart(4, "0"));
+Array(maxSmvAppId - minSmvAppId)
+    .fill(1)
+    .map((_, i) => (minSmvAppId + i).toString(16).toUpperCase().padStart(4, "0"));
+
+/** maximum value for `lnInst` attribute */
+const maxLnInst$1 = 99;
+Array(maxLnInst$1)
+    .fill(1)
+    .map((_, i) => `${i + 1}`);
+
+function isInputLeaf(input, allInputs) {
+    let sameInputs = 0;
+    for (const value of allInputs)
+        if (value === input)
+            sameInputs++;
+    return input.querySelectorAll("ExtRef").length === sameInputs;
+}
+/**
+ * Makes sure to not leave empty `Inputs` element after removing
+ * its child `ExtRef` elements using [[`extRefActions`]]
+ * @returns Actions to remove `Inputs` when empty
+ * */
+function removeInputs(extRefs) {
+    const removeInputs = [];
+    const parentInputs = extRefs
+        .map((remove) => remove.node.parentElement)
+        .filter((input) => input);
+    parentInputs.forEach((input, _index, inputs) => {
+        const inputNotRemovedYet = !removeInputs.some((removeInput) => removeInput.node === input);
+        if (isInputLeaf(input, inputs) && inputNotRemovedYet)
+            removeInputs.push({ node: input });
+    });
+    return extRefs.concat(removeInputs);
+}
+
+/** @returns object reference acc. IEC 61850-7-3 for control block elements */
+function controlBlockObjRef(ctrlBlock) {
+    const iedName = ctrlBlock.closest("IED")?.getAttribute("name");
+    const ldInst = ctrlBlock.closest("LDevice")?.getAttribute("inst");
+    const parentLn = ctrlBlock.closest("LN,LN0");
+    const prefix = parentLn?.getAttribute("prefix") ?? "";
+    const lnClass = parentLn?.getAttribute("lnClass");
+    const lnInst = parentLn?.getAttribute("inst") ?? "";
+    const cbName = ctrlBlock.getAttribute("name");
+    if (!iedName || !ldInst || !lnClass || !cbName)
+        return null;
+    return `${iedName}${ldInst}/${prefix}${lnClass}${lnInst}.${cbName}`;
+}
+
+/** @returns control block or null for a given external reference */
+function sourceControlBlock(extRef) {
+    const [iedName, srcLDInst, srcPrefix, srcLNClass, srcLNInst, srcCBName] = [
+        "iedName",
+        "srcLDInst",
+        "srcPrefix",
+        "srcLNClass",
+        "srcLNInst",
+        "srcCBName",
+    ].map((attr) => extRef.getAttribute(attr) ?? "");
+    return (Array.from(extRef.ownerDocument.querySelectorAll(`IED[name="${iedName}"] ReportControl, 
+          IED[name="${iedName}"] GSEControl, 
+          IED[name="${iedName}"] SampledValueControl`)).find((cBlock) => cBlock.closest("LDevice").getAttribute("inst") === srcLDInst &&
+        (cBlock.closest("LN, LN0").getAttribute("prefix") ?? "") ===
+            srcPrefix &&
+        cBlock.closest("LN, LN0").getAttribute("lnClass") === srcLNClass &&
+        cBlock.closest("LN, LN0").getAttribute("inst") === srcLNInst &&
+        cBlock.getAttribute("name") === srcCBName) ?? null);
+}
+
+/** @returns Element to remove the subscription supervision */
+function removableSupervisionElement(ctrlBlock, subscriberIed) {
+    const supervisionType = ctrlBlock.tagName === "GSEControl" ? "LGOS" : "LSVS";
+    const valElement = Array.from(subscriberIed.querySelectorAll(`LN[lnClass="${supervisionType}"] > DOI > DAI > Val`)).find((val) => val.textContent === controlBlockObjRef(ctrlBlock));
+    if (!valElement)
+        return null;
+    const ln = valElement.closest("LN");
+    const doi = valElement.closest("DOI");
+    // do not remove logical nodes `LGOS`, `LSVS` unless privately tagged
+    const canRemoveLn = ln.querySelector(':scope > Private[type="OpenSCD.create"]');
+    return canRemoveLn ? ln : doi;
+}
+/** @returns Whether `DA` with name `setSrcRef`  can edited by SCL editor */
+function isSrcRefEditable(ctrlBlock, subscriberIed) {
+    const supervisionElement = removableSupervisionElement(ctrlBlock, subscriberIed);
+    const ln = supervisionElement?.closest("LN") ?? null;
+    if (!ln)
+        return false;
+    if (supervisionElement?.querySelector(':scope DAI[name="setSrcRef"][valImport="true"][valKind="RO"],' +
+        ' :scope DAI[name="setSrcRef"][valImport="true"][valKind="Conf"]'))
+        return true;
+    const rootNode = ln.ownerDocument;
+    const lnClass = ln.getAttribute("lnClass");
+    const cbRefType = lnClass === "LGOS" ? "GoCBRef" : "SvCBRef";
+    const lnType = ln.getAttribute("lnType");
+    const goOrSvCBRef = rootNode.querySelector(`DataTypeTemplates > 
+        LNodeType[id="${lnType}"][lnClass="${lnClass}"] > DO[name="${cbRefType}"]`);
+    const cbRefId = goOrSvCBRef?.getAttribute("type");
+    const setSrcRef = rootNode.querySelector(`DataTypeTemplates > DOType[id="${cbRefId}"] > DA[name="setSrcRef"]`);
+    return ((setSrcRef?.getAttribute("valKind") === "Conf" ||
+        setSrcRef?.getAttribute("valKind") === "RO") &&
+        setSrcRef.getAttribute("valImport") === "true");
+}
+/** @returns Whether other subscribed ExtRef of the same control block exist */
+function isControlBlockSubscribed(extRefs) {
+    const [srcCBName, srcLDInst, srcLNClass, iedName, srcPrefix, srcLNInst, serviceType,] = [
+        "srcCBName",
+        "srcLDInst",
+        "srcLNClass",
+        "iedName",
+        "srcPrefix",
+        "srcLNInst",
+        "serviceType",
+    ].map((attr) => extRefs[0].getAttribute(attr));
+    const parentIed = extRefs[0].closest("IED");
+    return Array.from(parentIed.getElementsByTagName("ExtRef")).some((otherExtRef) => !extRefs.includes(otherExtRef) &&
+        (otherExtRef.getAttribute("srcPrefix") ?? "") === (srcPrefix ?? "") &&
+        (otherExtRef.getAttribute("srcLNInst") ?? "") === (srcLNInst ?? "") &&
+        otherExtRef.getAttribute("srcCBName") === srcCBName &&
+        otherExtRef.getAttribute("srcLDInst") === srcLDInst &&
+        otherExtRef.getAttribute("srcLNClass") === srcLNClass &&
+        otherExtRef.getAttribute("iedName") === iedName &&
+        otherExtRef.getAttribute("serviceType") === serviceType);
+}
+function cannotRemoveSupervision(extRefGroup) {
+    return (isControlBlockSubscribed(extRefGroup.extRefs) ||
+        !isSrcRefEditable(extRefGroup.ctrlBlock, extRefGroup.subscriberIed));
+}
+function groupPerControlBlock(extRefs) {
+    const groupedExtRefs = {};
+    extRefs.forEach((extRef) => {
+        const ctrlBlock = sourceControlBlock(extRef);
+        if (ctrlBlock) {
+            const ctrlBlockRef = controlBlockObjRef(ctrlBlock);
+            if (groupedExtRefs[ctrlBlockRef])
+                groupedExtRefs[ctrlBlockRef].extRefs.push(extRef);
+            else
+                groupedExtRefs[ctrlBlockRef] = {
+                    extRefs: [extRef],
+                    ctrlBlock,
+                    subscriberIed: extRef.closest("IED"),
+                };
+        }
+    });
+    return groupedExtRefs;
+}
+/** Removes subscription supervision - `LGOS` or `LSVS` - when no other data
+ * of a given `GSEControl` or `SampledValueControl`
+ * @param extRefs - An array of external reference elements
+ * @returns Actions to remove subscription supervision `LGOS` or `LSVS`
+ */
+function removeSubscriptionSupervision$1(extRefs) {
+    if (extRefs.length === 0)
+        return [];
+    const groupedExtRefs = groupPerControlBlock(extRefs);
+    return Object.values(groupedExtRefs)
+        .map((extRefGroup) => {
+        if (cannotRemoveSupervision(extRefGroup))
+            return null;
+        return removableSupervisionElement(extRefGroup.ctrlBlock, extRefGroup.subscriberIed);
+    })
+        .filter((element) => element).map((node) => ({ node }));
+}
+
+/**
+ * Remove link between sending IED data to receiving IED external
+ * references - unsubscribing.
+ * ```md
+ * 1. Unsubscribes external references itself:
+ * -Update `ExtRef` in case later binging is used (existing `intAddr` attribute)
+ * -Remove `ExtRef` in case `intAddr` is missing
+ *
+ * 2. Removes leaf `Input` elements as well
+ * 3. Removes subscription supervision (can be disabled through options.ignoreSupervision)
+ * - when all external references of one control block are unsubscribed
+ * - when `valKind` RO|Conf and `valImport` true
+ * ```
+ * In case the external reference
+ * @param extRefs - Array of external references
+ * @returns An array of update and/or remove action representing changes required
+ * to unsubscribe.
+ */
+function unsubscribe(extRefs, options = { ignoreSupervision: false }) {
+    const updateActions = [];
+    const removeActions = [];
+    extRefs.map((extRef) => {
+        if (extRef.getAttribute("intAddr"))
+            updateActions.push({
+                element: extRef,
+                attributes: {
+                    iedName: null,
+                    ldInst: null,
+                    prefix: null,
+                    lnClass: null,
+                    lnInst: null,
+                    doName: null,
+                    daName: null,
+                    srcLDInst: null,
+                    srcPrefix: null,
+                    srcLNClass: null,
+                    srcLNInst: null,
+                    srcCBName: null,
+                    ...(extRef.getAttribute("pServT") && { serviceType: null }),
+                },
+            });
+        else
+            removeActions.push({ node: extRef });
+    });
+    return [
+        ...removeInputs(removeActions),
+        ...updateActions,
+        ...(options.ignoreSupervision
+            ? []
+            : removeSubscriptionSupervision$1(extRefs)),
+    ];
+}
+
+await fetch(new URL("../foundation/nsd.json", import.meta.url)).then((res) => res.json());
+
+const tAbstractConductingEquipment$1 = [
+    "TransformerWinding",
+    "ConductingEquipment",
+];
+const tEquipment$1 = [
+    "GeneralEquipment",
+    "PowerTransformer",
+    ...tAbstractConductingEquipment$1,
+];
+const tEquipmentContainer$1 = ["Substation", "VoltageLevel", "Bay"];
+const tGeneralEquipmentContainer$1 = ["Process", "Line"];
+const tAbstractEqFuncSubFunc$1 = ["EqSubFunction", "EqFunction"];
+const tPowerSystemResource$1 = [
+    "SubFunction",
+    "Function",
+    "TapChanger",
+    "SubEquipment",
+    ...tEquipment$1,
+    ...tEquipmentContainer$1,
+    ...tGeneralEquipmentContainer$1,
+    ...tAbstractEqFuncSubFunc$1,
+];
+const tLNodeContainer$1 = ["ConnectivityNode", ...tPowerSystemResource$1];
+const tCertificate$1 = ["GOOSESecurity", "SMVSecurity"];
+const tNaming$1 = ["SubNetwork", ...tCertificate$1, ...tLNodeContainer$1];
+const tAbstractDataAttribute$1 = ["BDA", "DA"];
+const tControlWithIEDName$1 = ["SampledValueControl", "GSEControl"];
+const tControlWithTriggerOpt$1 = ["LogControl", "ReportControl"];
+const tControl$1 = [...tControlWithIEDName$1, ...tControlWithTriggerOpt$1];
+const tControlBlock$1 = ["GSE", "SMV"];
+const tUnNaming$1 = [
+    "ConnectedAP",
+    "PhysConn",
+    "SDO",
+    "DO",
+    "DAI",
+    "SDI",
+    "DOI",
+    "Inputs",
+    "RptEnabled",
+    "Server",
+    "ServerAt",
+    "SettingControl",
+    "Communication",
+    "Log",
+    "LDevice",
+    "DataSet",
+    "AccessPoint",
+    "IED",
+    "NeutralPoint",
+    ...tControl$1,
+    ...tControlBlock$1,
+    ...tAbstractDataAttribute$1,
+];
+const tAnyLN$1 = ["LN0", "LN"];
+const tAnyContentFromOtherNamespace$1 = [
+    "Text",
+    "Private",
+    "Hitem",
+    "AccessControl",
+];
+const tCert$1 = ["Subject", "IssuerName"];
+const tDurationInMilliSec$1 = ["MinTime", "MaxTime"];
+const tIDNaming$1 = ["LNodeType", "DOType", "DAType", "EnumType"];
+const tServiceYesNo$1 = [
+    "FileHandling",
+    "TimeSyncProt",
+    "CommProt",
+    "SGEdit",
+    "ConfSG",
+    "GetDirectory",
+    "GetDataObjectDefinition",
+    "DataObjectDirectory",
+    "GetDataSetValue",
+    "SetDataSetValue",
+    "DataSetDirectory",
+    "ReadWrite",
+    "TimerActivatedControl",
+    "GetCBValues",
+    "GSEDir",
+    "ConfLdName",
+];
+const tServiceWithMaxAndMaxAttributes$1 = ["DynDataSet", "ConfDataSet"];
+const tServiceWithMax$1 = [
+    "GSSE",
+    "GOOSE",
+    "ConfReportControl",
+    "SMVsc",
+    ...tServiceWithMaxAndMaxAttributes$1,
+];
+const tServiceWithMaxNonZero$1 = ["ConfLogControl", "ConfSigRef"];
+const tServiceSettings$1 = [
+    "ReportSettings",
+    "LogSettings",
+    "GSESettings",
+    "SMVSettings",
+];
+const tBaseElement$1 = ["SCL", ...tNaming$1, ...tUnNaming$1, ...tIDNaming$1];
+const sCLTags$1 = [
+    ...tBaseElement$1,
+    ...tAnyContentFromOtherNamespace$1,
+    "Header",
+    "LNode",
+    "Val",
+    "Voltage",
+    "Services",
+    ...tCert$1,
+    ...tDurationInMilliSec$1,
+    "Association",
+    "FCDA",
+    "ClientLN",
+    "IEDName",
+    "ExtRef",
+    "Protocol",
+    ...tAnyLN$1,
+    ...tServiceYesNo$1,
+    "DynAssociation",
+    "SettingGroups",
+    ...tServiceWithMax$1,
+    ...tServiceWithMaxNonZero$1,
+    ...tServiceSettings$1,
+    "ConfLNs",
+    "ClientServices",
+    "SupSubscription",
+    "ValueHandling",
+    "RedProt",
+    "McSecurity",
+    "KDC",
+    "Address",
+    "P",
+    "ProtNs",
+    "EnumVal",
+    "Terminal",
+    "BitRate",
+    "Authentication",
+    "DataTypeTemplates",
+    "History",
+    "OptFields",
+    "SmvOpts",
+    "TrgOps",
+    "SamplesPerSec",
+    "SmpRate",
+    "SecPerSamples",
+];
+const tBaseNameSequence$1 = ["Text", "Private"];
+const tNamingSequence$1 = [...tBaseNameSequence$1];
+const tUnNamingSequence$1 = [...tBaseNameSequence$1];
+const tIDNamingSequence$1 = [...tBaseNameSequence$1];
+const tAbstractDataAttributeSequence$1 = [...tUnNamingSequence$1, "Val"];
+const tLNodeContainerSequence$1 = [...tNamingSequence$1, "LNode"];
+const tPowerSystemResourceSequence$1 = [...tLNodeContainerSequence$1];
+const tEquipmentSequence$1 = [...tPowerSystemResourceSequence$1];
+const tEquipmentContainerSequence$1 = [
+    ...tPowerSystemResourceSequence$1,
+    "PowerTransformer",
+    "GeneralEquipment",
+];
+const tAbstractConductingEquipmentSequence$1 = [
+    ...tEquipmentSequence$1,
+    "Terminal",
+];
+const tControlBlockSequence$1 = [...tUnNamingSequence$1, "Address"];
+const tControlSequence$1 = [...tNamingSequence$1];
+const tControlWithIEDNameSequence$1 = [...tControlSequence$1, "IEDName"];
+const tAnyLNSequence$1 = [
+    ...tUnNamingSequence$1,
+    "DataSet",
+    "ReportControl",
+    "LogControl",
+    "DOI",
+    "Inputs",
+    "Log",
+];
+const tGeneralEquipmentContainerSequence$1 = [
+    ...tPowerSystemResourceSequence$1,
+    "GeneralEquipment",
+    "Function",
+];
+const tControlWithTriggerOptSequence$1 = [...tControlSequence$1, "TrgOps"];
+const tAbstractEqFuncSubFuncSequence$1 = [
+    ...tPowerSystemResourceSequence$1,
+    "GeneralEquipment",
+    "EqSubFunction",
+];
+({
+    AccessControl: {
+        parents: ["LDevice"],
+        children: [],
+    },
+    AccessPoint: {
+        parents: ["IED"],
+        children: [
+            ...tNamingSequence$1,
+            "Server",
+            "LN",
+            "ServerAt",
+            "Services",
+            "GOOSESecurity",
+            "SMVSecurity",
+        ],
+    },
+    Address: {
+        parents: ["ConnectedAP", "GSE", "SMV"],
+        children: ["P"],
+    },
+    Association: {
+        parents: ["Server"],
+        children: [],
+    },
+    Authentication: {
+        parents: ["Server"],
+        children: [],
+    },
+    BDA: {
+        parents: ["DAType"],
+        children: [...tAbstractDataAttributeSequence$1],
+    },
+    BitRate: {
+        parents: ["SubNetwork"],
+        children: [],
+    },
+    Bay: {
+        parents: ["VoltageLevel"],
+        children: [
+            ...tEquipmentContainerSequence$1,
+            "ConductingEquipment",
+            "ConnectivityNode",
+            "Function",
+        ],
+    },
+    ClientLN: {
+        parents: ["RptEnabled"],
+        children: [],
+    },
+    ClientServices: {
+        parents: ["Services"],
+        children: ["TimeSyncProt", "McSecurity"],
+    },
+    CommProt: {
+        parents: ["Services"],
+        children: [],
+    },
+    Communication: {
+        parents: ["SCL"],
+        children: [...tUnNamingSequence$1, "SubNetwork"],
+    },
+    ConductingEquipment: {
+        parents: ["Process", "Line", "SubFunction", "Function", "Bay"],
+        children: [
+            ...tAbstractConductingEquipmentSequence$1,
+            "EqFunction",
+            "SubEquipment",
+        ],
+    },
+    ConfDataSet: {
+        parents: ["Services"],
+        children: [],
+    },
+    ConfLdName: {
+        parents: ["Services"],
+        children: [],
+    },
+    ConfLNs: {
+        parents: ["Services"],
+        children: [],
+    },
+    ConfLogControl: {
+        parents: ["Services"],
+        children: [],
+    },
+    ConfReportControl: {
+        parents: ["Services"],
+        children: [],
+    },
+    ConfSG: {
+        parents: ["SettingGroups"],
+        children: [],
+    },
+    ConfSigRef: {
+        parents: ["Services"],
+        children: [],
+    },
+    ConnectedAP: {
+        parents: ["SubNetwork"],
+        children: [...tUnNamingSequence$1, "Address", "GSE", "SMV", "PhysConn"],
+    },
+    ConnectivityNode: {
+        parents: ["Bay", "Line"],
+        children: [...tLNodeContainerSequence$1],
+    },
+    DA: {
+        parents: ["DOType"],
+        children: [...tAbstractDataAttributeSequence$1],
+    },
+    DAI: {
+        parents: ["DOI", "SDI"],
+        children: [...tUnNamingSequence$1, "Val"],
+    },
+    DAType: {
+        parents: ["DataTypeTemplates"],
+        children: [...tIDNamingSequence$1, "BDA", "ProtNs"],
+    },
+    DO: {
+        parents: ["LNodeType"],
+        children: [...tUnNamingSequence$1],
+    },
+    DOI: {
+        parents: [...tAnyLN$1],
+        children: [...tUnNamingSequence$1, "SDI", "DAI"],
+    },
+    DOType: {
+        parents: ["DataTypeTemplates"],
+        children: [...tIDNamingSequence$1, "SDO", "DA"],
+    },
+    DataObjectDirectory: {
+        parents: ["Services"],
+        children: [],
+    },
+    DataSet: {
+        parents: [...tAnyLN$1],
+        children: [...tNamingSequence$1, "FCDA"],
+    },
+    DataSetDirectory: {
+        parents: ["Services"],
+        children: [],
+    },
+    DataTypeTemplates: {
+        parents: ["SCL"],
+        children: ["LNodeType", "DOType", "DAType", "EnumType"],
+    },
+    DynAssociation: {
+        parents: ["Services"],
+        children: [],
+    },
+    DynDataSet: {
+        parents: ["Services"],
+        children: [],
+    },
+    EnumType: {
+        parents: ["DataTypeTemplates"],
+        children: [...tIDNamingSequence$1, "EnumVal"],
+    },
+    EnumVal: {
+        parents: ["EnumType"],
+        children: [],
+    },
+    EqFunction: {
+        parents: [
+            "GeneralEquipment",
+            "TapChanger",
+            "TransformerWinding",
+            "PowerTransformer",
+            "SubEquipment",
+            "ConductingEquipment",
+        ],
+        children: [...tAbstractEqFuncSubFuncSequence$1],
+    },
+    EqSubFunction: {
+        parents: ["EqSubFunction", "EqFunction"],
+        children: [...tAbstractEqFuncSubFuncSequence$1],
+    },
+    ExtRef: {
+        parents: ["Inputs"],
+        children: [],
+    },
+    FCDA: {
+        parents: ["DataSet"],
+        children: [],
+    },
+    FileHandling: {
+        parents: ["Services"],
+        children: [],
+    },
+    Function: {
+        parents: ["Bay", "VoltageLevel", "Substation", "Process", "Line"],
+        children: [
+            ...tPowerSystemResourceSequence$1,
+            "SubFunction",
+            "GeneralEquipment",
+            "ConductingEquipment",
+        ],
+    },
+    GeneralEquipment: {
+        parents: [
+            "SubFunction",
+            "Function",
+            ...tGeneralEquipmentContainer$1,
+            ...tAbstractEqFuncSubFunc$1,
+            ...tEquipmentContainer$1,
+        ],
+        children: [...tEquipmentSequence$1, "EqFunction"],
+    },
+    GetCBValues: {
+        parents: ["Services"],
+        children: [],
+    },
+    GetDataObjectDefinition: {
+        parents: ["Services"],
+        children: [],
+    },
+    GetDataSetValue: {
+        parents: ["Services"],
+        children: [],
+    },
+    GetDirectory: {
+        parents: ["Services"],
+        children: [],
+    },
+    GOOSE: {
+        parents: ["Services"],
+        children: [],
+    },
+    GOOSESecurity: {
+        parents: ["AccessPoint"],
+        children: [...tNamingSequence$1, "Subject", "IssuerName"],
+    },
+    GSE: {
+        parents: ["ConnectedAP"],
+        children: [...tControlBlockSequence$1, "MinTime", "MaxTime"],
+    },
+    GSEDir: {
+        parents: ["Services"],
+        children: [],
+    },
+    GSEControl: {
+        parents: ["LN0"],
+        children: [...tControlWithIEDNameSequence$1, "Protocol"],
+    },
+    GSESettings: {
+        parents: ["Services"],
+        children: [],
+    },
+    GSSE: {
+        parents: ["Services"],
+        children: [],
+    },
+    Header: {
+        parents: ["SCL"],
+        children: ["Text", "History"],
+    },
+    History: {
+        parents: ["Header"],
+        children: ["Hitem"],
+    },
+    Hitem: {
+        parents: ["History"],
+        children: [],
+    },
+    IED: {
+        parents: ["SCL"],
+        children: [...tUnNamingSequence$1, "Services", "AccessPoint", "KDC"],
+    },
+    IEDName: {
+        parents: ["GSEControl", "SampledValueControl"],
+        children: [],
+    },
+    Inputs: {
+        parents: [...tAnyLN$1],
+        children: [...tUnNamingSequence$1, "ExtRef"],
+    },
+    IssuerName: {
+        parents: ["GOOSESecurity", "SMVSecurity"],
+        children: [],
+    },
+    KDC: {
+        parents: ["IED"],
+        children: [],
+    },
+    LDevice: {
+        parents: ["Server"],
+        children: [...tUnNamingSequence$1, "LN0", "LN", "AccessControl"],
+    },
+    LN: {
+        parents: ["AccessPoint", "LDevice"],
+        children: [...tAnyLNSequence$1],
+    },
+    LN0: {
+        parents: ["LDevice"],
+        children: [
+            ...tAnyLNSequence$1,
+            "GSEControl",
+            "SampledValueControl",
+            "SettingControl",
+        ],
+    },
+    LNode: {
+        parents: [...tLNodeContainer$1],
+        children: [...tUnNamingSequence$1],
+    },
+    LNodeType: {
+        parents: ["DataTypeTemplates"],
+        children: [...tIDNamingSequence$1, "DO"],
+    },
+    Line: {
+        parents: ["Process", "SCL"],
+        children: [
+            ...tGeneralEquipmentContainerSequence$1,
+            "Voltage",
+            "ConductingEquipment",
+        ],
+    },
+    Log: {
+        parents: [...tAnyLN$1],
+        children: [...tUnNamingSequence$1],
+    },
+    LogControl: {
+        parents: [...tAnyLN$1],
+        children: [...tControlWithTriggerOptSequence$1],
+    },
+    LogSettings: {
+        parents: ["Services"],
+        children: [],
+    },
+    MaxTime: {
+        parents: ["GSE"],
+        children: [],
+    },
+    McSecurity: {
+        parents: ["GSESettings", "SMVSettings", "ClientServices"],
+        children: [],
+    },
+    MinTime: {
+        parents: ["GSE"],
+        children: [],
+    },
+    NeutralPoint: {
+        parents: ["TransformerWinding"],
+        children: [...tUnNamingSequence$1],
+    },
+    OptFields: {
+        parents: ["ReportControl"],
+        children: [],
+    },
+    P: {
+        parents: ["Address", "PhysConn"],
+        children: [],
+    },
+    PhysConn: {
+        parents: ["ConnectedAP"],
+        children: [...tUnNamingSequence$1, "P"],
+    },
+    PowerTransformer: {
+        parents: [...tEquipmentContainer$1],
+        children: [
+            ...tEquipmentSequence$1,
+            "TransformerWinding",
+            "SubEquipment",
+            "EqFunction",
+        ],
+    },
+    Private: {
+        parents: [],
+        children: [],
+    },
+    Process: {
+        parents: ["Process", "SCL"],
+        children: [
+            ...tGeneralEquipmentContainerSequence$1,
+            "ConductingEquipment",
+            "Substation",
+            "Line",
+            "Process",
+        ],
+    },
+    ProtNs: {
+        parents: ["DAType", "DA"],
+        children: [],
+    },
+    Protocol: {
+        parents: ["GSEControl", "SampledValueControl"],
+        children: [],
+    },
+    ReadWrite: {
+        parents: ["Services"],
+        children: [],
+    },
+    RedProt: {
+        parents: ["Services"],
+        children: [],
+    },
+    ReportControl: {
+        parents: [...tAnyLN$1],
+        children: [...tControlWithTriggerOptSequence$1, "OptFields", "RptEnabled"],
+    },
+    ReportSettings: {
+        parents: ["Services"],
+        children: [],
+    },
+    RptEnabled: {
+        parents: ["ReportControl"],
+        children: [...tUnNamingSequence$1, "ClientLN"],
+    },
+    SamplesPerSec: {
+        parents: ["SMVSettings"],
+        children: [],
+    },
+    SampledValueControl: {
+        parents: ["LN0"],
+        children: [...tControlWithIEDNameSequence$1, "SmvOpts"],
+    },
+    SecPerSamples: {
+        parents: ["SMVSettings"],
+        children: [],
+    },
+    SCL: {
+        parents: [],
+        children: [
+            ...tBaseNameSequence$1,
+            "Header",
+            "Substation",
+            "Communication",
+            "IED",
+            "DataTypeTemplates",
+            "Line",
+            "Process",
+        ],
+    },
+    SDI: {
+        parents: ["DOI", "SDI"],
+        children: [...tUnNamingSequence$1, "SDI", "DAI"],
+    },
+    SDO: {
+        parents: ["DOType"],
+        children: [...tNamingSequence$1],
+    },
+    Server: {
+        parents: ["AccessPoint"],
+        children: [
+            ...tUnNamingSequence$1,
+            "Authentication",
+            "LDevice",
+            "Association",
+        ],
+    },
+    ServerAt: {
+        parents: ["AccessPoint"],
+        children: [...tUnNamingSequence$1],
+    },
+    Services: {
+        parents: ["IED", "AccessPoint"],
+        children: [
+            "DynAssociation",
+            "SettingGroups",
+            "GetDirectory",
+            "GetDataObjectDefinition",
+            "DataObjectDirectory",
+            "GetDataSetValue",
+            "SetDataSetValue",
+            "DataSetDirectory",
+            "ConfDataSet",
+            "DynDataSet",
+            "ReadWrite",
+            "TimerActivatedControl",
+            "ConfReportControl",
+            "GetCBValues",
+            "ConfLogControl",
+            "ReportSettings",
+            "LogSettings",
+            "GSESettings",
+            "SMVSettings",
+            "GSEDir",
+            "GOOSE",
+            "GSSE",
+            "SMVsc",
+            "FileHandling",
+            "ConfLNs",
+            "ClientServices",
+            "ConfLdName",
+            "SupSubscription",
+            "ConfSigRef",
+            "ValueHandling",
+            "RedProt",
+            "TimeSyncProt",
+            "CommProt",
+        ],
+    },
+    SetDataSetValue: {
+        parents: ["Services"],
+        children: [],
+    },
+    SettingControl: {
+        parents: ["LN0"],
+        children: [...tUnNamingSequence$1],
+    },
+    SettingGroups: {
+        parents: ["Services"],
+        children: ["SGEdit", "ConfSG"],
+    },
+    SGEdit: {
+        parents: ["SettingGroups"],
+        children: [],
+    },
+    SmpRate: {
+        parents: ["SMVSettings"],
+        children: [],
+    },
+    SMV: {
+        parents: ["ConnectedAP"],
+        children: [...tControlBlockSequence$1],
+    },
+    SmvOpts: {
+        parents: ["SampledValueControl"],
+        children: [],
+    },
+    SMVsc: {
+        parents: ["Services"],
+        children: [],
+    },
+    SMVSecurity: {
+        parents: ["AccessPoint"],
+        children: [...tNamingSequence$1, "Subject", "IssuerName"],
+    },
+    SMVSettings: {
+        parents: ["Services"],
+        children: ["SmpRate", "SamplesPerSec", "SecPerSamples", "McSecurity"],
+    },
+    SubEquipment: {
+        parents: [
+            "TapChanger",
+            "PowerTransformer",
+            "ConductingEquipment",
+            "TransformerWinding",
+            ...tAbstractConductingEquipment$1,
+        ],
+        children: [...tPowerSystemResourceSequence$1, "EqFunction"],
+    },
+    SubFunction: {
+        parents: ["SubFunction", "Function"],
+        children: [
+            ...tPowerSystemResourceSequence$1,
+            "GeneralEquipment",
+            "ConductingEquipment",
+            "SubFunction",
+        ],
+    },
+    SubNetwork: {
+        parents: ["Communication"],
+        children: [...tNamingSequence$1, "BitRate", "ConnectedAP"],
+    },
+    Subject: {
+        parents: ["GOOSESecurity", "SMVSecurity"],
+        children: [],
+    },
+    Substation: {
+        parents: ["SCL"],
+        children: [...tEquipmentContainerSequence$1, "VoltageLevel", "Function"],
+    },
+    SupSubscription: {
+        parents: ["Services"],
+        children: [],
+    },
+    TapChanger: {
+        parents: ["TransformerWinding"],
+        children: [...tPowerSystemResourceSequence$1, "SubEquipment", "EqFunction"],
+    },
+    Terminal: {
+        parents: [...tEquipment$1],
+        children: [...tUnNamingSequence$1],
+    },
+    Text: {
+        parents: sCLTags$1.filter((tag) => tag !== "Text" && tag !== "Private"),
+        children: [],
+    },
+    TimerActivatedControl: {
+        parents: ["Services"],
+        children: [],
+    },
+    TimeSyncProt: {
+        parents: ["Services", "ClientServices"],
+        children: [],
+    },
+    TransformerWinding: {
+        parents: ["PowerTransformer"],
+        children: [
+            ...tAbstractConductingEquipmentSequence$1,
+            "TapChanger",
+            "NeutralPoint",
+            "EqFunction",
+            "SubEquipment",
+        ],
+    },
+    TrgOps: {
+        parents: ["ReportControl"],
+        children: [],
+    },
+    Val: {
+        parents: ["DAI", "DA", "BDA"],
+        children: [],
+    },
+    ValueHandling: {
+        parents: ["Services"],
+        children: [],
+    },
+    Voltage: {
+        parents: ["VoltageLevel"],
+        children: [],
+    },
+    VoltageLevel: {
+        parents: ["Substation"],
+        children: [...tEquipmentContainerSequence$1, "Voltage", "Bay", "Function"],
+    },
+});
+
 /**
  * @license
  * Copyright 2018 Google Inc.
@@ -10287,6 +11337,7 @@ function isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement) 
 function getSubscribedExtRefElements(rootElement, controlTag, fcdaElement, controlElement, includeLaterBinding) {
     return getExtRefElements(rootElement, fcdaElement, includeLaterBinding).filter(extRefElement => isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement));
 }
+// TODO: scl-lib export
 function getCbReference(extRef) {
     var _a, _b;
     const extRefValues = ['iedName', 'srcPrefix', 'srcCBName'];
@@ -10360,6 +11411,7 @@ function getSupervisionCbRefs(ied, cbTagName) {
     const selectorString = `LN[lnClass="${supervisionType}"]>DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]>Val,LN0[lnClass="${supervisionType}"]>DOI[name="${supervisionName}"]>DAI[name="setSrcRef"]>Val`;
     return Array.from(ied.querySelectorAll(selectorString));
 }
+// Internal API in scl-lib
 /**
  * Creates a string pointer to the control block element.
  *
@@ -11405,28 +12457,9 @@ class SubscriberLaterBinding extends s$1 {
      *
      * @param extRef - The Ext Ref Element to clean from attributes.
      */
-    unsubscribe(extRef) {
+    unsubscribeExtRef(extRef) {
         const editActions = [];
-        editActions.push({
-            element: extRef,
-            attributes: {
-                intAddr: extRef.getAttribute('intAddr'),
-                desc: extRef.getAttribute('desc'),
-                iedName: null,
-                ldInst: null,
-                prefix: null,
-                lnClass: null,
-                lnInst: null,
-                doName: null,
-                daName: null,
-                serviceType: extRef.getAttribute('serviceType'),
-                srcLDInst: null,
-                srcPrefix: null,
-                srcLNClass: null,
-                srcLNInst: null,
-                srcCBName: null,
-            },
-        });
+        editActions.push(...unsubscribe([extRef], { ignoreSupervision: true }));
         let controlBlockElement;
         if (this.subscriberView) {
             controlBlockElement = findControlBlock(extRef);
@@ -12478,10 +13511,10 @@ Basic Type: ${spec.bType}"
                         this.subscribe(selectedExtRefElement, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
                     }
                     else {
-                        this.unsubscribe(selectedExtRefElement);
+                        this.unsubscribeExtRef(selectedExtRefElement);
                     }
                     // without this statement, neither the ExtRef list or the FCDA list
-                    // (with the count) update correctly.
+                    // (with the count) update correctly. It is unclear why.
                     this.requestUpdate();
                     selectedListItem.selected = false;
                 }}
@@ -12528,7 +13561,7 @@ Basic Type: ${spec.bType}"
                     return;
                 if (isSubscribed(selectedExtRefElement) ||
                     isPartiallyConfigured(selectedExtRefElement)) {
-                    this.unsubscribe(selectedExtRefElement);
+                    this.unsubscribeExtRef(selectedExtRefElement);
                     // deselect in UI
                     // list item is left selected to allow further subscription
                     this.currentSelectedFcdaElement = undefined;
