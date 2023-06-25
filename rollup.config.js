@@ -1,5 +1,6 @@
 import nodeResolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
+import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
 import copy from 'rollup-plugin-copy';
 
 export default {
@@ -19,5 +20,6 @@ export default {
     copy({
       targets: [{ src: 'demo/index.deploy.html', dest: 'dist' }],
     }),
+    importMetaAssets(),
   ],
 };
