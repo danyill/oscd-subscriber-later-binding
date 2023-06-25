@@ -822,7 +822,7 @@ describe('goose', () => {
           await plugin.updateComplete;
 
           await resetMouseState();
-          await timeout(standardWait); // rendering ?
+          await timeout(standardWait * 1.5); // rendering ?
           await visualDiff(plugin, testName(this));
         });
 

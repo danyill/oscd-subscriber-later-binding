@@ -109,10 +109,7 @@ See <<Development>>
 
 === As part of the OpenSCD distribution
 
-TIP: OpenSCD is transitioning to use of `open-scd-core`, these instructions will require updating at the end of this transition.
-
-// TODO: Is this fixed yet?
-IMPORTANT: Currently the reactive update cycle in OpenSCD doesn't optimally support this plugin's behaviour -- it scrolls to the top of lists after a subscription is made or one of the window panes may go blank. This is a known issue and under investigation.
+NOTE: OpenSCD is transitioning to use of `open-scd-core`, these instructions will require updating at the end of this transition.
 
 . Open your OpenSCD distribution or use {uri-openscd-app}.
 
