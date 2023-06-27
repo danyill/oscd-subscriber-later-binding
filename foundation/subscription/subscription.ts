@@ -72,7 +72,7 @@ function sameAttributeValue(
  * @param rightElement       - The Right Element to check.
  * @param rightAttributeName - The name of the attribute (right) to check.
  */
-export function sameAttributeValueDiffName(
+function sameAttributeValueDiffName(
   leftElement: Element | undefined,
   leftAttributeName: string,
   rightElement: Element | undefined,
@@ -328,7 +328,7 @@ function instantiatedSupervisionsCount(
  * @param controlBlock The GOOSE or SMV message element
  * @returns The max number of LN instances with supervision allowed
  */
-export function maxSupervisions(
+function maxSupervisions(
   subscriberIED: Element,
   controlBlock: Element
 ): number {
@@ -380,7 +380,7 @@ function isSupervisionAllowed(
  * @param subscriberIED The subscriber IED
  * @returns The LN instance or null if no LN instance could be found or created
  */
-export function findOrCreateAvailableLNInst(
+function findOrCreateAvailableLNInst(
   controlBlock: Element,
   subscriberIED: Element,
   supervisionType: string
@@ -742,7 +742,7 @@ export function getExtRefControlBlockPath(extRefElement: Element): string {
   }${srcLDInst} / ${srcLNClass} ${srcCBName}`;
 }
 
-export function findFCDAs(extRef: Element): Element[] {
+function findFCDAs(extRef: Element): Element[] {
   if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) return [];
 
   const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
