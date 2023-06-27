@@ -1647,7 +1647,7 @@ describe('goose', () => {
       // Doesn't seem to be testable by a visual test -- unsure why
       const tooltip = fcda?.getAttribute('title');
 
-      expect(tooltip).to.be.equal('CDC: DPC\nBasic Type: Enum');
+      expect(tooltip).to.be.equal('CDC: DPC\nBasic Type: Dbpos');
     });
 
     it('for an ExtRef with pXX attrs shows a tooltip with cdc and basic type', async function () {
@@ -1677,7 +1677,7 @@ describe('goose', () => {
       // Doesn't seem to be testable by a visual test -- unsure why
       const tooltip = extref?.getAttribute('title');
 
-      expect(tooltip).to.be.equal(`CDC: DPC\nBasic Type: Enum`);
+      expect(tooltip).to.be.equal(`CDC: DPC\nBasic Type: Dbpos`);
     });
 
     it('changes to subscriber view', async function () {

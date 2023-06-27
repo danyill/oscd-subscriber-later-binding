@@ -11,7 +11,13 @@ import { msg } from '@lit/localize';
 import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { unsubscribe } from '@openenergytools/scl-lib';
+import {
+  doesFcdaMeetExtRefRestrictions,
+  extRefTypeRestrictions,
+  fcdaBaseTypes,
+  subscribe,
+  unsubscribe,
+} from '@openenergytools/scl-lib';
 
 import '@material/mwc-fab';
 import '@material/mwc-icon';
@@ -26,12 +32,10 @@ import '@material/mwc-textfield';
 import {
   Edit,
   EditEvent,
-  Insert,
   isInsert,
   isRemove,
   isUpdate,
   newEditEvent,
-  Remove,
 } from '@openscd/open-scd-core';
 
 import type { Icon } from '@material/mwc-icon';
@@ -46,7 +50,6 @@ import { identity } from './foundation/identities/identity.js';
 import { selector } from './foundation/identities/selector.js';
 import {
   checkEditionSpecificRequirements,
-  fcdaSpecification,
   findControlBlock,
   findFCDA,
   getCbReference,
@@ -58,11 +61,9 @@ import {
   getOrderedIeds,
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
-  inputRestriction,
   instantiateSubscriptionSupervision,
   isPartiallyConfigured,
   isSubscribed,
-  updateExtRefElement,
   canRemoveSubscriptionSupervision,
   removeSubscriptionSupervision,
 } from './foundation/subscription/subscription.js';
@@ -88,18 +89,22 @@ type controlTagType = 'SampledValueControl' | 'GSEControl';
 type iconLookup = Record<controlTagType, SVGTemplateResult>;
 
 type fcdaInfo = {
-  spec: {
-    cdc: string | null;
-    bType: string | null;
-  };
+  spec:
+    | {
+        cdc: string;
+        bType?: string | undefined;
+      }
+    | undefined;
   desc: fcdaDesc;
 };
 
 type extRefInfo = {
-  spec: {
-    cdc: string | null;
-    bType: string | null;
-  };
+  spec:
+    | {
+        cdc: string;
+        bType?: string | undefined;
+      }
+    | undefined;
 };
 
 const iconControlLookup: iconLookup = {
@@ -107,7 +112,10 @@ const iconControlLookup: iconLookup = {
   GSEControl: gooseIcon,
 };
 
-const serviceTypeLookup = {
+interface ServiceTypeLookup {
+  [key: string]: 'GOOSE' | 'SMV';
+}
+const serviceTypeLookup: ServiceTypeLookup = {
   GSEControl: 'GOOSE',
   SampledValueControl: 'SMV',
 };
@@ -706,7 +714,7 @@ export default class SubscriberLaterBinding extends LitElement {
   private getFcdaInfo(fcdaElement: Element): fcdaInfo {
     const id = `${identity(fcdaElement)}`;
     if (!this.fcdaInfo.has(id)) {
-      const spec = fcdaSpecification(fcdaElement);
+      const spec = fcdaBaseTypes(fcdaElement);
       const desc = getFcdaInstDesc(fcdaElement);
       this.fcdaInfo.set(id, { spec, desc });
     }
@@ -716,7 +724,7 @@ export default class SubscriberLaterBinding extends LitElement {
   private getExtRefInfo(extRefElement: Element): extRefInfo {
     const id = `${identity(extRefElement)}`;
     if (!this.extRefInfo.has(id)) {
-      const spec = inputRestriction(extRefElement);
+      const spec = extRefTypeRestrictions(extRefElement);
       this.extRefInfo.set(id, { spec });
     }
     return this.extRefInfo.get(id)!;
@@ -868,22 +876,27 @@ export default class SubscriberLaterBinding extends LitElement {
    */
   private subscribe(
     extRef: Element,
-    controlElement: Element,
-    fcdaElement: Element
+    controlBlock: Element,
+    fcda: Element
   ): void {
-    const updateEdit = updateExtRefElement(extRef, controlElement, fcdaElement);
+    // need to remove invalid existing subscription
+    if (isSubscribed(extRef) || isPartiallyConfigured(extRef))
+      this.dispatchEvent(
+        newEditEvent(unsubscribe([extRef], { ignoreSupervision: true }))
+      );
 
-    let supervisionActions: (Insert | Remove)[] = [];
+    const edits: Edit[] = [];
+
+    edits.push(subscribe([{ sink: extRef, source: { fcda, controlBlock } }]));
 
     if (!this.notChangeSupervisionLNs) {
       const subscriberIed = extRef.closest('IED')!;
-      supervisionActions = instantiateSubscriptionSupervision(
-        controlElement,
-        subscriberIed
+      edits.push(
+        instantiateSubscriptionSupervision(controlBlock, subscriberIed)
       );
     }
 
-    this.dispatchEvent(newEditEvent([updateEdit, ...supervisionActions]));
+    this.dispatchEvent(newEditEvent(edits));
   }
 
   public getSubscribedExtRefElements(): Element[] {
@@ -1095,7 +1108,7 @@ export default class SubscriberLaterBinding extends LitElement {
       ?twoline=${!!desc || supervisionNode !== null}
       class="extref"
       data-extref="${identity(extRefElement)}"
-      title="${spec.cdc && spec.bType
+      title="${spec && spec.cdc && spec.bType
         ? `CDC: ${spec.cdc ?? '?'}\nBasic Type: ${spec.bType ?? '?'}`
         : ''}"
     >
@@ -1117,50 +1130,51 @@ export default class SubscriberLaterBinding extends LitElement {
     </mwc-list-item>`;
   }
 
-  /**
-   * Check data consistency of source `FCDA` and sink `ExtRef` based on
-   * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
-   * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.
-   * In case
-   *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
-   *  - no CDC or bType can be extracted, do not allow subscribing
-   *
-   * @param extRef - The `ExtRef` Element to check against
-   * @param fcdaElement - The SCL `FCDA` element within the DataSet
-   * @param controlElement - The control element associated with the `FCDA` `DataSet`
-   */
-  nonMatchingExtRefElement(
-    extRef: Element | undefined,
-    fcdaElement: Element | undefined,
-    controlElement: Element | undefined
-  ): boolean {
-    if (!extRef) return false;
-    // Vendor does not provide data for the check
-    if (
-      !extRef.hasAttribute('pLN') ||
-      !extRef.hasAttribute('pDO') ||
-      !extRef.hasAttribute('pDA') ||
-      !extRef.hasAttribute('pServT')
-    )
-      return false;
+  // /**
+  //  * Check data consistency of source `FCDA` and sink `ExtRef` based on
+  //  * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
+  //  * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.
+  //  * In case
+  //  *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
+  //  *  - no CDC or bType can be extracted, do not allow subscribing
+  //  *
+  //  * @param extRef - The `ExtRef` Element to check against
+  //  * @param fcdaElement - The SCL `FCDA` element within the DataSet
+  //  * @param controlElement - The control element associated with the `FCDA` `DataSet`
+  //  */
+  // nonMatchingExtRefElement(
+  //   extRef: Element | undefined,
+  //   fcdaElement: Element | undefined,
+  //   controlElement: Element | undefined
+  // ): boolean {
+  //   if (!extRef) return false;
+  //   // Vendor does not provide data for the check
+  //   if (
+  //     !extRef.hasAttribute('pLN') ||
+  //     !extRef.hasAttribute('pDO') ||
+  //     !extRef.hasAttribute('pDA') ||
+  //     !extRef.hasAttribute('pServT')
+  //   )
+  //     return false;
 
-    // Not ready for any kind of subscription
-    if (!fcdaElement) return true;
+  //   // Not ready for any kind of subscription
+  //   if (!fcdaElement) return true;
 
-    const fcda = this.getFcdaInfo(fcdaElement).spec;
-    const input = this.getExtRefInfo(extRef).spec;
+  //   const fcda = this.getFcdaInfo(fcdaElement).spec;
+  //   const input = this.getExtRefInfo(extRef).spec;
 
-    if (fcda.cdc === null && input.cdc === null) return true;
-    if (fcda.bType === null && input.bType === null) return true;
-    if (
-      serviceTypeLookup[
-        <'GSEControl' | 'SampledValueControl'>controlElement!.tagName
-      ] !== extRef.getAttribute('pServT')
-    )
-      return true;
+  //   if (fcda && fcda.cdc === null && input && input.cdc === null) return true;
+  //   if (fcda && fcda.bType === null && input && input.bType === null)
+  //     return true;
+  //   if (
+  //     serviceTypeLookup[
+  //       <'GSEControl' | 'SampledValueControl'>controlElement!.tagName
+  //     ] !== extRef.getAttribute('pServT')
+  //   )
+  //     return true;
 
-    return fcda.cdc !== input.cdc || fcda.bType !== input.bType;
-  }
+  //   return fcda?.cdc !== input?.cdc || fcda?.bType !== input?.bType;
+  // }
 
   private isFcdaDisabled(
     fcdaElement: Element,
@@ -1172,10 +1186,11 @@ export default class SubscriberLaterBinding extends LitElement {
     const isFcdo = !fcdaElement.getAttribute('daName');
     const isPreconfiguredNotMatching =
       this.subscriberView &&
-      this.nonMatchingExtRefElement(
-        this.currentSelectedExtRefElement,
+      !!this.currentSelectedExtRefElement &&
+      !doesFcdaMeetExtRefRestrictions(
+        this.currentSelectedExtRefElement!,
         fcdaElement,
-        controlElement
+        serviceTypeLookup[this.controlTag]
       );
 
     const disabledFcdo =
@@ -1201,10 +1216,11 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-data-objects': !fcdaElement.getAttribute('daName'),
       'show-pxx-mismatch':
         this.subscriberView &&
-        this.nonMatchingExtRefElement(
-          this.currentSelectedExtRefElement,
+        !!this.currentSelectedExtRefElement &&
+        !doesFcdaMeetExtRefRestrictions(
+          this.currentSelectedExtRefElement!,
           fcdaElement,
-          controlElement
+          serviceTypeLookup[this.controlTag]
         ),
     };
 
@@ -1221,8 +1237,8 @@ export default class SubscriberLaterBinding extends LitElement {
       class="fcda ${classMap(filterClasses)}"
       data-control="${identity(controlElement)}"
       data-fcda="${identity(fcdaElement)}"
-      title="CDC: ${spec.cdc ?? '?'}
-Basic Type: ${spec.bType}"
+      title="CDC: ${spec?.cdc ?? '?'}
+Basic Type: ${spec?.bType ?? '?'}"
     >
       <span>${getFcdaOrExtRefTitle(fcdaElement)} </span>
       <span slot="secondary"> ${fcdaDesc}</span>
@@ -1657,11 +1673,13 @@ Basic Type: ${spec.bType}"
               !findFCDAs(extRefElement).find(x => x !== undefined);
             const { spec } = this.getExtRefInfo(extRefElement);
             const desc = getDescriptionAttribute(extRefElement);
-            const disabledExtRef = this.nonMatchingExtRefElement(
-              extRefElement,
-              this.currentSelectedFcdaElement,
-              this.currentSelectedControlElement
-            );
+            const disabledExtRef =
+              this.currentSelectedFcdaElement &&
+              !doesFcdaMeetExtRefRestrictions(
+                extRefElement,
+                this.currentSelectedFcdaElement,
+                serviceTypeLookup[this.controlTag]
+              );
             const iedName = extRefElement.closest('IED')!.getAttribute('name');
 
             return html`<mwc-list-item
@@ -1672,7 +1690,7 @@ Basic Type: ${spec.bType}"
               ?twoline=${!!desc}
               class="extref ${disabledExtRef ? 'show-pxx-mismatch' : ''}"
               data-extref="${identity(extRefElement)}"
-              title="${spec.cdc && spec.bType
+              title="${spec && spec.cdc && spec.bType
                 ? `CDC: ${spec.cdc ?? '?'}\nBasic Type: ${spec.bType ?? '?'}`
                 : ''}"
             >
@@ -2008,13 +2026,13 @@ Basic Type: ${spec.bType}"
       : null;
 
     const specExtRefText =
-      specExtRef.cdc || specExtRef.bType
+      specExtRef?.cdc || specExtRef?.bType
         ? `ExtRef: CDC: ${specExtRef.cdc ?? '?'}, Basic Type: ${
             specExtRef.bType ?? '?'
           }`
         : '';
     const specFcdaText =
-      specFcda && (specFcda.cdc || specFcda.bType)
+      specFcda?.cdc || specFcda?.bType
         ? `FCDA: CDC: ${specFcda.cdc ?? '?'}, Basic Type: ${
             specFcda.bType ?? '?'
           }`
