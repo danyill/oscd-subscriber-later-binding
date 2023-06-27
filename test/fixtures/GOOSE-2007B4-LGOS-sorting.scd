@@ -553,7 +553,7 @@
 		</DOType>
 		<DOType cdc="DPC" id="OpenSCD_DPC">
 			<DA name="origin" bType="Struct" dchg="true" fc="ST" type="OpenSCD_Originator"/>
-			<DA name="stVal" bType="Enum" dchg="true" fc="ST" type="BehaviourModeKind"/>
+			<DA name="stVal" bType="Dbpos" dchg="true" fc="ST"/>
 			<DA name="q" bType="Quality" qchg="true" fc="ST"/>
 			<DA name="t" bType="Timestamp" fc="ST"/>
 			<DA name="ctlModel" bType="Enum" fc="CF" type="CtlModelKind">
