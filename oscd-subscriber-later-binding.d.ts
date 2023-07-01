@@ -29,31 +29,36 @@ declare enum ExtRefSortOrder {
     Description = 2,
     MappedReference = 3
 }
+/**
+ * A plugin to allow subscriptions of GOOSE and SV using the
+ * later binding method as described in IEC 61850-6 Ed 2.1 providing
+ * both a publisher and subscriber-oriented view.
+ */
 export default class SubscriberLaterBinding extends LitElement {
     doc: XMLDocument;
     docName: string;
     editCount: number;
     controlTag: controlTagType;
     subscriberView: boolean;
-    hideSubscribed: boolean;
-    hideNotSubscribed: boolean;
-    hideDataObjects: boolean;
-    hidePreconfiguredNotMatching: boolean;
-    notAutoIncrement: boolean;
-    notChangeSupervisionLNs: boolean;
-    hideBound: boolean;
-    hideNotBound: boolean;
+    filterOutSubscribed: boolean;
+    filterOutNotSubscribed: boolean;
+    filterOutDataObjects: boolean;
+    filterOutPreconfiguredUnmatched: boolean;
+    autoIncrement: boolean;
+    ignoreSupervisions: boolean;
+    filterOutBound: boolean;
+    filterOutNotBound: boolean;
     strictServiceTypes: boolean;
     sortExtRefPublisher: ExtRefSortOrder;
     sortExtRefSubscriber: ExtRefSortOrder;
     sortFcda: FcdaSortOrder;
-    filterFcdaRegex: RegExp;
-    filterExtRefPublisherRegex: RegExp;
-    filterExtRefSubscriberRegex: RegExp;
-    currentSelectedControlElement: Element | undefined;
-    currentSelectedFcdaElement: Element | undefined;
-    currentIedElement: Element | undefined;
-    currentSelectedExtRefElement: Element | undefined;
+    searchFcdaRegex: RegExp;
+    searchExtRefPublisherRegex: RegExp;
+    searchExtRefSubscriberRegex: RegExp;
+    selectedControl: Element | undefined;
+    selectedFCDA: Element | undefined;
+    selectedIED: Element | undefined;
+    selectedExtRef: Element | undefined;
     private controlBlockFcdaInfo;
     private fcdaInfo;
     private extRefInfo;
@@ -87,21 +92,90 @@ export default class SubscriberLaterBinding extends LitElement {
     extRefListSubscriberSelectedUI?: ListItem;
     fcdaListSelectedUI?: ListItem;
     constructor();
+    /**
+     * Updates caching of control blocks, used FCDAs and supervision LNs.
+     * Done through even listening to all menu plugins to use events and be able
+     * to expect caching to be updated.
+     * @param event - `oscd-edit` event.
+     * @param when - 'before' or 'after' the event occurs.
+     */
     protected updateCaching(event: EditEvent, when: 'before' | 'after'): void;
+    /**
+     * Settings are stored in a single JSON value tagged against this plugin
+     * for simplicity.
+     */
     protected storeSettings(): void;
+    /**
+     * Restore settings from local storage, applying appropriate defaults
+     * if not set.
+     */
     protected restoreSettings(): void;
+    /**
+     * Retrieve matching control blocks in the SCL document to allow UI display
+     * In the subscriber view show all control blocks, in the publisher view
+     * only for "other IEDs".
+     * @param controlTag - The SCL control block element tagName string.
+     * @returns An array of control block elements for processing.
+     */
     private getControlElements;
+    /**
+     * Count the number of times an FCDA is used in an ExtRef to report
+     * subscription count in the UI.
+     * @param fcda - SCL FCDA element.
+     * @param control - SCL control block, `GSEControl` or `SampledValueControl`.
+     * @returns
+     */
     private getExtRefCount;
+    /**
+     * Build an initial count of how often each FCDA is used in an ExtRef.
+     * This is much more efficient than building the count and regenerating it
+     * piecemeal and is an optimisation for large SCL files.
+     * @returns nothing - cached on the class variable `controlBlockFcdaInfo`.
+     */
     private buildExtRefCount;
+    /**
+     * Store information about each FCDA, its specification (CDC and basic type)
+     * and also how many times it is used in an ExtRef.
+     * @param fcda - SCL FCDA element.
+     * @returns nothing - cached on the class variable `fcdaInfo`.
+     */
     private getFcdaInfo;
+    /**
+     * Store information about each ExtRef, CDC and basic type.
+     * @param extRef - SCL ExtREf element.
+     * @returns nothing - stored against class variable `extRefInfo`.
+     */
     private getExtRefInfo;
+    /**
+     * Generates a searchable string for the list search for a given ExtRef element
+     * Intended to allow an "if you can see it, you can search it" approach.
+     *
+     * @param extRef - SCL ExtRef element.
+     * @returns a string concatenating key searchable field values.
+     */
     private getExtRefSubscriberSearchString;
+    /**
+     * Generates a searchable string for the list search for a given FCDA with
+     * a control block.
+     * Intended to allow an "if you can see it, you can search it" approach.
+     *
+     * @param control - SCL control block element.
+     * @param fcda - SCL FCDA element.
+     * @returns a string concatenating key searchable field values.
+     */
     private getFcdaSearchString;
+    /**
+     * Reset all caching for a UI change or a new document
+     */
     protected resetCaching(): void;
+    /**
+     * Reset search fields for a UI change
+     */
     resetSearchFields(): void;
     protected updated(changedProperties: PropertyValues): void;
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.
+     * Supervisions are handled independently as this is a setting option.
      *
      * @param extRef - The Ext Ref Element to clean from attributes.
      */
@@ -113,43 +187,135 @@ export default class SubscriberLaterBinding extends LitElement {
      */
     private subscribe;
     getSubscribedExtRefElements(): Element[];
+    /**
+     * Retrieve ExtRefs which match current control block type settings in
+     * UI for display purposes.
+     * @param extRef - SCL ExtRef element
+     * @returns whether or not an ExtRef is viewable in the UI
+     */
     private isExtRefViewable;
+    /**
+     * Get document ExtRef elements available for subscription.
+     *
+     * @returns An Array of ExtRef SCL elements.
+     */
     getAvailableExtRefElements(): Element[];
-    private updateSupervision;
+    /**
+     * For a given supervision node, updates cache information.
+     * @param supLn - an SCL LN used for supervision, LGOS or LSVS.
+     * @param remove - whether a supervision is being removed.
+     * @returns - nothing. Updates cache values.
+     */
+    private updateSupervisionCache;
     private reCreateSupervisionCache;
+    /**
+     * Returns viewable ExtRefs for UI functions.
+     * @param ied - an SCL IED element.
+     * @returns - an Array of SCL ExtRefs.
+     */
     private getExtRefElementsByIED;
     private getCachedSupervision;
     private updateView;
     connectedCallback(): void;
     protected firstUpdated(): Promise<void>;
-    private renderSubscribedExtRefElement;
     /**
      * Check data consistency of source `FCDA` and sink `ExtRef` based on
      * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
-     * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.
+     * Consistent means `CDC` and `bType` of both ExtRef and FCDA are equal.
      * In case
      *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
-     *  - no CDC or bType can be extracted, do not allow subscribing
+     *  - no CDC or bType can be extracted, do not allow subscription
      *
      * @param extRef - The `ExtRef` Element to check against
-     * @param fcdaElement - The SCL `FCDA` element within the DataSet
-     * @param controlElement - The control element associated with the `FCDA` `DataSet`
+     * @param fcda - The SCL `FCDA` element within the DataSet
+     * @param control - The control element associated with the `FCDA` `DataSet`
      */
-    nonMatchingExtRefElement(extRef: Element | undefined, fcdaElement: Element | undefined, controlElement: Element | undefined): boolean;
+    nonMatchingExtRefElement(extRef: Element | undefined, fcda: Element | undefined, control: Element | undefined): boolean;
+    /**
+     * Check whether an FCDA should be shown as disabled in the UI. FCDAs are
+     * disabled if they are DO references, if they don't match preconfigured
+     * attributes.
+     *
+     * @param fcda - an SCL FCDA element.
+     * @param control - an SCL control block element.
+     * @param withFilter - whether to include current filter settings in assessment.
+     * @returns whether an FCDA should be shown as disabled.
+     */
     private isFcdaDisabled;
-    renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult;
+    /**
+     * Render a subscribed ExtRef element for the publisher view.
+     * @param extRef - an SCL ExtRef element.
+     * @returns - A Lit template result for rendering.
+     */
+    private renderSubscribedExtRefElement;
+    /**
+     * Render an FCDA element associated with a control block.
+     * @param control - an SCL control block GSEControl or SampledValueControl.
+     * @param fcda - an SCL FCDA element within a dataset.
+     * @returns A Lit template result for rendering.
+     */
+    renderFCDA(control: Element, fcda: Element): TemplateResult;
     renderFCDAListTitle(): TemplateResult;
     private sortFcdaSubscriberItems;
-    renderControlList(controlElements: Element[]): TemplateResult;
+    /**
+     * Render control blocks and their FCDAs.
+     * @param controls - an array of GSEControl or SampledValueControl elements.
+     * @returns - a Lit TemplateResult.
+     */
+    renderControlList(controls: Element[]): TemplateResult;
+    /**
+     * Render ExtRefs for publisher view which already have subscriptions.
+     * @returns - a Lit TemplateResult.
+     */
     private renderPublisherViewSubscribedExtRefs;
+    /**
+     * Render ExtRefs for publisher view which already have subscriptions.
+     * @returns - a Lit TemplateResult.
+     */
     private renderPublisherViewAvailableExtRefs;
+    /**
+     * In the publisher view renders the title and filter/settings icons
+     * for ExtRefs
+     * @returns - a Lit TemplateResult.
+     */
     private renderPublisherViewExtRefListTitle;
+    /**
+     * In the subscriber view renders the title and filter/settings icons
+     * for ExtRefs
+     * @returns - a Lit TemplateResult.
+     */
     private renderSubscriberViewExtRefListTitle;
+    /**
+     * Render an ExtRef element in the subscriber view.
+     * @param extRef - an SCL ExtREf element for later binding.
+     * @returns - a Lit TemplateResult.
+     */
     private renderSubscriberViewExtRef;
+    /**
+     * Render ExtRef elements in the subscriber view.
+     * @returns - a Lit TemplateResult.
+     */
     private renderSubscriberViewExtRefs;
+    /**
+     * Render ExtRef elements in either the publisher or subscriber view.
+     * @returns - a Lit TemplateResult.
+     */
     renderExtRefs(): TemplateResult;
+    /**
+     * Render UI button for switching between GSEControls and
+     * SampledValueControls.
+     * @returns - a Lit TemplateResult.
+     */
     renderControlTypeSelector(): TemplateResult;
+    /**
+     * Render FCDAs for publisher view.
+     * @returns - a Lit TemplateResult.
+     */
     renderPublisherFCDAs(): TemplateResult;
+    /**
+     * Render UI button for switching between publisher/subscriber.
+     * @returns - a Lit TemplateResult.
+     */
     renderSwitchView(): TemplateResult;
     render(): TemplateResult;
     static styles: import("lit").CSSResult;

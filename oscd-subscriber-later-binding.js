@@ -12047,22 +12047,33 @@ var ExtRefSortOrder;
     ExtRefSortOrder[ExtRefSortOrder["Description"] = 2] = "Description";
     ExtRefSortOrder[ExtRefSortOrder["MappedReference"] = 3] = "MappedReference";
 })(ExtRefSortOrder || (ExtRefSortOrder = {}));
+// This array must match the names of the above types as it used to
+// check if settings should be written to local storage.
+// There is no easy way to go from types to to an array of keys
+// see: https://github.com/Microsoft/TypeScript/issues/14419 for
+// requests for a custom transformer to achieve this
 const storedProperties = [
     'subscriberView',
     'controlTag',
-    'hideSubscribed',
-    'hideNotSubscribed',
-    'hideDataObjects',
-    'hidePreconfiguredNotMatching',
-    'notAutoIncrement',
-    'notChangeSupervisionLNs',
-    'hideBound',
-    'hideNotBound',
+    'filterOutSubscribed',
+    'filterOutUnsubscribed',
+    'filterOutDataObjects',
+    'filterOutPreconfiguredNotMatching',
+    'autoIncrement',
+    'ignoreSupervisions',
+    'filterOutBound',
+    'filterOutNotBound',
     'strictServiceTypes',
     'sortExtRefPublisher',
     'sortExtRefSubscriber',
     'sortFcda',
 ];
+/**
+ * Given an identity string prefixed with an IED name, remove the IED
+ * name and make more human readable by adding spaces around carets.
+ * @param idString
+ * @returns - an identity string without the iedName.
+ */
 function trimIdentityParent(idString) {
     return idString
         .split('>')
@@ -12070,6 +12081,15 @@ function trimIdentityParent(idString) {
         .slice(1)
         .join(' > ');
 }
+/**
+ * Sort ExtRefs according to an enumerated value allowing:
+ * data model, internal address, description or mapped refernece.
+ * Intended to be used with a sort function.
+ * @param sortSetting - An enumeration for the above.
+ * @param aExtRef - An SCL ExtRef element.
+ * @param bExtRef - An SCL ExtRef element.
+ * @returns a number.
+ */
 function sortExtRefItems(sortSetting, aExtRef, bExtRef) {
     var _a, _b, _c, _d;
     if (sortSetting === ExtRefSortOrder.InternalAddress)
@@ -12094,9 +12114,15 @@ function sortExtRefItems(sortSetting, aExtRef, bExtRef) {
     // data model order
     return 0;
 }
-function extRefPath(extRef) {
+/**
+ * Given an SCL element, returns an object reference up to the
+ * Logical Device.
+ * @param sclElement - an SCL  element.
+ * @returns a string.
+ */
+function objectReferenceInIed(sclElement) {
     var _a, _b;
-    const lN = (_a = extRef.closest('LN')) !== null && _a !== void 0 ? _a : extRef.closest('LN0');
+    const lN = (_a = sclElement.closest('LN')) !== null && _a !== void 0 ? _a : sclElement.closest('LN0');
     const lDevice = lN.closest('LDevice');
     const ldInst = lDevice.getAttribute('inst');
     const lnPrefix = (_b = lN.getAttribute('prefix')) !== null && _b !== void 0 ? _b : '';
@@ -12104,26 +12130,23 @@ function extRefPath(extRef) {
     const lnInst = lN.getAttribute('inst');
     return [ldInst, '/', lnPrefix, lnClass, lnInst].filter(a => !!a).join(' ');
 }
-function getLnTitle(childElement) {
-    var _a, _b;
-    if (!childElement)
-        return 'Unknown';
-    const lN = (_a = childElement.closest('LN')) !== null && _a !== void 0 ? _a : childElement.closest('LN0');
-    const lDevice = lN.closest('LDevice');
-    const ldInst = lDevice.getAttribute('inst');
-    const lnPrefix = (_b = lN.getAttribute('prefix')) !== null && _b !== void 0 ? _b : '';
-    const lnClass = lN.getAttribute('lnClass');
-    const lnInst = lN.getAttribute('inst');
-    return [ldInst, '/', lnPrefix, lnClass, lnInst]
-        .filter(a => a !== null)
-        .join(' ');
-}
-function getFilterRegex(searchText) {
+/**
+ * Creates a regular expression to allow case-insensitive searching of list
+ * items.
+ *
+ * * Supports globbing with * and
+ * * Supports quoting using both ' and " and is an AND-ing search which
+ *   narrows as further search text is added.
+ *
+ * @param searchExpression
+ * @returns a regular expression
+ */
+function getSearchRegex(searchExpression) {
     var _a;
-    if (searchText === '') {
+    if (searchExpression === '') {
         return /.*/i;
     }
-    const terms = (_a = searchText
+    const terms = (_a = searchExpression
         .replace(/[.+^${}()|[\]\\]/g, '\\$&')
         .trim()
         .match(/(?:[^\s"']+|['"][^'"]*["'])+/g)) !== null && _a !== void 0 ? _a : [];
@@ -12140,25 +12163,41 @@ function debounce(callback, delay = 100) {
         }, delay);
     };
 }
+/**
+ * A plugin to allow subscriptions of GOOSE and SV using the
+ * later binding method as described in IEC 61850-6 Ed 2.1 providing
+ * both a publisher and subscriber-oriented view.
+ */
 class SubscriberLaterBinding extends s$1 {
     constructor() {
         super();
-        this.filterFcdaRegex = /.*/i;
-        this.filterExtRefPublisherRegex = /.*/i;
-        this.filterExtRefSubscriberRegex = /.*/i;
+        this.searchFcdaRegex = /.*/i;
+        this.searchExtRefPublisherRegex = /.*/i;
+        this.searchExtRefSubscriberRegex = /.*/i;
         this.controlBlockFcdaInfo = new Map();
         this.fcdaInfo = new Map();
         this.extRefInfo = new Map();
         this.supervisionData = new Map();
+        // edits are processed to allow updating of cached values from
+        // menu plugins which provide manufacturer-specific functionality
+        // allowing e.g. .stVal and .q to be single-click mapped.
         // before edit occurs
         window.addEventListener('oscd-edit', event => this.updateCaching(event, 'before'), { capture: true });
         // after edit occurs
         window.addEventListener('oscd-edit', event => this.updateCaching(event, 'after'));
     }
+    /**
+     * Updates caching of control blocks, used FCDAs and supervision LNs.
+     * Done through even listening to all menu plugins to use events and be able
+     * to expect caching to be updated.
+     * @param event - `oscd-edit` event.
+     * @param when - 'before' or 'after' the event occurs.
+     */
     updateCaching(event, when) {
         // Infinity as 1 due to error type instantiation error
         // https://github.com/microsoft/TypeScript/issues/49280
         const flatEdits = [event.detail].flat(Infinity);
+        // ExtRef information will be regenerated as required, just remove it
         const handleExtRef = (extRef) => {
             if (!isSubscribed(extRef))
                 return;
@@ -12172,6 +12211,7 @@ class SubscriberLaterBinding extends s$1 {
                 this.controlBlockFcdaInfo.delete(controlBlockFcdaId);
             }
         };
+        // FCDA information will be regenerated as required, just remove it
         const handleFCDA = (fcda) => {
             this.fcdaInfo.delete(`${identity(fcda)}`);
         };
@@ -12192,13 +12232,11 @@ class SubscriberLaterBinding extends s$1 {
             else {
                 supLn = supElement.closest('LN');
             }
-            // always remove supervision data and allow it to be re-built as required
             if (supLn) {
-                // const hasCbRef = getSupervisionCbRef(supLn);
                 if (!remove)
-                    this.updateSupervision(supLn);
+                    this.updateSupervisionCache(supLn);
                 if (remove)
-                    this.updateSupervision(supLn, true);
+                    this.updateSupervisionCache(supLn, true);
             }
         };
         flatEdits.forEach(edit => {
@@ -12215,6 +12253,8 @@ class SubscriberLaterBinding extends s$1 {
                     handleExtRef(element);
                 if (element.tagName === 'FCDA')
                     handleFCDA(element);
+                // need to track before and after to ensure that appropriate values
+                // can be extracted
                 if (isSupervision(element) && when === 'before' && isRemove(edit))
                     handleSupervision(element, true);
                 if (isSupervision(element) && when === 'after' && !isRemove(edit))
@@ -12222,20 +12262,24 @@ class SubscriberLaterBinding extends s$1 {
             }
         });
     }
+    /**
+     * Settings are stored in a single JSON value tagged against this plugin
+     * for simplicity.
+     */
     storeSettings() {
         const storedConfiguration = {
             subscriberView: this.subscriberView,
             controlTag: this.switchControlTypeUI.on
                 ? 'GSEControl'
                 : 'SampledValueControl',
-            hideSubscribed: this.hideSubscribed,
-            hideNotSubscribed: this.hideNotSubscribed,
-            hideDataObjects: this.hideDataObjects,
-            hidePreconfiguredNotMatching: this.hidePreconfiguredNotMatching,
-            notAutoIncrement: this.notAutoIncrement,
-            notChangeSupervisionLNs: this.notChangeSupervisionLNs,
-            hideBound: this.hideBound,
-            hideNotBound: this.hideNotBound,
+            filterOutSubscribed: this.filterOutSubscribed,
+            filterOutNotSubscribed: this.filterOutNotSubscribed,
+            filterOutDataObjects: this.filterOutDataObjects,
+            filterOutPreconfiguredUnmatched: this.filterOutPreconfiguredUnmatched,
+            autoIncrement: this.autoIncrement,
+            ignoreSupervisions: this.ignoreSupervisions,
+            filterOutBound: this.filterOutBound,
+            filterOutNotBound: this.filterOutNotBound,
             strictServiceTypes: this.strictServiceTypes,
             sortExtRefPublisher: this.sortExtRefPublisher,
             sortExtRefSubscriber: this.sortExtRefSubscriber,
@@ -12243,6 +12287,10 @@ class SubscriberLaterBinding extends s$1 {
         };
         localStorage.setItem('oscd-subscriber-later-binding', JSON.stringify(storedConfiguration));
     }
+    /**
+     * Restore settings from local storage, applying appropriate defaults
+     * if not set.
+     */
     restoreSettings() {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         const storedSettings = localStorage.getItem('oscd-subscriber-later-binding');
@@ -12251,16 +12299,18 @@ class SubscriberLaterBinding extends s$1 {
             : undefined;
         this.subscriberView = (_a = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.subscriberView) !== null && _a !== void 0 ? _a : false;
         this.controlTag = (_b = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.controlTag) !== null && _b !== void 0 ? _b : 'GSEControl';
-        this.hideSubscribed = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideSubscribed) || false;
-        this.hideNotSubscribed = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideNotSubscribed) || false;
-        this.hideDataObjects = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideDataObjects) || false;
-        this.hidePreconfiguredNotMatching =
-            (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hidePreconfiguredNotMatching) || false;
-        this.notAutoIncrement = (_c = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.notAutoIncrement) !== null && _c !== void 0 ? _c : false;
-        this.notChangeSupervisionLNs =
-            (_d = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.notChangeSupervisionLNs) !== null && _d !== void 0 ? _d : false;
-        this.hideBound = (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideBound) !== null && _e !== void 0 ? _e : false;
-        this.hideNotBound = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.hideNotBound) !== null && _f !== void 0 ? _f : false;
+        this.filterOutSubscribed =
+            (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutSubscribed) || false;
+        this.filterOutNotSubscribed =
+            (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutUnsubscribed) || false;
+        this.filterOutDataObjects =
+            (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutDataObjects) || false;
+        this.filterOutPreconfiguredUnmatched =
+            (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutPreconfiguredNotMatching) || false;
+        this.autoIncrement = (_c = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.autoIncrement) !== null && _c !== void 0 ? _c : true;
+        this.ignoreSupervisions = (_d = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.ignoreSupervisions) !== null && _d !== void 0 ? _d : false;
+        this.filterOutBound = (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutBound) !== null && _e !== void 0 ? _e : false;
+        this.filterOutNotBound = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutNotBound) !== null && _f !== void 0 ? _f : false;
         this.strictServiceTypes = (_g = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.strictServiceTypes) !== null && _g !== void 0 ? _g : false;
         this.sortExtRefPublisher =
             (_h = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefPublisher) !== null && _h !== void 0 ? _h : ExtRefSortOrder.DataModel;
@@ -12268,30 +12318,46 @@ class SubscriberLaterBinding extends s$1 {
             (_j = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefSubscriber) !== null && _j !== void 0 ? _j : ExtRefSortOrder.DataModel;
         this.sortFcda = (_k = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortFcda) !== null && _k !== void 0 ? _k : FcdaSortOrder.DataModel;
     }
+    /**
+     * Retrieve matching control blocks in the SCL document to allow UI display
+     * In the subscriber view show all control blocks, in the publisher view
+     * only for "other IEDs".
+     * @param controlTag - The SCL control block element tagName string.
+     * @returns An array of control block elements for processing.
+     */
     getControlElements(controlTag) {
         if (this.doc) {
             return Array.from(this.doc.querySelectorAll(`LN0 > ${controlTag}`)).filter(control => {
                 var _a;
                 return !this.subscriberView ||
-                    !this.currentSelectedExtRefElement ||
-                    control.closest('IED') !==
-                        ((_a = this.currentSelectedExtRefElement) === null || _a === void 0 ? void 0 : _a.closest('IED'));
+                    !this.selectedExtRef ||
+                    control.closest('IED') !== ((_a = this.selectedExtRef) === null || _a === void 0 ? void 0 : _a.closest('IED'));
             });
         }
         return [];
     }
-    getExtRefCount(fcdaElement, controlElement) {
-        const controlBlockFcdaId = `${identity(controlElement)} ${identity(fcdaElement)}`;
+    /**
+     * Count the number of times an FCDA is used in an ExtRef to report
+     * subscription count in the UI.
+     * @param fcda - SCL FCDA element.
+     * @param control - SCL control block, `GSEControl` or `SampledValueControl`.
+     * @returns
+     */
+    getExtRefCount(fcda, control) {
+        const controlBlockFcdaId = `${identity(control)} ${identity(fcda)}`;
         if (!this.controlBlockFcdaInfo.has(controlBlockFcdaId)) {
-            const extRefCount = getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, fcdaElement, controlElement, true // TODO: do we need this?
+            const extRefCount = getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, fcda, control, true // TODO: do we need this?
             ).length;
             this.controlBlockFcdaInfo.set(controlBlockFcdaId, extRefCount);
-            // this.controlBlockFcdaInfo = new Map(this.controlBlockFcdaInfo);
         }
         return this.controlBlockFcdaInfo.get(controlBlockFcdaId);
     }
-    // This does the initial build of the ExtRef count is and is targeting
-    // high performance on large files
+    /**
+     * Build an initial count of how often each FCDA is used in an ExtRef.
+     * This is much more efficient than building the count and regenerating it
+     * piecemeal and is an optimisation for large SCL files.
+     * @returns nothing - cached on the class variable `controlBlockFcdaInfo`.
+     */
     buildExtRefCount() {
         if (!this.doc)
             return;
@@ -12333,10 +12399,10 @@ class SubscriberLaterBinding extends s$1 {
                 });
             }
         });
-        // get all document extrefs
+        // get all later binding ExtRefs
         const extRefs = Array.from(this.doc.querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
          :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`)).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
-        // match the extrefs
+        // match the ExtRefs
         extRefs.forEach(extRef => {
             const extRefMatcher = [
                 'iedName',
@@ -12359,23 +12425,41 @@ class SubscriberLaterBinding extends s$1 {
             }
         });
     }
-    getFcdaInfo(fcdaElement) {
-        const id = `${identity(fcdaElement)}`;
+    /**
+     * Store information about each FCDA, its specification (CDC and basic type)
+     * and also how many times it is used in an ExtRef.
+     * @param fcda - SCL FCDA element.
+     * @returns nothing - cached on the class variable `fcdaInfo`.
+     */
+    getFcdaInfo(fcda) {
+        const id = `${identity(fcda)}`;
         if (!this.fcdaInfo.has(id)) {
-            const spec = fcdaSpecification(fcdaElement);
-            const desc = getFcdaInstDesc(fcdaElement);
+            const spec = fcdaSpecification(fcda);
+            const desc = getFcdaInstDesc(fcda);
             this.fcdaInfo.set(id, { spec, desc });
         }
         return this.fcdaInfo.get(id);
     }
-    getExtRefInfo(extRefElement) {
-        const id = `${identity(extRefElement)}`;
+    /**
+     * Store information about each ExtRef, CDC and basic type.
+     * @param extRef - SCL ExtREf element.
+     * @returns nothing - stored against class variable `extRefInfo`.
+     */
+    getExtRefInfo(extRef) {
+        const id = `${identity(extRef)}`;
         if (!this.extRefInfo.has(id)) {
-            const spec = inputRestriction(extRefElement);
+            const spec = inputRestriction(extRef);
             this.extRefInfo.set(id, { spec });
         }
         return this.extRefInfo.get(id);
     }
+    /**
+     * Generates a searchable string for the list search for a given ExtRef element
+     * Intended to allow an "if you can see it, you can search it" approach.
+     *
+     * @param extRef - SCL ExtRef element.
+     * @returns a string concatenating key searchable field values.
+     */
     getExtRefSubscriberSearchString(extRef) {
         var _a;
         const ied = extRef.closest('IED');
@@ -12385,23 +12469,41 @@ class SubscriberLaterBinding extends s$1 {
         let subscriberFCDA;
         let extRefPathValue;
         let fcdaDesc;
+        let fcdaSpec;
         if (subscribed) {
             subscriberFCDA = findFCDAs$1(extRef).find(x => x !== undefined);
             extRefPathValue = `${extRef.getAttribute('iedName')} ${getFcdaOrExtRefTitle(extRef)}`;
-            fcdaDesc = subscriberFCDA
-                ? Object.values(this.getFcdaInfo(subscriberFCDA).desc)
-                    .flat(Infinity)
-                    .join('>')
-                : null;
+            if (subscriberFCDA) {
+                const fcdaInfo = this.getFcdaInfo(subscriberFCDA);
+                fcdaDesc = subscriberFCDA
+                    ? Object.values(fcdaInfo.desc)
+                        .flat(Infinity)
+                        .join('>')
+                    : null;
+                fcdaSpec = `${fcdaInfo.spec.cdc} ${fcdaInfo.spec.bType}`;
+            }
         }
         const extRefCBPath = getExtRefControlBlockPath(extRef);
-        return `${iedInfo} ${identity(extRef)} ${identity((_a = this.getCachedSupervision(extRef)) !== null && _a !== void 0 ? _a : null)} ${getDescriptionAttribute(extRef)} ${identity(subscriberFCDA !== null && subscriberFCDA !== void 0 ? subscriberFCDA : null)} ${fcdaDesc} ${extRefPathValue} ${extRefCBPath}`;
+        return `${iedInfo} ${identity(extRef)} ${identity((_a = this.getCachedSupervision(extRef)) !== null && _a !== void 0 ? _a : null)} ${getDescriptionAttribute(extRef)} ${identity(subscriberFCDA !== null && subscriberFCDA !== void 0 ? subscriberFCDA : null)} ${fcdaDesc !== null && fcdaDesc !== void 0 ? fcdaDesc : ''} ${fcdaSpec !== null && fcdaSpec !== void 0 ? fcdaSpec : ''} ${extRefPathValue} ${extRefCBPath}`;
     }
+    /**
+     * Generates a searchable string for the list search for a given FCDA with
+     * a control block.
+     * Intended to allow an "if you can see it, you can search it" approach.
+     *
+     * @param control - SCL control block element.
+     * @param fcda - SCL FCDA element.
+     * @returns a string concatenating key searchable field values.
+     */
     getFcdaSearchString(control, fcda) {
-        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${getFcdaOrExtRefTitle(fcda)} ${Object.values(this.getFcdaInfo(fcda).desc)
+        const fcdaInfo = this.getFcdaInfo(fcda);
+        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${fcdaInfo.spec.bType} ${fcdaInfo.spec.cdc} ${getFcdaOrExtRefTitle(fcda)} ${Object.values(fcdaInfo.desc)
             .flat(Infinity)
             .join(' ')}`;
     }
+    /**
+     * Reset all caching for a UI change or a new document
+     */
     resetCaching() {
         // reset caching
         this.controlBlockFcdaInfo = new Map();
@@ -12410,18 +12512,21 @@ class SubscriberLaterBinding extends s$1 {
         // reset supervision cache
         this.reCreateSupervisionCache();
     }
+    /**
+     * Reset search fields for a UI change
+     */
     resetSearchFields() {
         if (this.filterExtRefPublisherInputUI) {
             this.filterExtRefPublisherInputUI.value = '';
-            this.filterExtRefPublisherRegex = /.*/i;
+            this.searchExtRefPublisherRegex = /.*/i;
         }
         if (this.filterExtRefSubscriberInputUI) {
             this.filterExtRefSubscriberInputUI.value = '';
-            this.filterExtRefSubscriberRegex = /.*/i;
+            this.searchExtRefSubscriberRegex = /.*/i;
         }
         if (this.filterFcdaInputUI)
             this.filterFcdaInputUI.value = '';
-        this.filterFcdaRegex = /.*/i;
+        this.searchFcdaRegex = /.*/i;
     }
     updated(changedProperties) {
         super.updated(changedProperties);
@@ -12430,9 +12535,9 @@ class SubscriberLaterBinding extends s$1 {
         // https://github.com/openscd/open-scd-core/issues/92
         if (changedProperties.has('docName')) {
             this.resetSearchFields();
-            this.currentSelectedControlElement = undefined;
-            this.currentSelectedFcdaElement = undefined;
-            this.currentSelectedExtRefElement = undefined;
+            this.selectedControl = undefined;
+            this.selectedFCDA = undefined;
+            this.selectedExtRef = undefined;
             this.resetCaching();
             // deselect in UI
             if (this.extRefListSubscriberSelectedUI) {
@@ -12448,30 +12553,32 @@ class SubscriberLaterBinding extends s$1 {
             // re-attach anchors
             this.updateView();
         }
+        // update local storage for stored plugin settings
         const settingsUpdateRequired = Array.from(changedProperties.keys()).some(r => storedProperties.includes(r.toString()));
         if (settingsUpdateRequired)
             this.storeSettings();
     }
     /**
      * Unsubscribing means removing a list of attributes from the ExtRef Element.
+     * Supervisions are handled independently as this is a setting option.
      *
      * @param extRef - The Ext Ref Element to clean from attributes.
      */
     unsubscribeExtRef(extRef) {
         const editActions = [];
         editActions.push(...unsubscribe([extRef], { ignoreSupervision: true }));
-        let controlBlockElement;
+        let controlBlock;
         if (this.subscriberView) {
-            controlBlockElement = findControlBlock(extRef);
+            controlBlock = findControlBlock(extRef);
         }
         else {
-            controlBlockElement = this.currentSelectedControlElement;
+            controlBlock = this.selectedControl;
         }
-        if (!this.notChangeSupervisionLNs &&
+        if (!this.ignoreSupervisions &&
             canRemoveSubscriptionSupervision(extRef) &&
-            controlBlockElement) {
+            controlBlock) {
             const subscriberIed = extRef.closest('IED');
-            editActions.push(...removeSubscriptionSupervision(controlBlockElement, subscriberIed));
+            editActions.push(...removeSubscriptionSupervision(controlBlock, subscriberIed));
         }
         this.dispatchEvent(newEditEvent(editActions));
     }
@@ -12480,34 +12587,50 @@ class SubscriberLaterBinding extends s$1 {
      *
      * @param extRef - The ExtRef Element to add the attributes to.
      */
-    subscribe(extRef, controlElement, fcdaElement) {
-        const updateEdit = updateExtRefElement(extRef, controlElement, fcdaElement);
-        let supervisionActions = [];
-        if (!this.notChangeSupervisionLNs) {
+    subscribe(extRef, control, fcdaElement) {
+        const updateEdit = updateExtRefElement(extRef, control, fcdaElement);
+        let supEdits = [];
+        if (!this.ignoreSupervisions) {
             const subscriberIed = extRef.closest('IED');
-            supervisionActions = instantiateSubscriptionSupervision(controlElement, subscriberIed);
+            supEdits = instantiateSubscriptionSupervision(control, subscriberIed);
         }
-        this.dispatchEvent(newEditEvent([updateEdit, ...supervisionActions]));
+        this.dispatchEvent(newEditEvent([updateEdit, ...supEdits]));
     }
     getSubscribedExtRefElements() {
-        return getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, this.currentSelectedFcdaElement, this.currentSelectedControlElement, true);
+        return getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, this.selectedFCDA, this.selectedControl, true);
     }
-    isExtRefViewable(extRefElement) {
-        return (extRefElement.hasAttribute('intAddr') &&
+    /**
+     * Retrieve ExtRefs which match current control block type settings in
+     * UI for display purposes.
+     * @param extRef - SCL ExtRef element
+     * @returns whether or not an ExtRef is viewable in the UI
+     */
+    isExtRefViewable(extRef) {
+        return (extRef.hasAttribute('intAddr') &&
             ((!this.strictServiceTypes &&
-                !extRefElement.hasAttribute('serviceType') &&
-                !extRefElement.hasAttribute('pServT')) ||
-                extRefElement.getAttribute('serviceType') ===
+                !extRef.hasAttribute('serviceType') &&
+                !extRef.hasAttribute('pServT')) ||
+                extRef.getAttribute('serviceType') ===
                     serviceTypeLookup[this.controlTag] ||
-                extRefElement.getAttribute('pServT') ===
-                    serviceTypeLookup[this.controlTag]));
+                extRef.getAttribute('pServT') === serviceTypeLookup[this.controlTag]));
     }
+    /**
+     * Get document ExtRef elements available for subscription.
+     *
+     * @returns An Array of ExtRef SCL elements.
+     */
     getAvailableExtRefElements() {
-        return getExtRefElements(this.doc.getRootNode(), this.currentSelectedFcdaElement, true).filter(extRefElement => (!isSubscribed(extRefElement) ||
+        return getExtRefElements(this.doc.getRootNode(), this.selectedFCDA, true).filter(extRefElement => (!isSubscribed(extRefElement) ||
             !findFCDAs$1(extRefElement).find(x => x !== undefined)) &&
             this.isExtRefViewable(extRefElement));
     }
-    updateSupervision(supLn, remove = false) {
+    /**
+     * For a given supervision node, updates cache information.
+     * @param supLn - an SCL LN used for supervision, LGOS or LSVS.
+     * @param remove - whether a supervision is being removed.
+     * @returns - nothing. Updates cache values.
+     */
+    updateSupervisionCache(supLn, remove = false) {
         // supervision could be removed leaving no information in the document
         // if via an event
         if (!supLn.closest('IED'))
@@ -12525,12 +12648,16 @@ class SubscriberLaterBinding extends s$1 {
     }
     reCreateSupervisionCache() {
         this.supervisionData = new Map();
-        getUsedSupervisionInstances(this.doc, serviceTypeLookup[this.controlTag]).forEach(supervisionLN => this.updateSupervision(supervisionLN));
+        getUsedSupervisionInstances(this.doc, serviceTypeLookup[this.controlTag]).forEach(supervisionLN => this.updateSupervisionCache(supervisionLN));
     }
-    // eslint-disable-next-line class-methods-use-this
+    /**
+     * Returns viewable ExtRefs for UI functions.
+     * @param ied - an SCL IED element.
+     * @returns - an Array of SCL ExtRefs.
+     */
     getExtRefElementsByIED(ied) {
         return Array.from(ied.querySelectorAll(`:scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef,
-         :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`)).filter(extRefElement => this.isExtRefViewable(extRefElement));
+         :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`)).filter(extRef => this.isExtRefViewable(extRef));
     }
     getCachedSupervision(extRefElement) {
         const iedName = extRefElement.closest('IED').getAttribute('name');
@@ -12541,14 +12668,14 @@ class SubscriberLaterBinding extends s$1 {
         if (this.subscriberView) {
             this.filterMenuExtRefSubscriberUI.anchor = (this.filterMenuExtRefSubscriberButtonUI);
             this.filterMenuExtRefSubscriberUI.addEventListener('closed', () => {
-                this.hideBound = !(this.filterMenuExtRefSubscriberUI.index).has(0);
-                this.hideNotBound = !(this.filterMenuExtRefSubscriberUI.index).has(1);
+                this.filterOutBound = !(this.filterMenuExtRefSubscriberUI.index).has(0);
+                this.filterOutNotBound = !(this.filterMenuExtRefSubscriberUI.index).has(1);
                 this.strictServiceTypes = !(this.filterMenuExtRefSubscriberUI.index).has(2);
             });
             this.settingsMenuExtRefSubscriberUI.anchor = (this.settingsMenuExtRefSubscriberButtonUI);
             this.settingsMenuExtRefSubscriberUI.addEventListener('closed', () => {
-                this.notAutoIncrement = !(this.settingsMenuExtRefSubscriberUI.index).has(0);
-                this.notChangeSupervisionLNs = !(this.settingsMenuExtRefSubscriberUI.index).has(1);
+                this.autoIncrement = (this.settingsMenuExtRefSubscriberUI.index).has(0);
+                this.ignoreSupervisions = !(this.settingsMenuExtRefSubscriberUI.index).has(1);
             });
             this.sortMenuExtRefSubscriberUI.anchor = (this.sortMenuExtRefSubscriberButtonUI);
             this.sortMenuExtRefSubscriberUI.addEventListener('closed', () => {
@@ -12562,7 +12689,7 @@ class SubscriberLaterBinding extends s$1 {
             this.filterMenuExtRefPublisherUI.anchor = (this.filterMenuExtrefPublisherButtonUI);
             this.filterMenuExtRefPublisherUI.addEventListener('closed', () => {
                 this.strictServiceTypes = !(this.filterMenuExtRefPublisherUI.index).has(0);
-                this.hidePreconfiguredNotMatching = !(this.filterMenuExtRefPublisherUI.index).has(1);
+                this.filterOutPreconfiguredUnmatched = !(this.filterMenuExtRefPublisherUI.index).has(1);
             });
             this.sortMenuExtRefPublisherUI.anchor = (this.sortMenuExtRefPublisherButtonUI);
             this.sortMenuExtRefPublisherUI.addEventListener('closed', () => {
@@ -12573,22 +12700,23 @@ class SubscriberLaterBinding extends s$1 {
             });
             this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
             this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
-                this.notChangeSupervisionLNs = !(this.settingsMenuExtRefPublisherUI.index).has(0);
+                this.ignoreSupervisions = !(this.settingsMenuExtRefPublisherUI.index).has(0);
             });
         }
     }
     connectedCallback() {
         super.connectedCallback();
+        // restore settings from local storage on plugin loading
         this.restoreSettings();
     }
     async firstUpdated() {
         this.filterMenuFcdaUI.anchor = this.filterMenuFcdaButtonUI;
         this.filterMenuFcdaUI.addEventListener('closed', () => {
-            this.hideSubscribed = !this.filterMenuFcdaUI.index.has(0);
-            this.hideNotSubscribed = !this.filterMenuFcdaUI.index.has(1);
-            this.hideDataObjects = !this.filterMenuFcdaUI.index.has(2);
+            this.filterOutSubscribed = !(this.filterMenuFcdaUI.index).has(0);
+            this.filterOutNotSubscribed = !(this.filterMenuFcdaUI.index).has(1);
+            this.filterOutDataObjects = !(this.filterMenuFcdaUI.index).has(2);
             if (this.subscriberView)
-                this.hidePreconfiguredNotMatching = !(this.filterMenuFcdaUI.index).has(3);
+                this.filterOutPreconfiguredUnmatched = !(this.filterMenuFcdaUI.index).has(3);
         });
         this.sortMenuFcdaUI.anchor = this.sortMenuFcdaButtonUI;
         this.sortMenuFcdaUI.addEventListener('closed', () => {
@@ -12599,26 +12727,88 @@ class SubscriberLaterBinding extends s$1 {
         });
         this.updateView();
     }
-    // eslint-disable-next-line class-methods-use-this
-    renderSubscribedExtRefElement(extRefElement) {
+    /**
+     * Check data consistency of source `FCDA` and sink `ExtRef` based on
+     * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
+     * Consistent means `CDC` and `bType` of both ExtRef and FCDA are equal.
+     * In case
+     *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
+     *  - no CDC or bType can be extracted, do not allow subscription
+     *
+     * @param extRef - The `ExtRef` Element to check against
+     * @param fcda - The SCL `FCDA` element within the DataSet
+     * @param control - The control element associated with the `FCDA` `DataSet`
+     */
+    nonMatchingExtRefElement(extRef, fcda, control) {
+        if (!extRef)
+            return false;
+        // No data for the check
+        if (!extRef.hasAttribute('pLN') ||
+            !extRef.hasAttribute('pDO') ||
+            !extRef.hasAttribute('pDA') ||
+            !extRef.hasAttribute('pServT'))
+            return false;
+        // Not ready for any kind of subscription
+        if (!fcda)
+            return true;
+        const fcdaInfo = this.getFcdaInfo(fcda).spec;
+        const inputInfo = this.getExtRefInfo(extRef).spec;
+        if (fcdaInfo.cdc === null && inputInfo.cdc === null)
+            return true;
+        if (fcdaInfo.bType === null && inputInfo.bType === null)
+            return true;
+        if (serviceTypeLookup[control.tagName] !== extRef.getAttribute('pServT'))
+            return true;
+        return fcdaInfo.cdc !== inputInfo.cdc || fcdaInfo.bType !== inputInfo.bType;
+    }
+    /**
+     * Check whether an FCDA should be shown as disabled in the UI. FCDAs are
+     * disabled if they are DO references, if they don't match preconfigured
+     * attributes.
+     *
+     * @param fcda - an SCL FCDA element.
+     * @param control - an SCL control block element.
+     * @param withFilter - whether to include current filter settings in assessment.
+     * @returns whether an FCDA should be shown as disabled.
+     */
+    isFcdaDisabled(fcda, control, withFilter = false) {
+        // If daName is missing, we have an FCDO which is not currently supported
+        // TODO: Remove this and actually support FCDOs
+        const isFcdo = !fcda.getAttribute('daName');
+        const isPreconfiguredNotMatching = this.subscriberView &&
+            this.nonMatchingExtRefElement(this.selectedExtRef, fcda, control);
+        const disabledFcdo = (isFcdo && !withFilter) ||
+            (withFilter && isFcdo && this.filterOutDataObjects);
+        const disabledPreconfigured = (isPreconfiguredNotMatching && !withFilter) ||
+            (withFilter &&
+                isPreconfiguredNotMatching &&
+                this.filterOutPreconfiguredUnmatched);
+        return disabledFcdo || disabledPreconfigured;
+    }
+    /**
+     * Render a subscribed ExtRef element for the publisher view.
+     * @param extRef - an SCL ExtRef element.
+     * @returns - A Lit template result for rendering.
+     */
+    renderSubscribedExtRefElement(extRef) {
         var _a, _b;
-        const supervisionNode = getExistingSupervision(extRefElement);
-        const { spec } = this.getExtRefInfo(extRefElement);
-        const desc = getDescriptionAttribute(extRefElement);
-        const iedName = extRefElement.closest('IED').getAttribute('name');
+        const supervisionNode = getExistingSupervision(extRef);
+        const { spec } = this.getExtRefInfo(extRef);
+        const desc = getDescriptionAttribute(extRef);
+        const iedName = extRef.closest('IED').getAttribute('name');
         return x `<mwc-list-item
       graphic="large"
       ?hasMeta=${supervisionNode !== null}
       ?twoline=${!!desc || supervisionNode !== null}
       class="extref"
-      data-extref="${identity(extRefElement)}"
+      data-extref="${identity(extRef)}"
       title="${spec.cdc && spec.bType
             ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             : ''}"
     >
       <span
-        >${iedName} > ${extRefPath(extRefElement)}:
-        ${extRefElement.getAttribute('intAddr')}
+        >${iedName} > ${objectReferenceInIed(extRef)}:
+        ${extRef.getAttribute('intAddr')}
       </span>
       <span slot="secondary"
         >${desc}${supervisionNode !== null
@@ -12634,64 +12824,23 @@ class SubscriberLaterBinding extends s$1 {
     </mwc-list-item>`;
     }
     /**
-     * Check data consistency of source `FCDA` and sink `ExtRef` based on
-     * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
-     * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.
-     * In case
-     *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
-     *  - no CDC or bType can be extracted, do not allow subscribing
-     *
-     * @param extRef - The `ExtRef` Element to check against
-     * @param fcdaElement - The SCL `FCDA` element within the DataSet
-     * @param controlElement - The control element associated with the `FCDA` `DataSet`
+     * Render an FCDA element associated with a control block.
+     * @param control - an SCL control block GSEControl or SampledValueControl.
+     * @param fcda - an SCL FCDA element within a dataset.
+     * @returns A Lit template result for rendering.
      */
-    nonMatchingExtRefElement(extRef, fcdaElement, controlElement) {
-        if (!extRef)
-            return false;
-        // Vendor does not provide data for the check
-        if (!extRef.hasAttribute('pLN') ||
-            !extRef.hasAttribute('pDO') ||
-            !extRef.hasAttribute('pDA') ||
-            !extRef.hasAttribute('pServT'))
-            return false;
-        // Not ready for any kind of subscription
-        if (!fcdaElement)
-            return true;
-        const fcda = this.getFcdaInfo(fcdaElement).spec;
-        const input = this.getExtRefInfo(extRef).spec;
-        if (fcda.cdc === null && input.cdc === null)
-            return true;
-        if (fcda.bType === null && input.bType === null)
-            return true;
-        if (serviceTypeLookup[controlElement.tagName] !== extRef.getAttribute('pServT'))
-            return true;
-        return fcda.cdc !== input.cdc || fcda.bType !== input.bType;
-    }
-    isFcdaDisabled(fcdaElement, controlElement, withFilter = false) {
-        // If daName is missing, we have an FCDO which is not currently supported
-        // TODO: Remove this and actually support FCDOs
-        const isFcdo = !fcdaElement.getAttribute('daName');
-        const isPreconfiguredNotMatching = this.subscriberView &&
-            this.nonMatchingExtRefElement(this.currentSelectedExtRefElement, fcdaElement, controlElement);
-        const disabledFcdo = (isFcdo && !withFilter) || (withFilter && isFcdo && this.hideDataObjects);
-        const disablePreconfigured = (isPreconfiguredNotMatching && !withFilter) ||
-            (withFilter &&
-                isPreconfiguredNotMatching &&
-                this.hidePreconfiguredNotMatching);
-        return disabledFcdo || disablePreconfigured;
-    }
-    renderFCDA(controlElement, fcdaElement) {
+    renderFCDA(control, fcda) {
         var _a;
-        const fcdaCount = this.getExtRefCount(fcdaElement, controlElement);
-        const isDisabled = this.isFcdaDisabled(fcdaElement, controlElement);
+        const fcdaCount = this.getExtRefCount(fcda, control);
+        const isDisabled = this.isFcdaDisabled(fcda, control);
         const filterClasses = {
             'show-subscribed': fcdaCount !== 0,
             'show-not-subscribed': fcdaCount === 0,
-            'show-data-objects': !fcdaElement.getAttribute('daName'),
+            'show-data-objects': !fcda.getAttribute('daName'),
             'show-pxx-mismatch': this.subscriberView &&
-                this.nonMatchingExtRefElement(this.currentSelectedExtRefElement, fcdaElement, controlElement),
+                this.nonMatchingExtRefElement(this.selectedExtRef, fcda, control),
         };
-        const { spec, desc } = this.getFcdaInfo(fcdaElement);
+        const { spec, desc } = this.getFcdaInfo(fcda);
         const fcdaDesc = Object.values(desc)
             .flat(Infinity)
             .join(' > ');
@@ -12701,12 +12850,12 @@ class SubscriberLaterBinding extends s$1 {
       ?disabled=${isDisabled}
       ?twoline=${fcdaDesc !== ''}
       class="fcda ${o(filterClasses)}"
-      data-control="${identity(controlElement)}"
-      data-fcda="${identity(fcdaElement)}"
+      data-control="${identity(control)}"
+      data-fcda="${identity(fcda)}"
       title="CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}
 Basic Type: ${spec.bType}"
     >
-      <span>${getFcdaOrExtRefTitle(fcdaElement)} </span>
+      <span>${getFcdaOrExtRefTitle(fcda)} </span>
       <span slot="secondary"> ${fcdaDesc}</span>
       <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
       ${fcdaCount !== 0 ? x `<span slot="meta">${fcdaCount}</span>` : A}
@@ -12715,22 +12864,18 @@ Basic Type: ${spec.bType}"
     renderFCDAListTitle() {
         const menuClasses = {
             'title-element': true,
-            'filter-off': this.hideSubscribed ||
-                this.hideNotSubscribed ||
-                this.hideDataObjects ||
-                (this.hidePreconfiguredNotMatching && this.subscriberView),
+            'filter-off': this.filterOutSubscribed ||
+                this.filterOutNotSubscribed ||
+                this.filterOutDataObjects ||
+                (this.filterOutPreconfiguredUnmatched && this.subscriberView),
         };
-        const selectedFcdaTitle = this.currentSelectedControlElement &&
-            this.currentSelectedFcdaElement &&
-            !this.subscriberView
-            ? `${getNameAttribute(this.currentSelectedFcdaElement.closest('IED'))} > ${getNameAttribute(this.currentSelectedControlElement)} : ${getFcdaOrExtRefTitle(this.currentSelectedFcdaElement)}`
+        const selectedFcdaTitle = this.selectedControl && this.selectedFCDA && !this.subscriberView
+            ? `${getNameAttribute(this.selectedFCDA.closest('IED'))} > ${getNameAttribute(this.selectedControl)} : ${getFcdaOrExtRefTitle(this.selectedFCDA)}`
             : '';
         return x `
       <h1 class="fcda-title">
         ${this.renderControlTypeSelector()}
-        ${this.currentSelectedControlElement &&
-            this.currentSelectedFcdaElement &&
-            !this.subscriberView
+        ${this.selectedControl && this.selectedFCDA && !this.subscriberView
             ? x `<span
               class="selected title-element text"
               title="${selectedFcdaTitle}"
@@ -12759,21 +12904,21 @@ Basic Type: ${spec.bType}"
           <mwc-check-list-item
             class="filter-subscribed"
             left
-            ?selected=${!this.hideSubscribed}
+            ?selected=${!this.filterOutSubscribed}
           >
             <span>${msg('Subscribed')}</span>
           </mwc-check-list-item>
           <mwc-check-list-item
             class="filter-not-subscribed"
             left
-            ?selected=${!this.hideNotSubscribed}
+            ?selected=${!this.filterOutNotSubscribed}
           >
             <span>${msg('Not Subscribed')}</span>
           </mwc-check-list-item>
           <mwc-check-list-item
             class="filter-data-objects"
             left
-            ?selected=${!this.hideDataObjects}
+            ?selected=${!this.filterOutDataObjects}
           >
             <span>${msg('Data Objects')}</span>
           </mwc-check-list-item>
@@ -12781,7 +12926,7 @@ Basic Type: ${spec.bType}"
             ? x `<mwc-check-list-item
                 class="filter-preconfigured"
                 left
-                ?selected=${!this.hidePreconfiguredNotMatching}
+                ?selected=${!this.filterOutPreconfiguredUnmatched}
               >
                 <span
                   >${msg('Non-Matching Preconfigured')}</span
@@ -12897,12 +13042,17 @@ Basic Type: ${spec.bType}"
         // data model order
         return 0;
     }
-    renderControlList(controlElements) {
+    /**
+     * Render control blocks and their FCDAs.
+     * @param controls - an array of GSEControl or SampledValueControl elements.
+     * @returns - a Lit TemplateResult.
+     */
+    renderControlList(controls) {
         const filteredListClasses = {
-            'show-subscribed': !this.hideSubscribed,
-            'show-not-subscribed': !this.hideNotSubscribed,
-            'show-pxx-mismatch': !this.hidePreconfiguredNotMatching,
-            'show-data-objects': !this.hideDataObjects,
+            'show-subscribed': !this.filterOutSubscribed,
+            'show-not-subscribed': !this.filterOutNotSubscribed,
+            'show-pxx-mismatch': !this.filterOutPreconfiguredUnmatched,
+            'show-data-objects': !this.filterOutDataObjects,
         };
         return x `<div class="searchField">
         <abbr title="${msg('Search')}"
@@ -12911,7 +13061,7 @@ Basic Type: ${spec.bType}"
             iconTrailing="search"
             outlined
             @input=${debounce(() => {
-            this.filterFcdaRegex = getFilterRegex(this.filterFcdaInputUI.value);
+            this.searchFcdaRegex = getSearchRegex(this.filterFcdaInputUI.value);
         })}
           ></mwc-textfield
         ></abbr>
@@ -12926,13 +13076,13 @@ Basic Type: ${spec.bType}"
             if (!selectedListItem)
                 return;
             const { control, fcda } = selectedListItem.dataset;
-            this.currentSelectedControlElement = this.doc.querySelector(selector(this.controlTag, control));
-            this.currentSelectedFcdaElement = this.doc.querySelector(selector('FCDA', fcda));
+            this.selectedControl = this.doc.querySelector(selector(this.controlTag, control));
+            this.selectedFCDA = this.doc.querySelector(selector('FCDA', fcda));
             // only continue if conditions for subscription met
             if (!(this.subscriberView &&
-                this.currentSelectedControlElement &&
-                this.currentSelectedFcdaElement &&
-                this.currentSelectedExtRefElement)) {
+                this.selectedControl &&
+                this.selectedFCDA &&
+                this.selectedExtRef)) {
                 // in the subscriber view if an FCDA is selected, deactivate it
                 // so that when it is re-selected it will trigger an event
                 if (this.subscriberView) {
@@ -12942,10 +13092,10 @@ Basic Type: ${spec.bType}"
                 // conditions for a subscription have not been met
                 return;
             }
-            this.subscribe(this.currentSelectedExtRefElement, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
-            this.currentSelectedExtRefElement = undefined;
+            this.subscribe(this.selectedExtRef, this.selectedControl, this.selectedFCDA);
+            this.selectedExtRef = undefined;
             // if incrementing, click on next ExtRef list item if not subscribed
-            if (this.extRefListSubscriberSelectedUI && !this.notAutoIncrement) {
+            if (this.extRefListSubscriberSelectedUI && this.autoIncrement) {
                 const nextActivatableItem = (this.extRefListSubscriberUI.querySelector('mwc-list-item[activated].extref ~ mwc-list-item.extref'));
                 if (nextActivatableItem) {
                     const { extref } = nextActivatableItem.dataset;
@@ -12965,7 +13115,7 @@ Basic Type: ${spec.bType}"
                 }
             }
             // deselect ExtRef
-            if (this.extRefListSubscriberSelectedUI && this.notAutoIncrement) {
+            if (this.extRefListSubscriberSelectedUI && !this.autoIncrement) {
                 this.extRefListSubscriberSelectedUI.selected = false;
                 this.extRefListSubscriberSelectedUI.activated = false;
             }
@@ -12973,29 +13123,29 @@ Basic Type: ${spec.bType}"
             selectedListItem.selected = false;
             selectedListItem.activated = false;
             // reset state
-            this.currentSelectedControlElement = undefined;
-            this.currentSelectedFcdaElement = undefined;
+            this.selectedControl = undefined;
+            this.selectedFCDA = undefined;
         }}"
       >
-        ${c(controlElements.filter(controlElement => {
-            const fcdaElements = getFcdaElements(controlElement);
+        ${c(controls.filter(controlCandidate => {
+            const fcdaCandidates = getFcdaElements(controlCandidate);
             // if disabled (non-matching pXX or DOs) are filtered
             // then don't show them
-            const onlyHasDisabledItems = fcdaElements.every(fcda => this.isFcdaDisabled(fcda, controlElement, true));
-            const isWithinSearch = this.filterFcdaRegex &&
-                fcdaElements.some(fcda => this.filterFcdaRegex.test(`${this.getFcdaSearchString(controlElement, fcda)}`));
-            return (isWithinSearch && fcdaElements.length && !onlyHasDisabledItems);
-        }), i => identity(i), controlElement => {
-            const fcdaElements = getFcdaElements(controlElement)
-                .filter(fcda => this.filterFcdaRegex.test(`${this.getFcdaSearchString(controlElement, fcda)}`))
+            const onlyHasDisabledItems = fcdaCandidates.every(fcda => this.isFcdaDisabled(fcda, controlCandidate, true));
+            const isWithinSearch = this.searchFcdaRegex &&
+                fcdaCandidates.some(fcda => this.searchFcdaRegex.test(`${this.getFcdaSearchString(controlCandidate, fcda)}`));
+            return (isWithinSearch && fcdaCandidates.length && !onlyHasDisabledItems);
+        }), i => identity(i), control => {
+            const fcdas = getFcdaElements(control)
+                .filter(fcdaCandidate => this.searchFcdaRegex.test(`${this.getFcdaSearchString(control, fcdaCandidate)}`))
                 .sort((a, b) => this.sortFcdaSubscriberItems(a, b));
-            const someSubscribed = fcdaElements.some(fcda => this.getExtRefCount(fcda, controlElement) !== 0);
-            const someNotSubscribed = fcdaElements.some(fcda => this.getExtRefCount(fcda, controlElement) === 0);
+            const someSubscribed = fcdas.some(fcda => this.getExtRefCount(fcda, control) !== 0);
+            const someNotSubscribed = fcdas.some(fcda => this.getExtRefCount(fcda, control) === 0);
             const filterClasses = {
                 'show-subscribed': someSubscribed,
                 'show-not-subscribed': someNotSubscribed,
             };
-            const iedName = controlElement.closest('IED').getAttribute('name');
+            const iedName = control.closest('IED').getAttribute('name');
             // TODO: Restore wizard editing functionality
             return x `<mwc-list-item
                 noninteractive
@@ -13004,26 +13154,30 @@ Basic Type: ${spec.bType}"
                 twoline
                 hasMeta
               >
-                <span>${iedName} > ${getNameAttribute(controlElement)} </span>
+                <span>${iedName} > ${getNameAttribute(control)} </span>
                 <span slot="secondary"
-                  >${getLnTitle(controlElement)}
-                  ${getDescriptionAttribute(controlElement)
-                ? x ` - ${getDescriptionAttribute(controlElement)}`
+                  >${objectReferenceInIed(control)}
+                  ${getDescriptionAttribute(control)
+                ? x ` - ${getDescriptionAttribute(control)}`
                 : A}</span
                 >
                 <mwc-icon slot="graphic"
                   >${iconControlLookup[this.controlTag]}</mwc-icon
                 >
               </mwc-list-item>
-              ${c(fcdaElements, i => `${identity(controlElement)} ${identity(i)}`, fcdaElement => this.renderFCDA(controlElement, fcdaElement))}`;
+              ${c(fcdas, i => `${identity(control)} ${identity(i)}`, fcda => this.renderFCDA(control, fcda))}`;
         })}
       </mwc-list>`;
     }
+    /**
+     * Render ExtRefs for publisher view which already have subscriptions.
+     * @returns - a Lit TemplateResult.
+     */
     renderPublisherViewSubscribedExtRefs() {
         const subscribedExtRefs = this.getSubscribedExtRefElements()
-            .filter(extRef => {
-            const supervisionNode = getExistingSupervision(extRef);
-            return this.filterExtRefPublisherRegex.test(`${identity(extRef)} ${getDescriptionAttribute(extRef)} ${identity(supervisionNode)}`);
+            .filter(extRefCandidate => {
+            const supervisionNode = getExistingSupervision(extRefCandidate);
+            return this.searchExtRefPublisherRegex.test(`${identity(extRefCandidate)} ${getDescriptionAttribute(extRefCandidate)} ${identity(supervisionNode)}`);
         })
             .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
         return x `
@@ -13038,9 +13192,13 @@ Basic Type: ${spec.bType}"
           </mwc-list-item>`}
     `;
     }
+    /**
+     * Render ExtRefs for publisher view which already have subscriptions.
+     * @returns - a Lit TemplateResult.
+     */
     renderPublisherViewAvailableExtRefs() {
         const availableExtRefs = this.getAvailableExtRefElements()
-            .filter(extRef => this.filterExtRefPublisherRegex.test(`${identity(extRef)} ${getDescriptionAttribute(extRef)}`))
+            .filter(extRefCandidate => this.searchExtRefPublisherRegex.test(`${identity(extRefCandidate)} ${getDescriptionAttribute(extRefCandidate)}`))
             .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
         return x `
       <mwc-list-item noninteractive>
@@ -13048,33 +13206,32 @@ Basic Type: ${spec.bType}"
       </mwc-list-item>
       <li divider role="separator"></li>
       ${availableExtRefs.length > 0
-            ? x `${availableExtRefs.map(extRefElement => {
+            ? x `${availableExtRefs.map(extRef => {
                 var _a, _b;
-                const hasMissingMapping = isSubscribed(extRefElement) &&
-                    !findFCDAs$1(extRefElement).find(x => x !== undefined);
-                const { spec } = this.getExtRefInfo(extRefElement);
-                const desc = getDescriptionAttribute(extRefElement);
-                const disabledExtRef = this.nonMatchingExtRefElement(extRefElement, this.currentSelectedFcdaElement, this.currentSelectedControlElement);
-                const iedName = extRefElement.closest('IED').getAttribute('name');
+                const hasMissingMapping = isSubscribed(extRef) &&
+                    !findFCDAs$1(extRef).find(x => x !== undefined);
+                const { spec } = this.getExtRefInfo(extRef);
+                const desc = getDescriptionAttribute(extRef);
+                const disabledExtRef = this.nonMatchingExtRefElement(extRef, this.selectedFCDA, this.selectedControl);
+                const iedName = extRef.closest('IED').getAttribute('name');
                 return x `<mwc-list-item
               graphic="large"
               ?disabled=${disabledExtRef}
-              ?hasMeta=${isPartiallyConfigured(extRefElement) ||
-                    hasMissingMapping}
+              ?hasMeta=${isPartiallyConfigured(extRef) || hasMissingMapping}
               ?twoline=${!!desc}
               class="extref ${disabledExtRef ? 'show-pxx-mismatch' : ''}"
-              data-extref="${identity(extRefElement)}"
+              data-extref="${identity(extRef)}"
               title="${spec.cdc && spec.bType
                     ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                     : ''}"
             >
               <span>
-                ${iedName} > ${extRefPath(extRefElement)}:
-                ${extRefElement.getAttribute('intAddr')}
+                ${iedName} > ${objectReferenceInIed(extRef)}:
+                ${extRef.getAttribute('intAddr')}
               </span>
               <span slot="secondary">${desc}</span>
               <mwc-icon slot="graphic">link_off</mwc-icon>
-              ${isPartiallyConfigured(extRefElement)
+              ${isPartiallyConfigured(extRef)
                     ? x `<mwc-icon
                     slot="meta"
                     class="invalid-mapping"
@@ -13097,9 +13254,14 @@ Basic Type: ${spec.bType}"
           </mwc-list-item>`}
     `;
     }
+    /**
+     * In the publisher view renders the title and filter/settings icons
+     * for ExtRefs
+     * @returns - a Lit TemplateResult.
+     */
     renderPublisherViewExtRefListTitle() {
         const filterMenuClasses = {
-            'filter-off': this.strictServiceTypes || this.hidePreconfiguredNotMatching,
+            'filter-off': this.strictServiceTypes || this.filterOutPreconfiguredUnmatched,
             'title-element': true,
         };
         return x `<h1 class="fcda-title">
@@ -13131,7 +13293,7 @@ Basic Type: ${spec.bType}"
         <mwc-check-list-item
           class="filter-preconfigured"
           left
-          ?selected=${!this.hidePreconfiguredNotMatching}
+          ?selected=${!this.filterOutPreconfiguredUnmatched}
         >
           <span>${msg('Non-Matching Preconfigured')}</span>
         </mwc-check-list-item>
@@ -13194,23 +13356,30 @@ Basic Type: ${spec.bType}"
         <mwc-check-list-item
           class="no-supervisions"
           left
-          ?selected=${!this.notChangeSupervisionLNs}
+          ?selected=${!this.ignoreSupervisions}
         >
           <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
     }
+    /**
+     * In the subscriber view renders the title and filter/settings icons
+     * for ExtRefs
+     * @returns - a Lit TemplateResult.
+     */
     renderSubscriberViewExtRefListTitle() {
         var _a;
         const menuClasses = {
-            'filter-off': this.hideBound || this.hideNotBound || this.strictServiceTypes,
+            'filter-off': this.filterOutBound ||
+                this.filterOutNotBound ||
+                this.strictServiceTypes,
         };
-        const selectedExtRefTitle = this.currentSelectedExtRefElement
-            ? `${getNameAttribute((_a = this.currentSelectedExtRefElement) === null || _a === void 0 ? void 0 : _a.closest('IED'))} > ${extRefPath(this.currentSelectedExtRefElement)}: ${this.currentSelectedExtRefElement.getAttribute('intAddr')}`
+        const selectedExtRefTitle = this.selectedExtRef
+            ? `${getNameAttribute((_a = this.selectedExtRef) === null || _a === void 0 ? void 0 : _a.closest('IED'))} > ${objectReferenceInIed(this.selectedExtRef)}: ${this.selectedExtRef.getAttribute('intAddr')}`
             : '';
         return x `<h1 class="subscriber-title">
-      ${this.currentSelectedExtRefElement
+      ${this.selectedExtRef
             ? x `<span
             class="selected title-element text"
             title="${selectedExtRefTitle}"
@@ -13238,14 +13407,14 @@ Basic Type: ${spec.bType}"
         <mwc-check-list-item
           class="show-bound"
           left
-          ?selected=${!this.hideBound}
+          ?selected=${!this.filterOutBound}
         >
           <span>${msg('Subscribed')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="show-not-bound"
           left
-          ?selected=${!this.hideNotBound}
+          ?selected=${!this.filterOutNotBound}
         >
           <span>${msg('Not Subscribed')}</span>
         </mwc-check-list-item>
@@ -13321,52 +13490,57 @@ Basic Type: ${spec.bType}"
         <mwc-check-list-item
           class="auto-increment"
           left
-          ?selected=${!this.notAutoIncrement}
+          ?selected=${this.autoIncrement}
         >
           <span>${msg('Auto-increment')}</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="no-supervisions"
           left
-          ?selected=${!this.notChangeSupervisionLNs}
+          ?selected=${!this.ignoreSupervisions}
         >
           <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
     }
-    renderSubscriberViewExtRef(extRefElement) {
+    /**
+     * Render an ExtRef element in the subscriber view.
+     * @param extRef - an SCL ExtREf element for later binding.
+     * @returns - a Lit TemplateResult.
+     */
+    renderSubscriberViewExtRef(extRef) {
         var _a, _b, _c, _d, _e;
         let subscriberFCDA;
         let supervisionNode;
         let controlBlockDescription;
         let supervisionDescription;
-        const subscribed = isSubscribed(extRefElement);
+        const subscribed = isSubscribed(extRef);
         if (subscribed) {
-            subscriberFCDA = findFCDAs$1(extRefElement).find(x => x !== undefined);
-            supervisionNode = this.getCachedSupervision(extRefElement);
-            controlBlockDescription = getExtRefControlBlockPath(extRefElement);
+            subscriberFCDA = findFCDAs$1(extRef).find(element => element !== undefined);
+            supervisionNode = this.getCachedSupervision(extRef);
+            controlBlockDescription = getExtRefControlBlockPath(extRef);
         }
         if (supervisionNode) {
             supervisionDescription = trimIdentityParent(`${identity(supervisionNode)}`);
         }
-        const extRefDescription = getDescriptionAttribute(extRefElement);
+        const extRefDescription = getDescriptionAttribute(extRef);
         const supAndctrlDescription = supervisionDescription || controlBlockDescription
             ? `${[controlBlockDescription, supervisionDescription]
                 .filter(desc => desc !== undefined)
                 .join(', ')}`
             : A;
-        const hasInvalidMapping = isPartiallyConfigured(extRefElement);
+        const hasInvalidMapping = isPartiallyConfigured(extRef);
         const hasMissingMapping = subscribed && !subscriberFCDA;
         const bound = subscribed || hasInvalidMapping;
-        const specExtRef = this.getExtRefInfo(extRefElement).spec;
+        const specExtRef = this.getExtRefInfo(extRef).spec;
         const specFcda = subscriberFCDA
             ? this.getFcdaInfo(subscriberFCDA).spec
             : null;
-        // this fcda name is taken from the ExtRef so even if an FCDA
+        // this FCDA name is taken from the ExtRef so even if an FCDA
         // cannot be located we can "show" the subscription
         const fcdaName = subscribed || hasMissingMapping
-            ? `${(_a = extRefElement.getAttribute('iedName')) !== null && _a !== void 0 ? _a : 'Unknown'} > ${getFcdaOrExtRefTitle(extRefElement)}`
+            ? `${(_a = extRef.getAttribute('iedName')) !== null && _a !== void 0 ? _a : 'Unknown'} > ${getFcdaOrExtRefTitle(extRef)}`
             : '';
         const fcdaDesc = subscriberFCDA
             ? Object.values(this.getFcdaInfo(subscriberFCDA).desc).join(' > ')
@@ -13388,11 +13562,11 @@ Basic Type: ${spec.bType}"
       ?hasMeta=${supervisionNode !== undefined ||
             hasInvalidMapping ||
             hasMissingMapping}
-      data-extref="${identity(extRefElement)}"
+      data-extref="${identity(extRef)}"
       title="${[specExtRefText, specFcdaText].join('\n')}"
     >
       <span class="extref-firstline">
-        ${extRefPath(extRefElement)}: ${extRefElement.getAttribute('intAddr')}
+        ${objectReferenceInIed(extRef)}: ${extRef.getAttribute('intAddr')}
         ${subscribed || hasInvalidMapping
             ? x `<mwc-icon id="leftArrow">arrow_back</mwc-icon>
               ${subscribed ? `${fcdaName}` : ''}
@@ -13435,12 +13609,16 @@ Basic Type: ${spec.bType}"
             : A}
     </mwc-list-item>`;
     }
+    /**
+     * Render ExtRef elements in the subscriber view.
+     * @returns - a Lit TemplateResult.
+     */
     renderSubscriberViewExtRefs() {
         if (this.supervisionData.size === 0)
             this.reCreateSupervisionCache();
         const ieds = getOrderedIeds(this.doc).filter(ied => {
             const extRefs = Array.from(this.getExtRefElementsByIED(ied));
-            return extRefs.some(extRef => this.filterExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)));
+            return extRefs.some(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)));
         });
         return x `${c(ieds, i => `${identity(i)} ${this.controlTag}`, ied => {
             const extRefs = Array.from(this.getExtRefElementsByIED(ied));
@@ -13469,17 +13647,21 @@ Basic Type: ${spec.bType}"
             <mwc-icon slot="graphic">developer_board</mwc-icon>
           </mwc-list-item>
           ${c(Array.from(this.getExtRefElementsByIED(ied)
-                .filter(extRef => this.filterExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)))
+                .filter(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)))
                 .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b))), exId => `${identity(exId)} ${this.controlTag}`, extRef => this.renderSubscriberViewExtRef(extRef))}
         `;
         })}`;
     }
+    /**
+     * Render ExtRef elements in either the publisher or subscriber view.
+     * @returns - a Lit TemplateResult.
+     */
     renderExtRefs() {
         var _a;
         if (!this.subscriberView) {
             return x `<section class="column">
         ${this.renderPublisherViewExtRefListTitle()}
-        ${this.currentSelectedControlElement && this.currentSelectedFcdaElement
+        ${this.selectedControl && this.selectedFCDA
                 ? x `<div class="searchField">
                 <abbr title="${msg('Search')}"
                   ><mwc-textfield
@@ -13487,14 +13669,14 @@ Basic Type: ${spec.bType}"
                     iconTrailing="search"
                     outlined
                     @input=${debounce(() => {
-                    this.filterExtRefPublisherRegex = getFilterRegex(this.filterExtRefPublisherInputUI.value);
+                    this.searchExtRefPublisherRegex = getSearchRegex(this.filterExtRefPublisherInputUI.value);
                 })}
                   ></mwc-textfield
                 ></abbr>
               </div>
               <mwc-list
                 id="publisherExtRefList"
-                class="main-list ${!this.hidePreconfiguredNotMatching
+                class="main-list ${!this.filterOutPreconfiguredUnmatched
                     ? 'show-pxx-mismatch'
                     : ''}"
                 @selected=${(ev) => {
@@ -13508,7 +13690,7 @@ Basic Type: ${spec.bType}"
                     const selectedExtRefElement = this.doc.querySelector(selector('ExtRef', extref));
                     if (!isSubscribed(selectedExtRefElement) ||
                         !findFCDAs$1(selectedExtRefElement).find(x => x !== undefined)) {
-                        this.subscribe(selectedExtRefElement, this.currentSelectedControlElement, this.currentSelectedFcdaElement);
+                        this.subscribe(selectedExtRefElement, this.selectedControl, this.selectedFCDA);
                     }
                     else {
                         this.unsubscribeExtRef(selectedExtRefElement);
@@ -13526,8 +13708,8 @@ Basic Type: ${spec.bType}"
       </section>`;
         }
         const filteredListClasses = {
-            'show-bound': !this.hideBound,
-            'show-not-bound': !this.hideNotBound,
+            'show-bound': !this.filterOutBound,
+            'show-not-bound': !this.filterOutNotBound,
         };
         const hasExtRefs = (_a = this.doc) === null || _a === void 0 ? void 0 : _a.querySelector(`:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
        :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`);
@@ -13542,7 +13724,7 @@ Basic Type: ${spec.bType}"
                   iconTrailing="search"
                   outlined
                   @input=${debounce(() => {
-                this.filterExtRefSubscriberRegex = getFilterRegex(this.filterExtRefSubscriberInputUI.value);
+                this.searchExtRefSubscriberRegex = getSearchRegex(this.filterExtRefSubscriberInputUI.value);
             })}
                 ></mwc-textfield
               ></abbr>
@@ -13556,23 +13738,28 @@ Basic Type: ${spec.bType}"
                 if (!selectedListItem)
                     return;
                 const { extref } = selectedListItem.dataset;
-                const selectedExtRefElement = (this.doc.querySelector(selector('ExtRef', extref)));
-                if (!selectedExtRefElement)
+                const selectedExtRef = (this.doc.querySelector(selector('ExtRef', extref)));
+                if (!selectedExtRef)
                     return;
-                if (isSubscribed(selectedExtRefElement) ||
-                    isPartiallyConfigured(selectedExtRefElement)) {
-                    this.unsubscribeExtRef(selectedExtRefElement);
+                if (isSubscribed(selectedExtRef) ||
+                    isPartiallyConfigured(selectedExtRef)) {
+                    this.unsubscribeExtRef(selectedExtRef);
                     // deselect in UI
                     // list item is left selected to allow further subscription
-                    this.currentSelectedFcdaElement = undefined;
-                    this.currentSelectedControlElement = undefined;
+                    this.selectedFCDA = undefined;
+                    this.selectedControl = undefined;
                 }
-                this.currentSelectedExtRefElement = selectedExtRefElement;
+                this.selectedExtRef = selectedExtRef;
             }}
               >${this.renderSubscriberViewExtRefs()}
             </mwc-list>`}
     </section>`;
     }
+    /**
+     * Render UI button for switching between GSEControls and
+     * SampledValueControls.
+     * @returns - a Lit TemplateResult.
+     */
     renderControlTypeSelector() {
         return x `
       <mwc-icon-button-toggle
@@ -13593,9 +13780,9 @@ Basic Type: ${spec.bType}"
                 this.fcdaListSelectedUI.activated = false;
             }
             // reset state
-            this.currentSelectedControlElement = undefined;
-            this.currentSelectedFcdaElement = undefined;
-            this.currentSelectedExtRefElement = undefined;
+            this.selectedControl = undefined;
+            this.selectedFCDA = undefined;
+            this.selectedExtRef = undefined;
             this.resetSearchFields();
             this.resetCaching();
         }}
@@ -13604,6 +13791,10 @@ Basic Type: ${spec.bType}"
       </mwc-icon-button-toggle>
     `;
     }
+    /**
+     * Render FCDAs for publisher view.
+     * @returns - a Lit TemplateResult.
+     */
     renderPublisherFCDAs() {
         const controlElements = this.getControlElements(this.controlTag);
         return x `<section class="column fcda">
@@ -13617,6 +13808,10 @@ Basic Type: ${spec.bType}"
           </h3>`}
     </section>`;
     }
+    /**
+     * Render UI button for switching between publisher/subscriber.
+     * @returns - a Lit TemplateResult.
+     */
     renderSwitchView() {
         return x ` <mwc-fab
       mini
@@ -13632,9 +13827,9 @@ Basic Type: ${spec.bType}"
                 this.fcdaListSelectedUI.activated = false;
             }
             // reset state
-            this.currentSelectedControlElement = undefined;
-            this.currentSelectedFcdaElement = undefined;
-            this.currentSelectedExtRefElement = undefined;
+            this.selectedControl = undefined;
+            this.selectedFCDA = undefined;
+            this.selectedExtRef = undefined;
             this.resetSearchFields();
             await this.updateComplete;
             // await for regeneration of UI and then attach anchors
@@ -13974,28 +14169,28 @@ __decorate([
 ], SubscriberLaterBinding.prototype, "subscriberView", void 0);
 __decorate([
     e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "hideSubscribed", void 0);
+], SubscriberLaterBinding.prototype, "filterOutSubscribed", void 0);
 __decorate([
     e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "hideNotSubscribed", void 0);
+], SubscriberLaterBinding.prototype, "filterOutNotSubscribed", void 0);
 __decorate([
     e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "hideDataObjects", void 0);
+], SubscriberLaterBinding.prototype, "filterOutDataObjects", void 0);
 __decorate([
     e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "hidePreconfiguredNotMatching", void 0);
+], SubscriberLaterBinding.prototype, "filterOutPreconfiguredUnmatched", void 0);
 __decorate([
     e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "notAutoIncrement", void 0);
+], SubscriberLaterBinding.prototype, "autoIncrement", void 0);
 __decorate([
     e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "notChangeSupervisionLNs", void 0);
+], SubscriberLaterBinding.prototype, "ignoreSupervisions", void 0);
 __decorate([
     e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "hideBound", void 0);
+], SubscriberLaterBinding.prototype, "filterOutBound", void 0);
 __decorate([
     e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "hideNotBound", void 0);
+], SubscriberLaterBinding.prototype, "filterOutNotBound", void 0);
 __decorate([
     e$5({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "strictServiceTypes", void 0);
@@ -14010,25 +14205,25 @@ __decorate([
 ], SubscriberLaterBinding.prototype, "sortFcda", void 0);
 __decorate([
     e$5({ type: String })
-], SubscriberLaterBinding.prototype, "filterFcdaRegex", void 0);
+], SubscriberLaterBinding.prototype, "searchFcdaRegex", void 0);
 __decorate([
     e$5({ type: String })
-], SubscriberLaterBinding.prototype, "filterExtRefPublisherRegex", void 0);
+], SubscriberLaterBinding.prototype, "searchExtRefPublisherRegex", void 0);
 __decorate([
     e$5({ type: String })
-], SubscriberLaterBinding.prototype, "filterExtRefSubscriberRegex", void 0);
+], SubscriberLaterBinding.prototype, "searchExtRefSubscriberRegex", void 0);
 __decorate([
     t$1()
-], SubscriberLaterBinding.prototype, "currentSelectedControlElement", void 0);
+], SubscriberLaterBinding.prototype, "selectedControl", void 0);
 __decorate([
     t$1()
-], SubscriberLaterBinding.prototype, "currentSelectedFcdaElement", void 0);
+], SubscriberLaterBinding.prototype, "selectedFCDA", void 0);
 __decorate([
     t$1()
-], SubscriberLaterBinding.prototype, "currentIedElement", void 0);
+], SubscriberLaterBinding.prototype, "selectedIED", void 0);
 __decorate([
     t$1()
-], SubscriberLaterBinding.prototype, "currentSelectedExtRefElement", void 0);
+], SubscriberLaterBinding.prototype, "selectedExtRef", void 0);
 __decorate([
     i$2('#switchView')
 ], SubscriberLaterBinding.prototype, "switchViewUI", void 0);
