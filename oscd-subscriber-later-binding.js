@@ -261,6 +261,16 @@ const t={ATTRIBUTE:1,CHILD:2,PROPERTY:3,BOOLEAN_ATTRIBUTE:4,EVENT:5,ELEMENT:6},e
  */
 const u=(e,s,t)=>{const r=new Map;for(let l=s;l<=t;l++)r.set(e[l],l);return r},c=e$1(class extends i$1{constructor(e){if(super(e),e.type!==t.CHILD)throw Error("repeat() can only be used in text expressions")}ht(e,s,t){let r;void 0===t?t=s:void 0!==s&&(r=s);const l=[],o=[];let i=0;for(const s of e)l[i]=r?r(s,i):i,o[i]=t(s,i),i++;return {values:o,keys:l}}render(e,s,t){return this.ht(e,s,t).values}update(s$1,[t,r$1,c]){var d;const a=m(s$1),{values:p$1,keys:v}=this.ht(t,r$1,c);if(!Array.isArray(a))return this.ut=v,p$1;const h=null!==(d=this.ut)&&void 0!==d?d:this.ut=[],m$1=[];let y,x,j=0,k=a.length-1,w=0,A=p$1.length-1;for(;j<=k&&w<=A;)if(null===a[j])j++;else if(null===a[k])k--;else if(h[j]===v[w])m$1[w]=u$1(a[j],p$1[w]),j++,w++;else if(h[k]===v[A])m$1[A]=u$1(a[k],p$1[A]),k--,A--;else if(h[j]===v[A])m$1[A]=u$1(a[j],p$1[A]),r(s$1,m$1[A+1],a[j]),j++,A--;else if(h[k]===v[w])m$1[w]=u$1(a[k],p$1[w]),r(s$1,a[j],a[k]),k--,w++;else if(void 0===y&&(y=u(v,w,A),x=u(h,j,k)),y.has(h[j]))if(y.has(h[k])){const e=x.get(v[w]),t=void 0!==e?a[e]:null;if(null===t){const e=r(s$1,a[j]);u$1(e,p$1[w]),m$1[w]=e;}else m$1[w]=u$1(t,p$1[w]),r(s$1,a[j],t),a[e]=null;w++;}else p(a[k]),k--;else p(a[j]),j++;for(;w<=A;){const e=r(s$1,m$1[A+1]);u$1(e,p$1[w]),m$1[w++]=e;}for(;j<=k;){const e=a[j++];null!==e&&p(e);}return this.ut=v,s(s$1,m$1),T}});
 
+/** Utility function to create element with `tagName` and its`attributes` */
+function createElement(doc, tag, attrs) {
+    const element = doc.createElementNS(doc.documentElement.namespaceURI, tag);
+    Object.entries(attrs)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        .filter(([_, value]) => value !== null)
+        .forEach(([name, value]) => element.setAttribute(name, value));
+    return element;
+}
+
 const maxGseMacAddress = 0x010ccd0101ff;
 const minGseMacAddress = 0x010ccd010000;
 const maxSmvMacAddress = 0x010ccd0401ff;
@@ -506,8 +516,6 @@ function unsubscribe(extRefs, options = { ignoreSupervision: false }) {
     ];
 }
 
-await fetch(new URL(new URL('assets/nsd-0a370a57.json', import.meta.url).href, import.meta.url)).then((res) => res.json());
-
 const tAbstractConductingEquipment$1 = [
     "TransformerWinding",
     "ConductingEquipment",
@@ -692,7 +700,7 @@ const tAbstractEqFuncSubFuncSequence$1 = [
     "GeneralEquipment",
     "EqSubFunction",
 ];
-({
+const tags$1 = {
     AccessControl: {
         parents: ["LDevice"],
         children: [],
@@ -1309,7 +1317,335 @@ const tAbstractEqFuncSubFuncSequence$1 = [
         parents: ["Substation"],
         children: [...tEquipmentContainerSequence$1, "Voltage", "Bay", "Function"],
     },
-});
+};
+const tagSet$1 = new Set(sCLTags$1);
+function isSCLTag$1(tag) {
+    return tagSet$1.has(tag);
+}
+/**
+ * Helper function for to determine schema valid `reference` for OpenSCD
+ * core Insert event.
+ * !! only valid with Edition 2.1 projects (2007B4)
+ * @param parent - The parent element the new child shall be added to
+ * @param tag - The `tagName` of the new child
+ * @returns Reference for new [[`tag`]] child within [[`parent`]]  or `null`
+ */
+function getReference(parent, tag) {
+    if (!isSCLTag$1(tag))
+        return null;
+    const parentTag = parent.tagName;
+    const children = Array.from(parent.children);
+    if (parentTag === "Services" ||
+        parentTag === "SettingGroups" ||
+        !isSCLTag$1(parentTag))
+        return children.find((child) => child.tagName === tag) ?? null;
+    const sequence = tags$1[parentTag].children;
+    let index = sequence.findIndex((element) => element === tag);
+    if (index < 0)
+        return null;
+    let nextSibling;
+    while (index < sequence.length && !nextSibling) {
+        // eslint-disable-next-line no-loop-func
+        nextSibling = children.find((child) => child.tagName === sequence[index]);
+        index += 1;
+    }
+    return nextSibling ?? null;
+}
+
+function dataAttributeSpecification(anyLn, doName, daName) {
+    const doc = anyLn.ownerDocument;
+    const lNodeType = doc.querySelector(`:root > DataTypeTemplates > LNodeType[id="${anyLn.getAttribute("lnType")}"]`);
+    const doNames = doName.split(".");
+    let leaf = lNodeType;
+    for (const doName of doNames) {
+        const dO = leaf?.querySelector(`DO[name="${doName}"], SDO[name="${doName}"]`);
+        leaf = doc.querySelector(`:root > DataTypeTemplates > DOType[id="${dO?.getAttribute("type")}"]`);
+    }
+    const cdc = leaf?.getAttribute("cdc");
+    if (!cdc)
+        return;
+    if (!daName)
+        return { cdc };
+    const daNames = daName.split(".");
+    for (const daName of daNames) {
+        const dA = leaf?.querySelector(`DA[name="${daName}"], BDA[name="${daName}"]`);
+        leaf =
+            daNames.indexOf(daName) < daNames.length - 1
+                ? doc.querySelector(`:root > DataTypeTemplates > DAType[id="${dA?.getAttribute("type")}"]`)
+                : dA;
+    }
+    const bType = leaf?.getAttribute("bType");
+    if (!bType)
+        return;
+    return { cdc, bType };
+}
+/**
+ * Determines common data class (CDC) of a given `doName` and with present
+ * `daName` its `bType`.
+ * @param fcda - The `FCDA` element to determine the `cdc` and `bType` for
+ * @returns An object that contains the `cdc` and `bType` with given `daName`
+ * or undefined if one of them cannot be determined
+ */
+function fcdaBaseTypes(fcda) {
+    const sourceIed = fcda.closest("IED");
+    const [ldInst, prefix, lnClass, lnInst, doName, daName] = [
+        "ldInst",
+        "prefix",
+        "lnClass",
+        "lnInst",
+        "doName",
+        "daName",
+    ].map((attr) => fcda.getAttribute(attr));
+    if (!sourceIed || !ldInst || !lnClass || !doName)
+        return;
+    const anyLn = Array.from(sourceIed.querySelectorAll(`LDevice[inst="${ldInst}"] > LN, LDevice[inst="${ldInst}"] > LN0`)).find((anyLn) => {
+        return ((anyLn.getAttribute("prefix") ?? "") === (prefix ?? "") &&
+            anyLn.getAttribute("lnClass") === lnClass &&
+            anyLn.getAttribute("inst") === (lnInst ?? ""));
+    });
+    if (!anyLn)
+        return;
+    return dataAttributeSpecification(anyLn, doName, daName);
+}
+
+const dataObjects = await fetch(new URL(new URL('assets/nsd-0a370a57.json', import.meta.url).href, import.meta.url)).then((res) => res.json());
+/**
+ * This function returns the common data class `CDC` of the
+ * specified data object `pDO` and the basic type of the specified
+ * data attribute `pDA`.
+ * ```md
+ * The `CDC` of a given `pDO` is determined based on NSD files.
+ * This function therefore assumes the `pDO` to be a data object defined
+ * in the namespace of the IEC 61850-7-4 and IEC 61850-7-3
+ * ```
+ * @param extRef - The later binding type external reference
+ * @returns An object that contains the `cdc` and with existing `pDA`
+ * the `bType` or undefined if no valid specification can be returned
+ */
+function extRefTypeRestrictions(extRef) {
+    const [pDO, pDA] = ["pDO", "pDA"].map((attr) => extRef.getAttribute(attr));
+    if (!pDO)
+        return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dataObject = dataObjects[pDO];
+    const cdc = dataObject?.cdc ?? null;
+    if (!cdc)
+        return;
+    if (!pDA && cdc)
+        return { cdc };
+    const dataAttribute = dataObject.children[pDA];
+    const bType = dataAttribute?.bType ?? null;
+    if (!bType)
+        return;
+    return { cdc, bType };
+}
+
+/**
+ * This function checks if restrictions of an `ExtRef` element given by
+ * `pDO` and optionally by `pDA`, `pLN` and `pServT` are met by the FCDA/FCD
+ * @param extRef - The `ExtRef` element to be checked against
+ * @param data - The `FCDA` element to be checked
+ * @param controlBlockType - The control block type to check back with `pServT`
+ * @returns Whether the FCDA basic types meet the restrictions of the
+ * ExtRef element
+ */
+function doesFcdaMeetExtRefRestrictions(extRef, fcda, controlBlockType) {
+    // Vendor does not provide data for the check so any FCDA meets restriction
+    if (!extRef.hasAttribute("pDO"))
+        return true;
+    const fcdaTypes = fcdaBaseTypes(fcda);
+    const extRefSpec = extRefTypeRestrictions(extRef);
+    // Check cannot be performed assume restriction check to fail
+    if (!extRefSpec || !fcdaTypes)
+        return false;
+    if (extRef.getAttribute("pServT") &&
+        controlBlockType !== extRef.getAttribute("pServT"))
+        return false;
+    if (extRef.getAttribute("pLN") &&
+        extRef.getAttribute("pLN") !== fcda.getAttribute("lnClass"))
+        return false;
+    if (fcdaTypes.cdc !== extRefSpec.cdc)
+        return false;
+    if (extRef.getAttribute("pDA") && fcdaTypes.bType !== extRefSpec.bType)
+        return false;
+    return true;
+}
+
+const serviceTypes$1 = {
+    ReportControl: "Report",
+    GSEControl: "GOOSE",
+    SampledValueControl: "SMV",
+};
+function srcAttributes(controlBlock) {
+    const srcLDInst = controlBlock?.closest("LDevice")?.getAttribute("inst") || null;
+    const srcPrefix = controlBlock?.closest("LN0,LN")?.getAttribute("prefix") || "";
+    const srcLNClass = controlBlock?.closest("LN0,LN")?.getAttribute("lnClass") || null;
+    const srcLNInst = controlBlock?.closest("LN0,LN")?.getAttribute("inst") || null;
+    const srcCBName = controlBlock?.getAttribute("name") || null;
+    if (!controlBlock ||
+        !serviceTypes$1[controlBlock.tagName] ||
+        !srcLDInst ||
+        !srcLNClass ||
+        !srcCBName)
+        return {
+            srcLDInst: null,
+            srcPrefix: null,
+            srcLNClass: null,
+            srcLNInst: null,
+            srcCBName: null,
+            serviceType: null,
+        };
+    return {
+        srcLDInst,
+        srcPrefix,
+        srcLNClass,
+        srcLNInst,
+        srcCBName,
+        serviceType: serviceTypes$1[controlBlock.tagName],
+    };
+}
+function getDataAttributes(fcda) {
+    const sourceIed = fcda.closest("IED");
+    const iedName = sourceIed?.getAttribute("name");
+    const [ldInst, prefix, lnClass, lnInst, doName, daName, fc] = [
+        "ldInst",
+        "prefix",
+        "lnClass",
+        "lnInst",
+        "doName",
+        "daName",
+        "fc",
+    ].map((attr) => fcda.getAttribute(attr));
+    if (!sourceIed || !iedName || !ldInst || !lnClass || !doName || !fc)
+        return null;
+    return {
+        iedName,
+        ldInst,
+        prefix,
+        lnClass,
+        lnInst,
+        doName,
+        daName,
+        fc,
+    };
+}
+function createSubscribeAction(connection, parent) {
+    const doc = connection.sink.ownerDocument;
+    const fcda = connection.source.fcda;
+    const controlBlock = connection.source.controlBlock;
+    const isEd1 = !doc.querySelector("SCL")?.getAttribute("version");
+    const ed1Attributes = getDataAttributes(fcda);
+    if (!ed1Attributes)
+        return null;
+    const ed2Attributes = {
+        ...ed1Attributes,
+        ...srcAttributes(controlBlock),
+    };
+    if (connection.sink.tagName === "ExtRef" && isEd1)
+        return {
+            element: connection.sink,
+            attributes: ed1Attributes,
+        };
+    if (connection.sink.tagName === "ExtRef" && !isEd1)
+        return {
+            element: connection.sink,
+            attributes: ed2Attributes,
+        };
+    const reference = getReference(parent, "ExtRef");
+    if (connection.sink.tagName !== "ExtRef" && isEd1) {
+        const extRef = createElement(doc, "ExtRef", ed1Attributes);
+        return { parent, node: extRef, reference };
+    }
+    const extRef = createElement(doc, "ExtRef", ed2Attributes);
+    return { parent, node: extRef, reference };
+}
+function createSubscribeActions(connections) {
+    const inputActions = [];
+    const extRefActions = connections
+        .map((option) => {
+        const parent = option.sink;
+        // no Inputs child yet in anyLN element
+        if ((parent.tagName === "LN" || parent.tagName === "LN0") &&
+            !inputActions.some((insert) => insert.parent === parent)) {
+            const inputs = createElement(parent.ownerDocument, "Inputs", {});
+            const action = createSubscribeAction(option, inputs);
+            if (action)
+                inputActions.push({
+                    parent,
+                    node: inputs,
+                    reference: getReference(parent, "Inputs"),
+                });
+            return action;
+        }
+        // there is an Input already in anyLn
+        if ((parent.tagName === "LN" || parent.tagName === "LN0") &&
+            inputActions.some((insert) => insert.parent === parent)) {
+            const inputs = inputActions.find((insert) => insert.parent === parent)
+                .node;
+            return createSubscribeAction(option, inputs);
+        }
+        return createSubscribeAction(option, parent);
+    })
+        .filter((action) => action);
+    return [...inputActions, ...extRefActions];
+}
+function invalidSink(sink) {
+    if (sink.tagName === "ExtRef")
+        return !sink.getAttribute("intAddr") || !!sink.getAttribute("iedName");
+    return !(sink.tagName === "LN" ||
+        sink.tagName === "LN0" ||
+        sink.tagName === "Inputs");
+}
+function validSubscribeConditions(connection) {
+    if (invalidSink(connection.sink))
+        return false;
+    //TODO: check connection via Communication section
+    const fcda = connection.source.fcda;
+    const controlBlock = connection.source.controlBlock;
+    const serviceType = controlBlock
+        ? serviceTypes$1[controlBlock.tagName]
+        : undefined;
+    if (connection.sink.tagName === "ExtRef" &&
+        !doesFcdaMeetExtRefRestrictions(connection.sink, fcda, serviceType))
+        return false;
+    return true;
+}
+/**
+ * A function to subscribe [[`source`]](s) to [[`sink`]](s).
+ * > Be aware that this function is producing a diff to the actual SCL.
+ * > It is therefore crucial to make sure that at the point of calling
+ * > this function the SCL is up to date.
+ * @example
+ * ```ts
+ * // do not do this
+ * const diff1 = subscribe(conn1);
+ * const diff2 = subscribe(conn2);
+ * .dispatch(editEvent([diff1, diff2]));
+ *
+ * // better do this
+ * const diff = subscribe([conn1, conn2]);
+ * .dispatch(editEvent(diff))
+ * ```
+ * @param sink - Can be `LN0`, `LN` and `Inputs`
+ * for non-later-binding type of subscription and `ExtRef` with `intAddr`
+ * for later binding type subscription.
+ * @param source.fcda - `FCDA` element
+ * @param source.controlBlock - The control block carrying the [[`source.fcda`]]
+ * @returns An array of actions to do a valid subscription
+ */
+function subscribe(connectionOrConnections, options = { force: false }) {
+    const connections = Array.isArray(connectionOrConnections)
+        ? connectionOrConnections
+        : [connectionOrConnections];
+    const validConnections = options.force
+        ? connections
+        : connections.filter(validSubscribeConditions);
+    const extRefActions = createSubscribeActions(validConnections);
+    return [
+        ...extRefActions,
+        //TODO: ...insertSubscriptionSupervisions(extRefActions),
+    ];
+}
 
 /**
  * @license
@@ -11147,116 +11483,6 @@ function getFcdaOrExtRefTitle(fcdaElement) {
         ? `.`
         : ``}${(_d = fcdaElement.getAttribute('daName')) !== null && _d !== void 0 ? _d : ''}`;
 }
-function dataAttributeSpecification(anyLn, doName, daName) {
-    const doc = anyLn.ownerDocument;
-    const lNodeType = doc.querySelector(`:root > DataTypeTemplates > LNodeType[id="${anyLn.getAttribute('lnType')}"]`);
-    const doNames = doName.split('.');
-    let leaf = lNodeType;
-    for (const doN of doNames) {
-        const dO = leaf === null || leaf === void 0 ? void 0 : leaf.querySelector(`DO[name="${doN}"], SDO[name="${doN}"]`);
-        leaf = doc.querySelector(`:root > DataTypeTemplates > DOType[id="${dO === null || dO === void 0 ? void 0 : dO.getAttribute('type')}"]`);
-    }
-    if (!leaf || !leaf.getAttribute('cdc'))
-        return { cdc: null, bType: null };
-    const cdc = leaf.getAttribute('cdc');
-    const daNames = daName.split('.');
-    for (const daN of daNames) {
-        const dA = leaf === null || leaf === void 0 ? void 0 : leaf.querySelector(`DA[name="${daN}"], BDA[name="${daN}"]`);
-        leaf =
-            daNames.indexOf(daN) < daNames.length - 1
-                ? doc.querySelector(`root > DataTypeTemplates > DAType[id="${dA === null || dA === void 0 ? void 0 : dA.getAttribute('type')}"]`)
-                : dA;
-    }
-    if (!leaf || !leaf.getAttribute('bType'))
-        return { cdc, bType: null };
-    const bType = leaf.getAttribute('bType');
-    return { bType, cdc };
-}
-// TODO: This is now exported as it can be quite useful
-/**
- * Edition 2 and later SCL files allow to restrict subscription on
- * later binding type inputs (`ExtRef` elements) based on a `CDC` and
- * basic type `bType`.
- * @param extRef - A later binding type input in the sink IED
- * @returns data objects `CDC` and data attribute basic type `bType` or `null`
- */
-function inputRestriction(extRef) {
-    var _a;
-    const [pLN, pDO, pDA] = ['pLN', 'pDO', 'pDA'].map(attr => extRef.getAttribute(attr));
-    if (!pLN || !pDO || !pDA)
-        return { cdc: null, bType: null };
-    const anyLns = Array.from((_a = extRef.ownerDocument.querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN[lnClass="${pLN}"], :root > IED > AccessPoint > Server > LDevice > LN0[lnClass="${pLN}"]`)) !== null && _a !== void 0 ? _a : []);
-    for (const anyLn of anyLns) {
-        const dataSpec = dataAttributeSpecification(anyLn, pDO, pDA);
-        if (dataSpec.cdc !== null && dataSpec.bType !== null)
-            return dataSpec;
-    }
-    return { cdc: null, bType: null };
-}
-// TODO: I have exported this
-// TODO I have modified this from LDevice[inst="${fcda.getAttribute('inst')}"] LN0` to LDevice[inst="${fcda.getAttribute('ldInst')}"] LN0`
-// there is no inst attribute declared against an FCDA
-/**
- * @param fcda - Data attribute reference in a data set
- * @returns Data objects `CDC` and data attributes `bType`
- */
-function fcdaSpecification(fcda) {
-    var _a;
-    const [doName, daName] = ['doName', 'daName'].map(attr => fcda.getAttribute(attr));
-    if (!doName || !daName)
-        return { cdc: null, bType: null };
-    const ied = fcda.closest('IED');
-    const anyLn = Array.from((_a = ied === null || ied === void 0 ? void 0 : ied.querySelectorAll(`:root > IED > AccessPoint > Server > LDevice[inst="${fcda.getAttribute('ldInst')}"] > LN, :root > IED > AccessPoint > Server > LDevice[inst="${fcda.getAttribute('ldInst')}"] > LN0`)) !== null && _a !== void 0 ? _a : []).find(aLn => {
-        var _a, _b, _c, _d, _e, _f;
-        return ((_a = aLn.getAttribute('prefix')) !== null && _a !== void 0 ? _a : '') ===
-            ((_b = fcda.getAttribute('prefix')) !== null && _b !== void 0 ? _b : '') &&
-            ((_c = aLn.getAttribute('lnClass')) !== null && _c !== void 0 ? _c : '') ===
-                ((_d = fcda.getAttribute('lnClass')) !== null && _d !== void 0 ? _d : '') &&
-            ((_e = aLn.getAttribute('inst')) !== null && _e !== void 0 ? _e : '') === ((_f = fcda.getAttribute('lnInst')) !== null && _f !== void 0 ? _f : '');
-    });
-    if (!anyLn)
-        return { cdc: null, bType: null };
-    return dataAttributeSpecification(anyLn, doName, daName);
-}
-// /**
-//  * Check data consistency of source `FCDA` and sink `ExtRef` based on
-//  * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
-//  * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.
-//  * In case
-//  *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
-//  *  - no CDC or bType can be extracted, do not allow subscribing
-//  *
-//  * @param extRef - The `ExtRef` Element to check against
-//  * @param fcdaElement - The SCL `FCDA` element within the DataSet
-//  * @param controlElement - The control element associated with the `FCDA` `DataSet`
-//  */
-// function unsupportedExtRefElement(
-//   extRef: Element | undefined,
-//   fcdaElement: Element | undefined,
-//   controlElement: Element | undefined
-// ): boolean {
-//   if (!extRef) return false;
-//   // Vendor does not provide data for the check
-//   if (
-//     !extRef.hasAttribute('pLN') ||
-//     !extRef.hasAttribute('pDO') ||
-//     !extRef.hasAttribute('pDA') ||
-//     !extRef.hasAttribute('pServT')
-//   )
-//     return false;
-//   // Not ready for any kind of subscription
-//   if (!fcdaElement) return true;
-//   const fcda = fcdaSpecification(fcdaElement);
-//   const input = inputRestriction(extRef);
-//   if (fcda.cdc === null && input.cdc === null) return true;
-//   if (fcda.bType === null && input.bType === null) return true;
-//   if (
-//     serviceTypes[controlElement?.tagName ?? ''] !==
-//     extRef.getAttribute('pServT')
-//   )
-//     return true;
-//   return fcda.cdc !== input.cdc || fcda.bType !== input.bType;
-// }
 function getExtRefElements(rootElement, fcdaElement, includeLaterBinding) {
     return Array.from(rootElement.querySelectorAll('ExtRef'))
         .filter(element => (includeLaterBinding && element.hasAttribute('intAddr')) ||
@@ -11637,124 +11863,6 @@ function instantiateSubscriptionSupervision(controlBlock, subscriberIED) {
         node: newValElement,
     });
     return edits;
-}
-/**
- * Update the passed ExtRefElement and set the required attributes on the cloned element
- * depending on the Edition and type of Control Element.
- *
- * @param extRefElement  - The ExtRef Element to update.
- * @param controlElement - `ReportControl`, `GSEControl` or `SampledValueControl` source element
- * @param fcdaElement    - The source data attribute element.
- * @returns An Update Action for the ExtRefElement.
- */
-function updateExtRefElement(extRefElement, controlElement, fcdaElement) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
-    const iedName = (_b = (_a = fcdaElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name')) !== null && _b !== void 0 ? _b : null;
-    const [ldInst, prefix, lnClass, lnInst, doName, daName] = [
-        'ldInst',
-        'prefix',
-        'lnClass',
-        'lnInst',
-        'doName',
-        'daName',
-    ].map(attr => fcdaElement.getAttribute(attr));
-    const [desc, intAddr, pLN, pDO, pDA, pServT] = [
-        'desc',
-        'intAddr',
-        'pLN',
-        'pDO',
-        'pDA',
-        'pServT',
-    ].map(attr => extRefElement.getAttribute(attr));
-    const schemaVersion = getSclSchemaVersion(fcdaElement.ownerDocument);
-    if (schemaVersion === '2003') {
-        // Edition 2003(1) does not define serviceType and its MCD attribute starting with srcXXX
-        return {
-            element: extRefElement,
-            attributes: {
-                intAddr,
-                desc,
-                iedName,
-                ldInst,
-                lnClass,
-                lnInst,
-                prefix,
-                doName,
-                daName,
-            },
-        };
-    }
-    if (!controlElement || !serviceTypes[controlElement.tagName]) {
-        // for invalid control block tag name assume polling
-        return {
-            element: extRefElement,
-            attributes: {
-                intAddr,
-                desc,
-                iedName,
-                serviceType: 'Poll',
-                ldInst,
-                lnClass,
-                lnInst,
-                prefix,
-                doName,
-                daName,
-            },
-        };
-    }
-    const srcLDInst = (_d = (_c = controlElement.closest('LDevice')) === null || _c === void 0 ? void 0 : _c.getAttribute('inst')) !== null && _d !== void 0 ? _d : '';
-    const srcPrefix = (_f = (_e = controlElement.closest('LN0,LN')) === null || _e === void 0 ? void 0 : _e.getAttribute('prefix')) !== null && _f !== void 0 ? _f : '';
-    const srcLNClass = (_h = (_g = controlElement.closest('LN0,LN')) === null || _g === void 0 ? void 0 : _g.getAttribute('lnClass')) !== null && _h !== void 0 ? _h : '';
-    const srcLNInst = (_j = controlElement.closest('LN0,LN')) === null || _j === void 0 ? void 0 : _j.getAttribute('inst');
-    const srcCBName = (_k = controlElement.getAttribute('name')) !== null && _k !== void 0 ? _k : '';
-    if (schemaVersion === '2007B') {
-        return {
-            element: extRefElement,
-            attributes: {
-                intAddr,
-                desc,
-                iedName,
-                serviceType: serviceTypes[controlElement.tagName],
-                ldInst,
-                lnClass,
-                lnInst,
-                prefix,
-                doName,
-                daName,
-                srcLDInst,
-                srcPrefix,
-                srcLNClass,
-                ...(srcLNInst && { srcLNInst }),
-                srcCBName,
-            },
-        };
-    }
-    // We must be on schemaVersion 2007B4 or later
-    // We should ensure that that the pXX fields are transferred if present
-    return {
-        element: extRefElement,
-        attributes: {
-            intAddr,
-            desc,
-            iedName,
-            serviceType: serviceTypes[controlElement.tagName],
-            ldInst,
-            lnClass,
-            lnInst,
-            prefix,
-            doName,
-            daName,
-            srcLDInst,
-            srcPrefix,
-            srcLNClass,
-            ...(srcLNInst && { srcLNInst }),
-            srcCBName,
-            ...(pLN && { pLN }),
-            ...(pDO && { pDO }),
-            ...(pDA && { pDA }),
-            ...(pServT && { pServT }),
-        },
-    };
 }
 function canRemoveSubscriptionSupervision(subscribedExtRef) {
     var _a, _b;
@@ -12434,7 +12542,7 @@ class SubscriberLaterBinding extends s$1 {
     getFcdaInfo(fcda) {
         const id = `${identity(fcda)}`;
         if (!this.fcdaInfo.has(id)) {
-            const spec = fcdaSpecification(fcda);
+            const spec = fcdaBaseTypes(fcda);
             const desc = getFcdaInstDesc(fcda);
             this.fcdaInfo.set(id, { spec, desc });
         }
@@ -12448,7 +12556,7 @@ class SubscriberLaterBinding extends s$1 {
     getExtRefInfo(extRef) {
         const id = `${identity(extRef)}`;
         if (!this.extRefInfo.has(id)) {
-            const spec = inputRestriction(extRef);
+            const spec = extRefTypeRestrictions(extRef);
             this.extRefInfo.set(id, { spec });
         }
         return this.extRefInfo.get(id);
@@ -12461,7 +12569,7 @@ class SubscriberLaterBinding extends s$1 {
      * @returns a string concatenating key searchable field values.
      */
     getExtRefSubscriberSearchString(extRef) {
-        var _a;
+        var _a, _b, _c, _d, _e;
         const ied = extRef.closest('IED');
         const subscribed = isSubscribed(extRef);
         const [iedDesc, iedType, iedMfg] = ['desc', 'type', 'manufacturer'].map(attr => ied.getAttribute(attr));
@@ -12480,11 +12588,11 @@ class SubscriberLaterBinding extends s$1 {
                         .flat(Infinity)
                         .join('>')
                     : null;
-                fcdaSpec = `${fcdaInfo.spec.cdc} ${fcdaInfo.spec.bType}`;
+                fcdaSpec = `${(_b = (_a = fcdaInfo.spec) === null || _a === void 0 ? void 0 : _a.cdc) !== null && _b !== void 0 ? _b : ''} ${(_d = (_c = fcdaInfo.spec) === null || _c === void 0 ? void 0 : _c.bType) !== null && _d !== void 0 ? _d : ''}`;
             }
         }
         const extRefCBPath = getExtRefControlBlockPath(extRef);
-        return `${iedInfo} ${identity(extRef)} ${identity((_a = this.getCachedSupervision(extRef)) !== null && _a !== void 0 ? _a : null)} ${getDescriptionAttribute(extRef)} ${identity(subscriberFCDA !== null && subscriberFCDA !== void 0 ? subscriberFCDA : null)} ${fcdaDesc !== null && fcdaDesc !== void 0 ? fcdaDesc : ''} ${fcdaSpec !== null && fcdaSpec !== void 0 ? fcdaSpec : ''} ${extRefPathValue} ${extRefCBPath}`;
+        return `${iedInfo} ${identity(extRef)} ${identity((_e = this.getCachedSupervision(extRef)) !== null && _e !== void 0 ? _e : null)} ${getDescriptionAttribute(extRef)} ${identity(subscriberFCDA !== null && subscriberFCDA !== void 0 ? subscriberFCDA : null)} ${fcdaDesc !== null && fcdaDesc !== void 0 ? fcdaDesc : ''} ${fcdaSpec !== null && fcdaSpec !== void 0 ? fcdaSpec : ''} ${extRefPathValue} ${extRefCBPath}`;
     }
     /**
      * Generates a searchable string for the list search for a given FCDA with
@@ -12496,8 +12604,9 @@ class SubscriberLaterBinding extends s$1 {
      * @returns a string concatenating key searchable field values.
      */
     getFcdaSearchString(control, fcda) {
+        var _a, _b, _c, _d;
         const fcdaInfo = this.getFcdaInfo(fcda);
-        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${fcdaInfo.spec.bType} ${fcdaInfo.spec.cdc} ${getFcdaOrExtRefTitle(fcda)} ${Object.values(fcdaInfo.desc)
+        return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(fcda)} ${(_b = (_a = fcdaInfo.spec) === null || _a === void 0 ? void 0 : _a.bType) !== null && _b !== void 0 ? _b : ''} ${(_d = (_c = fcdaInfo.spec) === null || _c === void 0 ? void 0 : _c.cdc) !== null && _d !== void 0 ? _d : ''} ${getFcdaOrExtRefTitle(fcda)} ${Object.values(fcdaInfo.desc)
             .flat(Infinity)
             .join(' ')}`;
     }
@@ -12587,14 +12696,18 @@ class SubscriberLaterBinding extends s$1 {
      *
      * @param extRef - The ExtRef Element to add the attributes to.
      */
-    subscribe(extRef, control, fcdaElement) {
-        const updateEdit = updateExtRefElement(extRef, control, fcdaElement);
+    subscribe(extRef, controlBlock, fcda) {
+        // need to remove invalid existing subscription
+        if (isSubscribed(extRef) || isPartiallyConfigured(extRef))
+            this.dispatchEvent(newEditEvent(unsubscribe([extRef], { ignoreSupervision: true })));
+        const subscribeEdits = [];
         let supEdits = [];
+        subscribeEdits.push(subscribe([{ sink: extRef, source: { fcda, controlBlock } }]));
         if (!this.ignoreSupervisions) {
             const subscriberIed = extRef.closest('IED');
-            supEdits = instantiateSubscriptionSupervision(control, subscriberIed);
+            supEdits = instantiateSubscriptionSupervision(controlBlock, subscriberIed);
         }
-        this.dispatchEvent(newEditEvent([updateEdit, ...supEdits]));
+        this.dispatchEvent(newEditEvent([subscribeEdits, ...supEdits]));
     }
     getSubscribedExtRefElements() {
         return getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, this.selectedFCDA, this.selectedControl, true);
@@ -12753,13 +12866,13 @@ class SubscriberLaterBinding extends s$1 {
             return true;
         const fcdaInfo = this.getFcdaInfo(fcda).spec;
         const inputInfo = this.getExtRefInfo(extRef).spec;
-        if (fcdaInfo.cdc === null && inputInfo.cdc === null)
+        if ((fcdaInfo === null || fcdaInfo === void 0 ? void 0 : fcdaInfo.cdc) === null && (inputInfo === null || inputInfo === void 0 ? void 0 : inputInfo.cdc) === null)
             return true;
-        if (fcdaInfo.bType === null && inputInfo.bType === null)
+        if ((fcdaInfo === null || fcdaInfo === void 0 ? void 0 : fcdaInfo.bType) === null && (inputInfo === null || inputInfo === void 0 ? void 0 : inputInfo.bType) === null)
             return true;
         if (serviceTypeLookup[control.tagName] !== extRef.getAttribute('pServT'))
             return true;
-        return fcdaInfo.cdc !== inputInfo.cdc || fcdaInfo.bType !== inputInfo.bType;
+        return ((fcdaInfo === null || fcdaInfo === void 0 ? void 0 : fcdaInfo.cdc) !== (inputInfo === null || inputInfo === void 0 ? void 0 : inputInfo.cdc) || (fcdaInfo === null || fcdaInfo === void 0 ? void 0 : fcdaInfo.bType) !== (inputInfo === null || inputInfo === void 0 ? void 0 : inputInfo.bType));
     }
     /**
      * Check whether an FCDA should be shown as disabled in the UI. FCDAs are
@@ -12802,7 +12915,7 @@ class SubscriberLaterBinding extends s$1 {
       ?twoline=${!!desc || supervisionNode !== null}
       class="extref"
       data-extref="${identity(extRef)}"
-      title="${spec.cdc && spec.bType
+      title="${spec && spec.cdc && spec.bType
             ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
             : ''}"
     >
@@ -12830,7 +12943,7 @@ class SubscriberLaterBinding extends s$1 {
      * @returns A Lit template result for rendering.
      */
     renderFCDA(control, fcda) {
-        var _a;
+        var _a, _b;
         const fcdaCount = this.getExtRefCount(fcda, control);
         const isDisabled = this.isFcdaDisabled(fcda, control);
         const filterClasses = {
@@ -12838,7 +12951,8 @@ class SubscriberLaterBinding extends s$1 {
             'show-not-subscribed': fcdaCount === 0,
             'show-data-objects': !fcda.getAttribute('daName'),
             'show-pxx-mismatch': this.subscriberView &&
-                this.nonMatchingExtRefElement(this.selectedExtRef, fcda, control),
+                !!this.selectedExtRef &&
+                !doesFcdaMeetExtRefRestrictions(this.selectedExtRef, fcda, serviceTypeLookup[this.controlTag]),
         };
         const { spec, desc } = this.getFcdaInfo(fcda);
         const fcdaDesc = Object.values(desc)
@@ -12852,8 +12966,8 @@ class SubscriberLaterBinding extends s$1 {
       class="fcda ${o(filterClasses)}"
       data-control="${identity(control)}"
       data-fcda="${identity(fcda)}"
-      title="CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}
-Basic Type: ${spec.bType}"
+      title="CDC: ${(_a = spec === null || spec === void 0 ? void 0 : spec.cdc) !== null && _a !== void 0 ? _a : '?'}
+Basic Type: ${(_b = spec === null || spec === void 0 ? void 0 : spec.bType) !== null && _b !== void 0 ? _b : '?'}"
     >
       <span>${getFcdaOrExtRefTitle(fcda)} </span>
       <span slot="secondary"> ${fcdaDesc}</span>
@@ -13212,7 +13326,8 @@ Basic Type: ${spec.bType}"
                     !findFCDAs$1(extRef).find(x => x !== undefined);
                 const { spec } = this.getExtRefInfo(extRef);
                 const desc = getDescriptionAttribute(extRef);
-                const disabledExtRef = this.nonMatchingExtRefElement(extRef, this.selectedFCDA, this.selectedControl);
+                const disabledExtRef = this.selectedFCDA &&
+                    !doesFcdaMeetExtRefRestrictions(extRef, this.selectedFCDA, serviceTypeLookup[this.controlTag]);
                 const iedName = extRef.closest('IED').getAttribute('name');
                 return x `<mwc-list-item
               graphic="large"
@@ -13221,7 +13336,7 @@ Basic Type: ${spec.bType}"
               ?twoline=${!!desc}
               class="extref ${disabledExtRef ? 'show-pxx-mismatch' : ''}"
               data-extref="${identity(extRef)}"
-              title="${spec.cdc && spec.bType
+              title="${spec && spec.cdc && spec.bType
                     ? `CDC: ${(_a = spec.cdc) !== null && _a !== void 0 ? _a : '?'}\nBasic Type: ${(_b = spec.bType) !== null && _b !== void 0 ? _b : '?'}`
                     : ''}"
             >
@@ -13545,10 +13660,10 @@ Basic Type: ${spec.bType}"
         const fcdaDesc = subscriberFCDA
             ? Object.values(this.getFcdaInfo(subscriberFCDA).desc).join(' > ')
             : null;
-        const specExtRefText = specExtRef.cdc || specExtRef.bType
+        const specExtRefText = (specExtRef === null || specExtRef === void 0 ? void 0 : specExtRef.cdc) || (specExtRef === null || specExtRef === void 0 ? void 0 : specExtRef.bType)
             ? `ExtRef: CDC: ${(_b = specExtRef.cdc) !== null && _b !== void 0 ? _b : '?'}, Basic Type: ${(_c = specExtRef.bType) !== null && _c !== void 0 ? _c : '?'}`
             : '';
-        const specFcdaText = specFcda && (specFcda.cdc || specFcda.bType)
+        const specFcdaText = (specFcda === null || specFcda === void 0 ? void 0 : specFcda.cdc) || (specFcda === null || specFcda === void 0 ? void 0 : specFcda.bType)
             ? `FCDA: CDC: ${(_d = specFcda.cdc) !== null && _d !== void 0 ? _d : '?'}, Basic Type: ${(_e = specFcda.bType) !== null && _e !== void 0 ? _e : '?'}`
             : '';
         const filterClasses = {
