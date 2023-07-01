@@ -1724,6 +1724,24 @@ describe('goose', () => {
     });
 
     it('changes to sampled values view', async function () {
+      // check also that it deselects a selected FCDA as part of changing view
+      const fcdaListElement = plugin.fcdaListUI!;
+
+      const fcda = getFcdaItem(
+        fcdaListElement,
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      );
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(fcda!),
+      });
+      await plugin.fcdaListUI!.updateComplete;
+      await plugin.updateComplete;
+      await timeout(standardWait); // selection
+
       await sendMouse({
         type: 'click',
         button: 'left',
