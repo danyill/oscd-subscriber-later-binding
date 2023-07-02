@@ -12,7 +12,6 @@ import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
 import {
-  doesFcdaMeetExtRefRestrictions,
   extRefTypeRestrictions,
   fcdaBaseTypes,
   subscribe,
@@ -1223,50 +1222,54 @@ export default class SubscriberLaterBinding extends LitElement {
   }
 
   /**
-   * Check data consistency of source `FCDA` and sink `ExtRef` based on
-   * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
-   * Consistent means `CDC` and `bType` of both ExtRef and FCDA are equal.
-   * In case
-   *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
-   *  - no CDC or bType can be extracted, do not allow subscription
+   * This function checks if restrictions of an `ExtRef` element given by
+   * `pDO` and optionally by `pDA`, `pLN` and `pServT` are met by the FCDA/FCD
+   * @param extRef - The `ExtRef` element to be checked against
+   * @param data - The `FCDA` element to be checked
+   * @param controlBlockType - The control block type to check back with `pServT`
+   * @returns Whether the FCDA basic types meet the restrictions of the
+   * ExtRef element
    *
-   * @param extRef - The `ExtRef` Element to check against
-   * @param fcda - The SCL `FCDA` element within the DataSet
-   * @param control - The control element associated with the `FCDA` `DataSet`
+   * IMPORTANT: This function  is an _almost_ exact copy of the same function in
+   * scl-lib and is different only in that it uses cached values for performance,
+   * uses the UI option for the control block type and short circuits at the top
+   * for missing elements
+   *
    */
-  nonMatchingExtRefElement(
+  doesFcdaMeetExtRefRestrictions(
     extRef: Element | undefined,
-    fcda: Element | undefined,
-    control: Element | undefined
+    fcda: Element | undefined
   ): boolean {
-    if (!extRef) return false;
-    // No data for the check
+    if (!extRef || !fcda) return true;
+
+    if (!extRef.hasAttribute('pDO')) return true;
+
+    const controlBlockType = serviceTypeLookup[this.controlTag];
+
+    const fcdaTypes = this.getFcdaInfo(fcda).spec;
+    const extRefSpec = this.getExtRefInfo(extRef).spec;
+
+    // Check cannot be performed assume restriction check to fail
+    if (!extRefSpec || !fcdaTypes) return false;
+
     if (
-      !extRef.hasAttribute('pLN') ||
-      !extRef.hasAttribute('pDO') ||
-      !extRef.hasAttribute('pDA') ||
-      !extRef.hasAttribute('pServT')
+      extRef.getAttribute('pServT') &&
+      controlBlockType !== extRef.getAttribute('pServT')
     )
       return false;
 
-    // Not ready for any kind of subscription
-    if (!fcda) return true;
-
-    const fcdaInfo = this.getFcdaInfo(fcda).spec;
-    const inputInfo = this.getExtRefInfo(extRef).spec;
-
-    if (fcdaInfo?.cdc === null && inputInfo?.cdc === null) return true;
-    if (fcdaInfo?.bType === null && inputInfo?.bType === null) return true;
     if (
-      serviceTypeLookup[
-        <'GSEControl' | 'SampledValueControl'>control!.tagName
-      ] !== extRef.getAttribute('pServT')
+      extRef.getAttribute('pLN') &&
+      extRef.getAttribute('pLN') !== fcda.getAttribute('lnClass')
     )
-      return true;
+      return false;
 
-    return (
-      fcdaInfo?.cdc !== inputInfo?.cdc || fcdaInfo?.bType !== inputInfo?.bType
-    );
+    if (fcdaTypes.cdc !== extRefSpec.cdc) return false;
+
+    if (extRef.getAttribute('pDA') && fcdaTypes.bType !== extRefSpec.bType)
+      return false;
+
+    return true;
   }
 
   /**
@@ -1289,7 +1292,7 @@ export default class SubscriberLaterBinding extends LitElement {
     const isFcdo = !fcda.getAttribute('daName');
     const isPreconfiguredNotMatching =
       this.subscriberView &&
-      this.nonMatchingExtRefElement(this.selectedExtRef, fcda, control);
+      !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef, fcda);
 
     const disabledFcdo =
       (isFcdo && !withFilter) ||
@@ -1361,11 +1364,7 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-pxx-mismatch':
         this.subscriberView &&
         !!this.selectedExtRef &&
-        !doesFcdaMeetExtRefRestrictions(
-          this.selectedExtRef!,
-          fcda,
-          serviceTypeLookup[this.controlTag]
-        ),
+        !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef!, fcda),
     };
 
     const { spec, desc } = this.getFcdaInfo(fcda);
@@ -1828,11 +1827,7 @@ Basic Type: ${spec?.bType ?? '?'}"
             const desc = getDescriptionAttribute(extRef);
             const disabledExtRef =
               this.selectedFCDA &&
-              !doesFcdaMeetExtRefRestrictions(
-                extRef,
-                this.selectedFCDA,
-                serviceTypeLookup[this.controlTag]
-              );
+              !this.doesFcdaMeetExtRefRestrictions(extRef, this.selectedFCDA);
             const iedName = extRef.closest('IED')!.getAttribute('name');
 
             return html`<mwc-list-item

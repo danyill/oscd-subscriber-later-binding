@@ -206,7 +206,7 @@ Within an OpenSCD core distribution, plugins are also loaded from a json file wi
   "icon": "link", // <.>
   "active": true, // <.>
   "requireDoc": true, // <.>
-  "src": "/dist/oscd-subscriber-later-binding.js" // <.>
+  "src": "{uri-ci-bundle}" // <.>
 }
 ----
 <.> Name of the plugin which appears in the editor menu at top of screen
@@ -215,7 +215,7 @@ Within an OpenSCD core distribution, plugins are also loaded from a json file wi
 <.> Whether the plugin is enabled by default or has to be enabled in the plugins menu
 <.> Whether a document must be loaded for this plugin to be available
 <.> URL which can be a local or remote resource. 
-For a local resource, begins with a forward slash, e.g. `plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js`. 
+For a local resource, begins without a forward slash, e.g. `plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js`. 
 In this case what is shown is loading a plugin from the internet using the continuous integration build process.
 
 . You need to copy an entry like the above, ensure the `src` URL resolves and the plugin should be loaded when the distribution is built.
