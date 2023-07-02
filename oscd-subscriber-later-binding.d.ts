@@ -219,18 +219,21 @@ export default class SubscriberLaterBinding extends LitElement {
     connectedCallback(): void;
     protected firstUpdated(): Promise<void>;
     /**
-     * Check data consistency of source `FCDA` and sink `ExtRef` based on
-     * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
-     * Consistent means `CDC` and `bType` of both ExtRef and FCDA are equal.
-     * In case
-     *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
-     *  - no CDC or bType can be extracted, do not allow subscription
+     * This function checks if restrictions of an `ExtRef` element given by
+     * `pDO` and optionally by `pDA`, `pLN` and `pServT` are met by the FCDA/FCD
+     * @param extRef - The `ExtRef` element to be checked against
+     * @param data - The `FCDA` element to be checked
+     * @param controlBlockType - The control block type to check back with `pServT`
+     * @returns Whether the FCDA basic types meet the restrictions of the
+     * ExtRef element
      *
-     * @param extRef - The `ExtRef` Element to check against
-     * @param fcda - The SCL `FCDA` element within the DataSet
-     * @param control - The control element associated with the `FCDA` `DataSet`
+     * IMPORTANT: This function  is an _almost_ exact copy of the same function in
+     * scl-lib and is different only in that it uses cached values for performance,
+     * uses the UI option for the control block type and short circuits at the top
+     * for missing elements
+     *
      */
-    nonMatchingExtRefElement(extRef: Element | undefined, fcda: Element | undefined, control: Element | undefined): boolean;
+    doesFcdaMeetExtRefRestrictions(extRef: Element | undefined, fcda: Element | undefined): boolean;
     /**
      * Check whether an FCDA should be shown as disabled in the UI. FCDAs are
      * disabled if they are DO references, if they don't match preconfigured
