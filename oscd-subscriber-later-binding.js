@@ -1526,7 +1526,6 @@ function getDataAttributes(fcda) {
         lnInst,
         doName,
         daName,
-        fc,
     };
 }
 function createSubscribeAction(connection, parent) {
@@ -12702,7 +12701,7 @@ class SubscriberLaterBinding extends s$1 {
             this.dispatchEvent(newEditEvent(unsubscribe([extRef], { ignoreSupervision: true })));
         const subscribeEdits = [];
         let supEdits = [];
-        subscribeEdits.push(subscribe([{ sink: extRef, source: { fcda, controlBlock } }]));
+        subscribeEdits.push(subscribe({ sink: extRef, source: { fcda, controlBlock } }));
         if (!this.ignoreSupervisions) {
             const subscriberIed = extRef.closest('IED');
             supEdits = instantiateSubscriptionSupervision(controlBlock, subscriberIed);
