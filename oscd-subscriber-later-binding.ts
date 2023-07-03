@@ -988,7 +988,7 @@ export default class SubscriberLaterBinding extends LitElement {
     let supEdits: Edit[] = [];
 
     subscribeEdits.push(
-      subscribe([{ sink: extRef, source: { fcda, controlBlock } }])
+      subscribe({ sink: extRef, source: { fcda, controlBlock } })
     );
 
     if (!this.ignoreSupervisions) {
