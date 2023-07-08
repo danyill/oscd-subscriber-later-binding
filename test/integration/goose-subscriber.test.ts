@@ -988,6 +988,33 @@ describe('goose', () => {
         await visualDiff(plugin, testName(this));
       });
 
+      it('and can filter out quality', async function () {
+        const button = plugin.filterMenuFcdaButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await timeout(standardWait); // opening dialog
+
+        const filterQuality =
+          plugin.filterMenuFcdaUI.querySelector('.filter-quality');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterQuality!),
+        });
+        await timeout(standardWait); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
+        await plugin.updateComplete;
+
+        await resetMouseState();
+        await timeout(standardWait); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
       it('and can filter out non-matching pre-configured', async function () {
         const extRefListElement = plugin.extRefListSubscriberUI!;
         const extref = getExtRefItem(
@@ -1119,6 +1146,39 @@ describe('goose', () => {
         });
         await plugin.filterMenuExtRefSubscriberUI.updateComplete;
         await plugin.updateComplete;
+
+        await resetMouseState();
+        await timeout(standardWait); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and filters out ExtRefs with pDA is q', async function () {
+        const extRefFilterMenu = plugin.filterMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extRefFilterMenu!),
+        });
+        await timeout(standardWait); // opening dialog
+
+        const filterpDAq =
+          plugin.filterMenuExtRefSubscriberUI.querySelector('.show-pDAq');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterpDAq!),
+        });
+        await plugin.filterMenuExtRefSubscriberUI.updateComplete;
+        await plugin.updateComplete;
+
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extRef = getExtRefItem(
+          extRefListElement,
+          'Has_Only_Preconfigured>>QB2_Disconnector> XSWI 1>someRestrictedExtRef[0]'
+        )!;
+        extRef.scrollIntoView();
 
         await resetMouseState();
         await timeout(standardWait); // rendering ?

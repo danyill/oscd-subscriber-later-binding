@@ -140,12 +140,14 @@ type StoredConfiguration = {
   filterOutSubscribed: boolean;
   filterOutUnsubscribed: boolean;
   filterOutDataObjects: boolean;
+  filterOutQuality: boolean;
   filterOutPreconfiguredNotMatching: boolean;
   autoIncrement: boolean;
   ignoreSupervisions: boolean;
   filterOutBound: boolean;
   filterOutNotBound: boolean;
   strictServiceTypes: boolean;
+  filterOutpDAq: boolean;
   sortExtRefPublisher: ExtRefSortOrder;
   sortExtRefSubscriber: ExtRefSortOrder;
   sortFcda: FcdaSortOrder;
@@ -162,12 +164,14 @@ const storedProperties: string[] = [
   'filterOutSubscribed',
   'filterOutUnsubscribed',
   'filterOutDataObjects',
+  'filterOutQuality',
   'filterOutPreconfiguredNotMatching',
   'autoIncrement',
   'ignoreSupervisions',
   'filterOutBound',
   'filterOutNotBound',
   'strictServiceTypes',
+  'filterOutpDAq',
   'sortExtRefPublisher',
   'sortExtRefSubscriber',
   'sortFcda',
@@ -251,6 +255,13 @@ function objectReferenceInIed(sclElement: Element): string {
   return [ldInst, '/', lnPrefix, lnClass, lnInst].filter(a => !!a).join(' ');
 }
 
+function doesExtRefpDAIncludeQ(extRef: Element): boolean {
+  return (
+    extRef.hasAttribute('pDA') &&
+    extRef.getAttribute('pDA')?.split('.').pop() === 'q'
+  );
+}
+
 /**
  * Creates a regular expression to allow case-insensitive searching of list
  * items.
@@ -321,6 +332,9 @@ export default class SubscriberLaterBinding extends LitElement {
   filterOutDataObjects!: boolean;
 
   @property({ type: Boolean })
+  filterOutQuality!: boolean;
+
+  @property({ type: Boolean })
   filterOutPreconfiguredUnmatched!: boolean;
 
   @property({ type: Boolean })
@@ -337,6 +351,9 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @property({ type: Boolean })
   strictServiceTypes!: boolean;
+
+  @property({ type: Boolean })
+  filterOutpDAq!: boolean;
 
   @property({ type: String })
   sortExtRefPublisher!: ExtRefSortOrder;
@@ -581,12 +598,14 @@ export default class SubscriberLaterBinding extends LitElement {
       filterOutSubscribed: this.filterOutSubscribed,
       filterOutNotSubscribed: this.filterOutNotSubscribed,
       filterOutDataObjects: this.filterOutDataObjects,
+      filterOutQuality: this.filterOutQuality,
       filterOutPreconfiguredUnmatched: this.filterOutPreconfiguredUnmatched,
       autoIncrement: this.autoIncrement,
       ignoreSupervisions: this.ignoreSupervisions,
       filterOutBound: this.filterOutBound,
       filterOutNotBound: this.filterOutNotBound,
       strictServiceTypes: this.strictServiceTypes,
+      filterOutpDAq: this.filterOutpDAq,
       sortExtRefPublisher: this.sortExtRefPublisher,
       sortExtRefSubscriber: this.sortExtRefSubscriber,
       sortFcda: this.sortFcda,
@@ -620,6 +639,9 @@ export default class SubscriberLaterBinding extends LitElement {
 
     this.filterOutDataObjects =
       storedConfiguration?.filterOutDataObjects || false;
+
+    this.filterOutQuality = storedConfiguration?.filterOutQuality || false;
+
     this.filterOutPreconfiguredUnmatched =
       storedConfiguration?.filterOutPreconfiguredNotMatching || false;
 
@@ -629,6 +651,7 @@ export default class SubscriberLaterBinding extends LitElement {
     this.filterOutBound = storedConfiguration?.filterOutBound ?? false;
     this.filterOutNotBound = storedConfiguration?.filterOutNotBound ?? false;
     this.strictServiceTypes = storedConfiguration?.strictServiceTypes ?? false;
+    this.filterOutpDAq = storedConfiguration?.filterOutpDAq ?? false;
 
     this.sortExtRefPublisher =
       storedConfiguration?.sortExtRefPublisher ?? ExtRefSortOrder.DataModel;
@@ -1122,6 +1145,9 @@ export default class SubscriberLaterBinding extends LitElement {
         this.strictServiceTypes = !(<Set<number>>(
           this.filterMenuExtRefSubscriberUI.index
         )).has(2);
+        this.filterOutpDAq = !(<Set<number>>(
+          this.filterMenuExtRefSubscriberUI.index
+        )).has(3);
       });
 
       this.settingsMenuExtRefSubscriberUI.anchor = <HTMLElement>(
@@ -1203,10 +1229,13 @@ export default class SubscriberLaterBinding extends LitElement {
       this.filterOutDataObjects = !(<Set<number>>(
         this.filterMenuFcdaUI.index
       )).has(2);
+      this.filterOutQuality = !(<Set<number>>this.filterMenuFcdaUI.index).has(
+        3
+      );
       if (this.subscriberView)
         this.filterOutPreconfiguredUnmatched = !(<Set<number>>(
           this.filterMenuFcdaUI.index
-        )).has(3);
+        )).has(4);
     });
 
     this.sortMenuFcdaUI.anchor = <HTMLElement>this.sortMenuFcdaButtonUI;
@@ -1361,6 +1390,7 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-subscribed': fcdaCount !== 0,
       'show-not-subscribed': fcdaCount === 0,
       'show-data-objects': !fcda.getAttribute('daName'),
+      'show-quality': fcda.getAttribute('daName')?.split('.').pop() === 'q',
       'show-pxx-mismatch':
         this.subscriberView &&
         !!this.selectedExtRef &&
@@ -1397,6 +1427,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         this.filterOutSubscribed ||
         this.filterOutNotSubscribed ||
         this.filterOutDataObjects ||
+        this.filterOutQuality ||
         (this.filterOutPreconfiguredUnmatched && this.subscriberView),
     };
     const selectedFcdaTitle =
@@ -1456,6 +1487,13 @@ Basic Type: ${spec?.bType ?? '?'}"
             ?selected=${!this.filterOutDataObjects}
           >
             <span>${msg('Data Objects')}</span>
+          </mwc-check-list-item>
+          <mwc-check-list-item
+            class="filter-quality"
+            left
+            ?selected=${!this.filterOutQuality}
+          >
+            <span>${msg('Quality')}</span>
           </mwc-check-list-item>
           ${this.subscriberView
             ? html`<mwc-check-list-item
@@ -1595,6 +1633,7 @@ Basic Type: ${spec?.bType ?? '?'}"
       'show-not-subscribed': !this.filterOutNotSubscribed,
       'show-pxx-mismatch': !this.filterOutPreconfiguredUnmatched,
       'show-data-objects': !this.filterOutDataObjects,
+      'show-quality': !this.filterOutQuality,
     };
 
     return html`<div class="searchField">
@@ -1995,7 +2034,8 @@ Basic Type: ${spec?.bType ?? '?'}"
       'filter-off':
         this.filterOutBound ||
         this.filterOutNotBound ||
-        this.strictServiceTypes,
+        this.strictServiceTypes ||
+        this.filterOutpDAq,
     };
 
     const selectedExtRefTitle = this.selectedExtRef
@@ -2052,6 +2092,13 @@ Basic Type: ${spec?.bType ?? '?'}"
           ?selected=${!this.strictServiceTypes}
         >
           <span>${msg('Unspecified Service Types')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="show-pDAq"
+          left
+          ?selected=${!this.filterOutpDAq}
+        >
+          <span>${msg('Preconfigured Quality Attribute')}</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
@@ -2272,10 +2319,17 @@ Basic Type: ${spec?.bType ?? '?'}"
     if (this.supervisionData.size === 0) this.reCreateSupervisionCache();
     const ieds = getOrderedIeds(this.doc).filter(ied => {
       const extRefs = Array.from(this.getExtRefElementsByIED(ied));
-      return extRefs.some(extRef =>
-        this.searchExtRefSubscriberRegex.test(
-          this.getExtRefSubscriberSearchString(extRef)
-        )
+      return (
+        extRefs.some(extRef =>
+          this.searchExtRefSubscriberRegex.test(
+            this.getExtRefSubscriberSearchString(extRef)
+          )
+        ) &&
+        (!this.filterOutpDAq ||
+          (this.filterOutpDAq &&
+            extRefs.some(
+              candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)
+            )))
       );
     });
 
@@ -2317,10 +2371,13 @@ Basic Type: ${spec?.bType ?? '?'}"
           ${repeat(
             Array.from(
               this.getExtRefElementsByIED(ied)
-                .filter(extRef =>
-                  this.searchExtRefSubscriberRegex.test(
-                    this.getExtRefSubscriberSearchString(extRef)
-                  )
+                .filter(
+                  extRef =>
+                    this.searchExtRefSubscriberRegex.test(
+                      this.getExtRefSubscriberSearchString(extRef)
+                    ) &&
+                    (!this.filterOutpDAq ||
+                      (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef)))
                 )
                 .sort((a, b) =>
                   sortExtRefItems(this.sortExtRefSubscriber, a, b)
@@ -2705,6 +2762,11 @@ Basic Type: ${spec?.bType ?? '?'}"
 
     /* hide data objects if filter enabled */
     #fcdaList:not(.show-data-objects) mwc-list-item.fcda.show-data-objects {
+      display: none;
+    }
+
+    /* hide quality attributes if filter enabled */
+    #fcdaList:not(.show-quality) mwc-list-item.fcda.show-quality {
       display: none;
     }
 

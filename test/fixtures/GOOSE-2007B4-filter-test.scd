@@ -226,8 +226,24 @@
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI">
 						<Inputs>
-							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To Pos" pLN="CSWI" pDO="Pos" pDA="q" pServT="GOOSE"/>
+							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To q" pLN="CSWI" pDO="Pos" pDA="q" pServT="GOOSE"/>
 							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To Pos" pLN="CSWI" pDO="Pos" pDA="stVal" pServT="GOOSE"/>
+						</Inputs>
+					</LN>
+				</LDevice>
+			</Server>
+		</AccessPoint>
+	</IED>
+	<IED name="Has_Only_Preconfigured_pDAq" desc="GOOSE publisher" manufacturer="Dummy">
+		<AccessPoint name="AP1">
+			<Server>
+				<Authentication/>
+				<LDevice inst="QB2_Disconnector">
+					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
+					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI">
+						<Inputs>
+							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To Q" pLN="CSWI" pDO="Pos" pDA="q" pServT="GOOSE"/>
+							<ExtRef intAddr="someRestrictedExtRef2" desc="Restricted To Q" pLN="CSWI" pDO="Pos" pDA="q" pServT="GOOSE"/>
 						</Inputs>
 					</LN>
 				</LDevice>

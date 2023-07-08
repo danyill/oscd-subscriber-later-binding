@@ -616,6 +616,33 @@ describe('goose', () => {
         await visualDiff(plugin, testName(this));
       });
 
+      it('and can filter out quality attributes', async function () {
+        const button = plugin.filterMenuFcdaButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await timeout(standardWait); // opening dialog
+
+        const filterQuality =
+          plugin.filterMenuFcdaUI.querySelector('.filter-quality');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterQuality!),
+        });
+        await timeout(standardWait); // selection
+        await plugin.filterMenuFcdaUI.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(standardWait); // rendering ?
+        await resetMouseState();
+        await visualDiff(plugin, testName(this));
+      });
+
       it('shows ExtRef filter options defaulting to on', async function () {
         const extRefFilterMenu = plugin.filterMenuExtrefPublisherButtonUI;
 

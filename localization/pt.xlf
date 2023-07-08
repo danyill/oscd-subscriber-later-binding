@@ -134,6 +134,14 @@
         <source>Mapped Reference</source>
         <target>Referência Mapeada</target>
       </trans-unit>
+      <trans-unit id="sf675f879b1c892c6">
+        <source>Quality</source>
+        <target>Qualidade</target>
+      </trans-unit>
+      <trans-unit id="s6d46705bc76da1b7">
+        <source>Preconfigured Quality Attribute</source>
+        <target>Atributos de Qualidade Pré-configurados</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
