@@ -144,6 +144,7 @@ type StoredConfiguration = {
   filterOutPreconfiguredNotMatching: boolean;
   autoIncrement: boolean;
   ignoreSupervisions: boolean;
+  allowExternalPlugins: boolean;
   filterOutBound: boolean;
   filterOutNotBound: boolean;
   strictServiceTypes: boolean;
@@ -315,6 +316,12 @@ export default class SubscriberLaterBinding extends LitElement {
   @property() docName!: string;
 
   @property() editCount!: number;
+
+  @property({ type: String, reflect: true })
+  identity = 'danyill.oscd-subscriber-later-binding';
+
+  @property({ type: Boolean, reflect: true })
+  allowExternalPlugins = true;
 
   @property({ type: Boolean })
   controlTag!: controlTagType;
@@ -602,6 +609,7 @@ export default class SubscriberLaterBinding extends LitElement {
       filterOutPreconfiguredUnmatched: this.filterOutPreconfiguredUnmatched,
       autoIncrement: this.autoIncrement,
       ignoreSupervisions: this.ignoreSupervisions,
+      allowExternalPlugins: this.allowExternalPlugins,
       filterOutBound: this.filterOutBound,
       filterOutNotBound: this.filterOutNotBound,
       strictServiceTypes: this.strictServiceTypes,
@@ -647,6 +655,8 @@ export default class SubscriberLaterBinding extends LitElement {
 
     this.autoIncrement = storedConfiguration?.autoIncrement ?? true;
     this.ignoreSupervisions = storedConfiguration?.ignoreSupervisions ?? false;
+    this.allowExternalPlugins =
+      storedConfiguration?.allowExternalPlugins ?? true;
 
     this.filterOutBound = storedConfiguration?.filterOutBound ?? false;
     this.filterOutNotBound = storedConfiguration?.filterOutNotBound ?? false;
@@ -1161,6 +1171,9 @@ export default class SubscriberLaterBinding extends LitElement {
         this.ignoreSupervisions = !(<Set<number>>(
           this.settingsMenuExtRefSubscriberUI.index
         )).has(1);
+        this.allowExternalPlugins = (<Set<number>>(
+          this.settingsMenuExtRefSubscriberUI.index
+        )).has(2);
       });
 
       this.sortMenuExtRefSubscriberUI.anchor = <HTMLElement>(
@@ -1206,6 +1219,9 @@ export default class SubscriberLaterBinding extends LitElement {
         this.ignoreSupervisions = !(<Set<number>>(
           this.settingsMenuExtRefPublisherUI.index
         )).has(0);
+        this.allowExternalPlugins = (<Set<number>>(
+          this.settingsMenuExtRefPublisherUI.index
+        )).has(1);
       });
     }
   }
@@ -2020,6 +2036,13 @@ Basic Type: ${spec?.bType ?? '?'}"
         >
           <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>
+        <mwc-check-list-item
+          class="allow-external-plugins"
+          left
+          ?selected=${this.allowExternalPlugins}
+        >
+          <span>${msg('Allow External Plugins')}</span>
+        </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
   }
@@ -2175,6 +2198,13 @@ Basic Type: ${spec?.bType ?? '?'}"
           ?selected=${!this.ignoreSupervisions}
         >
           <span>${msg('Change Supervision LNs')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="allow-external-plugins"
+          left
+          ?selected=${this.allowExternalPlugins}
+        >
+          <span>${msg('Allow External Plugins')}</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;

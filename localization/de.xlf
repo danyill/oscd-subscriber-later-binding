@@ -142,6 +142,10 @@
         <source>Preconfigured Quality Attribute</source>
         <target>Vorkonfigurierte Qualitätsmerkmale</target>
       </trans-unit>
+      <trans-unit id="se5fced4f6d864345">
+        <source>Allow External Plugins</source>
+        <target>Externe Plugins zulassen</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -1811,6 +1811,71 @@ describe('goose', () => {
       await plugin.updateComplete;
       await timeout(500); // plugin loading and initial render?
     });
+
+    describe('has settings', () => {
+      beforeEach(async function () {
+        localStorage.clear();
+        await setViewPort();
+        resetMouse();
+
+        doc = await fetch('/test/fixtures/GOOSE-2007B4-LGOS.scd')
+          .then(response => response.text())
+          .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+        editor.docName = 'GOOSE-2007B4-LGOS.scd';
+        editor.docs[editor.docName] = doc;
+
+        await editor.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(500); // plugin loading and initial render?
+      });
+
+      it('it shows an ExtRef settings menu', async function () {
+        const button = plugin.settingsMenuExtRefPublisherButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await plugin.settingsMenuExtRefPublisherUI.updateComplete;
+
+        await timeout(standardWait); // opening dialog
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('which allows external plugins by default', async function () {
+        expect(plugin.allowExternalPlugins).to.be.true;
+        expect(plugin).has.attribute('allowexternalplugins');
+      });
+
+      it('can disable external plugins', async function () {
+        const button = plugin.settingsMenuExtRefPublisherButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await plugin.settingsMenuExtRefPublisherUI.updateComplete;
+
+        const allowExternalPluginsSettings =
+          plugin.settingsMenuExtRefPublisherUI.querySelector(
+            '.allow-external-plugins'
+          );
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(allowExternalPluginsSettings!),
+        });
+        await plugin.settingsMenuExtRefPublisherUI!.updateComplete;
+        await plugin.updateComplete;
+        await timeout(standardWait); // selection
+
+        expect(plugin).does.not.have.attribute('allowexternalplugins');
+      });
+    });
   });
 
   // TODO: Test undo and redo once core is updated

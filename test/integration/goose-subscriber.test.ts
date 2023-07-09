@@ -5,7 +5,7 @@ import { visualDiff } from '@web/test-runner-visual-regression';
 
 import { sendMouse, resetMouse, sendKeys } from '@web/test-runner-commands';
 
-import { fixture, html } from '@open-wc/testing';
+import { expect, fixture, html } from '@open-wc/testing';
 
 import '@openscd/open-scd-core/open-scd.js';
 
@@ -1797,6 +1797,71 @@ describe('goose', () => {
       await resetMouseState();
       await timeout(standardWait); // button selection
       await visualDiff(plugin, testName(this));
+    });
+
+    describe('has settings', () => {
+      beforeEach(async function () {
+        localStorage.clear();
+        await setViewPort();
+        resetMouse();
+
+        doc = await fetch('/test/fixtures/GOOSE-2007B4-LGOS.scd')
+          .then(response => response.text())
+          .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+        editor.docName = 'GOOSE-2007B4-LGOS.scd';
+        editor.docs[editor.docName] = doc;
+
+        await editor.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(500); // plugin loading and initial render?
+      });
+
+      it('it shows an ExtRef settings menu', async function () {
+        const button = plugin.settingsMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
+
+        await timeout(standardWait); // opening dialog
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('which allows external plugins by default', async function () {
+        expect(plugin.allowExternalPlugins).to.be.true;
+        expect(plugin).has.attribute('allowexternalplugins');
+      });
+
+      it('can disable external plugins', async function () {
+        const button = plugin.settingsMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
+
+        const allowExternalPluginsSettings =
+          plugin.settingsMenuExtRefSubscriberUI.querySelector(
+            '.allow-external-plugins'
+          );
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(allowExternalPluginsSettings!),
+        });
+        await plugin.settingsMenuExtRefSubscriberUI!.updateComplete;
+        await plugin.updateComplete;
+        await timeout(standardWait); // selection
+
+        expect(plugin).does.not.have.attribute('allowexternalplugins');
+      });
     });
   });
 
