@@ -12285,6 +12285,8 @@ function debounce(callback, delay = 100) {
 class SubscriberLaterBinding extends s$1 {
     constructor() {
         super();
+        this.identity = 'danyill.oscd-subscriber-later-binding';
+        this.allowExternalPlugins = true;
         this.searchFcdaRegex = /.*/i;
         this.searchExtRefPublisherRegex = /.*/i;
         this.searchExtRefSubscriberRegex = /.*/i;
@@ -12393,6 +12395,7 @@ class SubscriberLaterBinding extends s$1 {
             filterOutPreconfiguredUnmatched: this.filterOutPreconfiguredUnmatched,
             autoIncrement: this.autoIncrement,
             ignoreSupervisions: this.ignoreSupervisions,
+            allowExternalPlugins: this.allowExternalPlugins,
             filterOutBound: this.filterOutBound,
             filterOutNotBound: this.filterOutNotBound,
             strictServiceTypes: this.strictServiceTypes,
@@ -12408,7 +12411,7 @@ class SubscriberLaterBinding extends s$1 {
      * if not set.
      */
     restoreSettings() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         const storedSettings = localStorage.getItem('oscd-subscriber-later-binding');
         const storedConfiguration = storedSettings
             ? JSON.parse(storedSettings)
@@ -12426,15 +12429,17 @@ class SubscriberLaterBinding extends s$1 {
             (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutPreconfiguredNotMatching) || false;
         this.autoIncrement = (_c = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.autoIncrement) !== null && _c !== void 0 ? _c : true;
         this.ignoreSupervisions = (_d = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.ignoreSupervisions) !== null && _d !== void 0 ? _d : false;
-        this.filterOutBound = (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutBound) !== null && _e !== void 0 ? _e : false;
-        this.filterOutNotBound = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutNotBound) !== null && _f !== void 0 ? _f : false;
-        this.strictServiceTypes = (_g = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.strictServiceTypes) !== null && _g !== void 0 ? _g : false;
-        this.filterOutpDAq = (_h = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutpDAq) !== null && _h !== void 0 ? _h : false;
+        this.allowExternalPlugins =
+            (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.allowExternalPlugins) !== null && _e !== void 0 ? _e : true;
+        this.filterOutBound = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutBound) !== null && _f !== void 0 ? _f : false;
+        this.filterOutNotBound = (_g = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutNotBound) !== null && _g !== void 0 ? _g : false;
+        this.strictServiceTypes = (_h = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.strictServiceTypes) !== null && _h !== void 0 ? _h : false;
+        this.filterOutpDAq = (_j = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutpDAq) !== null && _j !== void 0 ? _j : false;
         this.sortExtRefPublisher =
-            (_j = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefPublisher) !== null && _j !== void 0 ? _j : ExtRefSortOrder.DataModel;
+            (_k = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefPublisher) !== null && _k !== void 0 ? _k : ExtRefSortOrder.DataModel;
         this.sortExtRefSubscriber =
-            (_k = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefSubscriber) !== null && _k !== void 0 ? _k : ExtRefSortOrder.DataModel;
-        this.sortFcda = (_l = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortFcda) !== null && _l !== void 0 ? _l : FcdaSortOrder.DataModel;
+            (_l = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefSubscriber) !== null && _l !== void 0 ? _l : ExtRefSortOrder.DataModel;
+        this.sortFcda = (_m = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortFcda) !== null && _m !== void 0 ? _m : FcdaSortOrder.DataModel;
     }
     /**
      * Retrieve matching control blocks in the SCL document to allow UI display
@@ -12800,6 +12805,7 @@ class SubscriberLaterBinding extends s$1 {
             this.settingsMenuExtRefSubscriberUI.addEventListener('closed', () => {
                 this.autoIncrement = (this.settingsMenuExtRefSubscriberUI.index).has(0);
                 this.ignoreSupervisions = !(this.settingsMenuExtRefSubscriberUI.index).has(1);
+                this.allowExternalPlugins = (this.settingsMenuExtRefSubscriberUI.index).has(2);
             });
             this.sortMenuExtRefSubscriberUI.anchor = (this.sortMenuExtRefSubscriberButtonUI);
             this.sortMenuExtRefSubscriberUI.addEventListener('closed', () => {
@@ -12825,6 +12831,7 @@ class SubscriberLaterBinding extends s$1 {
             this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
             this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
                 this.ignoreSupervisions = !(this.settingsMenuExtRefPublisherUI.index).has(0);
+                this.allowExternalPlugins = (this.settingsMenuExtRefPublisherUI.index).has(1);
             });
         }
     }
@@ -13501,6 +13508,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         >
           <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>
+        <mwc-check-list-item
+          class="allow-external-plugins"
+          left
+          ?selected=${this.allowExternalPlugins}
+        >
+          <span>${msg('Allow External Plugins')}</span>
+        </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
     }
@@ -13649,6 +13663,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           ?selected=${!this.ignoreSupervisions}
         >
           <span>${msg('Change Supervision LNs')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="allow-external-plugins"
+          left
+          ?selected=${this.allowExternalPlugins}
+        >
+          <span>${msg('Allow External Plugins')}</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -14320,6 +14341,12 @@ __decorate([
 __decorate([
     e$5()
 ], SubscriberLaterBinding.prototype, "editCount", void 0);
+__decorate([
+    e$5({ type: String, reflect: true })
+], SubscriberLaterBinding.prototype, "identity", void 0);
+__decorate([
+    e$5({ type: Boolean, reflect: true })
+], SubscriberLaterBinding.prototype, "allowExternalPlugins", void 0);
 __decorate([
     e$5({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "controlTag", void 0);

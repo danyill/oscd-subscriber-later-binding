@@ -38,6 +38,8 @@ export default class SubscriberLaterBinding extends LitElement {
     doc: XMLDocument;
     docName: string;
     editCount: number;
+    identity: string;
+    allowExternalPlugins: boolean;
     controlTag: controlTagType;
     subscriberView: boolean;
     filterOutSubscribed: boolean;
