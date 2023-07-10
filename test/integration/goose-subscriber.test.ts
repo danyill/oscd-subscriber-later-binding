@@ -397,6 +397,7 @@ describe('goose', () => {
 
         await resetMouseState();
         await timeout(standardWait); // selection
+        expect(plugin).does.not.have.attribute('ignoresupervision');
         await visualDiff(plugin, testName(this));
       });
 
@@ -418,6 +419,7 @@ describe('goose', () => {
 
         await resetMouseState();
         await timeout(standardWait); // selection
+        expect(plugin).does.not.have.attribute('ignoresupervision');
         await visualDiff(plugin, testName(this));
       });
 
@@ -506,6 +508,7 @@ describe('goose', () => {
 
         await resetMouseState();
         await timeout(standardWait); // selection
+        expect(plugin).does.have.attribute('ignoresupervision');
         await visualDiff(plugin, testName(this));
       });
 
@@ -1176,7 +1179,7 @@ describe('goose', () => {
         const extRefListElement = plugin.extRefListSubscriberUI!;
         const extRef = getExtRefItem(
           extRefListElement,
-          'Has_Only_Preconfigured>>QB2_Disconnector> XSWI 1>someRestrictedExtRef[0]'
+          'Has_Only_Preconfigured>>QB2_Disconnector> XSWI 1>someRestrictedExtRef[1]'
         )!;
         extRef.scrollIntoView();
 

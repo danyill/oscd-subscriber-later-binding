@@ -143,7 +143,7 @@ type StoredConfiguration = {
   filterOutQuality: boolean;
   filterOutPreconfiguredNotMatching: boolean;
   autoIncrement: boolean;
-  ignoreSupervisions: boolean;
+  ignoreSupervision: boolean;
   allowExternalPlugins: boolean;
   filterOutBound: boolean;
   filterOutNotBound: boolean;
@@ -168,7 +168,7 @@ const storedProperties: string[] = [
   'filterOutQuality',
   'filterOutPreconfiguredNotMatching',
   'autoIncrement',
-  'ignoreSupervisions',
+  'ignoreSupervision',
   'filterOutBound',
   'filterOutNotBound',
   'strictServiceTypes',
@@ -347,8 +347,8 @@ export default class SubscriberLaterBinding extends LitElement {
   @property({ type: Boolean })
   autoIncrement!: boolean;
 
-  @property({ type: Boolean })
-  ignoreSupervisions!: boolean;
+  @property({ type: Boolean, reflect: true })
+  ignoreSupervision!: boolean;
 
   @property({ type: Boolean })
   filterOutBound!: boolean;
@@ -608,7 +608,7 @@ export default class SubscriberLaterBinding extends LitElement {
       filterOutQuality: this.filterOutQuality,
       filterOutPreconfiguredUnmatched: this.filterOutPreconfiguredUnmatched,
       autoIncrement: this.autoIncrement,
-      ignoreSupervisions: this.ignoreSupervisions,
+      ignoreSupervision: this.ignoreSupervision,
       allowExternalPlugins: this.allowExternalPlugins,
       filterOutBound: this.filterOutBound,
       filterOutNotBound: this.filterOutNotBound,
@@ -654,7 +654,7 @@ export default class SubscriberLaterBinding extends LitElement {
       storedConfiguration?.filterOutPreconfiguredNotMatching || false;
 
     this.autoIncrement = storedConfiguration?.autoIncrement ?? true;
-    this.ignoreSupervisions = storedConfiguration?.ignoreSupervisions ?? false;
+    this.ignoreSupervision = storedConfiguration?.ignoreSupervision ?? false;
     this.allowExternalPlugins =
       storedConfiguration?.allowExternalPlugins ?? true;
 
@@ -988,7 +988,7 @@ export default class SubscriberLaterBinding extends LitElement {
     }
 
     if (
-      !this.ignoreSupervisions &&
+      !this.ignoreSupervision &&
       canRemoveSubscriptionSupervision(extRef) &&
       controlBlock
     ) {
@@ -1024,7 +1024,7 @@ export default class SubscriberLaterBinding extends LitElement {
       subscribe({ sink: extRef, source: { fcda, controlBlock } })
     );
 
-    if (!this.ignoreSupervisions) {
+    if (!this.ignoreSupervision) {
       const subscriberIed = extRef.closest('IED')!;
       supEdits = instantiateSubscriptionSupervision(
         controlBlock,
@@ -1168,7 +1168,7 @@ export default class SubscriberLaterBinding extends LitElement {
         this.autoIncrement = (<Set<number>>(
           this.settingsMenuExtRefSubscriberUI.index
         )).has(0);
-        this.ignoreSupervisions = !(<Set<number>>(
+        this.ignoreSupervision = !(<Set<number>>(
           this.settingsMenuExtRefSubscriberUI.index
         )).has(1);
         this.allowExternalPlugins = (<Set<number>>(
@@ -1216,7 +1216,7 @@ export default class SubscriberLaterBinding extends LitElement {
       );
 
       this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
-        this.ignoreSupervisions = !(<Set<number>>(
+        this.ignoreSupervision = !(<Set<number>>(
           this.settingsMenuExtRefPublisherUI.index
         )).has(0);
         this.allowExternalPlugins = (<Set<number>>(
@@ -2032,7 +2032,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         <mwc-check-list-item
           class="no-supervisions"
           left
-          ?selected=${!this.ignoreSupervisions}
+          ?selected=${!this.ignoreSupervision}
         >
           <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>
@@ -2195,7 +2195,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         <mwc-check-list-item
           class="no-supervisions"
           left
-          ?selected=${!this.ignoreSupervisions}
+          ?selected=${!this.ignoreSupervision}
         >
           <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>

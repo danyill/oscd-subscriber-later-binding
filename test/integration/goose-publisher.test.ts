@@ -314,6 +314,7 @@ describe('goose', () => {
 
         await resetMouseState();
         await timeout(standardWait); // selection
+        expect(plugin).does.not.have.attribute('ignoresupervision');
         await visualDiff(plugin, testName(this));
       });
 
@@ -351,6 +352,7 @@ describe('goose', () => {
 
         await resetMouseState();
         await timeout(standardWait); // selection
+        expect(plugin).does.not.have.attribute('ignoresupervision');
         await visualDiff(plugin, testName(this));
       });
 
@@ -473,6 +475,7 @@ describe('goose', () => {
 
         await resetMouseState();
         await timeout(standardWait);
+        expect(plugin).does.have.attribute('ignoresupervision');
         await visualDiff(plugin, testName(this));
       });
     });
