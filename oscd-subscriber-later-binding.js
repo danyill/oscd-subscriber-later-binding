@@ -12168,7 +12168,7 @@ const storedProperties = [
     'filterOutQuality',
     'filterOutPreconfiguredNotMatching',
     'autoIncrement',
-    'ignoreSupervisions',
+    'ignoreSupervision',
     'filterOutBound',
     'filterOutNotBound',
     'strictServiceTypes',
@@ -12394,7 +12394,7 @@ class SubscriberLaterBinding extends s$1 {
             filterOutQuality: this.filterOutQuality,
             filterOutPreconfiguredUnmatched: this.filterOutPreconfiguredUnmatched,
             autoIncrement: this.autoIncrement,
-            ignoreSupervisions: this.ignoreSupervisions,
+            ignoreSupervision: this.ignoreSupervision,
             allowExternalPlugins: this.allowExternalPlugins,
             filterOutBound: this.filterOutBound,
             filterOutNotBound: this.filterOutNotBound,
@@ -12428,7 +12428,7 @@ class SubscriberLaterBinding extends s$1 {
         this.filterOutPreconfiguredUnmatched =
             (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutPreconfiguredNotMatching) || false;
         this.autoIncrement = (_c = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.autoIncrement) !== null && _c !== void 0 ? _c : true;
-        this.ignoreSupervisions = (_d = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.ignoreSupervisions) !== null && _d !== void 0 ? _d : false;
+        this.ignoreSupervision = (_d = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.ignoreSupervision) !== null && _d !== void 0 ? _d : false;
         this.allowExternalPlugins =
             (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.allowExternalPlugins) !== null && _e !== void 0 ? _e : true;
         this.filterOutBound = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutBound) !== null && _f !== void 0 ? _f : false;
@@ -12698,7 +12698,7 @@ class SubscriberLaterBinding extends s$1 {
         else {
             controlBlock = this.selectedControl;
         }
-        if (!this.ignoreSupervisions &&
+        if (!this.ignoreSupervision &&
             canRemoveSubscriptionSupervision(extRef) &&
             controlBlock) {
             const subscriberIed = extRef.closest('IED');
@@ -12718,7 +12718,7 @@ class SubscriberLaterBinding extends s$1 {
         const subscribeEdits = [];
         let supEdits = [];
         subscribeEdits.push(subscribe({ sink: extRef, source: { fcda, controlBlock } }));
-        if (!this.ignoreSupervisions) {
+        if (!this.ignoreSupervision) {
             const subscriberIed = extRef.closest('IED');
             supEdits = instantiateSubscriptionSupervision(controlBlock, subscriberIed);
         }
@@ -12804,7 +12804,7 @@ class SubscriberLaterBinding extends s$1 {
             this.settingsMenuExtRefSubscriberUI.anchor = (this.settingsMenuExtRefSubscriberButtonUI);
             this.settingsMenuExtRefSubscriberUI.addEventListener('closed', () => {
                 this.autoIncrement = (this.settingsMenuExtRefSubscriberUI.index).has(0);
-                this.ignoreSupervisions = !(this.settingsMenuExtRefSubscriberUI.index).has(1);
+                this.ignoreSupervision = !(this.settingsMenuExtRefSubscriberUI.index).has(1);
                 this.allowExternalPlugins = (this.settingsMenuExtRefSubscriberUI.index).has(2);
             });
             this.sortMenuExtRefSubscriberUI.anchor = (this.sortMenuExtRefSubscriberButtonUI);
@@ -12830,7 +12830,7 @@ class SubscriberLaterBinding extends s$1 {
             });
             this.settingsMenuExtRefPublisherUI.anchor = (this.settingsMenuExtRefPublisherButtonUI);
             this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
-                this.ignoreSupervisions = !(this.settingsMenuExtRefPublisherUI.index).has(0);
+                this.ignoreSupervision = !(this.settingsMenuExtRefPublisherUI.index).has(0);
                 this.allowExternalPlugins = (this.settingsMenuExtRefPublisherUI.index).has(1);
             });
         }
@@ -13504,7 +13504,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         <mwc-check-list-item
           class="no-supervisions"
           left
-          ?selected=${!this.ignoreSupervisions}
+          ?selected=${!this.ignoreSupervision}
         >
           <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>
@@ -13660,7 +13660,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         <mwc-check-list-item
           class="no-supervisions"
           left
-          ?selected=${!this.ignoreSupervisions}
+          ?selected=${!this.ignoreSupervision}
         >
           <span>${msg('Change Supervision LNs')}</span>
         </mwc-check-list-item>
@@ -14372,8 +14372,8 @@ __decorate([
     e$5({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "autoIncrement", void 0);
 __decorate([
-    e$5({ type: Boolean })
-], SubscriberLaterBinding.prototype, "ignoreSupervisions", void 0);
+    e$5({ type: Boolean, reflect: true })
+], SubscriberLaterBinding.prototype, "ignoreSupervision", void 0);
 __decorate([
     e$5({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "filterOutBound", void 0);

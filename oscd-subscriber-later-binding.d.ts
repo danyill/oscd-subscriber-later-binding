@@ -48,7 +48,7 @@ export default class SubscriberLaterBinding extends LitElement {
     filterOutQuality: boolean;
     filterOutPreconfiguredUnmatched: boolean;
     autoIncrement: boolean;
-    ignoreSupervisions: boolean;
+    ignoreSupervision: boolean;
     filterOutBound: boolean;
     filterOutNotBound: boolean;
     strictServiceTypes: boolean;
