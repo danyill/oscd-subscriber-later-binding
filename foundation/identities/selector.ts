@@ -11,13 +11,6 @@ export function selector(tagName: string, identity: string | number): string {
   return tagName;
 }
 
-export function findElement(
-  root: XMLDocument | Element,
-  { tagName, identity }: { tagName: SCLTag; identity: string }
-): Element | null {
-  return root.querySelector(selector(tagName, identity));
-}
-
 function crossProduct<T>(...arrays: T[][]): T[][] {
   return arrays.reduce<T[][]>(
     (a, b) => <T[][]>a.flatMap(d => b.map(e => [d, e].flat())),

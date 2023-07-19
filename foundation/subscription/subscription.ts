@@ -14,7 +14,7 @@ export type fcdaData = {
   desc: fcdaDesc;
 };
 
-export const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
+const SCL_NAMESPACE = 'http://www.iec.ch/61850/2003/SCL';
 
 export function getFcdaOrExtRefTitle(fcdaElement: Element): string {
   return `${fcdaElement.getAttribute('ldInst')} ${
