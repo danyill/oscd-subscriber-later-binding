@@ -13,9 +13,9 @@
     "start": "npm run build && concurrently -k -r \"tsc -b --watch --preserveWatchOutput\" \"wds\"",
     "start:build": "npm run build && es-dev-server --root-dir dist --app-index index.html --compatibility none --open",
     "start:bundle": "npm run bundle && es-dev-server --root-dir dist --app-index index.html --compatibility none --open",
-    "test": "playwright install && wtr --coverage",
-    "test:watch": "npm run build && concurrently -k -r \"tsc -b --watch --preserveWatchOutput\" \"wtr --watch --coverage\"",
-    "test:update": "npm run build && wtr --update-visual-baseline",
+    "test": "rimraf dist && npm run build && playwright install && wtr --coverage",
+    "test:watch": "rimraf dist && npm run build && concurrently -k -r \"tsc -b --watch --preserveWatchOutput\" \"wtr --watch --coverage\"",
+    "test:update": "rimraf dist && npm run build && wtr --update-visual-baseline",
     "analyze": "cem analyze --litelement",
     "deploy": "npm run bundle && gh-pages --dist 'dist'",
     "build": "npm run extract && npm run localize && npm run compile",
@@ -27,7 +27,7 @@
     "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
     "extract": "lit-localize extract",
     "localize": "lit-localize build",
-    "prepare": "husky install"
+    "prepare": "husky install && playwright install"
   },
   "dependencies": {
     "@lit/localize": "^0.11.4",
