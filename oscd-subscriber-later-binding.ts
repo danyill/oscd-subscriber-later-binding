@@ -66,11 +66,7 @@ import {
   canRemoveSubscriptionSupervision,
   removeSubscriptionSupervision,
 } from './foundation/subscription/subscription.js';
-import {
-  findFCDAs,
-  getDescriptionAttribute,
-  getNameAttribute,
-} from './foundation/foundation.js';
+import { findFCDAs } from './foundation/foundation.js';
 import {
   gooseIcon,
   smvIcon,
@@ -873,7 +869,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
     return `${iedInfo} ${identity(extRef)} ${identity(
       this.getCachedSupervision(extRef) ?? null
-    )} ${getDescriptionAttribute(extRef)} ${identity(subscriberFCDA ?? null)} ${
+    )} ${extRef.getAttribute('desc')} ${identity(subscriberFCDA ?? null)} ${
       fcdaDesc ?? ''
     } ${fcdaSpec ?? ''} ${extRefPathValue} ${extRefCBPath}`;
   }
@@ -889,7 +885,7 @@ export default class SubscriberLaterBinding extends LitElement {
    */
   private getFcdaSearchString(control: Element, fcda: Element): string {
     const fcdaInfo = this.getFcdaInfo(fcda);
-    return `${identity(control)} ${getDescriptionAttribute(control)} ${identity(
+    return `${identity(control)} ${control.getAttribute('desc')} ${identity(
       fcda
     )} ${fcdaInfo.spec?.bType ?? ''} ${
       fcdaInfo.spec?.cdc ?? ''
@@ -1360,7 +1356,7 @@ export default class SubscriberLaterBinding extends LitElement {
   private renderSubscribedExtRefElement(extRef: Element): TemplateResult {
     const supervisionNode = getExistingSupervision(extRef);
     const { spec } = this.getExtRefInfo(extRef);
-    const desc = getDescriptionAttribute(extRef);
+    const desc = extRef.getAttribute('desc');
     const iedName = extRef.closest('IED')!.getAttribute('name');
 
     return html`<mwc-list-item
@@ -1448,10 +1444,10 @@ Basic Type: ${spec?.bType ?? '?'}"
     };
     const selectedFcdaTitle =
       this.selectedControl && this.selectedFCDA && !this.subscriberView
-        ? `${getNameAttribute(
-            this.selectedFCDA.closest('IED')!
-          )} > ${getNameAttribute(
-            this.selectedControl
+        ? `${this.selectedFCDA
+            .closest('IED')
+            ?.getAttribute('name')} > ${this.selectedControl.getAttribute(
+            'name'
           )} : ${getFcdaOrExtRefTitle(this.selectedFCDA)}`
         : '';
 
@@ -1803,11 +1799,11 @@ Basic Type: ${spec?.bType ?? '?'}"
                 twoline
                 hasMeta
               >
-                <span>${iedName} > ${getNameAttribute(control)} </span>
+                <span>${iedName} > ${control.getAttribute('name')} </span>
                 <span slot="secondary"
                   >${objectReferenceInIed(control)}
-                  ${getDescriptionAttribute(control)
-                    ? html` - ${getDescriptionAttribute(control)}`
+                  ${control.getAttribute('desc')
+                    ? html` - ${control.getAttribute('desc')}`
                     : nothing}</span
                 >
                 <mwc-icon slot="graphic"
@@ -1833,8 +1829,8 @@ Basic Type: ${spec?.bType ?? '?'}"
       .filter(extRefCandidate => {
         const supervisionNode = getExistingSupervision(extRefCandidate);
         return this.searchExtRefPublisherRegex.test(
-          `${identity(extRefCandidate)} ${getDescriptionAttribute(
-            extRefCandidate
+          `${identity(extRefCandidate)} ${extRefCandidate.getAttribute(
+            'desc'
           )} ${identity(supervisionNode)}`
         );
       })
@@ -1862,9 +1858,7 @@ Basic Type: ${spec?.bType ?? '?'}"
     const availableExtRefs = this.getAvailableExtRefElements()
       .filter(extRefCandidate =>
         this.searchExtRefPublisherRegex.test(
-          `${identity(extRefCandidate)} ${getDescriptionAttribute(
-            extRefCandidate
-          )}`
+          `${identity(extRefCandidate)} ${extRefCandidate.getAttribute('desc')}`
         )
       )
       .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
@@ -1879,7 +1873,7 @@ Basic Type: ${spec?.bType ?? '?'}"
               isSubscribed(extRef) &&
               !findFCDAs(extRef).find(x => x !== undefined);
             const { spec } = this.getExtRefInfo(extRef);
-            const desc = getDescriptionAttribute(extRef);
+            const desc = extRef.getAttribute('desc');
             const disabledExtRef =
               this.selectedFCDA &&
               !this.doesFcdaMeetExtRefRestrictions(extRef, this.selectedFCDA);
@@ -2062,9 +2056,9 @@ Basic Type: ${spec?.bType ?? '?'}"
     };
 
     const selectedExtRefTitle = this.selectedExtRef
-      ? `${getNameAttribute(
-          this.selectedExtRef?.closest('IED')!
-        )} > ${objectReferenceInIed(
+      ? `${this.selectedExtRef
+          ?.closest('IED')
+          ?.getAttribute('name')} > ${objectReferenceInIed(
           this.selectedExtRef
         )}: ${this.selectedExtRef.getAttribute('intAddr')}`
       : '';
@@ -2235,7 +2229,7 @@ Basic Type: ${spec?.bType ?? '?'}"
       );
     }
 
-    const extRefDescription = getDescriptionAttribute(extRef);
+    const extRefDescription = extRef.getAttribute('desc');
 
     const supAndctrlDescription =
       supervisionDescription || controlBlockDescription
@@ -2394,7 +2388,7 @@ Basic Type: ${spec?.bType ?? '?'}"
             noninteractive
             graphic="icon"
           >
-            <span>${getNameAttribute(ied)}</span>
+            <span>${ied.getAttribute('name')}</span>
             <span slot="secondary">${iedInfo}</span>
             <mwc-icon slot="graphic">developer_board</mwc-icon>
           </mwc-list-item>

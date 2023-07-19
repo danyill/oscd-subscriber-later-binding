@@ -14,26 +14,6 @@ export const serviceTypes: Partial<Record<string, string>> = {
   SampledValueControl: 'SMV',
 };
 
-/**
- * Extract the 'name' attribute from the given XML element.
- * @param element - The element to extract name from.
- * @returns the name, or undefined if there is no name.
- */
-export function getNameAttribute(element: Element): string | undefined {
-  const name = element.getAttribute('name');
-  return name ?? undefined;
-}
-
-/**
- * Extract the 'desc' attribute from the given XML element.
- * @param element - The element to extract description from.
- * @returns the name, or undefined if there is no description.
- */
-export function getDescriptionAttribute(element: Element): string | undefined {
-  const name = element.getAttribute('desc');
-  return name ?? undefined;
-}
-
 export function isPublic(element: Element): boolean {
   return !element.closest('Private');
 }
