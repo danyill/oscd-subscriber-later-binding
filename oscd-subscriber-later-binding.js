@@ -14027,7 +14027,6 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
 }
 SubscriberLaterBinding.styles = i$5 `
     :host {
-      width: 100vw;
       display: flex;
 
       --secondaryThemeFallback: #018786;
