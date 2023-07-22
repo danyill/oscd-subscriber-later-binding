@@ -2661,7 +2661,6 @@ Basic Type: ${spec?.bType ?? '?'}"
 
   static styles = css`
     :host {
-      width: 100vw;
       display: flex;
 
       --secondaryThemeFallback: #018786;
