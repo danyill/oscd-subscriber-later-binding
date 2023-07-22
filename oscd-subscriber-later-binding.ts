@@ -2733,9 +2733,7 @@ Basic Type: ${spec?.bType ?? '?'}"
 
     .column {
       flex: 50%;
-      /* margin: 0px 6px 0px; */
       min-width: 300px;
-      height: 100%;
       overflow-y: clip;
       overflow-x: auto;
     }
@@ -2821,7 +2819,6 @@ Basic Type: ${spec?.bType ?? '?'}"
     #listContainer {
       width: 100%;
       display: flex;
-      /* padding: 8px 3px 8px; */
       height: calc(100vh - 118px);
     }
 
