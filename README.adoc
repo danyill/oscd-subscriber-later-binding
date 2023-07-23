@@ -25,6 +25,9 @@
 :uri-ci-bundle: https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js
 :uri-material-icons: https://fonts.google.com/icons
 :uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
+:uri-addon-plugin-siemens: https://github.com/danyill/oscd-subscriber-lb-siemens
+:uri-addon-plugin-sel: https://github.com/danyill/oscd-subscriber-lb-sel
+:uri-addon-plugin-nr: https://github.com/danyill/oscd-subscriber-lb-nr
 
 // badges
 image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[title='Build Status']
@@ -48,6 +51,8 @@ editor engine for {uri-openscd}[OpenSCD].
 It offers a publisher and subscriber view to allow efficient and intuitive use.
 
 {uri-openscd-core-plugin-demo}[Try it out online]!
+
+This demo also includes some add-on plugins to provide specific functionality for {uri-addon-plugin-siemens}[Siemens], {uri-addon-plugin-sel}[SEL] and {uri-addon-plugin-nr}[NR Electric] IEDs. To use this, enable it first by opening the menu plugin and checking "Enable".
 
 // TODO: Update screenshots
 |===
