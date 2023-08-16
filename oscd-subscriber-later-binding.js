@@ -13022,8 +13022,8 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             >`
             : x `<span class="title-element text"
               >${this.controlTag === 'SampledValueControl'
-                ? msg('Select SV')
-                : msg('Select GOOSE')}</span
+                ? msg('Select SV Publisher')
+                : msg('Select GOOSE Publisher')}</span
             >`}
         <mwc-icon-button
           id="filterFcdaIcon"
@@ -13413,7 +13413,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             'title-element': true,
         };
         return x `<h1 class="fcda-title">
-      <span class="title-element text">${msg('Select Input')}</span>
+      <span class="title-element text">${msg('Select Subscriber Input')}</span>
       <mwc-icon-button
         id="filterExtRefPublisherIcon"
         class="${o(filterMenuClasses)}"
@@ -13541,7 +13541,9 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             title="${selectedExtRefTitle}"
             >${selectedExtRefTitle}</span
           >`
-            : x `<span class="title-element text">${msg('Select Input')}</span>`}
+            : x `<span class="title-element text"
+            >${msg('Select Subscriber Input')}</span
+          >`}
 
       <mwc-icon-button
         id="filterExtRefSubscriberIcon"

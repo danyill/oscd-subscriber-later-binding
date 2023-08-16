@@ -1,5 +1,4 @@
 export declare const templates: {
-    s0df58b351dfdde3e: string;
     s1cff131b3b4aa852: string;
     s22a10e043800c031: string;
     s22b07ec8ef21ae60: string;
@@ -10,11 +9,9 @@ export declare const templates: {
     s4d958711afb20742: string;
     s54431d00a8030125: string;
     s5d929ff1619ac0c9: string;
-    s62577ba24e6c7d95: string;
     s63d894b1ddb06289: string;
     s6d46705bc76da1b7: string;
     s70c2825ea00a6e1d: string;
-    s7b45ec25bda765ae: string;
     s7c95876637f6a9d7: string;
     s83b4689aeee7103d: string;
     s8515776e84d433b7: string;
@@ -35,6 +32,9 @@ export declare const templates: {
     sf5bd9968dcf60b09: string;
     sf662655f1f2b699c: string;
     sf675f879b1c892c6: string;
+    s524a73ff42cdb07a: string;
+    sa932746a6ee3478a: string;
+    sba500ed4ebad68c1: string;
     sbcdf43ebad9c5a3a: string;
     s62b4f83c9503e1af: import("@lit/localize").StrResult;
     s0731afca1ab76175: import("@lit/localize").StrResult;
