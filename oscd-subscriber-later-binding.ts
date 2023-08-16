@@ -1466,8 +1466,8 @@ Basic Type: ${spec?.bType ?? '?'}"
             >`
           : html`<span class="title-element text"
               >${this.controlTag === 'SampledValueControl'
-                ? msg('Select SV')
-                : msg('Select GOOSE')}</span
+                ? msg('Select SV Publisher')
+                : msg('Select GOOSE Publisher')}</span
             >`}
         <mwc-icon-button
           id="filterFcdaIcon"
@@ -1941,7 +1941,7 @@ Basic Type: ${spec?.bType ?? '?'}"
     };
 
     return html`<h1 class="fcda-title">
-      <span class="title-element text">${msg('Select Input')}</span>
+      <span class="title-element text">${msg('Select Subscriber Input')}</span>
       <mwc-icon-button
         id="filterExtRefPublisherIcon"
         class="${classMap(filterMenuClasses)}"
@@ -2076,7 +2076,9 @@ Basic Type: ${spec?.bType ?? '?'}"
             title="${selectedExtRefTitle}"
             >${selectedExtRefTitle}</span
           >`
-        : html`<span class="title-element text">${msg('Select Input')}</span>`}
+        : html`<span class="title-element text"
+            >${msg('Select Subscriber Input')}</span
+          >`}
 
       <mwc-icon-button
         id="filterExtRefSubscriberIcon"
