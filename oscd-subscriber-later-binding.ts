@@ -48,7 +48,6 @@ import type { TextField } from '@material/mwc-textfield';
 import { identity } from './foundation/identities/identity.js';
 import { selector } from './foundation/identities/selector.js';
 import {
-  checkEditionSpecificRequirements,
   findControlBlock,
   findFCDA,
   getCbReference,
@@ -711,94 +710,6 @@ export default class SubscriberLaterBinding extends LitElement {
       this.controlBlockFcdaInfo.set(controlBlockFcdaId, extRefCount);
     }
     return this.controlBlockFcdaInfo.get(controlBlockFcdaId)!;
-  }
-
-  /**
-   * Build an initial count of how often each FCDA is used in an ExtRef.
-   * This is much more efficient than building the count and regenerating it
-   * piecemeal and is an optimisation for large SCL files.
-   * @returns nothing - cached on the class variable `controlBlockFcdaInfo`.
-   */
-  private buildExtRefCount(): void {
-    if (!this.doc) return;
-
-    const dsToCb = new Map();
-    // get only the FCDAs relevant to the current view
-    const fcdaData = new Map();
-    const fcdaCompare = new Map();
-    Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(
-      cb => {
-        const isReferencedDs = cb.parentElement!.querySelector(
-          `DataSet[name="${cb.getAttribute('datSet')}"]`
-        );
-
-        if (isReferencedDs) {
-          dsToCb.set(identity(isReferencedDs), cb);
-        }
-      }
-    );
-
-    this.doc
-      .querySelectorAll(
-        `:root > IED > AccessPoint > Server > LDevice > LN > DataSet, 
-         :root > IED > AccessPoint > Server > LDevice > LN0 > DataSet`
-      )
-      .forEach(dataSet => {
-        if (dsToCb.has(identity(dataSet))) {
-          const thisCb = dsToCb.get(identity(dataSet));
-          dataSet.querySelectorAll('FCDA').forEach(fcda => {
-            const key = `${identity(thisCb)} ${identity(fcda)}`;
-            fcdaData.set(fcda, {
-              key,
-              cb: dsToCb.get(identity(dataSet)),
-            });
-            this.controlBlockFcdaInfo.set(key, 0);
-            const iedName = fcda.closest('IED')!.getAttribute('name');
-            const fcdaMatcher = `${iedName} ${[
-              'ldInst',
-              'prefix',
-              'lnClass',
-              'lnInst',
-              'doName',
-              'daName',
-            ]
-              .map(attr => fcda.getAttribute(attr))
-              .join(' ')}`;
-            fcdaCompare.set(fcdaMatcher, fcda);
-          });
-        }
-      });
-
-    // get all later binding ExtRefs
-    const extRefs = Array.from(
-      this.doc.querySelectorAll(
-        `:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
-         :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`
-      )
-    ).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
-
-    // match the ExtRefs
-    extRefs.forEach(extRef => {
-      const extRefMatcher = [
-        'iedName',
-        'ldInst',
-        'prefix',
-        'lnClass',
-        'lnInst',
-        'doName',
-        'daName',
-      ]
-        .map(attr => extRef.getAttribute(attr))
-        .join(' ');
-      if (fcdaCompare.has(extRefMatcher)) {
-        const fcda = fcdaCompare.get(extRefMatcher);
-        const { key, cb } = fcdaData.get(fcda);
-        if (checkEditionSpecificRequirements(this.controlTag, cb, extRef)) {
-          const currentCountValue = this.controlBlockFcdaInfo.get(key)!;
-          this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
-        }
-      }
-    });
   }
 
   /**
@@ -2650,9 +2561,6 @@ Basic Type: ${spec?.bType ?? '?'}"
   }
 
   render(): TemplateResult {
-    // initial information caching
-    if (this.controlBlockFcdaInfo.size === 0) this.buildExtRefCount();
-
     const classList = { 'subscriber-view': this.subscriberView };
     const result = html`<div id="listContainer" class="${classMap(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
