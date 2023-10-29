@@ -12476,79 +12476,6 @@ class SubscriberLaterBinding extends s$1 {
         return this.controlBlockFcdaInfo.get(controlBlockFcdaId);
     }
     /**
-     * Build an initial count of how often each FCDA is used in an ExtRef.
-     * This is much more efficient than building the count and regenerating it
-     * piecemeal and is an optimisation for large SCL files.
-     * @returns nothing - cached on the class variable `controlBlockFcdaInfo`.
-     */
-    buildExtRefCount() {
-        if (!this.doc)
-            return;
-        const dsToCb = new Map();
-        // get only the FCDAs relevant to the current view
-        const fcdaData = new Map();
-        const fcdaCompare = new Map();
-        Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(cb => {
-            const isReferencedDs = cb.parentElement.querySelector(`DataSet[name="${cb.getAttribute('datSet')}"]`);
-            if (isReferencedDs) {
-                dsToCb.set(identity(isReferencedDs), cb);
-            }
-        });
-        this.doc
-            .querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN > DataSet, 
-         :root > IED > AccessPoint > Server > LDevice > LN0 > DataSet`)
-            .forEach(dataSet => {
-            if (dsToCb.has(identity(dataSet))) {
-                const thisCb = dsToCb.get(identity(dataSet));
-                dataSet.querySelectorAll('FCDA').forEach(fcda => {
-                    const key = `${identity(thisCb)} ${identity(fcda)}`;
-                    fcdaData.set(fcda, {
-                        key,
-                        cb: dsToCb.get(identity(dataSet)),
-                    });
-                    this.controlBlockFcdaInfo.set(key, 0);
-                    const iedName = fcda.closest('IED').getAttribute('name');
-                    const fcdaMatcher = `${iedName} ${[
-                        'ldInst',
-                        'prefix',
-                        'lnClass',
-                        'lnInst',
-                        'doName',
-                        'daName',
-                    ]
-                        .map(attr => fcda.getAttribute(attr))
-                        .join(' ')}`;
-                    fcdaCompare.set(fcdaMatcher, fcda);
-                });
-            }
-        });
-        // get all later binding ExtRefs
-        const extRefs = Array.from(this.doc.querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
-         :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`)).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
-        // match the ExtRefs
-        extRefs.forEach(extRef => {
-            const extRefMatcher = [
-                'iedName',
-                'ldInst',
-                'prefix',
-                'lnClass',
-                'lnInst',
-                'doName',
-                'daName',
-            ]
-                .map(attr => extRef.getAttribute(attr))
-                .join(' ');
-            if (fcdaCompare.has(extRefMatcher)) {
-                const fcda = fcdaCompare.get(extRefMatcher);
-                const { key, cb } = fcdaData.get(fcda);
-                if (checkEditionSpecificRequirements(this.controlTag, cb, extRef)) {
-                    const currentCountValue = this.controlBlockFcdaInfo.get(key);
-                    this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
-                }
-            }
-        });
-    }
-    /**
      * Store information about each FCDA, its specification (CDC and basic type)
      * and also how many times it is used in an ExtRef.
      * @param fcda - SCL FCDA element.
@@ -14016,9 +13943,6 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
     </mwc-fab>`;
     }
     render() {
-        // initial information caching
-        if (this.controlBlockFcdaInfo.size === 0)
-            this.buildExtRefCount();
         const classList = { 'subscriber-view': this.subscriberView };
         const result = x `<div id="listContainer" class="${o(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}
