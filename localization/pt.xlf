@@ -86,18 +86,6 @@
         <source>Non-Matching Preconfigured</source>
         <target>Pré-configurados Não Correspondentes</target>
       </trans-unit>
-      <trans-unit id="s7b45ec25bda765ae">
-        <source>Select SV</source>
-        <target>Selecionar SV</target>
-      </trans-unit>
-      <trans-unit id="s0df58b351dfdde3e">
-        <source>Select GOOSE</source>
-        <target>Selecionar GOOSE</target>
-      </trans-unit>
-      <trans-unit id="s62577ba24e6c7d95">
-        <source>Select Input</source>
-        <target>Selecionar Entrada</target>
-      </trans-unit>
       <trans-unit id="s8a7bee24f1eeaff1">
         <source>Sort</source>
         <target>Ordenar</target>
@@ -145,6 +133,54 @@
       <trans-unit id="se5fced4f6d864345">
         <source>Allow External Plugins</source>
         <target>Permitir Plugins Externos</target>
+      </trans-unit>
+      <trans-unit id="s524a73ff42cdb07a">
+        <source>Select SV Publisher</source>
+        <target>Selecionar SV</target>
+      </trans-unit>
+      <trans-unit id="sa932746a6ee3478a">
+        <source>Select GOOSE Publisher</source>
+        <target>Selecionar GOOSE</target>
+      </trans-unit>
+      <trans-unit id="sba500ed4ebad68c1">
+        <source>Select Subscriber Input</source>
+        <target>Selecionar Entrada</target>
+      </trans-unit>
+      <trans-unit id="sbcdf43ebad9c5a3a">
+        <source>Something unexpected happened!</source>
+      </trans-unit>
+      <trans-unit id="s62b4f83c9503e1af">
+        <source>≥ <x id="0" equiv-text="${redo.length}"/> nodes changed</source>
+      </trans-unit>
+      <trans-unit id="s0731afca1ab76175">
+        <source><x id="0" equiv-text="${redo.node.nodeName}"/> moved to <x id="1" equiv-text="${redo.parent.nodeName}"/></source>
+      </trans-unit>
+      <trans-unit id="s83eaab546be4bfb9">
+        <source><x id="0" equiv-text="${redo.node.nodeName}"/> inserted into <x id="1" equiv-text="${redo.parent.nodeName}"/></source>
+      </trans-unit>
+      <trans-unit id="s0f8217f07c54b541">
+        <source><x id="0" equiv-text="${redo.node.nodeName}"/> removed</source>
+      </trans-unit>
+      <trans-unit id="s85a55e7007003cc2">
+        <source><x id="0" equiv-text="${redo.element.tagName}"/> updated</source>
+      </trans-unit>
+      <trans-unit id="s8f4be9f086eb530f">
+        <source>Undo</source>
+      </trans-unit>
+      <trans-unit id="s7417792bbe720149">
+        <source>Redo</source>
+      </trans-unit>
+      <trans-unit id="s90c6a2fed2796c07">
+        <source>Editing history</source>
+      </trans-unit>
+      <trans-unit id="s6d8c02aee480af7a">
+        <source>Menu</source>
+      </trans-unit>
+      <trans-unit id="sfb0e98cb12fe463c">
+        <source>Your editing history will be displayed here.</source>
+      </trans-unit>
+      <trans-unit id="s5e8250fb85d64c23">
+        <source>Close</source>
       </trans-unit>
     </body>
   </file>

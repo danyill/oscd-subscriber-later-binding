@@ -144,6 +144,7 @@ type StoredConfiguration = {
   autoIncrement: boolean;
   ignoreSupervision: boolean;
   allowExternalPlugins: boolean;
+  disableExtRefFCDACheck: boolean;
   filterOutBound: boolean;
   filterOutNotBound: boolean;
   strictServiceTypes: boolean;
@@ -168,6 +169,8 @@ const storedProperties: string[] = [
   'filterOutPreconfiguredNotMatching',
   'autoIncrement',
   'ignoreSupervision',
+  'allowExternalPlugins',
+  'disableExtRefFCDACheck',
   'filterOutBound',
   'filterOutNotBound',
   'strictServiceTypes',
@@ -321,6 +324,9 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @property({ type: Boolean, reflect: true })
   allowExternalPlugins = true;
+
+  @property({ type: Boolean })
+  disableExtRefFCDACheck!: boolean;
 
   @property({ type: Boolean })
   controlTag!: controlTagType;
@@ -612,6 +618,7 @@ export default class SubscriberLaterBinding extends LitElement {
       autoIncrement: this.autoIncrement,
       ignoreSupervision: this.ignoreSupervision,
       allowExternalPlugins: this.allowExternalPlugins,
+      disableExtRefFCDACheck: this.disableExtRefFCDACheck,
       filterOutBound: this.filterOutBound,
       filterOutNotBound: this.filterOutNotBound,
       strictServiceTypes: this.strictServiceTypes,
@@ -659,6 +666,8 @@ export default class SubscriberLaterBinding extends LitElement {
     this.ignoreSupervision = storedConfiguration?.ignoreSupervision ?? false;
     this.allowExternalPlugins =
       storedConfiguration?.allowExternalPlugins ?? true;
+    this.disableExtRefFCDACheck =
+      storedConfiguration?.disableExtRefFCDACheck || false;
 
     this.filterOutBound = storedConfiguration?.filterOutBound ?? false;
     this.filterOutNotBound = storedConfiguration?.filterOutNotBound ?? false;
@@ -935,7 +944,10 @@ export default class SubscriberLaterBinding extends LitElement {
     let supEdits: Edit[] = [];
 
     subscribeEdits.push(
-      subscribe({ sink: extRef, source: { fcda, controlBlock } })
+      subscribe(
+        { sink: extRef, source: { fcda, controlBlock } },
+        this.disableExtRefFCDACheck ? { force: true } : { force: false }
+      )
     );
 
     if (!this.ignoreSupervision) {
@@ -1088,6 +1100,9 @@ export default class SubscriberLaterBinding extends LitElement {
         this.allowExternalPlugins = (<Set<number>>(
           this.settingsMenuExtRefSubscriberUI.index
         )).has(2);
+        this.disableExtRefFCDACheck = (<Set<number>>(
+          this.settingsMenuExtRefSubscriberUI.index
+        )).has(3);
       });
 
       this.sortMenuExtRefSubscriberUI.anchor = <HTMLElement>(
@@ -1136,6 +1151,9 @@ export default class SubscriberLaterBinding extends LitElement {
         this.allowExternalPlugins = (<Set<number>>(
           this.settingsMenuExtRefPublisherUI.index
         )).has(1);
+        this.disableExtRefFCDACheck = (<Set<number>>(
+          this.settingsMenuExtRefPublisherUI.index
+        )).has(2);
       });
     }
   }
@@ -1223,7 +1241,8 @@ export default class SubscriberLaterBinding extends LitElement {
     )
       return false;
 
-    if (fcdaTypes.cdc !== extRefSpec.cdc) return false;
+    if (fcdaTypes.cdc !== extRefSpec.cdc && !this.disableExtRefFCDACheck)
+      return false;
 
     if (extRef.getAttribute('pDA') && fcdaTypes.bType !== extRefSpec.bType)
       return false;
@@ -1957,6 +1976,13 @@ Basic Type: ${spec?.bType ?? '?'}"
         >
           <span>${msg('Allow External Plugins')}</span>
         </mwc-check-list-item>
+        <mwc-check-list-item
+          class="allow-external-plugins"
+          left
+          ?selected=${this.disableExtRefFCDACheck}
+        >
+          <span>${msg('Disable ExtRef FCDA Check')}</span>
+        </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
   }
@@ -2128,6 +2154,13 @@ Basic Type: ${spec?.bType ?? '?'}"
           ?selected=${this.allowExternalPlugins}
         >
           <span>${msg('Allow External Plugins')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="allow-external-plugins"
+          left
+          ?selected=${this.disableExtRefFCDACheck}
+        >
+          <span>${msg('Disable ExtRef FCDA Check')}</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
