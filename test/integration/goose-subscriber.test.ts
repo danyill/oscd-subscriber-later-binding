@@ -1743,6 +1743,52 @@ describe('goose', () => {
       });
     });
 
+    describe('can search and filter', () => {
+      describe('in Extrefs', async function () {
+        it('for a description with only subscribed filters shows no items', async function () {
+          const extRefFilterMenu = plugin.filterMenuExtRefSubscriberButtonUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefFilterMenu!),
+          });
+          await timeout(standardWait); // opening dialog
+
+          const filterNotBound =
+            plugin.filterMenuExtRefSubscriberUI.querySelector(
+              '.show-not-bound'
+            );
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(filterNotBound!),
+          });
+          await plugin.filterMenuExtRefSubscriberUI.updateComplete;
+          await plugin.updateComplete;
+
+          await timeout(standardWait); // rendering ?
+
+          const extRefTextInput = plugin.filterExtRefSubscriberInputUI;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(extRefTextInput!),
+          });
+          await sendKeys({ type: 'Restr' });
+          await plugin.extRefListSubscriberUI?.updateComplete;
+          await plugin.updateComplete;
+          extRefTextInput!.scrollIntoView();
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+      });
+    });
+
     it('deselects an ExtRef when a new document is opened', async function () {
       const extRefListElement = plugin.extRefListSubscriberUI!;
       const extref = getExtRefItem(

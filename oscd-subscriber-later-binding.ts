@@ -1998,7 +1998,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         title="${msg('Copy to Clipboard as Markdown')}"
         icon="content_copy"
         @click=${() => {
-          this.copyToMarkDown();
+          this.copySubscriberExtRefInfoToMarkdown();
         }}
       ></mwc-icon-button>
       <mwc-icon-button
@@ -2133,7 +2133,7 @@ Basic Type: ${spec?.bType ?? '?'}"
     </h1>`;
   }
 
-  copyToMarkDown() {
+  copySubscriberExtRefInfoToMarkdown() {
     const markdown = this.renderSubscriberViewExtRefsMarkdown();
     navigator.clipboard.writeText(markdown);
   }
@@ -2293,13 +2293,26 @@ Basic Type: ${spec?.bType ?? '?'}"
 
     return `${ieds
       .map(ied => {
-        const extRefs = Array.from(this.getExtRefElementsByIED(ied));
+        const extRefs = Array.from(
+          this.getExtRefElementsByIED(ied)
+            .filter(
+              extRef =>
+                this.searchExtRefSubscriberRegex.test(
+                  this.getExtRefSubscriberSearchString(extRef)
+                ) &&
+                (!this.filterOutpDAq ||
+                  (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef)))
+            )
+            .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b))
+        );
 
         const hasBoundToBeHidden =
           this.filterOutBound && extRefs.every(extRef => isSubscribed(extRef));
         const hasNotBoundToBeHidden =
           this.filterOutNotBound &&
-          extRefs.every(extRef => !isSubscribed(extRef));
+          extRefs.every(
+            extRef => !isSubscribed(extRef) && !isPartiallyConfigured(extRef)
+          );
 
         if (!extRefs.length) return ``;
 
@@ -2318,18 +2331,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         )
           return ``;
 
-        return `* 📦 ${getNameAttribute(ied)}\n  ${iedInfo}\n\n${Array.from(
-          this.getExtRefElementsByIED(ied)
-            .filter(
-              extRef =>
-                this.searchExtRefSubscriberRegex.test(
-                  this.getExtRefSubscriberSearchString(extRef)
-                ) &&
-                (!this.filterOutpDAq ||
-                  (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef)))
-            )
-            .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b))
-        )
+        return `* 📦 ${getNameAttribute(ied)}\n  ${iedInfo}\n\n${extRefs
           .map(extRef => this.renderSubscriberViewExtRefMarkdown(extRef))
           .join('')}`;
       })
@@ -2450,7 +2452,18 @@ Basic Type: ${spec?.bType ?? '?'}"
       ieds,
       i => `${identity(i)} ${this.controlTag}`,
       ied => {
-        const extRefs = Array.from(this.getExtRefElementsByIED(ied));
+        const extRefs = Array.from(
+          this.getExtRefElementsByIED(ied)
+            .filter(
+              extRef =>
+                this.searchExtRefSubscriberRegex.test(
+                  this.getExtRefSubscriberSearchString(extRef)
+                ) &&
+                (!this.filterOutpDAq ||
+                  (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef)))
+            )
+            .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b))
+        );
         const someBound = extRefs.some(extRef => isSubscribed(extRef));
         const someNotBound = extRefs.some(extRef => !isSubscribed(extRef));
 
@@ -2482,20 +2495,7 @@ Basic Type: ${spec?.bType ?? '?'}"
             <mwc-icon slot="graphic">developer_board</mwc-icon>
           </mwc-list-item>
           ${repeat(
-            Array.from(
-              this.getExtRefElementsByIED(ied)
-                .filter(
-                  extRef =>
-                    this.searchExtRefSubscriberRegex.test(
-                      this.getExtRefSubscriberSearchString(extRef)
-                    ) &&
-                    (!this.filterOutpDAq ||
-                      (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef)))
-                )
-                .sort((a, b) =>
-                  sortExtRefItems(this.sortExtRefSubscriber, a, b)
-                )
-            ),
+            extRefs,
             exId => `${identity(exId)} ${this.controlTag}`,
             extRef => this.renderSubscriberViewExtRef(extRef)
           )}
