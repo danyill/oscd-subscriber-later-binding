@@ -95,6 +95,7 @@ export default class SubscriberLaterBinding extends LitElement {
     extRefListSubscriberUI?: List;
     extRefListSubscriberSelectedUI?: ListItem;
     fcdaListSelectedUI?: ListItem;
+    subscriberExtRefMarkdownSaveButton?: Icon;
     constructor();
     /**
      * Updates caching of control blocks, used FCDAs and supervision LNs.
@@ -285,12 +286,24 @@ export default class SubscriberLaterBinding extends LitElement {
      * @returns - a Lit TemplateResult.
      */
     private renderSubscriberViewExtRefListTitle;
+    copyToMarkDown(): void;
     /**
      * Render an ExtRef element in the subscriber view.
      * @param extRef - an SCL ExtREf element for later binding.
      * @returns - a Lit TemplateResult.
      */
     private renderSubscriberViewExtRef;
+    /**
+     * Render ExtRef elements in the subscriber view to a Markdown text string.
+     * @returns - a Markdown string.
+     */
+    private renderSubscriberViewExtRefsMarkdown;
+    /**
+     * Render an ExtRef element in Markdown
+     * @param extRef - an SCL ExtRef element for later binding.
+     * @returns - a string
+     */
+    private renderSubscriberViewExtRefMarkdown;
     /**
      * Render ExtRef elements in the subscriber view.
      * @returns - a Lit TemplateResult.

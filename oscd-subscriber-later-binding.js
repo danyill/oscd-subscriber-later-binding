@@ -13471,7 +13471,14 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             : x `<span class="title-element text"
             >${msg('Select Subscriber Input')}</span
           >`}
-
+      <mwc-icon-button
+        id="saveSubscriberExtRefToMarkdown"
+        title="${msg('Copy to Clipboard as Markdown')}"
+        icon="content_copy"
+        @click=${() => {
+            this.copyToMarkDown();
+        }}
+      ></mwc-icon-button>
       <mwc-icon-button
         id="filterExtRefSubscriberIcon"
         class="${o(menuClasses)}"
@@ -13603,6 +13610,10 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
       </mwc-menu>
     </h1>`;
     }
+    copyToMarkDown() {
+        const markdown = this.renderSubscriberViewExtRefsMarkdown();
+        navigator.clipboard.writeText(markdown);
+    }
     /**
      * Render an ExtRef element in the subscriber view.
      * @param extRef - an SCL ExtREf element for later binding.
@@ -13707,6 +13718,103 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           >`
             : A}
     </mwc-list-item>`;
+    }
+    /**
+     * Render ExtRef elements in the subscriber view to a Markdown text string.
+     * @returns - a Markdown string.
+     */
+    renderSubscriberViewExtRefsMarkdown() {
+        if (this.supervisionData.size === 0)
+            this.reCreateSupervisionCache();
+        const ieds = getOrderedIeds(this.doc).filter(ied => {
+            const extRefs = Array.from(this.getExtRefElementsByIED(ied));
+            return (extRefs.some(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef))) &&
+                (!this.filterOutpDAq ||
+                    (this.filterOutpDAq &&
+                        extRefs.some(candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)))));
+        });
+        return `${ieds
+            .map(ied => {
+            const extRefs = Array.from(this.getExtRefElementsByIED(ied));
+            const hasBoundToBeHidden = this.filterOutBound && extRefs.every(extRef => isSubscribed(extRef));
+            const hasNotBoundToBeHidden = this.filterOutNotBound &&
+                extRefs.every(extRef => !isSubscribed(extRef));
+            if (!extRefs.length)
+                return ``;
+            const [iedDesc, iedType, iedMfg] = ['desc', 'type', 'manufacturer'].map(attr => ied.getAttribute(attr));
+            const iedInfo = [iedDesc, iedMfg, iedType]
+                .filter(val => !!val)
+                .join(' - ');
+            if (hasBoundToBeHidden ||
+                hasNotBoundToBeHidden ||
+                (this.filterOutBound && this.filterOutNotBound))
+                return ``;
+            return `* 📦 ${getNameAttribute(ied)}\n  ${iedInfo}\n\n${Array.from(this.getExtRefElementsByIED(ied)
+                .filter(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)) &&
+                (!this.filterOutpDAq ||
+                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))))
+                .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b)))
+                .map(extRef => this.renderSubscriberViewExtRefMarkdown(extRef))
+                .join('')}`;
+        })
+            .join('\n')}`;
+    }
+    /**
+     * Render an ExtRef element in Markdown
+     * @param extRef - an SCL ExtRef element for later binding.
+     * @returns - a string
+     */
+    renderSubscriberViewExtRefMarkdown(extRef) {
+        var _a;
+        let subscriberFCDA;
+        let supervisionNode;
+        let controlBlockDescription;
+        let supervisionDescription;
+        const subscribed = isSubscribed(extRef);
+        if (subscribed) {
+            subscriberFCDA = findFCDAs$1(extRef).find(element => element !== undefined);
+            supervisionNode = this.getCachedSupervision(extRef);
+            controlBlockDescription = getExtRefControlBlockPath(extRef);
+        }
+        if (supervisionNode) {
+            supervisionDescription = trimIdentityParent(`${identity(supervisionNode)}`);
+        }
+        const extRefDescription = getDescriptionAttribute(extRef);
+        const hasInvalidMapping = isPartiallyConfigured(extRef);
+        const hasMissingMapping = subscribed && !subscriberFCDA;
+        const supAndctrlDescription = supervisionDescription || controlBlockDescription
+            ? `${[
+                controlBlockDescription,
+                subscribed &&
+                    supervisionNode !== undefined &&
+                    !hasInvalidMapping &&
+                    !hasMissingMapping
+                    ? `💓 ${supervisionDescription}`
+                    : undefined,
+            ]
+                .filter(desc => desc !== undefined)
+                .join(', ')}`
+            : ``;
+        // this FCDA name is taken from the ExtRef so even if an FCDA
+        // cannot be located we can "show" the subscription
+        const fcdaName = subscribed || hasMissingMapping
+            ? `${(_a = extRef.getAttribute('iedName')) !== null && _a !== void 0 ? _a : 'Unknown'} > ${getFcdaOrExtRefTitle(extRef)}`
+            : '';
+        const fcdaDesc = subscriberFCDA
+            ? Object.values(this.getFcdaInfo(subscriberFCDA).desc).join(' > ')
+            : null;
+        const hasBoundToBeHidden = this.filterOutBound && isSubscribed(extRef);
+        const hasNotBoundToBeHidden = this.filterOutNotBound && !isSubscribed(extRef) && !hasInvalidMapping;
+        const notVisible = hasBoundToBeHidden ||
+            hasNotBoundToBeHidden ||
+            (this.filterOutBound && this.filterOutNotBound);
+        if (notVisible)
+            return ``;
+        return `  * ${subscribed ? '🔗 ' : ''}${objectReferenceInIed(extRef)}: ${extRef.getAttribute('intAddr')}${subscribed || hasInvalidMapping
+            ? ` ⬅ ${subscribed ? `${fcdaName}` : ''} ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
+            : ``}\n    ${extRefDescription ? `${extRefDescription}` : ``}${extRefDescription && fcdaDesc && fcdaDesc !== '' ? ` ⬅ ${fcdaDesc}` : ``}${extRefDescription && supAndctrlDescription !== ``
+            ? ` (${supAndctrlDescription})`
+            : supAndctrlDescription}${hasInvalidMapping ? ` (❌ Invalid)` : ``}${hasMissingMapping ? ` (⚠️ Missing Mapping)` : ``}\n\n`;
     }
     /**
      * Render ExtRef elements in the subscriber view.
@@ -14422,6 +14530,9 @@ __decorate([
 __decorate([
     i$2('#fcdaList mwc-list-item[selected]')
 ], SubscriberLaterBinding.prototype, "fcdaListSelectedUI", void 0);
+__decorate([
+    i$2('#saveSubscriberExtRefToMarkdown')
+], SubscriberLaterBinding.prototype, "subscriberExtRefMarkdownSaveButton", void 0);
 
 export { SubscriberLaterBinding as default };
 //# sourceMappingURL=oscd-subscriber-later-binding.js.map

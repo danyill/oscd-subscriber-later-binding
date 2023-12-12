@@ -35,6 +35,7 @@ export declare const templates: {
     s524a73ff42cdb07a: string;
     sa932746a6ee3478a: string;
     sba500ed4ebad68c1: string;
+    se45824a7653edbfa: string;
     sbcdf43ebad9c5a3a: string;
     s62b4f83c9503e1af: import("@lit/localize").StrResult;
     s0731afca1ab76175: import("@lit/localize").StrResult;
