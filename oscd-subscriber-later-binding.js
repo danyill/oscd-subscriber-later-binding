@@ -13476,7 +13476,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         title="${msg('Copy to Clipboard as Markdown')}"
         icon="content_copy"
         @click=${() => {
-            this.copyToMarkDown();
+            this.copySubscriberExtRefInfoToMarkdown();
         }}
       ></mwc-icon-button>
       <mwc-icon-button
@@ -13610,7 +13610,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
       </mwc-menu>
     </h1>`;
     }
-    copyToMarkDown() {
+    copySubscriberExtRefInfoToMarkdown() {
         const markdown = this.renderSubscriberViewExtRefsMarkdown();
         navigator.clipboard.writeText(markdown);
     }
@@ -13735,10 +13735,14 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         });
         return `${ieds
             .map(ied => {
-            const extRefs = Array.from(this.getExtRefElementsByIED(ied));
+            const extRefs = Array.from(this.getExtRefElementsByIED(ied)
+                .filter(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)) &&
+                (!this.filterOutpDAq ||
+                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))))
+                .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b)));
             const hasBoundToBeHidden = this.filterOutBound && extRefs.every(extRef => isSubscribed(extRef));
             const hasNotBoundToBeHidden = this.filterOutNotBound &&
-                extRefs.every(extRef => !isSubscribed(extRef));
+                extRefs.every(extRef => !isSubscribed(extRef) && !isPartiallyConfigured(extRef));
             if (!extRefs.length)
                 return ``;
             const [iedDesc, iedType, iedMfg] = ['desc', 'type', 'manufacturer'].map(attr => ied.getAttribute(attr));
@@ -13749,11 +13753,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                 hasNotBoundToBeHidden ||
                 (this.filterOutBound && this.filterOutNotBound))
                 return ``;
-            return `* 📦 ${getNameAttribute(ied)}\n  ${iedInfo}\n\n${Array.from(this.getExtRefElementsByIED(ied)
-                .filter(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)) &&
-                (!this.filterOutpDAq ||
-                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))))
-                .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b)))
+            return `* 📦 ${getNameAttribute(ied)}\n  ${iedInfo}\n\n${extRefs
                 .map(extRef => this.renderSubscriberViewExtRefMarkdown(extRef))
                 .join('')}`;
         })
@@ -13831,7 +13831,11 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                         extRefs.some(candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)))));
         });
         return x `${c(ieds, i => `${identity(i)} ${this.controlTag}`, ied => {
-            const extRefs = Array.from(this.getExtRefElementsByIED(ied));
+            const extRefs = Array.from(this.getExtRefElementsByIED(ied)
+                .filter(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)) &&
+                (!this.filterOutpDAq ||
+                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))))
+                .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b)));
             const someBound = extRefs.some(extRef => isSubscribed(extRef));
             const someNotBound = extRefs.some(extRef => !isSubscribed(extRef));
             if (!extRefs.length)
@@ -13856,11 +13860,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             <span slot="secondary">${iedInfo}</span>
             <mwc-icon slot="graphic">developer_board</mwc-icon>
           </mwc-list-item>
-          ${c(Array.from(this.getExtRefElementsByIED(ied)
-                .filter(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)) &&
-                (!this.filterOutpDAq ||
-                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))))
-                .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b))), exId => `${identity(exId)} ${this.controlTag}`, extRef => this.renderSubscriberViewExtRef(extRef))}
+          ${c(extRefs, exId => `${identity(exId)} ${this.controlTag}`, extRef => this.renderSubscriberViewExtRef(extRef))}
         `;
         })}`;
     }

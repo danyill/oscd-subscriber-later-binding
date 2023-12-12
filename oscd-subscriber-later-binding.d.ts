@@ -286,7 +286,7 @@ export default class SubscriberLaterBinding extends LitElement {
      * @returns - a Lit TemplateResult.
      */
     private renderSubscriberViewExtRefListTitle;
-    copyToMarkDown(): void;
+    copySubscriberExtRefInfoToMarkdown(): void;
     /**
      * Render an ExtRef element in the subscriber view.
      * @param extRef - an SCL ExtREf element for later binding.
