@@ -29,6 +29,12 @@ declare enum ExtRefSortOrder {
     Description = 2,
     MappedReference = 3
 }
+export declare type DoesFcdaMeetExtRefRestrictionsOptions = {
+    /** The control block type to check against `pServT` */
+    controlBlockType?: 'GOOSE' | 'Report' | 'SMV' | 'Poll';
+    /** Whether to only check against basic type. Skips check against pDO and pLN */
+    checkOnlyBType?: boolean;
+};
 /**
  * A plugin to allow subscriptions of GOOSE and SV using the
  * later binding method as described in IEC 61850-6 Ed 2.1 providing
@@ -40,6 +46,7 @@ export default class SubscriberLaterBinding extends LitElement {
     editCount: number;
     identity: string;
     allowExternalPlugins: boolean;
+    checkOnlyPreferredBasicType: boolean;
     controlTag: controlTagType;
     subscriberView: boolean;
     filterOutSubscribed: boolean;
@@ -231,7 +238,7 @@ export default class SubscriberLaterBinding extends LitElement {
      * for missing elements
      *
      */
-    doesFcdaMeetExtRefRestrictions(extRef: Element | undefined, fcda: Element | undefined): boolean;
+    doesFcdaMeetExtRefRestrictions(extRef: Element, fcda: Element, options?: DoesFcdaMeetExtRefRestrictionsOptions): boolean;
     /**
      * Check whether an FCDA should be shown as disabled in the UI. FCDAs are
      * disabled if they are DO references, if they don't match preconfigured

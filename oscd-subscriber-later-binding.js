@@ -12169,6 +12169,8 @@ const storedProperties = [
     'filterOutPreconfiguredNotMatching',
     'autoIncrement',
     'ignoreSupervision',
+    'allowExternalPlugins',
+    'checkOnlyPreferredBasicType',
     'filterOutBound',
     'filterOutNotBound',
     'strictServiceTypes',
@@ -12396,6 +12398,7 @@ class SubscriberLaterBinding extends s$1 {
             autoIncrement: this.autoIncrement,
             ignoreSupervision: this.ignoreSupervision,
             allowExternalPlugins: this.allowExternalPlugins,
+            checkOnlyPreferredBasicType: this.checkOnlyPreferredBasicType,
             filterOutBound: this.filterOutBound,
             filterOutNotBound: this.filterOutNotBound,
             strictServiceTypes: this.strictServiceTypes,
@@ -12431,6 +12434,8 @@ class SubscriberLaterBinding extends s$1 {
         this.ignoreSupervision = (_d = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.ignoreSupervision) !== null && _d !== void 0 ? _d : false;
         this.allowExternalPlugins =
             (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.allowExternalPlugins) !== null && _e !== void 0 ? _e : true;
+        this.checkOnlyPreferredBasicType =
+            (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.checkOnlyPreferredBasicType) || false;
         this.filterOutBound = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutBound) !== null && _f !== void 0 ? _f : false;
         this.filterOutNotBound = (_g = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutNotBound) !== null && _g !== void 0 ? _g : false;
         this.strictServiceTypes = (_h = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.strictServiceTypes) !== null && _h !== void 0 ? _h : false;
@@ -12644,7 +12649,12 @@ class SubscriberLaterBinding extends s$1 {
             this.dispatchEvent(newEditEvent(unsubscribe([extRef], { ignoreSupervision: true })));
         const subscribeEdits = [];
         let supEdits = [];
-        subscribeEdits.push(subscribe({ sink: extRef, source: { fcda, controlBlock } }));
+        subscribeEdits.push(subscribe({ sink: extRef, source: { fcda, controlBlock } }, 
+        // TODO: Update to use specific basic type option
+        // see https://github.com/danyill/oscd-subscriber-later-binding/issues/10
+        //
+        // { checkOnlyBType: this.checkOnlyPreferredBasicType }
+        this.checkOnlyPreferredBasicType ? { force: true } : { force: false }));
         if (!this.ignoreSupervision) {
             const subscriberIed = extRef.closest('IED');
             supEdits = instantiateSubscriptionSupervision(controlBlock, subscriberIed);
@@ -12733,6 +12743,9 @@ class SubscriberLaterBinding extends s$1 {
                 this.autoIncrement = (this.settingsMenuExtRefSubscriberUI.index).has(0);
                 this.ignoreSupervision = !(this.settingsMenuExtRefSubscriberUI.index).has(1);
                 this.allowExternalPlugins = (this.settingsMenuExtRefSubscriberUI.index).has(2);
+                this.checkOnlyPreferredBasicType = (this.settingsMenuExtRefSubscriberUI.index).has(3);
+                // required for checkOnlyPreferredBasic type to refresh
+                this.requestUpdate();
             });
             this.sortMenuExtRefSubscriberUI.anchor = (this.sortMenuExtRefSubscriberButtonUI);
             this.sortMenuExtRefSubscriberUI.addEventListener('closed', () => {
@@ -12759,6 +12772,9 @@ class SubscriberLaterBinding extends s$1 {
             this.settingsMenuExtRefPublisherUI.addEventListener('closed', () => {
                 this.ignoreSupervision = !(this.settingsMenuExtRefPublisherUI.index).has(0);
                 this.allowExternalPlugins = (this.settingsMenuExtRefPublisherUI.index).has(1);
+                this.checkOnlyPreferredBasicType = (this.settingsMenuExtRefPublisherUI.index).has(2);
+                // required for checkOnlyPreferredBasic type to refresh
+                this.requestUpdate();
             });
         }
     }
@@ -12801,20 +12817,24 @@ class SubscriberLaterBinding extends s$1 {
      * for missing elements
      *
      */
-    doesFcdaMeetExtRefRestrictions(extRef, fcda) {
+    doesFcdaMeetExtRefRestrictions(extRef, fcda, options = { checkOnlyBType: false }) {
         if (!extRef || !fcda)
             return true;
+        // Vendor does not provide data for the check so any FCDA meets restriction
         if (!extRef.hasAttribute('pDO'))
             return true;
-        const controlBlockType = serviceTypeLookup[this.controlTag];
         const fcdaTypes = this.getFcdaInfo(fcda).spec;
         const extRefSpec = this.getExtRefInfo(extRef).spec;
         // Check cannot be performed assume restriction check to fail
         if (!extRefSpec || !fcdaTypes)
             return false;
         if (extRef.getAttribute('pServT') &&
-            controlBlockType !== extRef.getAttribute('pServT'))
+            options.controlBlockType &&
+            options.controlBlockType !== extRef.getAttribute('pServT'))
             return false;
+        // Some vendors allow subscribing of e.g. ACT to SPS, both bType BOOLEAN
+        if (options.checkOnlyBType)
+            return fcdaTypes.bType === extRefSpec.bType;
         if (extRef.getAttribute('pLN') &&
             extRef.getAttribute('pLN') !== fcda.getAttribute('lnClass'))
             return false;
@@ -12839,7 +12859,10 @@ class SubscriberLaterBinding extends s$1 {
         // TODO: Remove this and actually support FCDOs
         const isFcdo = !fcda.getAttribute('daName');
         const isPreconfiguredNotMatching = this.subscriberView &&
-            !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef, fcda);
+            this.selectedExtRef !== undefined &&
+            !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef, fcda, {
+                checkOnlyBType: this.checkOnlyPreferredBasicType,
+            });
         const disabledFcdo = (isFcdo && !withFilter) ||
             (withFilter && isFcdo && this.filterOutDataObjects);
         const disabledPreconfigured = (isPreconfiguredNotMatching && !withFilter) ||
@@ -13287,7 +13310,9 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                 const { spec } = this.getExtRefInfo(extRef);
                 const desc = getDescriptionAttribute(extRef);
                 const disabledExtRef = this.selectedFCDA &&
-                    !this.doesFcdaMeetExtRefRestrictions(extRef, this.selectedFCDA);
+                    !this.doesFcdaMeetExtRefRestrictions(extRef, this.selectedFCDA, {
+                        checkOnlyBType: this.checkOnlyPreferredBasicType,
+                    });
                 const iedName = extRef.closest('IED').getAttribute('name');
                 return x `<mwc-list-item
               graphic="large"
@@ -13441,6 +13466,15 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           ?selected=${this.allowExternalPlugins}
         >
           <span>${msg('Allow External Plugins')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="check-only-preferred-basic-service-type"
+          left
+          ?selected=${this.checkOnlyPreferredBasicType}
+        >
+          <span
+            >${msg('Check Only Preconfigured Service and Basic Types')}</span
+          >
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -13606,6 +13640,15 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           ?selected=${this.allowExternalPlugins}
         >
           <span>${msg('Allow External Plugins')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="check-only-preferred-basic-service-type"
+          left
+          ?selected=${this.checkOnlyPreferredBasicType}
+        >
+          <span
+            >${msg('Check Only Preconfigured Service and Basic Types')}</span
+          >
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -14377,6 +14420,9 @@ __decorate([
 __decorate([
     e$5({ type: Boolean, reflect: true })
 ], SubscriberLaterBinding.prototype, "allowExternalPlugins", void 0);
+__decorate([
+    e$5({ type: Boolean, reflect: true })
+], SubscriberLaterBinding.prototype, "checkOnlyPreferredBasicType", void 0);
 __decorate([
     e$5({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "controlTag", void 0);
