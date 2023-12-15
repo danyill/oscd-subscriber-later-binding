@@ -1853,33 +1853,138 @@ describe('goose', () => {
         expect(plugin).has.attribute('allowexternalplugins');
       });
 
-      // This test currently fails on Firefox, unclear why? Viewport extents?
-      // It seems to pass when debugging manually.
-      // TODO: Diagnose and re-enable this test
-      // it('can disable external plugins', async function () {
-      //   const button = plugin.settingsMenuExtRefPublisherButtonUI;
+      it('can disable external plugins', async function () {
+        const button = plugin.settingsMenuExtRefPublisherButtonUI;
 
-      //   await sendMouse({
-      //     type: 'click',
-      //     button: 'left',
-      //     position: midEl(button!),
-      //   });
-      //   await plugin.settingsMenuExtRefPublisherUI.updateComplete;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await plugin.settingsMenuExtRefPublisherUI.updateComplete;
+        await timeout(standardWait); // selection
 
-      //   const allowExternalPluginsSettings =
-      //     plugin.settingsMenuExtRefPublisherUI.querySelector(
-      //       '.allow-external-plugins'
-      //     );
-      //   await sendMouse({
-      //     type: 'click',
-      //     button: 'left',
-      //     position: midEl(allowExternalPluginsSettings!),
-      //   });
-      //   await plugin.updateComplete;
-      //   await timeout(standardWait); // selection
+        const allowExternalPluginsSettings =
+          plugin.settingsMenuExtRefPublisherUI.querySelector(
+            '.allow-external-plugins'
+          );
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(allowExternalPluginsSettings!),
+        });
+        await plugin.updateComplete;
+        await timeout(standardWait); // selection
 
-      //   expect(plugin).does.not.have.attribute('allowexternalplugins');
-      // });
+        expect(plugin).does.not.have.attribute('allowexternalplugins');
+      });
+
+      it('does subscribe correctly when bypassing of service type and basic types', async function () {
+        localStorage.clear();
+        await setViewPort();
+        resetMouse();
+
+        doc = await fetch(
+          '/test/fixtures/GOOSE-2007B4-LGOS-different-preconfigured-CDCs.scd'
+        )
+          .then(response => response.text())
+          .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+        editor.docName = 'GOOSE-2007B4-LGOS-different-preconfigured-CDCs.scd';
+        editor.docs[editor.docName] = doc;
+
+        await editor.updateComplete;
+        await plugin.updateComplete;
+
+        await timeout(500); // plugin loading and initial render?
+
+        const fcdaListElement = plugin.fcdaListUI!;
+
+        const fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+          'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ PTOC 1.Op general (ST)'
+        );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!),
+        });
+        await plugin.fcdaListUI!.updateComplete;
+        await plugin.updateComplete;
+        await timeout(standardWait); // selection
+
+        const extRefTextInput = plugin.filterExtRefPublisherInputUI!;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extRefTextInput!),
+        });
+        await sendKeys({ type: 'SPS' });
+        await plugin.fcdaListUI!.updateComplete;
+        await plugin.updateComplete;
+        await timeout(standardWait);
+
+        expect(plugin.checkOnlyPreferredBasicType).to.be.false;
+        expect(plugin).does.not.have.attribute('checkonlypreferredbasictype');
+        // await visualDiff(plugin, `${testName(this)}-before-menu-open`);
+        // TODO: It is quite tedious to visualDiff multiple screenshots in a test.
+        // How do I allow errors to be ignored on first run?
+
+        const button = plugin.settingsMenuExtRefPublisherButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!),
+        });
+        await plugin.settingsMenuExtRefPublisherUI.updateComplete;
+
+        await timeout(standardWait); // opening dialog
+        await visualDiff(plugin, `${testName(this)}-after-menu-open`);
+
+        const checkOnlyPreferred =
+          plugin.settingsMenuExtRefPublisherUI.querySelector(
+            '.check-only-preferred-basic-service-type'
+          );
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(checkOnlyPreferred!),
+        });
+
+        await plugin.settingsMenuExtRefPublisherUI!.updateComplete;
+
+        const extRefListElement = plugin.extRefListPublisherUI!;
+        await extRefListElement.updateComplete;
+        await timeout(standardWait);
+
+        await visualDiff(plugin, `${testName(this)}-after-enable-option`);
+        await resetMouseState();
+        expect(plugin).does.have.attribute('checkonlypreferredbasictype');
+
+        const extref = getExtRefItem(
+          extRefListElement!,
+          'GOOSE_Subscriber1>>Earth_Switch> CSWI 1>someRestrictedExtRefSPS[0]'
+        );
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!),
+        });
+
+        await extref!.updateComplete;
+        await fcdaListElement.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await resetMouseState();
+        await timeout(standardWait); // selection
+        await visualDiff(plugin, `${testName(this)}-after-subscribe`);
+      });
     });
   });
 
