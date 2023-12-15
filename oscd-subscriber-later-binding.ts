@@ -144,6 +144,7 @@ type StoredConfiguration = {
   autoIncrement: boolean;
   ignoreSupervision: boolean;
   allowExternalPlugins: boolean;
+  checkOnlyPreferredBasicType: boolean;
   filterOutBound: boolean;
   filterOutNotBound: boolean;
   strictServiceTypes: boolean;
@@ -151,6 +152,13 @@ type StoredConfiguration = {
   sortExtRefPublisher: ExtRefSortOrder;
   sortExtRefSubscriber: ExtRefSortOrder;
   sortFcda: FcdaSortOrder;
+};
+
+export type DoesFcdaMeetExtRefRestrictionsOptions = {
+  /** The control block type to check against `pServT` */
+  controlBlockType?: 'GOOSE' | 'Report' | 'SMV' | 'Poll';
+  /** Whether to only check against basic type. Skips check against pDO and pLN */
+  checkOnlyBType?: boolean;
 };
 
 // This array must match the names of the above types as it used to
@@ -168,6 +176,8 @@ const storedProperties: string[] = [
   'filterOutPreconfiguredNotMatching',
   'autoIncrement',
   'ignoreSupervision',
+  'allowExternalPlugins',
+  'checkOnlyPreferredBasicType',
   'filterOutBound',
   'filterOutNotBound',
   'strictServiceTypes',
@@ -321,6 +331,9 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @property({ type: Boolean, reflect: true })
   allowExternalPlugins = true;
+
+  @property({ type: Boolean, reflect: true })
+  checkOnlyPreferredBasicType!: boolean;
 
   @property({ type: Boolean })
   controlTag!: controlTagType;
@@ -612,6 +625,7 @@ export default class SubscriberLaterBinding extends LitElement {
       autoIncrement: this.autoIncrement,
       ignoreSupervision: this.ignoreSupervision,
       allowExternalPlugins: this.allowExternalPlugins,
+      checkOnlyPreferredBasicType: this.checkOnlyPreferredBasicType,
       filterOutBound: this.filterOutBound,
       filterOutNotBound: this.filterOutNotBound,
       strictServiceTypes: this.strictServiceTypes,
@@ -659,6 +673,8 @@ export default class SubscriberLaterBinding extends LitElement {
     this.ignoreSupervision = storedConfiguration?.ignoreSupervision ?? false;
     this.allowExternalPlugins =
       storedConfiguration?.allowExternalPlugins ?? true;
+    this.checkOnlyPreferredBasicType =
+      storedConfiguration?.checkOnlyPreferredBasicType || false;
 
     this.filterOutBound = storedConfiguration?.filterOutBound ?? false;
     this.filterOutNotBound = storedConfiguration?.filterOutNotBound ?? false;
@@ -935,7 +951,14 @@ export default class SubscriberLaterBinding extends LitElement {
     let supEdits: Edit[] = [];
 
     subscribeEdits.push(
-      subscribe({ sink: extRef, source: { fcda, controlBlock } })
+      subscribe(
+        { sink: extRef, source: { fcda, controlBlock } },
+        // TODO: Update to use specific basic type option
+        // see https://github.com/danyill/oscd-subscriber-later-binding/issues/10
+        //
+        // { checkOnlyBType: this.checkOnlyPreferredBasicType }
+        this.checkOnlyPreferredBasicType ? { force: true } : { force: false }
+      )
     );
 
     if (!this.ignoreSupervision) {
@@ -1088,6 +1111,11 @@ export default class SubscriberLaterBinding extends LitElement {
         this.allowExternalPlugins = (<Set<number>>(
           this.settingsMenuExtRefSubscriberUI.index
         )).has(2);
+        this.checkOnlyPreferredBasicType = (<Set<number>>(
+          this.settingsMenuExtRefSubscriberUI.index
+        )).has(3);
+        // required for checkOnlyPreferredBasic type to refresh
+        this.requestUpdate();
       });
 
       this.sortMenuExtRefSubscriberUI.anchor = <HTMLElement>(
@@ -1136,6 +1164,11 @@ export default class SubscriberLaterBinding extends LitElement {
         this.allowExternalPlugins = (<Set<number>>(
           this.settingsMenuExtRefPublisherUI.index
         )).has(1);
+        this.checkOnlyPreferredBasicType = (<Set<number>>(
+          this.settingsMenuExtRefPublisherUI.index
+        )).has(2);
+        // required for checkOnlyPreferredBasic type to refresh
+        this.requestUpdate();
       });
     }
   }
@@ -1196,14 +1229,14 @@ export default class SubscriberLaterBinding extends LitElement {
    *
    */
   doesFcdaMeetExtRefRestrictions(
-    extRef: Element | undefined,
-    fcda: Element | undefined
+    extRef: Element,
+    fcda: Element,
+    options: DoesFcdaMeetExtRefRestrictionsOptions = { checkOnlyBType: false }
   ): boolean {
     if (!extRef || !fcda) return true;
 
+    // Vendor does not provide data for the check so any FCDA meets restriction
     if (!extRef.hasAttribute('pDO')) return true;
-
-    const controlBlockType = serviceTypeLookup[this.controlTag];
 
     const fcdaTypes = this.getFcdaInfo(fcda).spec;
     const extRefSpec = this.getExtRefInfo(extRef).spec;
@@ -1213,9 +1246,13 @@ export default class SubscriberLaterBinding extends LitElement {
 
     if (
       extRef.getAttribute('pServT') &&
-      controlBlockType !== extRef.getAttribute('pServT')
+      options.controlBlockType &&
+      options.controlBlockType !== extRef.getAttribute('pServT')
     )
       return false;
+
+    // Some vendors allow subscribing of e.g. ACT to SPS, both bType BOOLEAN
+    if (options.checkOnlyBType) return fcdaTypes.bType === extRefSpec.bType;
 
     if (
       extRef.getAttribute('pLN') &&
@@ -1251,7 +1288,10 @@ export default class SubscriberLaterBinding extends LitElement {
     const isFcdo = !fcda.getAttribute('daName');
     const isPreconfiguredNotMatching =
       this.subscriberView &&
-      !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef, fcda);
+      this.selectedExtRef !== undefined &&
+      !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef, fcda, {
+        checkOnlyBType: this.checkOnlyPreferredBasicType,
+      });
 
     const disabledFcdo =
       (isFcdo && !withFilter) ||
@@ -1796,7 +1836,10 @@ Basic Type: ${spec?.bType ?? '?'}"
             const desc = getDescriptionAttribute(extRef);
             const disabledExtRef =
               this.selectedFCDA &&
-              !this.doesFcdaMeetExtRefRestrictions(extRef, this.selectedFCDA);
+              !this.doesFcdaMeetExtRefRestrictions(extRef, this.selectedFCDA, {
+                checkOnlyBType: this.checkOnlyPreferredBasicType,
+              });
+
             const iedName = extRef.closest('IED')!.getAttribute('name');
 
             return html`<mwc-list-item
@@ -1956,6 +1999,15 @@ Basic Type: ${spec?.bType ?? '?'}"
           ?selected=${this.allowExternalPlugins}
         >
           <span>${msg('Allow External Plugins')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="check-only-preferred-basic-service-type"
+          left
+          ?selected=${this.checkOnlyPreferredBasicType}
+        >
+          <span
+            >${msg('Check Only Preconfigured Service and Basic Types')}</span
+          >
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -2128,6 +2180,15 @@ Basic Type: ${spec?.bType ?? '?'}"
           ?selected=${this.allowExternalPlugins}
         >
           <span>${msg('Allow External Plugins')}</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="check-only-preferred-basic-service-type"
+          left
+          ?selected=${this.checkOnlyPreferredBasicType}
+        >
+          <span
+            >${msg('Check Only Preconfigured Service and Basic Types')}</span
+          >
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
