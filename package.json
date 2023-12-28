@@ -18,19 +18,16 @@
     "test:update": "npm run build && wtr --update-visual-baseline",
     "analyze": "cem analyze --litelement",
     "deploy": "npm run bundle && gh-pages --dist 'dist'",
-    "build": "npm run extract && npm run localize && npm run compile",
+    "build": "npm run compile",
     "compile": "tsc -b",
     "bundle": "rimraf dist && rollup -c rollup.config.js",
     "doc": "npm run analyze -- --exclude dist && typedoc --out dist/doc foundation.ts",
     "prepublish": "npm run lint && npm run build && npm run doc",
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
-    "extract": "lit-localize extract",
-    "localize": "lit-localize build",
     "prepare": "husky install"
   },
   "dependencies": {
-    "@lit/localize": "^0.11.4",
     "@material/mwc-checkbox": "^0.27.0",
     "@material/mwc-fab": "^0.27.0",
     "@material/mwc-formfield": "^0.27.0",
@@ -46,7 +43,6 @@
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.6.6",
-    "@lit/localize-tools": "^0.6.8",
     "@open-wc/building-rollup": "^2.0.2",
     "@open-wc/eslint-config": "^8.0.2",
     "@open-wc/testing": "^3.1.6",
