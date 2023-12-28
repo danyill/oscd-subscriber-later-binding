@@ -178,250 +178,9 @@ function createElement(doc, tag, attrs) {
         .forEach(([name, value]) => element.setAttribute(name, value));
     return element;
 }
-
-const maxGseMacAddress = 0x010ccd0101ff;
-const minGseMacAddress = 0x010ccd010000;
-const maxSmvMacAddress = 0x010ccd0401ff;
-const minSmvMacAddress = 0x010ccd040000;
-function convertToMac(mac) {
-    const str = 0 + mac.toString(16).toUpperCase();
-    const arr = str.match(/.{1,2}/g);
-    return arr.join("-");
-}
-Array(maxGseMacAddress - minGseMacAddress)
-    .fill(1)
-    .map((_, i) => convertToMac(minGseMacAddress + i));
-Array(maxSmvMacAddress - minSmvMacAddress)
-    .fill(1)
-    .map((_, i) => convertToMac(minSmvMacAddress + i));
-
-const maxGseAppId = 0x3fff;
-const minGseAppId = 0x0000;
-// APPID range for Type1A(Trip) GOOSE acc. IEC 61850-8-1
-const maxGseTripAppId = 0xbfff;
-const minGseTripAppId = 0x8000;
-const maxSmvAppId = 0x7fff;
-const minSmvAppId = 0x4000;
-Array(maxGseAppId - minGseAppId)
-    .fill(1)
-    .map((_, i) => (minGseAppId + i).toString(16).toUpperCase().padStart(4, "0"));
-Array(maxGseTripAppId - minGseTripAppId)
-    .fill(1)
-    .map((_, i) => (minGseTripAppId + i).toString(16).toUpperCase().padStart(4, "0"));
-Array(maxSmvAppId - minSmvAppId)
-    .fill(1)
-    .map((_, i) => (minSmvAppId + i).toString(16).toUpperCase().padStart(4, "0"));
-
-/** maximum value for `lnInst` attribute */
-const maxLnInst$1 = 99;
-Array(maxLnInst$1)
-    .fill(1)
-    .map((_, i) => `${i + 1}`);
-
-function isInputLeaf(input, allInputs) {
-    let sameInputs = 0;
-    for (const value of allInputs)
-        if (value === input)
-            sameInputs++;
-    return input.querySelectorAll("ExtRef").length === sameInputs;
-}
-/**
- * Makes sure to not leave empty `Inputs` element after removing
- * its child `ExtRef` elements using [[`extRefActions`]]
- * @returns Actions to remove `Inputs` when empty
- * */
-function removeInputs(extRefs) {
-    const removeInputs = [];
-    const parentInputs = extRefs
-        .map((remove) => remove.node.parentElement)
-        .filter((input) => input);
-    parentInputs.forEach((input, _index, inputs) => {
-        const inputNotRemovedYet = !removeInputs.some((removeInput) => removeInput.node === input);
-        if (isInputLeaf(input, inputs) && inputNotRemovedYet)
-            removeInputs.push({ node: input });
-    });
-    return extRefs.concat(removeInputs);
-}
-
-/** @returns object reference acc. IEC 61850-7-3 for control block elements */
-function controlBlockObjRef(ctrlBlock) {
-    const iedName = ctrlBlock.closest("IED")?.getAttribute("name");
-    const ldInst = ctrlBlock.closest("LDevice")?.getAttribute("inst");
-    const parentLn = ctrlBlock.closest("LN,LN0");
-    const prefix = parentLn?.getAttribute("prefix") ?? "";
-    const lnClass = parentLn?.getAttribute("lnClass");
-    const lnInst = parentLn?.getAttribute("inst") ?? "";
-    const cbName = ctrlBlock.getAttribute("name");
-    if (!iedName || !ldInst || !lnClass || !cbName)
-        return null;
-    return `${iedName}${ldInst}/${prefix}${lnClass}${lnInst}.${cbName}`;
-}
-
-/** @returns control block or null for a given external reference */
-function sourceControlBlock(extRef) {
-    const [iedName, srcLDInst, srcPrefix, srcLNClass, srcLNInst, srcCBName] = [
-        "iedName",
-        "srcLDInst",
-        "srcPrefix",
-        "srcLNClass",
-        "srcLNInst",
-        "srcCBName",
-    ].map((attr) => extRef.getAttribute(attr) ?? "");
-    return (Array.from(extRef.ownerDocument.querySelectorAll(`IED[name="${iedName}"] ReportControl, 
-          IED[name="${iedName}"] GSEControl, 
-          IED[name="${iedName}"] SampledValueControl`)).find((cBlock) => cBlock.closest("LDevice").getAttribute("inst") === srcLDInst &&
-        (cBlock.closest("LN, LN0").getAttribute("prefix") ?? "") ===
-            srcPrefix &&
-        cBlock.closest("LN, LN0").getAttribute("lnClass") === srcLNClass &&
-        cBlock.closest("LN, LN0").getAttribute("inst") === srcLNInst &&
-        cBlock.getAttribute("name") === srcCBName) ?? null);
-}
-
-/** @returns Element to remove the subscription supervision */
-function removableSupervisionElement(ctrlBlock, subscriberIed) {
-    const supervisionType = ctrlBlock.tagName === "GSEControl" ? "LGOS" : "LSVS";
-    const valElement = Array.from(subscriberIed.querySelectorAll(`LN[lnClass="${supervisionType}"] > DOI > DAI > Val`)).find((val) => val.textContent === controlBlockObjRef(ctrlBlock));
-    if (!valElement)
-        return null;
-    const ln = valElement.closest("LN");
-    const doi = valElement.closest("DOI");
-    // do not remove logical nodes `LGOS`, `LSVS` unless privately tagged
-    const canRemoveLn = ln.querySelector(':scope > Private[type="OpenSCD.create"]');
-    return canRemoveLn ? ln : doi;
-}
-/** @returns Whether `DA` with name `setSrcRef`  can edited by SCL editor */
-function isSrcRefEditable(ctrlBlock, subscriberIed) {
-    const supervisionElement = removableSupervisionElement(ctrlBlock, subscriberIed);
-    const ln = supervisionElement?.closest("LN") ?? null;
-    if (!ln)
-        return false;
-    if (supervisionElement?.querySelector(':scope DAI[name="setSrcRef"][valImport="true"][valKind="RO"],' +
-        ' :scope DAI[name="setSrcRef"][valImport="true"][valKind="Conf"]'))
-        return true;
-    const rootNode = ln.ownerDocument;
-    const lnClass = ln.getAttribute("lnClass");
-    const cbRefType = lnClass === "LGOS" ? "GoCBRef" : "SvCBRef";
-    const lnType = ln.getAttribute("lnType");
-    const goOrSvCBRef = rootNode.querySelector(`DataTypeTemplates > 
-        LNodeType[id="${lnType}"][lnClass="${lnClass}"] > DO[name="${cbRefType}"]`);
-    const cbRefId = goOrSvCBRef?.getAttribute("type");
-    const setSrcRef = rootNode.querySelector(`DataTypeTemplates > DOType[id="${cbRefId}"] > DA[name="setSrcRef"]`);
-    return ((setSrcRef?.getAttribute("valKind") === "Conf" ||
-        setSrcRef?.getAttribute("valKind") === "RO") &&
-        setSrcRef.getAttribute("valImport") === "true");
-}
-/** @returns Whether other subscribed ExtRef of the same control block exist */
-function isControlBlockSubscribed(extRefs) {
-    const [srcCBName, srcLDInst, srcLNClass, iedName, srcPrefix, srcLNInst, serviceType,] = [
-        "srcCBName",
-        "srcLDInst",
-        "srcLNClass",
-        "iedName",
-        "srcPrefix",
-        "srcLNInst",
-        "serviceType",
-    ].map((attr) => extRefs[0].getAttribute(attr));
-    const parentIed = extRefs[0].closest("IED");
-    return Array.from(parentIed.getElementsByTagName("ExtRef")).some((otherExtRef) => !extRefs.includes(otherExtRef) &&
-        (otherExtRef.getAttribute("srcPrefix") ?? "") === (srcPrefix ?? "") &&
-        (otherExtRef.getAttribute("srcLNInst") ?? "") === (srcLNInst ?? "") &&
-        otherExtRef.getAttribute("srcCBName") === srcCBName &&
-        otherExtRef.getAttribute("srcLDInst") === srcLDInst &&
-        otherExtRef.getAttribute("srcLNClass") === srcLNClass &&
-        otherExtRef.getAttribute("iedName") === iedName &&
-        otherExtRef.getAttribute("serviceType") === serviceType);
-}
-function cannotRemoveSupervision(extRefGroup) {
-    return (isControlBlockSubscribed(extRefGroup.extRefs) ||
-        !isSrcRefEditable(extRefGroup.ctrlBlock, extRefGroup.subscriberIed));
-}
-function groupPerControlBlock(extRefs) {
-    const groupedExtRefs = {};
-    extRefs.forEach((extRef) => {
-        const ctrlBlock = sourceControlBlock(extRef);
-        if (ctrlBlock) {
-            const ctrlBlockRef = controlBlockObjRef(ctrlBlock);
-            if (groupedExtRefs[ctrlBlockRef])
-                groupedExtRefs[ctrlBlockRef].extRefs.push(extRef);
-            else
-                groupedExtRefs[ctrlBlockRef] = {
-                    extRefs: [extRef],
-                    ctrlBlock,
-                    subscriberIed: extRef.closest("IED"),
-                };
-        }
-    });
-    return groupedExtRefs;
-}
-/** Removes subscription supervision - `LGOS` or `LSVS` - when no other data
- * of a given `GSEControl` or `SampledValueControl`
- * @param extRefs - An array of external reference elements
- * @returns Actions to remove subscription supervision `LGOS` or `LSVS`
- */
-function removeSubscriptionSupervision$1(extRefs) {
-    if (extRefs.length === 0)
-        return [];
-    const groupedExtRefs = groupPerControlBlock(extRefs);
-    return Object.values(groupedExtRefs)
-        .map((extRefGroup) => {
-        if (cannotRemoveSupervision(extRefGroup))
-            return null;
-        return removableSupervisionElement(extRefGroup.ctrlBlock, extRefGroup.subscriberIed);
-    })
-        .filter((element) => element).map((node) => ({ node }));
-}
-
-/**
- * Remove link between sending IED data to receiving IED external
- * references - unsubscribing.
- * ```md
- * 1. Unsubscribes external references itself:
- * -Update `ExtRef` in case later binging is used (existing `intAddr` attribute)
- * -Remove `ExtRef` in case `intAddr` is missing
- *
- * 2. Removes leaf `Input` elements as well
- * 3. Removes subscription supervision (can be disabled through options.ignoreSupervision)
- * - when all external references of one control block are unsubscribed
- * - when `valKind` RO|Conf and `valImport` true
- * ```
- * In case the external reference
- * @param extRefs - Array of external references
- * @returns An array of update and/or remove action representing changes required
- * to unsubscribe.
- */
-function unsubscribe(extRefs, options = { ignoreSupervision: false }) {
-    const updateActions = [];
-    const removeActions = [];
-    extRefs.map((extRef) => {
-        if (extRef.getAttribute("intAddr"))
-            updateActions.push({
-                element: extRef,
-                attributes: {
-                    iedName: null,
-                    ldInst: null,
-                    prefix: null,
-                    lnClass: null,
-                    lnInst: null,
-                    doName: null,
-                    daName: null,
-                    srcLDInst: null,
-                    srcPrefix: null,
-                    srcLNClass: null,
-                    srcLNInst: null,
-                    srcCBName: null,
-                    ...(extRef.getAttribute("pServT") && { serviceType: null }),
-                },
-            });
-        else
-            removeActions.push({ node: extRef });
-    });
-    return [
-        ...removeInputs(removeActions),
-        ...updateActions,
-        ...(options.ignoreSupervision
-            ? []
-            : removeSubscriptionSupervision$1(extRefs)),
-    ];
+/** @returns the cartesian product of `arrays` */
+function crossProduct$1(...arrays) {
+    return arrays.reduce((a, b) => a.flatMap((d) => b.map((e) => [d, e].flat())), [[]]);
 }
 
 const tAbstractConductingEquipment$1 = [
@@ -1230,6 +989,7 @@ const tagSet$1 = new Set(sCLTags$1);
 function isSCLTag$1(tag) {
     return tagSet$1.has(tag);
 }
+
 /**
  * Helper function for to determine schema valid `reference` for OpenSCD
  * core Insert event.
@@ -1259,6 +1019,282 @@ function getReference(parent, tag) {
     }
     return nextSibling ?? null;
 }
+
+/** @returns object reference acc. IEC 61850-7-3 for control block elements */
+function controlBlockObjRef(ctrlBlock) {
+    const iedName = ctrlBlock.closest("IED")?.getAttribute("name");
+    const ldInst = ctrlBlock.closest("LDevice")?.getAttribute("inst");
+    const parentLn = ctrlBlock.closest("LN,LN0");
+    const prefix = parentLn?.getAttribute("prefix") ?? "";
+    const lnClass = parentLn?.getAttribute("lnClass");
+    const lnInst = parentLn?.getAttribute("inst") ?? "";
+    const cbName = ctrlBlock.getAttribute("name");
+    if (!iedName || !ldInst || !lnClass || !cbName)
+        return null;
+    return `${iedName}${ldInst}/${prefix}${lnClass}${lnInst}.${cbName}`;
+}
+
+function isInputLeaf(input, allInputs) {
+    let sameInputs = 0;
+    for (const value of allInputs)
+        if (value === input)
+            sameInputs++;
+    return input.querySelectorAll("ExtRef").length === sameInputs;
+}
+/**
+ * Makes sure to not leave empty `Inputs` element after removing
+ * its child `ExtRef` elements using [[`extRefedits`]]
+ * @returns edits to remove `Inputs` when empty
+ * */
+function removeInputs(extRefs) {
+    const removeInputs = [];
+    const parentInputs = extRefs
+        .map((remove) => remove.node.parentElement)
+        .filter((input) => input);
+    parentInputs.forEach((input, _index, inputs) => {
+        const inputNotRemovedYet = !removeInputs.some((removeInput) => removeInput.node === input);
+        if (isInputLeaf(input, inputs) && inputNotRemovedYet)
+            removeInputs.push({ node: input });
+    });
+    return extRefs.concat(removeInputs);
+}
+
+/**
+ * Locates control block from an ExtRef element.
+ * NOTE: Only supports > Edition 2 using the srcXXX attributes.
+ * @param extRef - SCL ExtRef element.
+ * @returns Either ReportControl/GSEControl/SampledValueControl or null
+ * if not found.
+ */
+function sourceControlBlock(extRef) {
+    const [iedName, srcPrefix, srcLNInst, srcCBName] = [
+        "iedName",
+        "srcPrefix",
+        "srcLNInst",
+        "srcCBName",
+    ].map((attr) => extRef.getAttribute(attr));
+    const doc = extRef.ownerDocument;
+    const srcLDInst = extRef.getAttribute("srcLDInst") ?? extRef.getAttribute("ldInst");
+    const srcLNClass = extRef.getAttribute("srcLNClass") ?? "LLN0";
+    const serviceType = extRef.getAttribute("serviceType") ?? extRef.getAttribute("pServT");
+    if (!iedName || !srcLDInst || !srcCBName || serviceType === "Poll")
+        return null;
+    const lDevice = `:root > IED[name="${iedName}"] > AccessPoint > Server > LDevice[inst="${srcLDInst}"]`;
+    const maybeReport = !serviceType || serviceType === "Report";
+    const maybeGSE = !serviceType || serviceType === "GOOSE";
+    const maybeSMV = !serviceType || serviceType === "SMV";
+    const anyLN = srcLNClass === "LLN0" ? "LN0" : "LN";
+    const lnClass = `[lnClass="${srcLNClass}"]`;
+    let lnPrefixQualifiers;
+    if (anyLN === "LN") {
+        lnPrefixQualifiers =
+            srcPrefix && srcPrefix !== ""
+                ? [`[prefix="${srcPrefix}"]`]
+                : [":not([prefix])", '[prefix=""]'];
+    }
+    else {
+        lnPrefixQualifiers = [":not([prefix])"];
+    }
+    // On LN0 srcLNInst missing on the ExtRef means an inst=""
+    // On LN inst must be a non-empty string and so srcLNInst
+    // must also be a non-empty string and be present
+    const lnInst = anyLN !== "LN0" && srcLNInst ? `[inst="${srcLNInst}"]` : '[inst=""]';
+    const cbName = `[name="${srcCBName}"]`;
+    const cbTypes = [
+        maybeReport ? `ReportControl${cbName}` : null,
+        maybeGSE ? `GSEControl${cbName}` : null,
+        maybeSMV ? `SampledValueControl${cbName}` : null,
+    ].filter((s) => !!s);
+    return doc.querySelector(crossProduct$1([`${lDevice}>${anyLN}${lnClass}${lnInst}`], lnPrefixQualifiers, [">"], cbTypes)
+        .map((strings) => strings.join(""))
+        .join(","));
+}
+
+/** @returns Element to remove the subscription supervision */
+function removableSupervisionElement(ctrlBlock, subscriberIed) {
+    const supervisionType = ctrlBlock.tagName === "GSEControl" ? "LGOS" : "LSVS";
+    const valElement = Array.from(subscriberIed.querySelectorAll(`LN[lnClass="${supervisionType}"] > DOI > DAI > Val`)).find((val) => val.textContent === controlBlockObjRef(ctrlBlock));
+    if (!valElement)
+        return null;
+    const ln = valElement.closest("LN");
+    const doi = valElement.closest("DOI");
+    // do not remove logical nodes `LGOS`, `LSVS` unless privately tagged
+    const canRemoveLn = ln.querySelector(':scope > Private[type="OpenSCD.create"]');
+    return canRemoveLn ? ln : doi;
+}
+/** @returns Whether `DA` with name `setSrcRef`  can edited by SCL editor */
+function isSrcRefEditable(ctrlBlock, subscriberIed) {
+    const supervisionElement = removableSupervisionElement(ctrlBlock, subscriberIed);
+    const ln = supervisionElement?.closest("LN") ?? null;
+    if (!ln)
+        return false;
+    if (supervisionElement?.querySelector(':scope DAI[name="setSrcRef"][valImport="true"][valKind="RO"],' +
+        ' :scope DAI[name="setSrcRef"][valImport="true"][valKind="Conf"]'))
+        return true;
+    const rootNode = ln.ownerDocument;
+    const lnClass = ln.getAttribute("lnClass");
+    const cbRefType = lnClass === "LGOS" ? "GoCBRef" : "SvCBRef";
+    const lnType = ln.getAttribute("lnType");
+    const goOrSvCBRef = rootNode.querySelector(`DataTypeTemplates > 
+        LNodeType[id="${lnType}"][lnClass="${lnClass}"] > DO[name="${cbRefType}"]`);
+    const cbRefId = goOrSvCBRef?.getAttribute("type");
+    const setSrcRef = rootNode.querySelector(`DataTypeTemplates > DOType[id="${cbRefId}"] > DA[name="setSrcRef"]`);
+    return ((setSrcRef?.getAttribute("valKind") === "Conf" ||
+        setSrcRef?.getAttribute("valKind") === "RO") &&
+        setSrcRef.getAttribute("valImport") === "true");
+}
+/** @returns Whether other subscribed ExtRef of the same control block exist */
+function isControlBlockSubscribed(extRefs) {
+    const [srcCBName, srcLDInst, srcLNClass, iedName, srcPrefix, srcLNInst, serviceType,] = [
+        "srcCBName",
+        "srcLDInst",
+        "srcLNClass",
+        "iedName",
+        "srcPrefix",
+        "srcLNInst",
+        "serviceType",
+    ].map((attr) => extRefs[0].getAttribute(attr));
+    const parentIed = extRefs[0].closest("IED");
+    return Array.from(parentIed.getElementsByTagName("ExtRef")).some((otherExtRef) => !extRefs.includes(otherExtRef) &&
+        (otherExtRef.getAttribute("srcPrefix") ?? "") === (srcPrefix ?? "") &&
+        (otherExtRef.getAttribute("srcLNInst") ?? "") === (srcLNInst ?? "") &&
+        otherExtRef.getAttribute("srcCBName") === srcCBName &&
+        otherExtRef.getAttribute("srcLDInst") === srcLDInst &&
+        otherExtRef.getAttribute("srcLNClass") === srcLNClass &&
+        otherExtRef.getAttribute("iedName") === iedName &&
+        otherExtRef.getAttribute("serviceType") === serviceType);
+}
+function cannotRemoveSupervision(extRefGroup) {
+    return (isControlBlockSubscribed(extRefGroup.extRefs) ||
+        !isSrcRefEditable(extRefGroup.ctrlBlock, extRefGroup.subscriberIed));
+}
+function groupPerControlBlock(extRefs) {
+    const groupedExtRefs = {};
+    extRefs.forEach((extRef) => {
+        const ctrlBlock = sourceControlBlock(extRef);
+        if (ctrlBlock) {
+            const ctrlBlockRef = controlBlockObjRef(ctrlBlock);
+            if (groupedExtRefs[ctrlBlockRef])
+                groupedExtRefs[ctrlBlockRef].extRefs.push(extRef);
+            else
+                groupedExtRefs[ctrlBlockRef] = {
+                    extRefs: [extRef],
+                    ctrlBlock,
+                    subscriberIed: extRef.closest("IED"),
+                };
+        }
+    });
+    return groupedExtRefs;
+}
+/** Removes subscription supervision - `LGOS` or `LSVS` - when no other data
+ * of a given `GSEControl` or `SampledValueControl`
+ * @param extRefs - An array of external reference elements
+ * @returns edits to remove subscription supervision `LGOS` or `LSVS`
+ */
+function removeSubscriptionSupervision$1(extRefs) {
+    if (extRefs.length === 0)
+        return [];
+    const groupedExtRefs = groupPerControlBlock(extRefs);
+    return Object.values(groupedExtRefs)
+        .map((extRefGroup) => {
+        if (cannotRemoveSupervision(extRefGroup))
+            return null;
+        return removableSupervisionElement(extRefGroup.ctrlBlock, extRefGroup.subscriberIed);
+    })
+        .filter((element) => element).map((node) => ({ node }));
+}
+
+/**
+ * Remove link between sending IED data to receiving IED external
+ * references - unsubscribing.
+ * ```md
+ * 1. Unsubscribes external references itself:
+ * -Update `ExtRef` in case later binging is used (existing `intAddr` attribute)
+ * -Remove `ExtRef` in case `intAddr` is missing
+ *
+ * 2. Removes leaf `Input` elements as well
+ * 3. Removes subscription supervision (can be disabled through options.ignoreSupervision)
+ * - when all external references of one control block are unsubscribed
+ * - when `valKind` RO|Conf and `valImport` true
+ * ```
+ * In case the external reference
+ * @param extRefs - Array of external references
+ * @returns An array of update and/or remove edit representing changes required
+ * to unsubscribe.
+ */
+function unsubscribe(extRefs, options = { ignoreSupervision: false }) {
+    const updateEdits = [];
+    const removeEdits = [];
+    extRefs.map((extRef) => {
+        if (extRef.getAttribute("intAddr"))
+            updateEdits.push({
+                element: extRef,
+                attributes: {
+                    iedName: null,
+                    ldInst: null,
+                    prefix: null,
+                    lnClass: null,
+                    lnInst: null,
+                    doName: null,
+                    daName: null,
+                    srcLDInst: null,
+                    srcPrefix: null,
+                    srcLNClass: null,
+                    srcLNInst: null,
+                    srcCBName: null,
+                    ...(extRef.getAttribute("pServT") && { serviceType: null }),
+                },
+            });
+        else
+            removeEdits.push({ node: extRef });
+    });
+    return [
+        ...removeInputs(removeEdits),
+        ...updateEdits,
+        ...(options.ignoreSupervision
+            ? []
+            : removeSubscriptionSupervision$1(extRefs)),
+    ];
+}
+
+const maxGseMacAddress = 0x010ccd0101ff;
+const minGseMacAddress = 0x010ccd010000;
+const maxSmvMacAddress = 0x010ccd0401ff;
+const minSmvMacAddress = 0x010ccd040000;
+function convertToMac(mac) {
+    const str = 0 + mac.toString(16).toUpperCase();
+    const arr = str.match(/.{1,2}/g);
+    return arr.join("-");
+}
+Array(maxGseMacAddress - minGseMacAddress)
+    .fill(1)
+    .map((_, i) => convertToMac(minGseMacAddress + i));
+Array(maxSmvMacAddress - minSmvMacAddress)
+    .fill(1)
+    .map((_, i) => convertToMac(minSmvMacAddress + i));
+
+const maxGseAppId = 0x3fff;
+const minGseAppId = 0x0000;
+// APPID range for Type1A(Trip) GOOSE acc. IEC 61850-8-1
+const maxGseTripAppId = 0xbfff;
+const minGseTripAppId = 0x8000;
+const maxSmvAppId = 0x7fff;
+const minSmvAppId = 0x4000;
+Array(maxGseAppId - minGseAppId)
+    .fill(1)
+    .map((_, i) => (minGseAppId + i).toString(16).toUpperCase().padStart(4, "0"));
+Array(maxGseTripAppId - minGseTripAppId)
+    .fill(1)
+    .map((_, i) => (minGseTripAppId + i).toString(16).toUpperCase().padStart(4, "0"));
+Array(maxSmvAppId - minSmvAppId)
+    .fill(1)
+    .map((_, i) => (minSmvAppId + i).toString(16).toUpperCase().padStart(4, "0"));
+
+/** maximum value for `lnInst` attribute */
+const maxLnInst$1 = 99;
+Array(maxLnInst$1)
+    .fill(1)
+    .map((_, i) => `${i + 1}`);
 
 function dataAttributeSpecification(anyLn, doName, daName) {
     const doc = anyLn.ownerDocument;
@@ -1436,7 +1472,7 @@ function getDataAttributes(fcda) {
         daName,
     };
 }
-function createSubscribeAction(connection, parent) {
+function createSubscribeEdit(connection, parent) {
     const doc = connection.sink.ownerDocument;
     const fcda = connection.source.fcda;
     const controlBlock = connection.source.controlBlock;
@@ -1466,35 +1502,35 @@ function createSubscribeAction(connection, parent) {
     const extRef = createElement(doc, "ExtRef", ed2Attributes);
     return { parent, node: extRef, reference };
 }
-function createSubscribeActions(connections) {
-    const inputActions = [];
-    const extRefActions = connections
+function createSubscribeEdits(connections) {
+    const inputEdits = [];
+    const extRefEdits = connections
         .map((option) => {
         const parent = option.sink;
         // no Inputs child yet in anyLN element
         if ((parent.tagName === "LN" || parent.tagName === "LN0") &&
-            !inputActions.some((insert) => insert.parent === parent)) {
+            !inputEdits.some((insert) => insert.parent === parent)) {
             const inputs = createElement(parent.ownerDocument, "Inputs", {});
-            const action = createSubscribeAction(option, inputs);
-            if (action)
-                inputActions.push({
+            const edit = createSubscribeEdit(option, inputs);
+            if (edit)
+                inputEdits.push({
                     parent,
                     node: inputs,
                     reference: getReference(parent, "Inputs"),
                 });
-            return action;
+            return edit;
         }
         // there is an Input already in anyLn
         if ((parent.tagName === "LN" || parent.tagName === "LN0") &&
-            inputActions.some((insert) => insert.parent === parent)) {
-            const inputs = inputActions.find((insert) => insert.parent === parent)
+            inputEdits.some((insert) => insert.parent === parent)) {
+            const inputs = inputEdits.find((insert) => insert.parent === parent)
                 .node;
-            return createSubscribeAction(option, inputs);
+            return createSubscribeEdit(option, inputs);
         }
-        return createSubscribeAction(option, parent);
+        return createSubscribeEdit(option, parent);
     })
-        .filter((action) => action);
-    return [...inputActions, ...extRefActions];
+        .filter((edit) => edit);
+    return [...inputEdits, ...extRefEdits];
 }
 function invalidSink(sink) {
     if (sink.tagName === "ExtRef")
@@ -1538,7 +1574,7 @@ function validSubscribeConditions(connection) {
  * for later binding type subscription.
  * @param source.fcda - `FCDA` element
  * @param source.controlBlock - The control block carrying the [[`source.fcda`]]
- * @returns An array of actions to do a valid subscription
+ * @returns An array of edits to do a valid subscription
  */
 function subscribe(connectionOrConnections, options = { force: false }) {
     const connections = Array.isArray(connectionOrConnections)
@@ -1547,10 +1583,10 @@ function subscribe(connectionOrConnections, options = { force: false }) {
     const validConnections = options.force
         ? connections
         : connections.filter(validSubscribeConditions);
-    const extRefActions = createSubscribeActions(validConnections);
+    const extRefEdits = createSubscribeEdits(validConnections);
     return [
-        ...extRefActions,
-        //TODO: ...insertSubscriptionSupervisions(extRefActions),
+        ...extRefEdits,
+        //TODO: ...insertSubscriptionSupervisions(extRefEdits),
     ];
 }
 
