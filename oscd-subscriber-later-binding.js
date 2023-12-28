@@ -87,98 +87,6 @@ var t$2;const i$4=window,s$2=i$4.trustedTypes,e$7=s$2?s$2.createPolicy("lit-html
 
 /**
  * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const isStrTagged = (val) => typeof val !== 'string' && 'strTag' in val;
-/**
- * Render the result of a `str` tagged template to a string. Note we don't need
- * to do this for Lit templates, since Lit itself handles rendering.
- */
-const joinStringsAndValues = (strings, values, valueOrder) => {
-    let concat = strings[0];
-    for (let i = 1; i < strings.length; i++) {
-        concat += values[valueOrder ? valueOrder[i - 1] : i - 1];
-        concat += strings[i];
-    }
-    return concat;
-};
-
-/**
- * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-/**
- * Default identity msg implementation. Simply returns the input template with
- * no awareness of translations. If the template is str-tagged, returns it in
- * string form.
- */
-const defaultMsg = ((template) => isStrTagged(template)
-    ? joinStringsAndValues(template.strings, template.values)
-    : template);
-
-/**
- * @license
- * Copyright 2020 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-class Deferred {
-    constructor() {
-        this.settled = false;
-        this.promise = new Promise((resolve, reject) => {
-            this._resolve = resolve;
-            this._reject = reject;
-        });
-    }
-    resolve(value) {
-        this.settled = true;
-        this._resolve(value);
-    }
-    reject(error) {
-        this.settled = true;
-        this._reject(error);
-    }
-}
-
-/**
- * @license
- * Copyright 2014 Travis Webb
- * SPDX-License-Identifier: MIT
- */
-for (let i = 0; i < 256; i++) {
-    ((i >> 4) & 15).toString(16) + (i & 15).toString(16);
-}
-
-/**
- * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-let loading = new Deferred();
-// The loading promise must be initially resolved, because that's what we should
-// return if the user immediately calls setLocale(sourceLocale).
-loading.resolve();
-
-/**
- * @license
- * Copyright 2020 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-/**
- * Make a string or lit-html template localizable.
- *
- * @param template A string, a lit-html template, or a function that returns
- * either a string or lit-html template.
- * @param options Optional configuration object with the following properties:
- *   - id: Optional project-wide unique identifier for this template. If
- *     omitted, an id will be automatically generated from the template strings.
- *   - desc: Optional description
- */
-let msg = defaultMsg;
-
-/**
- * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -12972,12 +12880,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             >`
             : x `<span class="title-element text"
               >${this.controlTag === 'SampledValueControl'
-                ? msg('Select SV Publisher')
-                : msg('Select GOOSE Publisher')}</span
+                ? 'Select SV Publisher'
+                : 'Select GOOSE Publisher'}</span
             >`}
         <mwc-icon-button
           id="filterFcdaIcon"
           class="${o(menuClasses)}"
+          title="Filter"
           icon="filter_list"
           @click=${() => {
             if (!this.filterMenuFcdaUI.open)
@@ -12995,28 +12904,28 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             left
             ?selected=${!this.filterOutSubscribed}
           >
-            <span>${msg('Subscribed')}</span>
+            <span>Subscribed</span>
           </mwc-check-list-item>
           <mwc-check-list-item
             class="filter-not-subscribed"
             left
             ?selected=${!this.filterOutNotSubscribed}
           >
-            <span>${msg('Not Subscribed')}</span>
+            <span>Not Subscribed</span>
           </mwc-check-list-item>
           <mwc-check-list-item
             class="filter-data-objects"
             left
             ?selected=${!this.filterOutDataObjects}
           >
-            <span>${msg('Data Objects')}</span>
+            <span>Data Objects</span>
           </mwc-check-list-item>
           <mwc-check-list-item
             class="filter-quality"
             left
             ?selected=${!this.filterOutQuality}
           >
-            <span>${msg('Quality')}</span>
+            <span>Quality</span>
           </mwc-check-list-item>
           ${this.subscriberView
             ? x `<mwc-check-list-item
@@ -13024,15 +12933,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                 left
                 ?selected=${!this.filterOutPreconfiguredUnmatched}
               >
-                <span
-                  >${msg('Non-Matching Preconfigured')}</span
-                ></mwc-check-list-item
+                <span>Non-Matching Preconfigured</span></mwc-check-list-item
               >`
             : A}
         </mwc-menu>
         <mwc-icon-button
           id="sortFcdaIcon"
-          title="${msg('Sort')}"
+          title="Sort')}"
           icon="sort"
           @click=${() => {
             if (!this.sortMenuFcdaUI.open)
@@ -13050,7 +12957,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             right
             ?selected=${this.sortFcda === FcdaSortOrder.DataModel}
           >
-            <span>${msg('Data Model')}</span>
+            <span>Data Model</span>
             <mwc-icon slot="graphic">check</mwc-icon>
           </mwc-list-item>
           <mwc-list-item
@@ -13058,7 +12965,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             right
             ?selected=${this.sortFcda === FcdaSortOrder.Path}
           >
-            <span>${msg('Object Reference')}</span>
+            <span>Object Reference</span>
             <mwc-icon slot="graphic">check</mwc-icon>
           </mwc-list-item>
           <mwc-list-item
@@ -13066,7 +12973,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             right
             ?selected=${this.sortFcda === FcdaSortOrder.FullDescription}
           >
-            <span>${msg('Full Description')}</span>
+            <span>Full Description</span>
             <mwc-icon slot="graphic">check</mwc-icon>
           </mwc-list-item>
           <mwc-list-item
@@ -13074,7 +12981,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             right
             ?selected=${this.sortFcda === FcdaSortOrder.DODescription}
           >
-            <span>${msg('Data Object and Attribute Description')}</span>
+            <span>Data Object and Attribute Description</span>
             <mwc-icon slot="graphic">check</mwc-icon>
           </mwc-list-item>
           <mwc-list-item
@@ -13082,7 +12989,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             right
             ?selected=${this.sortFcda === FcdaSortOrder.DADescription}
           >
-            <span>${msg('Data Attribute Description')}</span>
+            <span>Data Attribute Description</span>
             <mwc-icon slot="graphic">check</mwc-icon>
           </mwc-list-item>
         </mwc-menu>
@@ -13152,7 +13059,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             'show-quality': !this.filterOutQuality,
         };
         return x `<div class="searchField">
-        <abbr title="${msg('Search')}"
+        <abbr title="Search"
           ><mwc-textfield
             id="filterFcdaInput"
             iconTrailing="search"
@@ -13279,13 +13186,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
         return x `
       <mwc-list-item noninteractive>
-        <span>${msg('Subscribed')}</span>
+        <span>Subscribed</span>
       </mwc-list-item>
       <li divider role="separator"></li>
       ${subscribedExtRefs.length > 0
             ? x `${subscribedExtRefs.map(extRefElement => this.renderSubscribedExtRefElement(extRefElement))}`
             : x `<mwc-list-item graphic="large" noninteractive>
-            ${msg('No subscribed inputs')}
+            No subscribed inputs
           </mwc-list-item>`}
     `;
     }
@@ -13299,7 +13206,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             .sort((a, b) => sortExtRefItems(this.sortExtRefPublisher, a, b));
         return x `
       <mwc-list-item noninteractive>
-        <span> ${msg('Available to subscribe')} </span>
+        <span>Available to subscribe</span>
       </mwc-list-item>
       <li divider role="separator"></li>
       ${availableExtRefs.length > 0
@@ -13335,23 +13242,23 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                     ? x `<mwc-icon
                     slot="meta"
                     class="invalid-mapping"
-                    title="${msg('Invalid Mapping')}"
+                    title="Invalid Mapping"
                     >error</mwc-icon
                   >`
                     : A}
               ${hasMissingMapping
                     ? x `<mwc-icon
                     class="missing-mapping"
-                    title="${msg('The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.')}"
+                    title="The subscription is valid but the element is not present -- check that IED, control block and dataset are correct."
                     slot="meta"
                     >warning</mwc-icon
                   >`
                     : A}
             </mwc-list-item>`;
             })}`
-            : x `<mwc-list-item graphic="large" noninteractive>
-            ${msg('No available inputs to subscribe')}
-          </mwc-list-item>`}
+            : x `<mwc-list-item graphic="large" noninteractive
+            >No available inputs to subscribe</mwc-list-item
+          >`}
     `;
     }
     /**
@@ -13365,11 +13272,11 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             'title-element': true,
         };
         return x `<h1 class="fcda-title">
-      <span class="title-element text">${msg('Select Subscriber Input')}</span>
+      <span class="title-element text">Select Subscriber Input</span>
       <mwc-icon-button
         id="filterExtRefPublisherIcon"
         class="${o(filterMenuClasses)}"
-        title="${msg('Filter')}"
+        title="Filter"
         icon="filter_list"
         @click=${() => {
             if (!this.filterMenuExtRefPublisherUI.open)
@@ -13388,20 +13295,20 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           left
           ?selected=${!this.strictServiceTypes}
         >
-          <span>${msg('Unspecified Service Types')}</span>
+          <span>Unspecified Service Types</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="filter-preconfigured"
           left
           ?selected=${!this.filterOutPreconfiguredUnmatched}
         >
-          <span>${msg('Non-Matching Preconfigured')}</span>
+          <span>Non-Matching Preconfigured</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
         id="sortExtRefPublisherIcon"
         class="title-element"
-        title="${msg('Sort')}"
+        title="Sort"
         icon="sort"
         @click=${() => {
             if (!this.sortMenuExtRefPublisherUI.open)
@@ -13418,7 +13325,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           graphic="icon"
           ?selected=${this.sortExtRefPublisher === ExtRefSortOrder.DataModel}
         >
-          <span>${msg('Data Model')}</span>
+          <span>Data Model</span>
           <mwc-icon slot="graphic">check</mwc-icon>
         </mwc-list-item>
         <mwc-list-item
@@ -13426,21 +13333,21 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           ?selected=${this.sortExtRefPublisher ===
             ExtRefSortOrder.InternalAddress}
         >
-          <span>${msg('Internal Address')}</span>
+          <span>Internal Address</span>
           <mwc-icon slot="graphic">check</mwc-icon>
         </mwc-list-item>
         <mwc-list-item
           graphic="icon"
           ?selected=${this.sortExtRefPublisher === ExtRefSortOrder.Description}
         >
-          <span>${msg('Description')}</span>
+          <span>Description</span>
           <mwc-icon slot="graphic">check</mwc-icon>
         </mwc-list-item>
       </mwc-menu>
       <mwc-icon-button
         id="settingsExtRefPublisherIcon"
         class="title-element"
-        title="${msg('Settings')}"
+        title="Settings"
         icon="settings"
         @click=${() => {
             if (!this.settingsMenuExtRefPublisherUI.open)
@@ -13458,23 +13365,21 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           left
           ?selected=${!this.ignoreSupervision}
         >
-          <span>${msg('Change Supervision LNs')}</span>
+          <span>Change Supervision LNs</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="allow-external-plugins"
           left
           ?selected=${this.allowExternalPlugins}
         >
-          <span>${msg('Allow External Plugins')}</span>
+          <span>Allow External Plugins</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="check-only-preferred-basic-service-type"
           left
           ?selected=${this.checkOnlyPreferredBasicType}
         >
-          <span
-            >${msg('Check Only Preconfigured Service and Basic Types')}</span
-          >
+          <span>Check Only Preconfigured Service and Basic Types</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -13502,12 +13407,10 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             title="${selectedExtRefTitle}"
             >${selectedExtRefTitle}</span
           >`
-            : x `<span class="title-element text"
-            >${msg('Select Subscriber Input')}</span
-          >`}
+            : x `<span class="title-element text">Select Subscriber Input</span>`}
       <mwc-icon-button
         id="saveSubscriberExtRefToMarkdown"
-        title="${msg('Copy to Clipboard as Markdown')}"
+        title="Copy to Clipboard as Markdown"
         icon="content_copy"
         @click=${() => {
             this.copySubscriberExtRefInfoToMarkdown();
@@ -13516,7 +13419,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
       <mwc-icon-button
         id="filterExtRefSubscriberIcon"
         class="${o(menuClasses)}"
-        title="${msg('Filter')}"
+        title="Filter"
         icon="filter_list"
         @click=${() => {
             if (!this.filterMenuExtRefSubscriberUI.open)
@@ -13535,33 +13438,33 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           left
           ?selected=${!this.filterOutBound}
         >
-          <span>${msg('Subscribed')}</span>
+          <span>Subscribed</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="show-not-bound"
           left
           ?selected=${!this.filterOutNotBound}
         >
-          <span>${msg('Not Subscribed')}</span>
+          <span>Not Subscribed</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="show-unspecified-service-types"
           left
           ?selected=${!this.strictServiceTypes}
         >
-          <span>${msg('Unspecified Service Types')}</span>
+          <span>Unspecified Service Types</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="show-pDAq"
           left
           ?selected=${!this.filterOutpDAq}
         >
-          <span>${msg('Preconfigured Quality Attribute')}</span>
+          <span>Preconfigured Quality Attribute</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
         id="sortExtRefSubscriberIcon"
-        title="${msg('Sort')}"
+        title="Sort"
         icon="sort"
         @click=${() => {
             if (!this.sortMenuExtRefSubscriberUI.open)
@@ -13578,7 +13481,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           graphic="icon"
           ?selected=${this.sortExtRefSubscriber === ExtRefSortOrder.DataModel}
         >
-          <span>${msg('Data Model')}</span>
+          <span>Data Model</span>
           <mwc-icon slot="graphic">check</mwc-icon>
         </mwc-list-item>
         <mwc-list-item
@@ -13586,14 +13489,14 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           ?selected=${this.sortExtRefSubscriber ===
             ExtRefSortOrder.InternalAddress}
         >
-          <span>${msg('Internal Address')}</span>
+          <span>Internal Address</span>
           <mwc-icon slot="graphic">check</mwc-icon>
         </mwc-list-item>
         <mwc-list-item
           graphic="icon"
           ?selected=${this.sortExtRefSubscriber === ExtRefSortOrder.Description}
         >
-          <span>${msg('Description')}</span>
+          <span>Description</span>
           <mwc-icon slot="graphic">check</mwc-icon>
         </mwc-list-item>
         <mwc-list-item
@@ -13601,13 +13504,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           ?selected=${this.sortExtRefSubscriber ===
             ExtRefSortOrder.MappedReference}
         >
-          <span>${msg('Mapped Reference')}</span>
+          <span>Mapped Reference</span>
           <mwc-icon slot="graphic">check</mwc-icon>
         </mwc-list-item>
       </mwc-menu>
       <mwc-icon-button
         id="settingsExtRefSubscriberIcon"
-        title="${msg('Settings')}"
+        title="Settings"
         icon="settings"
         @click=${() => {
             if (!this.settingsMenuExtRefSubscriberUI.open)
@@ -13625,30 +13528,28 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           left
           ?selected=${this.autoIncrement}
         >
-          <span>${msg('Auto-increment')}</span>
+          <span>Auto-increment</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="no-supervisions"
           left
           ?selected=${!this.ignoreSupervision}
         >
-          <span>${msg('Change Supervision LNs')}</span>
+          <span>Change Supervision LNs</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="allow-external-plugins"
           left
           ?selected=${this.allowExternalPlugins}
         >
-          <span>${msg('Allow External Plugins')}</span>
+          <span>Allow External Plugins</span>
         </mwc-check-list-item>
         <mwc-check-list-item
           class="check-only-preferred-basic-service-type"
           left
           ?selected=${this.checkOnlyPreferredBasicType}
         >
-          <span
-            >${msg('Check Only Preconfigured Service and Basic Types')}</span
-          >
+          <span>Check Only Preconfigured Service and Basic Types</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -13723,7 +13624,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         ${subscribed || hasInvalidMapping
             ? x `<mwc-icon id="leftArrow">arrow_back</mwc-icon>
               ${subscribed ? `${fcdaName}` : ''}
-              ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
+              ${hasInvalidMapping ? 'Invalid Mapping' : ''} `
             : A}
       </span>
       <span slot="secondary"
@@ -13747,7 +13648,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
       ${hasInvalidMapping
             ? x `<mwc-icon
             class="invalid-mapping"
-            title="${msg('Invalid Mapping')}"
+            title="Invalid Mapping"
             slot="meta"
             >error</mwc-icon
           >`
@@ -13755,7 +13656,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
       ${hasMissingMapping
             ? x `<mwc-icon
             class="missing-mapping"
-            title="${msg('The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.')}"
+            title="The subscription is valid but the element is not present -- check that IED, control block and dataset are correct."
             slot="meta"
             >warning</mwc-icon
           >`
@@ -13854,7 +13755,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         if (notVisible)
             return ``;
         return `  * ${subscribed ? '🔗 ' : ''}${objectReferenceInIed(extRef)}: ${extRef.getAttribute('intAddr')}${subscribed || hasInvalidMapping
-            ? ` ⬅ ${subscribed ? `${fcdaName}` : ''} ${hasInvalidMapping ? `${msg('Invalid Mapping')}` : ''} `
+            ? ` ⬅ ${subscribed ? `${fcdaName}` : ''} ${hasInvalidMapping ? 'Invalid Mapping' : ''} `
             : ``}\n    ${extRefDescription ? `${extRefDescription}` : ``}${extRefDescription && fcdaDesc && fcdaDesc !== '' ? ` ⬅ ${fcdaDesc}` : ``}${extRefDescription && supAndctrlDescription !== ``
             ? ` (${supAndctrlDescription})`
             : supAndctrlDescription}${hasInvalidMapping ? ` (❌ Invalid)` : ``}${hasMissingMapping ? ` (⚠️ Missing Mapping)` : ``}\n\n`;
@@ -13918,7 +13819,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         ${this.renderPublisherViewExtRefListTitle()}
         ${this.selectedControl && this.selectedFCDA
                 ? x `<div class="searchField">
-                <abbr title="${msg('Search')}"
+                <abbr title="Search"
                   ><mwc-textfield
                     id="filterExtRefPublisherInput"
                     iconTrailing="search"
@@ -13959,7 +13860,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                 ${this.renderPublisherViewSubscribedExtRefs()}
                 ${this.renderPublisherViewAvailableExtRefs()}
               </mwc-list>`
-                : x `<h3>${msg('No published item selected')}</h3>`}
+                : x `<h3>No published item selected</h3>`}
       </section>`;
         }
         const filteredListClasses = {
@@ -13971,9 +13872,9 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         return x `<section class="column extref">
       ${this.renderSubscriberViewExtRefListTitle()}
       ${!hasExtRefs
-            ? x `<h3>${msg('No inputs')}</h3>`
+            ? x `<h3>No inputs</h3>`
             : x `<div class="searchField">
-              <abbr title="${msg('Search')}"
+              <abbr title="Search"
                 ><mwc-textfield
                   id="filterExtRefSubscriberInput"
                   iconTrailing="search"
@@ -14021,7 +13922,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         id="switchControlType"
         class="title-element"
         ?on=${this.controlTag === 'GSEControl'}
-        title="${msg('Change between GOOSE and Sampled Value publishers')}"
+        title="Change between GOOSE and Sampled Value publishers"
         @click=${() => {
             if (this.controlTag === 'GSEControl') {
                 this.controlTag = 'SampledValueControl';
@@ -14057,9 +13958,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
       ${controlElements.length !== 0
             ? this.renderControlList(controlElements)
             : x `<h3>
-            ${this.subscriberView
-                ? msg('No input selected')
-                : msg('No published items')}
+            ${this.subscriberView ? 'No input selected' : 'No published items'}
           </h3>`}
     </section>`;
     }
@@ -14073,7 +13972,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
       id="switchView"
       icon="swap_horiz"
       ?on=${this.subscriberView}
-      title="${msg('Switch between Publisher and Subscriber view')}"
+      title="Switch between Publisher and Subscriber view"
       @click=${async () => {
             this.subscriberView = !this.subscriberView;
             // deselect in UI
