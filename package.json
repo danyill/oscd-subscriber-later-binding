@@ -37,7 +37,7 @@
     "@material/mwc-list": "^0.27.0",
     "@material/mwc-menu": "^0.27.0",
     "@material/mwc-textfield": "^0.27.0",
-    "@openenergytools/scl-lib": "^0.2.2",
+    "@openenergytools/scl-lib": "^0.9.21",
     "@openscd/open-scd-core": "^0.0.2",
     "lit": "^2.4.0"
   },
