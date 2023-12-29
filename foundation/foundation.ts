@@ -11,7 +11,7 @@ export function getSclSchemaVersion(doc: Document): SclEdition {
 export const serviceTypes: Partial<Record<string, string>> = {
   ReportControl: 'Report',
   GSEControl: 'GOOSE',
-  SampledValueControl: 'SMV',
+  SampledValueControl: 'SMV'
 };
 
 /**
@@ -84,7 +84,7 @@ export function findFCDAs(extRef: Element): Element[] {
     'lnClass',
     'lnInst',
     'doName',
-    'daName',
+    'daName'
   ].map(name => extRef.getAttribute(name));
   const ied = Array.from(extRef.ownerDocument.getElementsByTagName('IED')).find(
     element =>

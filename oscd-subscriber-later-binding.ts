@@ -5,7 +5,7 @@ import {
   nothing,
   PropertyValues,
   SVGTemplateResult,
-  TemplateResult,
+  TemplateResult
 } from 'lit';
 
 import { property, query, state } from 'lit/decorators.js';
@@ -14,8 +14,10 @@ import { repeat } from 'lit/directives/repeat.js';
 import {
   extRefTypeRestrictions,
   fcdaBaseTypes,
+  find,
+  identity,
   subscribe,
-  unsubscribe,
+  unsubscribe
 } from '@openenergytools/scl-lib';
 
 import '@material/mwc-fab';
@@ -34,7 +36,7 @@ import {
   isInsert,
   isRemove,
   isUpdate,
-  newEditEvent,
+  newEditEvent
 } from '@openscd/open-scd-core';
 
 import type { Icon } from '@material/mwc-icon';
@@ -45,8 +47,6 @@ import type { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
 import type { Menu } from '@material/mwc-menu';
 import type { TextField } from '@material/mwc-textfield';
 
-import { identity } from './foundation/identities/identity.js';
-import { selector } from './foundation/identities/selector.js';
 import {
   findControlBlock,
   findFCDA,
@@ -63,18 +63,18 @@ import {
   isPartiallyConfigured,
   isSubscribed,
   canRemoveSubscriptionSupervision,
-  removeSubscriptionSupervision,
+  removeSubscriptionSupervision
 } from './foundation/subscription/subscription.js';
 import {
   findFCDAs,
   getDescriptionAttribute,
-  getNameAttribute,
+  getNameAttribute
 } from './foundation/foundation.js';
 import {
   gooseIcon,
   smvIcon,
   gooseActionIcon,
-  smvActionIcon,
+  smvActionIcon
 } from './foundation/icons.js';
 
 import { getFcdaInstDesc } from './foundation/tDataSet/getFcdaInstDesc.js';
@@ -107,7 +107,7 @@ type extRefInfo = {
 
 const iconControlLookup: iconLookup = {
   SampledValueControl: smvIcon,
-  GSEControl: gooseIcon,
+  GSEControl: gooseIcon
 };
 
 interface ServiceTypeLookup {
@@ -115,7 +115,7 @@ interface ServiceTypeLookup {
 }
 const serviceTypeLookup: ServiceTypeLookup = {
   GSEControl: 'GOOSE',
-  SampledValueControl: 'SMV',
+  SampledValueControl: 'SMV'
 };
 
 enum FcdaSortOrder {
@@ -123,14 +123,14 @@ enum FcdaSortOrder {
   Path,
   FullDescription,
   DODescription,
-  DADescription,
+  DADescription
 }
 
 enum ExtRefSortOrder {
   DataModel,
   InternalAddress,
   Description,
-  MappedReference,
+  MappedReference
 }
 
 type StoredConfiguration = {
@@ -184,7 +184,7 @@ const storedProperties: string[] = [
   'filterOutpDAq',
   'sortExtRefPublisher',
   'sortExtRefSubscriber',
-  'sortFcda',
+  'sortFcda'
 ];
 
 /**
@@ -632,7 +632,7 @@ export default class SubscriberLaterBinding extends LitElement {
       filterOutpDAq: this.filterOutpDAq,
       sortExtRefPublisher: this.sortExtRefPublisher,
       sortExtRefSubscriber: this.sortExtRefSubscriber,
-      sortFcda: this.sortFcda,
+      sortFcda: this.sortFcda
     };
 
     localStorage.setItem(
@@ -1290,7 +1290,7 @@ export default class SubscriberLaterBinding extends LitElement {
       this.subscriberView &&
       this.selectedExtRef !== undefined &&
       !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef, fcda, {
-        checkOnlyBType: this.checkOnlyPreferredBasicType,
+        checkOnlyBType: this.checkOnlyPreferredBasicType
       });
 
     const disabledFcdo =
@@ -1364,7 +1364,7 @@ export default class SubscriberLaterBinding extends LitElement {
       'show-pxx-mismatch':
         this.subscriberView &&
         !!this.selectedExtRef &&
-        !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef!, fcda),
+        !this.doesFcdaMeetExtRefRestrictions(this.selectedExtRef!, fcda)
     };
 
     const { spec, desc } = this.getFcdaInfo(fcda);
@@ -1398,7 +1398,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         this.filterOutNotSubscribed ||
         this.filterOutDataObjects ||
         this.filterOutQuality ||
-        (this.filterOutPreconfiguredUnmatched && this.subscriberView),
+        (this.filterOutPreconfiguredUnmatched && this.subscriberView)
     };
     const selectedFcdaTitle =
       this.selectedControl && this.selectedFCDA && !this.subscriberView
@@ -1561,7 +1561,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         [
           this.getFcdaInfo(fcda).desc.DOI,
           this.getFcdaInfo(fcda).desc.SDI,
-          this.getFcdaInfo(fcda).desc.DAI,
+          this.getFcdaInfo(fcda).desc.DAI
         ]
           .flat(Infinity as 1)
           .filter(item => !!item)
@@ -1602,7 +1602,7 @@ Basic Type: ${spec?.bType ?? '?'}"
       'show-not-subscribed': !this.filterOutNotSubscribed,
       'show-pxx-mismatch': !this.filterOutPreconfiguredUnmatched,
       'show-data-objects': !this.filterOutDataObjects,
-      'show-quality': !this.filterOutQuality,
+      'show-quality': !this.filterOutQuality
     };
 
     return html`<div class="searchField">
@@ -1630,10 +1630,8 @@ Basic Type: ${spec?.bType ?? '?'}"
           if (!selectedListItem) return;
 
           const { control, fcda } = (<ListItem>selectedListItem).dataset;
-          this.selectedControl = this.doc.querySelector(
-            selector(this.controlTag, control!)
-          )!;
-          this.selectedFCDA = this.doc.querySelector(selector('FCDA', fcda!))!;
+          this.selectedControl = find(this.doc, this.controlTag, control!)!;
+          this.selectedFCDA = find(this.doc, 'FCDA', fcda!)!;
 
           // only continue if conditions for subscription met
           if (
@@ -1674,9 +1672,7 @@ Basic Type: ${spec?.bType ?? '?'}"
             if (nextActivatableItem) {
               const { extref } = (<ListItem>nextActivatableItem).dataset;
               const nextExtRef =
-                this.doc.querySelector(
-                  selector('ExtRef', extref ?? 'Unknown')
-                ) ?? undefined;
+                find(this.doc, 'ExtRef', extref ?? 'Unknown') ?? undefined;
               if (nextExtRef && !isSubscribed(nextExtRef)) {
                 nextActivatableItem.click();
               } else {
@@ -1743,7 +1739,7 @@ Basic Type: ${spec?.bType ?? '?'}"
 
             const filterClasses = {
               'show-subscribed': someSubscribed,
-              'show-not-subscribed': someNotSubscribed,
+              'show-not-subscribed': someNotSubscribed
             };
 
             const iedName = control.closest('IED')!.getAttribute('name');
@@ -1836,7 +1832,7 @@ Basic Type: ${spec?.bType ?? '?'}"
             const disabledExtRef =
               this.selectedFCDA &&
               !this.doesFcdaMeetExtRefRestrictions(extRef, this.selectedFCDA, {
-                checkOnlyBType: this.checkOnlyPreferredBasicType,
+                checkOnlyBType: this.checkOnlyPreferredBasicType
               });
 
             const iedName = extRef.closest('IED')!.getAttribute('name');
@@ -1891,7 +1887,7 @@ Basic Type: ${spec?.bType ?? '?'}"
     const filterMenuClasses = {
       'filter-off':
         this.strictServiceTypes || this.filterOutPreconfiguredUnmatched,
-      'title-element': true,
+      'title-element': true
     };
 
     return html`<h1 class="fcda-title">
@@ -2019,7 +2015,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         this.filterOutBound ||
         this.filterOutNotBound ||
         this.strictServiceTypes ||
-        this.filterOutpDAq,
+        this.filterOutpDAq
     };
 
     const selectedExtRefTitle = this.selectedExtRef
@@ -2261,7 +2257,7 @@ Basic Type: ${spec?.bType ?? '?'}"
 
     const filterClasses = {
       'show-bound': bound,
-      'show-not-bound': !bound,
+      'show-not-bound': !bound
     };
 
     return html`<mwc-list-item
@@ -2428,7 +2424,7 @@ Basic Type: ${spec?.bType ?? '?'}"
             !hasInvalidMapping &&
             !hasMissingMapping
               ? `💓 ${supervisionDescription}`
-              : undefined,
+              : undefined
           ]
             .filter(desc => desc !== undefined)
             .join(', ')}`
@@ -2522,7 +2518,7 @@ Basic Type: ${spec?.bType ?? '?'}"
         const filterClasses = {
           control: true,
           'show-bound': someBound,
-          'show-not-bound': someNotBound,
+          'show-not-bound': someNotBound
         };
 
         const [iedDesc, iedType, iedMfg] = ['desc', 'type', 'manufacturer'].map(
@@ -2593,8 +2589,10 @@ Basic Type: ${spec?.bType ?? '?'}"
                   // TODO: The selector function does not work correctly when there are multiple ExtRefs with the
                   // same desc and intAddr.
                   // See: https://github.com/openscd/open-scd/issues/1214
-                  const selectedExtRefElement = this.doc.querySelector(
-                    selector('ExtRef', extref!)
+                  const selectedExtRefElement = find(
+                    this.doc,
+                    'ExtRef',
+                    extref!
                   )!;
 
                   if (
@@ -2624,7 +2622,7 @@ Basic Type: ${spec?.bType ?? '?'}"
 
     const filteredListClasses = {
       'show-bound': !this.filterOutBound,
-      'show-not-bound': !this.filterOutNotBound,
+      'show-not-bound': !this.filterOutNotBound
     };
 
     const hasExtRefs = this.doc?.querySelector(
@@ -2662,10 +2660,7 @@ Basic Type: ${spec?.bType ?? '?'}"
                 if (!selectedListItem) return;
 
                 const { extref } = selectedListItem.dataset;
-                const selectedExtRef = <Element>(
-                  this.doc.querySelector(selector('ExtRef', extref!))
-                );
-
+                const selectedExtRef = find(this.doc, 'ExtRef', extref!);
                 if (!selectedExtRef) return;
 
                 if (

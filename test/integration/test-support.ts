@@ -19,7 +19,7 @@ export function midEl(element: Element): [number, number] {
 
   return [
     Math.floor(x + window.pageXOffset + width / 2),
-    Math.floor(y + window.pageYOffset + height / 2),
+    Math.floor(y + window.pageYOffset + height / 2)
   ];
 }
 

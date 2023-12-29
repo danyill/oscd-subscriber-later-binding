@@ -5,7 +5,7 @@ import {
   getSclSchemaVersion,
   isPublic,
   minAvailableLogicalNodeInstance,
-  serviceTypes,
+  serviceTypes
 } from '../foundation.js';
 import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
 
@@ -256,7 +256,7 @@ export function isPartiallyConfigured(extRefElement: Element): boolean {
     'srcPrefix',
     'srcLNClass',
     'srcLNInst',
-    'srcCBName',
+    'srcCBName'
   ];
 
   return (
@@ -541,7 +541,7 @@ export function instantiateSubscriptionSupervision(
         node: availableLN,
         reference:
           parent!.querySelector(`LN[lnClass="${supervisionType}"]:last-child`)
-            ?.nextElementSibling ?? null,
+            ?.nextElementSibling ?? null
       });
     }
   }
@@ -559,7 +559,7 @@ export function instantiateSubscriptionSupervision(
     edits.push({
       parent: availableLN!,
       reference: null,
-      node: doiElement,
+      node: doiElement
     });
   }
 
@@ -585,7 +585,7 @@ export function instantiateSubscriptionSupervision(
     edits.push({
       parent: doiElement!,
       reference: null,
-      node: daiElement,
+      node: daiElement
     });
   }
 
@@ -596,7 +596,7 @@ export function instantiateSubscriptionSupervision(
   if (valElement) {
     // remove old element
     edits.push({
-      node: valElement,
+      node: valElement
     });
     newValElement = <Element>valElement.cloneNode(true);
   } else {
@@ -611,7 +611,7 @@ export function instantiateSubscriptionSupervision(
   edits.push({
     parent: daiElement!,
     reference: null,
-    node: newValElement,
+    node: newValElement
   });
 
   return edits;
@@ -626,7 +626,7 @@ export function canRemoveSubscriptionSupervision(
     'srcLNClass',
     'iedName',
     'srcPrefix',
-    'srcLNInst',
+    'srcLNInst'
   ].map(attr => subscribedExtRef.getAttribute(attr));
   return !Array.from(
     subscribedExtRef.closest('IED')?.getElementsByTagName('ExtRef') ?? []
@@ -673,13 +673,13 @@ export function removeSubscriptionSupervision(
   return isOpenScdCreated
     ? [
         {
-          node: lnElement,
-        },
+          node: lnElement
+        }
       ]
     : [
         {
-          node: valElement.closest('DOI')!,
-        },
+          node: valElement.closest('DOI')!
+        }
       ];
 }
 
@@ -734,7 +734,7 @@ export function getExtRefControlBlockPath(extRefElement: Element): string {
     'srcPrefix',
     'srcLDInst',
     'srcLNClass',
-    'srcCBName',
+    'srcCBName'
   ].map(name => extRefElement.getAttribute(name) ?? '');
 
   return `${
@@ -752,7 +752,7 @@ function findFCDAs(extRef: Element): Element[] {
     'lnClass',
     'lnInst',
     'doName',
-    'daName',
+    'daName'
   ].map(name => extRef.getAttribute(name));
   const ied = Array.from(extRef.ownerDocument.getElementsByTagName('IED')).find(
     element =>
@@ -789,7 +789,7 @@ const serviceTypeControlBlockTags: Partial<Record<string, string[]>> = {
   GOOSE: ['GSEControl'],
   SMV: ['SampledValueControl'],
   Report: ['ReportControl'],
-  NONE: ['LogControl', 'GSEControl', 'SampledValueControl', 'ReportControl'],
+  NONE: ['LogControl', 'GSEControl', 'SampledValueControl', 'ReportControl']
 };
 
 /**
@@ -856,7 +856,7 @@ export function findFCDA(
     'lnClass',
     'lnInst',
     'doName',
-    'daName',
+    'daName'
   ].map(name => extRef.getAttribute(name));
   const ied = Array.from(extRef.ownerDocument.getElementsByTagName('IED')).find(
     element =>

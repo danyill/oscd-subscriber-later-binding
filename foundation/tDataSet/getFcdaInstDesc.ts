@@ -53,7 +53,7 @@ export function getFcdaInstDesc(fcda: Element): fcdaDesc {
     if (!('SDI' in descs)) {
       descs = {
         ...descs,
-        ...(sdiDesc && sdiDesc !== '' && { SDI: [sdiDesc] }),
+        ...(sdiDesc && sdiDesc !== '' && { SDI: [sdiDesc] })
       };
     } else if (sdiDesc) descs.SDI!.push(sdiDesc);
   });

@@ -21,7 +21,7 @@ import {
   getFcdaItem,
   midEl,
   resetMouseState,
-  setViewPort,
+  setViewPort
 } from './test-support.js';
 
 import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
@@ -58,14 +58,14 @@ const plugins = {
       name: 'Subscriber Later Binding',
       translations: {
         de: 'Späte Bindung des Abonnenten',
-        pt: 'Associação Tardia de Assinante',
+        pt: 'Associação Tardia de Assinante'
       },
       icon: 'link',
       active: true,
       requireDoc: true,
-      src: '/dist/oscd-subscriber-later-binding.js',
-    },
-  ],
+      src: '/dist/oscd-subscriber-later-binding.js'
+    }
+  ]
 };
 
 beforeEach(async function () {
@@ -137,7 +137,7 @@ describe('goose', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(plugin.switchViewUI!),
+        position: midEl(plugin.switchViewUI!)
       });
       await plugin.updateComplete;
 
@@ -152,7 +152,7 @@ describe('goose', () => {
       // carrying out a mouse move causes a content refresh somehow??
       await sendMouse({
         type: 'move',
-        position: midEl(plugin!),
+        position: midEl(plugin!)
       });
 
       await resetMouseState();
@@ -186,7 +186,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -206,7 +206,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -226,7 +226,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -244,7 +244,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
 
         await fcda!.updateComplete;
@@ -270,7 +270,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
 
         await fcda!.updateComplete;
@@ -285,7 +285,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -303,7 +303,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
 
         await fcda!.updateComplete;
@@ -325,7 +325,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -342,7 +342,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
         await fcda!.updateComplete;
         await fcdaListElement.updateComplete;
@@ -352,7 +352,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -372,7 +372,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -389,7 +389,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
 
         await fcda!.updateComplete;
@@ -413,7 +413,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -436,7 +436,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -459,7 +459,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -472,7 +472,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await timeout(standardWait); // menu must show
 
@@ -485,7 +485,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(settingsNoSupervisions!),
+          position: midEl(settingsNoSupervisions!)
         });
         await timeout(standardWait);
         await settingsNoSupervisions!.updateComplete;
@@ -505,7 +505,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
 
         await resetMouseState();
@@ -529,7 +529,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -545,7 +545,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -561,7 +561,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -582,7 +582,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -603,7 +603,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
         await fcdaListElement!.updateComplete;
         await extref!.updateComplete;
@@ -621,7 +621,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -640,7 +640,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
         await fcdaListElement!.updateComplete;
         await extref!.updateComplete;
@@ -664,7 +664,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extref!),
+            position: midEl(extref!)
           });
           await extref.updateComplete;
           await extRefListElement.updateComplete;
@@ -682,7 +682,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(fcda!),
+            position: midEl(fcda!)
           });
 
           await fcda!.updateComplete;
@@ -704,7 +704,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(button!),
+            position: midEl(button!)
           });
           await timeout(standardWait); // menu must show
 
@@ -717,7 +717,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(autoIncrement!),
+            position: midEl(autoIncrement!)
           });
           await timeout(standardWait);
           await autoIncrement!.updateComplete;
@@ -735,7 +735,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extref!),
+            position: midEl(extref!)
           });
           await extref.updateComplete;
           await extRefListElement.updateComplete;
@@ -752,7 +752,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(fcda!),
+            position: midEl(fcda!)
           });
 
           await fcda!.updateComplete;
@@ -777,7 +777,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extref!),
+            position: midEl(extref!)
           });
           await extref.updateComplete;
           await extRefListElement.updateComplete;
@@ -795,7 +795,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(fcda!),
+            position: midEl(fcda!)
           });
 
           await fcda!.updateComplete;
@@ -821,7 +821,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extref!),
+            position: midEl(extref!)
           });
           await extref.updateComplete;
           await extRefListElement.updateComplete;
@@ -839,7 +839,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(fcda!),
+            position: midEl(fcda!)
           });
 
           await fcda!.updateComplete;
@@ -883,7 +883,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await plugin.filterMenuFcdaUI.updateComplete;
 
@@ -897,7 +897,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -908,7 +908,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterNotSubscribed!),
+          position: midEl(filterNotSubscribed!)
         });
         await timeout(standardWait); // selection
         await plugin.filterMenuFcdaUI.updateComplete;
@@ -925,7 +925,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -935,7 +935,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterSubscribed!),
+          position: midEl(filterSubscribed!)
         });
         await timeout(standardWait); // selection
         await plugin.filterMenuFcdaUI.updateComplete;
@@ -952,7 +952,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -962,7 +962,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterSubscribed!),
+          position: midEl(filterSubscribed!)
         });
         await timeout(standardWait); // selection
         await plugin.filterMenuFcdaUI.updateComplete;
@@ -971,7 +971,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -982,7 +982,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterDataObjects!),
+          position: midEl(filterDataObjects!)
         });
         await timeout(standardWait); // selection
         await plugin.filterMenuFcdaUI.updateComplete;
@@ -999,7 +999,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -1009,7 +1009,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterQuality!),
+          position: midEl(filterQuality!)
         });
         await timeout(standardWait); // selection
         await plugin.filterMenuFcdaUI.updateComplete;
@@ -1031,7 +1031,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -1042,7 +1042,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -1053,7 +1053,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterSubscribed!),
+          position: midEl(filterSubscribed!)
         });
         await timeout(standardWait); // selection
         await plugin.filterMenuFcdaUI.updateComplete;
@@ -1070,7 +1070,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRefFilterMenu!),
+          position: midEl(extRefFilterMenu!)
         });
 
         await timeout(standardWait); // opening dialog
@@ -1083,7 +1083,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRefFilterMenu!),
+          position: midEl(extRefFilterMenu!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -1093,7 +1093,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterBound!),
+          position: midEl(filterBound!)
         });
         await plugin.filterMenuExtRefSubscriberUI.updateComplete;
         await plugin.updateComplete;
@@ -1109,7 +1109,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRefFilterMenu!),
+          position: midEl(extRefFilterMenu!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -1119,7 +1119,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterNotBound!),
+          position: midEl(filterNotBound!)
         });
         await plugin.filterMenuExtRefSubscriberUI.updateComplete;
         await plugin.updateComplete;
@@ -1135,7 +1135,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRefFilterMenu!),
+          position: midEl(extRefFilterMenu!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -1147,7 +1147,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterUnspecifiedServiceTypes!),
+          position: midEl(filterUnspecifiedServiceTypes!)
         });
         await plugin.filterMenuExtRefSubscriberUI.updateComplete;
         await plugin.updateComplete;
@@ -1163,7 +1163,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRefFilterMenu!),
+          position: midEl(extRefFilterMenu!)
         });
         await timeout(standardWait); // opening dialog
 
@@ -1173,7 +1173,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(filterpDAq!),
+          position: midEl(filterpDAq!)
         });
         await plugin.filterMenuExtRefSubscriberUI.updateComplete;
         await plugin.updateComplete;
@@ -1221,7 +1221,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(button!),
+            position: midEl(button!)
           });
 
           await timeout(standardWait); // opening dialog
@@ -1234,7 +1234,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(button!),
+            position: midEl(button!)
           });
           await timeout(standardWait); // opening dialog
 
@@ -1245,7 +1245,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(sortItem!),
+            position: midEl(sortItem!)
           });
           await plugin.sortMenuExtRefSubscriberUI.updateComplete;
           await plugin.updateComplete;
@@ -1261,7 +1261,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(button!),
+            position: midEl(button!)
           });
           await timeout(standardWait); // opening dialog
 
@@ -1272,7 +1272,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(sortItem!),
+            position: midEl(sortItem!)
           });
           await plugin.sortMenuExtRefSubscriberUI.updateComplete;
           await plugin.updateComplete;
@@ -1288,7 +1288,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(button!),
+            position: midEl(button!)
           });
           await timeout(standardWait); // opening dialog
 
@@ -1299,7 +1299,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(sortItem!),
+            position: midEl(sortItem!)
           });
           await plugin.sortMenuExtRefSubscriberUI.updateComplete;
           await plugin.updateComplete;
@@ -1315,7 +1315,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(button!),
+            position: midEl(button!)
           });
           await timeout(standardWait); // opening dialog
 
@@ -1326,7 +1326,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(sortItem!),
+            position: midEl(sortItem!)
           });
           await plugin.sortMenuExtRefSubscriberUI.updateComplete;
           await plugin.updateComplete;
@@ -1347,7 +1347,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcdaTextInput!),
+          position: midEl(fcdaTextInput!)
         });
         await sendKeys({ type: 'QB1' });
         await plugin.fcdaListUI!.updateComplete;
@@ -1366,7 +1366,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'GOOSE_Subscriber1' });
 
@@ -1385,7 +1385,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'Dummy' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1403,7 +1403,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'Taxonomist' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1421,7 +1421,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'Earth_Switch' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1439,7 +1439,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'CILO' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1457,7 +1457,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'someRestrictedExtRef' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1475,7 +1475,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'Restricted' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1493,7 +1493,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'Restricted' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1511,7 +1511,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'LGOS' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1529,7 +1529,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'GOOSE2' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1547,7 +1547,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'GOOSE_Publisher2' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1565,7 +1565,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'QB1_Disconnector' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1583,7 +1583,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'QB1_Disconnector' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1601,7 +1601,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'GOOSE_Subscriber3 CSWI' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1619,7 +1619,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'Animalia' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1637,7 +1637,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'Arthropoda' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1655,10 +1655,10 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({
-            type: 'GOOSE_Subscriber Dummy Earth_Switch Arthropoda LGOS',
+            type: 'GOOSE_Subscriber Dummy Earth_Switch Arthropoda LGOS'
           });
           await plugin.extRefListSubscriberUI?.updateComplete;
           await plugin.updateComplete;
@@ -1675,7 +1675,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: '"LGOS 1"' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1693,7 +1693,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: "'LGOS 1'" });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1711,7 +1711,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'An??alia' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1729,7 +1729,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'A*poda' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1751,7 +1751,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefFilterMenu!),
+            position: midEl(extRefFilterMenu!)
           });
           await timeout(standardWait); // opening dialog
 
@@ -1763,7 +1763,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(filterNotBound!),
+            position: midEl(filterNotBound!)
           });
           await plugin.filterMenuExtRefSubscriberUI.updateComplete;
           await plugin.updateComplete;
@@ -1775,7 +1775,7 @@ describe('goose', () => {
           await sendMouse({
             type: 'click',
             button: 'left',
-            position: midEl(extRefTextInput!),
+            position: midEl(extRefTextInput!)
           });
           await sendKeys({ type: 'Restr' });
           await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1800,7 +1800,7 @@ describe('goose', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(extref!),
+        position: midEl(extref!)
       });
       await extref.updateComplete;
       await extRefListElement.updateComplete;
@@ -1828,7 +1828,7 @@ describe('goose', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(plugin.switchViewUI!),
+        position: midEl(plugin.switchViewUI!)
       });
       await plugin.updateComplete;
 
@@ -1841,7 +1841,7 @@ describe('goose', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(plugin.switchControlTypeUI!),
+        position: midEl(plugin.switchControlTypeUI!)
       });
       await plugin.updateComplete;
 
@@ -1858,7 +1858,7 @@ describe('goose', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(plugin.subscriberExtRefMarkdownSaveButton!),
+        position: midEl(plugin.subscriberExtRefMarkdownSaveButton!)
       });
       await plugin.updateComplete;
 
@@ -1895,7 +1895,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
 
@@ -1914,7 +1914,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
         await timeout(standardWait); // selection
@@ -1926,7 +1926,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(allowExternalPluginsSettings!),
+          position: midEl(allowExternalPluginsSettings!)
         });
         await plugin.settingsMenuExtRefSubscriberUI!.updateComplete;
         await plugin.updateComplete;
@@ -1959,7 +1959,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRefTextInput!),
+          position: midEl(extRefTextInput!)
         });
         await sendKeys({ type: 'SPS' });
         await plugin.extRefListSubscriberUI?.updateComplete;
@@ -1974,7 +1974,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extref!),
+          position: midEl(extref!)
         });
         await extref.updateComplete;
         await extRefListElement.updateComplete;
@@ -1993,7 +1993,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(button!),
+          position: midEl(button!)
         });
         await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
 
@@ -2007,7 +2007,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(checkOnlyPreferred!),
+          position: midEl(checkOnlyPreferred!)
         });
         await plugin.settingsMenuExtRefSubscriberUI!.updateComplete;
         await plugin.updateComplete;
@@ -2028,7 +2028,7 @@ describe('goose', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
 
         await fcda!.updateComplete;

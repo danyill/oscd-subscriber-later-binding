@@ -16,7 +16,7 @@ import {
   getFcdaItem,
   midEl,
   resetMouseState,
-  setViewPort,
+  setViewPort
 } from './test-support.js';
 import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
 
@@ -52,14 +52,14 @@ beforeEach(async function () {
         name: 'Subscriber Later Binding',
         translations: {
           de: 'Späte Bindung des Abonnenten',
-          pt: 'Associação Tardia de Assinante',
+          pt: 'Associação Tardia de Assinante'
         },
         icon: 'link',
         active: true,
         requireDoc: true,
-        src: '/dist/oscd-subscriber-later-binding.js',
-      },
-    ],
+        src: '/dist/oscd-subscriber-later-binding.js'
+      }
+    ]
   };
 
   script = document.createElement('script');
@@ -130,7 +130,7 @@ describe('smv', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(plugin.switchControlTypeUI!),
+        position: midEl(plugin.switchControlTypeUI!)
       });
       await plugin.updateComplete;
 
@@ -153,7 +153,7 @@ describe('smv', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(fcda!),
+        position: midEl(fcda!)
       });
       await fcda!.updateComplete;
       await fcdaListElement.updateComplete;
@@ -175,7 +175,7 @@ describe('smv', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
         fcda?.scrollIntoView();
 
@@ -197,7 +197,7 @@ describe('smv', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRef!),
+          position: midEl(extRef!)
         });
         await extRef!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -228,7 +228,7 @@ describe('smv', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
         await fcda!.updateComplete;
         await fcdaListElement.updateComplete;
@@ -244,7 +244,7 @@ describe('smv', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRef!),
+          position: midEl(extRef!)
         });
         await extRef!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -268,7 +268,7 @@ describe('smv', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
         await fcda!.updateComplete;
         await fcdaListElement.updateComplete;
@@ -285,7 +285,7 @@ describe('smv', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRef!),
+          position: midEl(extRef!)
         });
         await extRef!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -315,7 +315,7 @@ describe('smv', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(fcda!),
+          position: midEl(fcda!)
         });
         await fcda!.updateComplete;
         await fcdaListElement.updateComplete;
@@ -331,7 +331,7 @@ describe('smv', () => {
         await sendMouse({
           type: 'click',
           button: 'left',
-          position: midEl(extRef!),
+          position: midEl(extRef!)
         });
         await extRef!.updateComplete;
         await extRefListElement!.updateComplete;
@@ -347,7 +347,7 @@ describe('smv', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(plugin.switchViewUI!),
+        position: midEl(plugin.switchViewUI!)
       });
       await plugin.updateComplete;
 
@@ -360,7 +360,7 @@ describe('smv', () => {
       await sendMouse({
         type: 'click',
         button: 'left',
-        position: midEl(plugin.switchControlTypeUI!),
+        position: midEl(plugin.switchControlTypeUI!)
       });
       await plugin.updateComplete;
 

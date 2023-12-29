@@ -1,12 +1,12 @@
 const tAbstractConductingEquipment = [
   'TransformerWinding',
-  'ConductingEquipment',
+  'ConductingEquipment'
 ] as const;
 
 const tEquipment = [
   'GeneralEquipment',
   'PowerTransformer',
-  ...tAbstractConductingEquipment,
+  ...tAbstractConductingEquipment
 ] as const;
 const tEquipmentContainer = ['Substation', 'VoltageLevel', 'Bay'] as const;
 const tGeneralEquipmentContainer = ['Process', 'Line'] as const;
@@ -20,7 +20,7 @@ const tPowerSystemResource = [
   ...tEquipment,
   ...tEquipmentContainer,
   ...tGeneralEquipmentContainer,
-  ...tAbstractEqFuncSubFunc,
+  ...tAbstractEqFuncSubFunc
 ] as const;
 const tLNodeContainer = ['ConnectivityNode', ...tPowerSystemResource] as const;
 const tCertificate = ['GOOSESecurity', 'SMVSecurity'] as const;
@@ -53,7 +53,7 @@ const tUnNaming = [
   'NeutralPoint',
   ...tControl,
   ...tControlBlock,
-  ...tAbstractDataAttribute,
+  ...tAbstractDataAttribute
 ] as const;
 
 const tAnyLN = ['LN0', 'LN'] as const;
@@ -62,7 +62,7 @@ const tAnyContentFromOtherNamespace = [
   'Text',
   'Private',
   'Hitem',
-  'AccessControl',
+  'AccessControl'
 ] as const;
 
 const tCert = ['Subject', 'IssuerName'] as const;
@@ -86,7 +86,7 @@ const tServiceYesNo = [
   'TimerActivatedControl',
   'GetCBValues',
   'GSEDir',
-  'ConfLdName',
+  'ConfLdName'
 ] as const;
 
 const tServiceWithMaxAndMaxAttributes = ['DynDataSet', 'ConfDataSet'] as const;
@@ -96,7 +96,7 @@ const tServiceWithMax = [
   'GOOSE',
   'ConfReportControl',
   'SMVsc',
-  ...tServiceWithMaxAndMaxAttributes,
+  ...tServiceWithMaxAndMaxAttributes
 ] as const;
 
 const tServiceWithMaxNonZero = ['ConfLogControl', 'ConfSigRef'] as const;
@@ -105,7 +105,7 @@ const tServiceSettings = [
   'ReportSettings',
   'LogSettings',
   'GSESettings',
-  'SMVSettings',
+  'SMVSettings'
 ] as const;
 
 const tBaseElement = ['SCL', ...tNaming, ...tUnNaming, ...tIDNaming] as const;
@@ -154,10 +154,10 @@ const sCLTags = [
   'TrgOps',
   'SamplesPerSec',
   'SmpRate',
-  'SecPerSamples',
+  'SecPerSamples'
 ] as const;
 
-export type SCLTag = typeof sCLTags[number];
+export type SCLTag = (typeof sCLTags)[number];
 
 const tagSet = new Set<string>(sCLTags);
 
@@ -177,11 +177,11 @@ const tEquipmentSequence = [...tPowerSystemResourceSequence] as const;
 const tEquipmentContainerSequence = [
   ...tPowerSystemResourceSequence,
   'PowerTransformer',
-  'GeneralEquipment',
+  'GeneralEquipment'
 ] as const;
 const tAbstractConductingEquipmentSequence = [
   ...tEquipmentSequence,
-  'Terminal',
+  'Terminal'
 ] as const;
 const tControlBlockSequence = [...tUnNamingSequence, 'Address'] as const;
 const tControlSequence = [...tNamingSequence] as const;
@@ -193,18 +193,18 @@ const tAnyLNSequence = [
   'LogControl',
   'DOI',
   'Inputs',
-  'Log',
+  'Log'
 ] as const;
 const tGeneralEquipmentContainerSequence = [
   ...tPowerSystemResourceSequence,
   'GeneralEquipment',
-  'Function',
+  'Function'
 ] as const;
 const tControlWithTriggerOptSequence = [...tControlSequence, 'TrgOps'] as const;
 const tAbstractEqFuncSubFuncSequence = [
   ...tPowerSystemResourceSequence,
   'GeneralEquipment',
-  'EqSubFunction',
+  'EqSubFunction'
 ] as const;
 
 export const relatives: Record<
@@ -216,7 +216,7 @@ export const relatives: Record<
 > = {
   AccessControl: {
     parents: ['LDevice'],
-    children: [],
+    children: []
   },
   AccessPoint: {
     parents: ['IED'],
@@ -227,28 +227,28 @@ export const relatives: Record<
       'ServerAt',
       'Services',
       'GOOSESecurity',
-      'SMVSecurity',
-    ],
+      'SMVSecurity'
+    ]
   },
   Address: {
     parents: ['ConnectedAP', 'GSE', 'SMV'],
-    children: ['P'],
+    children: ['P']
   },
   Association: {
     parents: ['Server'],
-    children: [],
+    children: []
   },
   Authentication: {
     parents: ['Server'],
-    children: [],
+    children: []
   },
   BDA: {
     parents: ['DAType'],
-    children: [...tAbstractDataAttributeSequence],
+    children: [...tAbstractDataAttributeSequence]
   },
   BitRate: {
     parents: ['SubNetwork'],
-    children: [],
+    children: []
   },
   Bay: {
     parents: ['VoltageLevel'],
@@ -256,124 +256,124 @@ export const relatives: Record<
       ...tEquipmentContainerSequence,
       'ConductingEquipment',
       'ConnectivityNode',
-      'Function',
-    ],
+      'Function'
+    ]
   },
   ClientLN: {
     parents: ['RptEnabled'],
-    children: [],
+    children: []
   },
   ClientServices: {
     parents: ['Services'],
-    children: ['TimeSyncProt', 'McSecurity'],
+    children: ['TimeSyncProt', 'McSecurity']
   },
   CommProt: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   Communication: {
     parents: ['SCL'],
-    children: [...tUnNamingSequence, 'SubNetwork'],
+    children: [...tUnNamingSequence, 'SubNetwork']
   },
   ConductingEquipment: {
     parents: ['Process', 'Line', 'SubFunction', 'Function', 'Bay'],
     children: [
       ...tAbstractConductingEquipmentSequence,
       'EqFunction',
-      'SubEquipment',
-    ],
+      'SubEquipment'
+    ]
   },
   ConfDataSet: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   ConfLdName: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   ConfLNs: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   ConfLogControl: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   ConfReportControl: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   ConfSG: {
     parents: ['SettingGroups'],
-    children: [],
+    children: []
   },
   ConfSigRef: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   ConnectedAP: {
     parents: ['SubNetwork'],
-    children: [...tUnNamingSequence, 'Address', 'GSE', 'SMV', 'PhysConn'],
+    children: [...tUnNamingSequence, 'Address', 'GSE', 'SMV', 'PhysConn']
   },
   ConnectivityNode: {
     parents: ['Bay', 'Line'],
-    children: [...tLNodeContainerSequence],
+    children: [...tLNodeContainerSequence]
   },
   DA: {
     parents: ['DOType'],
-    children: [...tAbstractDataAttributeSequence],
+    children: [...tAbstractDataAttributeSequence]
   },
   DAI: {
     parents: ['DOI', 'SDI'],
-    children: [...tUnNamingSequence, 'Val'],
+    children: [...tUnNamingSequence, 'Val']
   },
   DAType: {
     parents: ['DataTypeTemplates'],
-    children: [...tIDNamingSequence, 'BDA', 'ProtNs'],
+    children: [...tIDNamingSequence, 'BDA', 'ProtNs']
   },
   DO: {
     parents: ['LNodeType'],
-    children: [...tUnNamingSequence],
+    children: [...tUnNamingSequence]
   },
   DOI: {
     parents: [...tAnyLN],
-    children: [...tUnNamingSequence, 'SDI', 'DAI'],
+    children: [...tUnNamingSequence, 'SDI', 'DAI']
   },
   DOType: {
     parents: ['DataTypeTemplates'],
-    children: [...tIDNamingSequence, 'SDO', 'DA'],
+    children: [...tIDNamingSequence, 'SDO', 'DA']
   },
   DataObjectDirectory: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   DataSet: {
     parents: [...tAnyLN],
-    children: [...tNamingSequence, 'FCDA'],
+    children: [...tNamingSequence, 'FCDA']
   },
   DataSetDirectory: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   DataTypeTemplates: {
     parents: ['SCL'],
-    children: ['LNodeType', 'DOType', 'DAType', 'EnumType'],
+    children: ['LNodeType', 'DOType', 'DAType', 'EnumType']
   },
   DynAssociation: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   DynDataSet: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   EnumType: {
     parents: ['DataTypeTemplates'],
-    children: [...tIDNamingSequence, 'EnumVal'],
+    children: [...tIDNamingSequence, 'EnumVal']
   },
   EnumVal: {
     parents: ['EnumType'],
-    children: [],
+    children: []
   },
   EqFunction: {
     parents: [
@@ -382,25 +382,25 @@ export const relatives: Record<
       'TransformerWinding',
       'PowerTransformer',
       'SubEquipment',
-      'ConductingEquipment',
+      'ConductingEquipment'
     ],
-    children: [...tAbstractEqFuncSubFuncSequence],
+    children: [...tAbstractEqFuncSubFuncSequence]
   },
   EqSubFunction: {
     parents: ['EqSubFunction', 'EqFunction'],
-    children: [...tAbstractEqFuncSubFuncSequence],
+    children: [...tAbstractEqFuncSubFuncSequence]
   },
   ExtRef: {
     parents: ['Inputs'],
-    children: [],
+    children: []
   },
   FCDA: {
     parents: ['DataSet'],
-    children: [],
+    children: []
   },
   FileHandling: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   Function: {
     parents: ['Bay', 'VoltageLevel', 'Substation', 'Process', 'Line'],
@@ -408,8 +408,8 @@ export const relatives: Record<
       ...tPowerSystemResourceSequence,
       'SubFunction',
       'GeneralEquipment',
-      'ConductingEquipment',
-    ],
+      'ConductingEquipment'
+    ]
   },
   GeneralEquipment: {
     parents: [
@@ -417,93 +417,93 @@ export const relatives: Record<
       'Function',
       ...tGeneralEquipmentContainer,
       ...tAbstractEqFuncSubFunc,
-      ...tEquipmentContainer,
+      ...tEquipmentContainer
     ],
-    children: [...tEquipmentSequence, 'EqFunction'],
+    children: [...tEquipmentSequence, 'EqFunction']
   },
   GetCBValues: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   GetDataObjectDefinition: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   GetDataSetValue: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   GetDirectory: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   GOOSE: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   GOOSESecurity: {
     parents: ['AccessPoint'],
-    children: [...tNamingSequence, 'Subject', 'IssuerName'],
+    children: [...tNamingSequence, 'Subject', 'IssuerName']
   },
   GSE: {
     parents: ['ConnectedAP'],
-    children: [...tControlBlockSequence, 'MinTime', 'MaxTime'],
+    children: [...tControlBlockSequence, 'MinTime', 'MaxTime']
   },
   GSEDir: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   GSEControl: {
     parents: ['LN0'],
-    children: [...tControlWithIEDNameSequence, 'Protocol'],
+    children: [...tControlWithIEDNameSequence, 'Protocol']
   },
   GSESettings: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   GSSE: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   Header: {
     parents: ['SCL'],
-    children: ['Text', 'History'],
+    children: ['Text', 'History']
   },
   History: {
     parents: ['Header'],
-    children: ['Hitem'],
+    children: ['Hitem']
   },
   Hitem: {
     parents: ['History'],
-    children: [],
+    children: []
   },
   IED: {
     parents: ['SCL'],
-    children: [...tUnNamingSequence, 'Services', 'AccessPoint', 'KDC'],
+    children: [...tUnNamingSequence, 'Services', 'AccessPoint', 'KDC']
   },
   IEDName: {
     parents: ['GSEControl', 'SampledValueControl'],
-    children: [],
+    children: []
   },
   Inputs: {
     parents: [...tAnyLN],
-    children: [...tUnNamingSequence, 'ExtRef'],
+    children: [...tUnNamingSequence, 'ExtRef']
   },
   IssuerName: {
     parents: ['GOOSESecurity', 'SMVSecurity'],
-    children: [],
+    children: []
   },
   KDC: {
     parents: ['IED'],
-    children: [],
+    children: []
   },
   LDevice: {
     parents: ['Server'],
-    children: [...tUnNamingSequence, 'LN0', 'LN', 'AccessControl'],
+    children: [...tUnNamingSequence, 'LN0', 'LN', 'AccessControl']
   },
   LN: {
     parents: ['AccessPoint', 'LDevice'],
-    children: [...tAnyLNSequence],
+    children: [...tAnyLNSequence]
   },
   LN0: {
     parents: ['LDevice'],
@@ -511,64 +511,64 @@ export const relatives: Record<
       ...tAnyLNSequence,
       'GSEControl',
       'SampledValueControl',
-      'SettingControl',
-    ],
+      'SettingControl'
+    ]
   },
   LNode: {
     parents: [...tLNodeContainer],
-    children: [...tUnNamingSequence],
+    children: [...tUnNamingSequence]
   },
   LNodeType: {
     parents: ['DataTypeTemplates'],
-    children: [...tIDNamingSequence, 'DO'],
+    children: [...tIDNamingSequence, 'DO']
   },
   Line: {
     parents: ['Process', 'SCL'],
     children: [
       ...tGeneralEquipmentContainerSequence,
       'Voltage',
-      'ConductingEquipment',
-    ],
+      'ConductingEquipment'
+    ]
   },
   Log: {
     parents: [...tAnyLN],
-    children: [...tUnNamingSequence],
+    children: [...tUnNamingSequence]
   },
   LogControl: {
     parents: [...tAnyLN],
-    children: [...tControlWithTriggerOptSequence],
+    children: [...tControlWithTriggerOptSequence]
   },
   LogSettings: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   MaxTime: {
     parents: ['GSE'],
-    children: [],
+    children: []
   },
   McSecurity: {
     parents: ['GSESettings', 'SMVSettings', 'ClientServices'],
-    children: [],
+    children: []
   },
   MinTime: {
     parents: ['GSE'],
-    children: [],
+    children: []
   },
   NeutralPoint: {
     parents: ['TransformerWinding'],
-    children: [...tUnNamingSequence],
+    children: [...tUnNamingSequence]
   },
   OptFields: {
     parents: ['ReportControl'],
-    children: [],
+    children: []
   },
   P: {
     parents: ['Address', 'PhysConn'],
-    children: [],
+    children: []
   },
   PhysConn: {
     parents: ['ConnectedAP'],
-    children: [...tUnNamingSequence, 'P'],
+    children: [...tUnNamingSequence, 'P']
   },
   PowerTransformer: {
     parents: [...tEquipmentContainer],
@@ -576,12 +576,12 @@ export const relatives: Record<
       ...tEquipmentSequence,
       'TransformerWinding',
       'SubEquipment',
-      'EqFunction',
-    ],
+      'EqFunction'
+    ]
   },
   Private: {
     parents: [],
-    children: [],
+    children: []
   },
   Process: {
     parents: ['Process', 'SCL'],
@@ -590,48 +590,48 @@ export const relatives: Record<
       'ConductingEquipment',
       'Substation',
       'Line',
-      'Process',
-    ],
+      'Process'
+    ]
   },
   ProtNs: {
     parents: ['DAType', 'DA'],
-    children: [],
+    children: []
   },
   Protocol: {
     parents: ['GSEControl', 'SampledValueControl'],
-    children: [],
+    children: []
   },
   ReadWrite: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   RedProt: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   ReportControl: {
     parents: [...tAnyLN],
-    children: [...tControlWithTriggerOptSequence, 'OptFields', 'RptEnabled'],
+    children: [...tControlWithTriggerOptSequence, 'OptFields', 'RptEnabled']
   },
   ReportSettings: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   RptEnabled: {
     parents: ['ReportControl'],
-    children: [...tUnNamingSequence, 'ClientLN'],
+    children: [...tUnNamingSequence, 'ClientLN']
   },
   SamplesPerSec: {
     parents: ['SMVSettings'],
-    children: [],
+    children: []
   },
   SampledValueControl: {
     parents: ['LN0'],
-    children: [...tControlWithIEDNameSequence, 'SmvOpts'],
+    children: [...tControlWithIEDNameSequence, 'SmvOpts']
   },
   SecPerSamples: {
     parents: ['SMVSettings'],
-    children: [],
+    children: []
   },
   SCL: {
     parents: [],
@@ -643,29 +643,24 @@ export const relatives: Record<
       'IED',
       'DataTypeTemplates',
       'Line',
-      'Process',
-    ],
+      'Process'
+    ]
   },
   SDI: {
     parents: ['DOI', 'SDI'],
-    children: [...tUnNamingSequence, 'SDI', 'DAI'],
+    children: [...tUnNamingSequence, 'SDI', 'DAI']
   },
   SDO: {
     parents: ['DOType'],
-    children: [...tNamingSequence],
+    children: [...tNamingSequence]
   },
   Server: {
     parents: ['AccessPoint'],
-    children: [
-      ...tUnNamingSequence,
-      'Authentication',
-      'LDevice',
-      'Association',
-    ],
+    children: [...tUnNamingSequence, 'Authentication', 'LDevice', 'Association']
   },
   ServerAt: {
     parents: ['AccessPoint'],
-    children: [...tUnNamingSequence],
+    children: [...tUnNamingSequence]
   },
   Services: {
     parents: ['IED', 'AccessPoint'],
@@ -702,48 +697,48 @@ export const relatives: Record<
       'ValueHandling',
       'RedProt',
       'TimeSyncProt',
-      'CommProt',
-    ],
+      'CommProt'
+    ]
   },
   SetDataSetValue: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   SettingControl: {
     parents: ['LN0'],
-    children: [...tUnNamingSequence],
+    children: [...tUnNamingSequence]
   },
   SettingGroups: {
     parents: ['Services'],
-    children: ['SGEdit', 'ConfSG'],
+    children: ['SGEdit', 'ConfSG']
   },
   SGEdit: {
     parents: ['SettingGroups'],
-    children: [],
+    children: []
   },
   SmpRate: {
     parents: ['SMVSettings'],
-    children: [],
+    children: []
   },
   SMV: {
     parents: ['ConnectedAP'],
-    children: [...tControlBlockSequence],
+    children: [...tControlBlockSequence]
   },
   SmvOpts: {
     parents: ['SampledValueControl'],
-    children: [],
+    children: []
   },
   SMVsc: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   SMVSecurity: {
     parents: ['AccessPoint'],
-    children: [...tNamingSequence, 'Subject', 'IssuerName'],
+    children: [...tNamingSequence, 'Subject', 'IssuerName']
   },
   SMVSettings: {
     parents: ['Services'],
-    children: ['SmpRate', 'SamplesPerSec', 'SecPerSamples', 'McSecurity'],
+    children: ['SmpRate', 'SamplesPerSec', 'SecPerSamples', 'McSecurity']
   },
   SubEquipment: {
     parents: [
@@ -751,9 +746,9 @@ export const relatives: Record<
       'PowerTransformer',
       'ConductingEquipment',
       'TransformerWinding',
-      ...tAbstractConductingEquipment,
+      ...tAbstractConductingEquipment
     ],
-    children: [...tPowerSystemResourceSequence, 'EqFunction'],
+    children: [...tPowerSystemResourceSequence, 'EqFunction']
   },
   SubFunction: {
     parents: ['SubFunction', 'Function'],
@@ -761,44 +756,44 @@ export const relatives: Record<
       ...tPowerSystemResourceSequence,
       'GeneralEquipment',
       'ConductingEquipment',
-      'SubFunction',
-    ],
+      'SubFunction'
+    ]
   },
   SubNetwork: {
     parents: ['Communication'],
-    children: [...tNamingSequence, 'BitRate', 'ConnectedAP'],
+    children: [...tNamingSequence, 'BitRate', 'ConnectedAP']
   },
   Subject: {
     parents: ['GOOSESecurity', 'SMVSecurity'],
-    children: [],
+    children: []
   },
   Substation: {
     parents: ['SCL'],
-    children: [...tEquipmentContainerSequence, 'VoltageLevel', 'Function'],
+    children: [...tEquipmentContainerSequence, 'VoltageLevel', 'Function']
   },
   SupSubscription: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   TapChanger: {
     parents: ['TransformerWinding'],
-    children: [...tPowerSystemResourceSequence, 'SubEquipment', 'EqFunction'],
+    children: [...tPowerSystemResourceSequence, 'SubEquipment', 'EqFunction']
   },
   Terminal: {
     parents: [...tEquipment],
-    children: [...tUnNamingSequence],
+    children: [...tUnNamingSequence]
   },
   Text: {
     parents: sCLTags.filter(tag => tag !== 'Text' && tag !== 'Private'),
-    children: [],
+    children: []
   },
   TimerActivatedControl: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   TimeSyncProt: {
     parents: ['Services', 'ClientServices'],
-    children: [],
+    children: []
   },
   TransformerWinding: {
     parents: ['PowerTransformer'],
@@ -807,27 +802,27 @@ export const relatives: Record<
       'TapChanger',
       'NeutralPoint',
       'EqFunction',
-      'SubEquipment',
-    ],
+      'SubEquipment'
+    ]
   },
   TrgOps: {
     parents: ['ReportControl'],
-    children: [],
+    children: []
   },
   Val: {
     parents: ['DAI', 'DA', 'BDA'],
-    children: [],
+    children: []
   },
   ValueHandling: {
     parents: ['Services'],
-    children: [],
+    children: []
   },
   Voltage: {
     parents: ['VoltageLevel'],
-    children: [],
+    children: []
   },
   VoltageLevel: {
     parents: ['Substation'],
-    children: [...tEquipmentContainerSequence, 'Voltage', 'Bay', 'Function'],
-  },
+    children: [...tEquipmentContainerSequence, 'Voltage', 'Bay', 'Function']
+  }
 };

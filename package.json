@@ -37,43 +37,44 @@
     "@material/mwc-list": "^0.27.0",
     "@material/mwc-menu": "^0.27.0",
     "@material/mwc-textfield": "^0.27.0",
+    "@open-wc/testing": "^4.0.0",
     "@openenergytools/scl-lib": "^0.9.21",
     "@openscd/open-scd-core": "^0.0.2",
-    "lit": "^2.4.0"
+    "@web/test-runner-commands": "^0.9.0",
+    "@web/test-runner-visual-regression": "^0.9.0",
+    "lit": "^3.1.0",
+    "sinon": "^17.0.1"
   },
   "devDependencies": {
-    "@custom-elements-manifest/analyzer": "^0.6.6",
+    "@custom-elements-manifest/analyzer": "^0.9.0",
     "@open-wc/building-rollup": "^2.0.2",
-    "@open-wc/eslint-config": "^8.0.2",
-    "@open-wc/testing": "^3.1.6",
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "@rollup/plugin-typescript": "^9.0.2",
-    "@types/node": "^18.11.9",
-    "@typescript-eslint/eslint-plugin": "^5.41.0",
-    "@typescript-eslint/parser": "^5.41.0",
-    "@web/dev-server": "^0.1.35",
-    "@web/rollup-plugin-import-meta-assets": "^2.0.0",
-    "@web/test-runner": "^0.15.0",
-    "@web/test-runner-commands": "^0.6.6",
-    "@web/test-runner-playwright": "^0.9.0",
-    "@web/test-runner-visual-regression": "^0.7.0",
-    "concurrently": "^7.5.0",
+    "@open-wc/eslint-config": "^12.0.2",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.5",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "@web/dev-server": "^0.4.1",
+    "@web/rollup-plugin-import-meta-assets": "^2.2.1",
+    "@web/test-runner": "^0.18.0",
+    "@web/test-runner-playwright": "^0.11.0",
+    "concurrently": "^8.2.2",
     "es-dev-server": "^2.1.0",
-    "eslint": "^8.26.0",
-    "eslint-config-prettier": "^8.5.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-tsdoc": "^0.2.17",
-    "gh-pages": "^4.0.0",
-    "husky": "^8.0.0",
-    "lint-staged": "^13.0.3",
+    "gh-pages": "^6.1.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
-    "prettier": "^2.7.1",
-    "rimraf": "^3.0.2",
-    "rollup-plugin-copy": "^3.4.0",
-    "sinon": "^17.0.1",
-    "tslib": "^2.4.1",
-    "typedoc": "^0.23.8",
-    "typescript": "^4.8.4"
+    "prettier": "^3.1.1",
+    "rimraf": "^5.0.5",
+    "rollup-plugin-copy": "^3.5.0",
+    "tslib": "^2.6.2",
+    "typedoc": "^0.25.4",
+    "typescript": "^5.3.3"
   },
   "customElements": "custom-elements.json",
   "eslintConfig": {
@@ -86,15 +87,10 @@
       "@typescript-eslint"
     ],
     "rules": {
-      "no-shadow": "off",
-      "@typescript-eslint/no-shadow": "error",
-      "no-duplicate-imports": "off",
-      "@typescript-eslint/no-duplicate-imports": "error",
-      "no-unused-vars": "off",
-      "no-redeclare": "off",
       "@typescript-eslint/no-unused-vars": [
         "error"
       ],
+      "@typescript-eslint/no-non-null-assertion": "off",
       "import/no-unresolved": "off",
       "import/extensions": [
         "error",
@@ -102,12 +98,26 @@
         {
           "ignorePackages": true
         }
-      ]
+      ],
+      "import/no-extraneous-dependencies": [
+        "error",
+        {
+          "devDependencies": [
+            "**/*.spec.ts"
+          ]
+        }
+      ],
+      "lit/no-classfield-shadowing": "off",
+      "no-duplicate-imports": "off",
+      "no-unused-vars": "off",
+      "no-redeclare": "off",
+      "no-shadow": "off"
     }
   },
   "prettier": {
+    "arrowParens": "avoid",
     "singleQuote": true,
-    "arrowParens": "avoid"
+    "trailingComma": "none"
   },
   "lint-staged": {
     "*.ts": [
