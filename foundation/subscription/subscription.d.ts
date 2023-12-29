@@ -1,6 +1,6 @@
 import { Insert, Remove } from '@openscd/open-scd-core';
 import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
-export declare type fcdaData = {
+export type fcdaData = {
     spec: {
         cdc: string;
         bType?: string;

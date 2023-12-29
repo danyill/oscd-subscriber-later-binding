@@ -1,4 +1,4 @@
-export declare type SclEdition = '2003' | '2007B' | '2007B4';
+export type SclEdition = '2003' | '2007B' | '2007B4';
 export declare function getSclSchemaVersion(doc: Document): SclEdition;
 export declare const serviceTypes: Partial<Record<string, string>>;
 /**

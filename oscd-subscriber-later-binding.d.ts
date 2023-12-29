@@ -15,7 +15,7 @@ import type { List } from '@material/mwc-list';
 import type { ListItem } from '@material/mwc-list/mwc-list-item';
 import type { Menu } from '@material/mwc-menu';
 import type { TextField } from '@material/mwc-textfield';
-declare type controlTagType = 'SampledValueControl' | 'GSEControl';
+type controlTagType = 'SampledValueControl' | 'GSEControl';
 declare enum FcdaSortOrder {
     DataModel = 0,
     Path = 1,
@@ -29,7 +29,7 @@ declare enum ExtRefSortOrder {
     Description = 2,
     MappedReference = 3
 }
-export declare type DoesFcdaMeetExtRefRestrictionsOptions = {
+export type DoesFcdaMeetExtRefRestrictionsOptions = {
     /** The control block type to check against `pServT` */
     controlBlockType?: 'GOOSE' | 'Report' | 'SMV' | 'Poll';
     /** Whether to only check against basic type. Skips check against pDO and pLN */

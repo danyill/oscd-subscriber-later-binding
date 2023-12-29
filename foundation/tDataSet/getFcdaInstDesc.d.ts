@@ -1,4 +1,4 @@
-export declare type fcdaDesc = {
+export type fcdaDesc = {
     LDevice?: string | null;
     LN?: string | null;
     DOI?: string | null;
