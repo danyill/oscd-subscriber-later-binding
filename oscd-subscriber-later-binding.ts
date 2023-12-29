@@ -16,7 +16,10 @@ import {
   fcdaBaseTypes,
   subscribe,
   unsubscribe,
+  instantiateSubscriptionSupervision,
 } from '@openenergytools/scl-lib';
+
+// not exported: removeSubscriptionSupervision
 
 import '@material/mwc-fab';
 import '@material/mwc-icon';
@@ -59,7 +62,6 @@ import {
   getOrderedIeds,
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
-  instantiateSubscriptionSupervision,
   isPartiallyConfigured,
   isSubscribed,
   canRemoveSubscriptionSupervision,
@@ -907,26 +909,9 @@ export default class SubscriberLaterBinding extends LitElement {
   private unsubscribeExtRef(extRef: Element): void {
     const editActions: Edit[] = [];
 
-    editActions.push(...unsubscribe([extRef], { ignoreSupervision: true }));
-
-    let controlBlock;
-
-    if (this.subscriberView) {
-      controlBlock = findControlBlock(extRef);
-    } else {
-      controlBlock = this.selectedControl;
-    }
-
-    if (
-      !this.ignoreSupervision &&
-      canRemoveSubscriptionSupervision(extRef) &&
-      controlBlock
-    ) {
-      const subscriberIed = extRef.closest('IED')!;
-      editActions.push(
-        ...removeSubscriptionSupervision(controlBlock, subscriberIed)
-      );
-    }
+    editActions.push(
+      ...unsubscribe([extRef], { ignoreSupervision: this.ignoreSupervision })
+    );
 
     this.dispatchEvent(newEditEvent(editActions));
   }
@@ -944,11 +929,10 @@ export default class SubscriberLaterBinding extends LitElement {
     // need to remove invalid existing subscription
     if (isSubscribed(extRef) || isPartiallyConfigured(extRef))
       this.dispatchEvent(
-        newEditEvent(unsubscribe([extRef], { ignoreSupervision: true }))
+        newEditEvent(unsubscribe([extRef], { ignoreSupervision: this.ignoreSupervision }))
       );
 
     const subscribeEdits: Edit[] = [];
-    let supEdits: Edit[] = [];
 
     subscribeEdits.push(
       subscribe(
@@ -957,19 +941,20 @@ export default class SubscriberLaterBinding extends LitElement {
         // see https://github.com/danyill/oscd-subscriber-later-binding/issues/10
         //
         // { checkOnlyBType: this.checkOnlyPreferredBasicType }
-        this.checkOnlyPreferredBasicType ? { force: true } : { force: false }
+         { {force: this.checkOnlyPreferredBasicType,  ignoreSupervision: this.ignoreSupervision }} 
       )
     );
 
     if (!this.ignoreSupervision) {
       const subscriberIed = extRef.closest('IED')!;
-      supEdits = instantiateSubscriptionSupervision(
-        controlBlock,
-        subscriberIed
-      );
+      const supEdit = instantiateSubscriptionSupervision({
+        subscriberIedOrLn: subscriberIed,
+        sourceControlBlock: controlBlock,
+      });
+      if (supEdit) subscribeEdits.push(supEdit);
     }
 
-    this.dispatchEvent(newEditEvent([subscribeEdits, ...supEdits]));
+    this.dispatchEvent(newEditEvent(subscribeEdits));
   }
 
   public getSubscribedExtRefElements(): Element[] {
