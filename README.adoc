@@ -70,9 +70,10 @@ Feel free to log issues to request fixes, improvements or new features.
 * Supports GOOSE and SMV
 * Allows subscriptions from either a publisher or subscriber view
 * Will instantiate supervisions if possible (if `valImport=true` and `valKind=RO` or `valKind=Conf` on the first LGOS/LSVS instance or the datatype)
-* Will show basic type and common data class on hover of FCDA elements or ExtRef elements (if available)
-* Supports preferred/pre-configured types (currently only if logical node, data object and data attribute are specified)
+* Will show basic type and common data class on hover of FCDA elements or ExtRef elements (if available via preconfigured types)
+* Supports preferred/pre-configured types
 * Allows filtering to only used/unused subscriptions
+* Provides copy-to-clipboard in Markdown format
 
 == How to use?
 
