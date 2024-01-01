@@ -57,10 +57,11 @@ This demo also includes some add-on plugins to provide specific functionality fo
 // TODO: Update screenshots
 |===
 a|.Subscriber View
-image::screenshot-subscriber-goose.png[width=800,link={imagesdir}/screenshot-subscriber-goose.png]
+image::../../test/screenshots/baseline/goose subscriber view can search in Extrefs for an IED manufacturer-Chromium.png[width=800,link=../../test/screenshots/baseline/goose subscriber view can search in Extrefs for an IED manufacturer-Chromium.png]
 
 a|.Publisher View
-image::screenshot-publisher-sv.png[width=800,link={imagesdir}/screenshot-publisher-sv.png]
+image::../../test/screenshots/baseline/smv publisher view can change subscriptions by unsubscribing an FCDA with supervisions-Chromium.png[width=800,link=../../test/screenshots/baseline/smv publisher view can change subscriptions by unsubscribing an FCDA with supervisions-Chromium.png]
+
 |===
 
 Feel free to log issues to request fixes, improvements or new features.
