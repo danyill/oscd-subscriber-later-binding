@@ -132,7 +132,9 @@ describe('goose', () => {
       await editor.updateComplete;
       await plugin.updateComplete;
 
-      await timeout(1200); // plugin loading and initial render?
+      // This is very long and seems to be partly caused by scl-lib load times
+      // TODO: Can this be reduced?
+      await timeout(3500); // plugin loading and initial render?
 
       await sendMouse({
         type: 'click',

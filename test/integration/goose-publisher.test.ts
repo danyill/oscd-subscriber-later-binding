@@ -88,7 +88,10 @@ beforeEach(async function () {
   document.head.appendChild(script);
 
   const ed: OpenSCD = await fixture(
-    html`<open-scd language="en" .plugins="${plugins}"></open-scd>`
+    html`<open-scd
+      language="en"
+      plugins="${JSON.stringify(plugins)}"
+    ></open-scd>`
   );
   document.body.prepend(ed);
 
