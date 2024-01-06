@@ -38,7 +38,7 @@
     "@material/mwc-menu": "^0.27.0",
     "@material/mwc-textfield": "^0.27.0",
     "@open-wc/testing": "^4.0.0",
-    "@openenergytools/scl-lib": "^0.9.21",
+    "@openenergytools/scl-lib": "^0.11.18",
     "@openscd/open-scd-core": "^0.0.2",
     "@web/test-runner-commands": "^0.9.0",
     "@web/test-runner-visual-regression": "^0.9.0",

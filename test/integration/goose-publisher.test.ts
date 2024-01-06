@@ -87,11 +87,8 @@ beforeEach(async function () {
   `;
   document.head.appendChild(script);
 
-  const ed = await fixture(
-    html`<open-scd
-      language="en"
-      plugins="${JSON.stringify(plugins)}"
-    ></open-scd>`
+  const ed: OpenSCD = await fixture(
+    html`<open-scd language="en" .plugins="${plugins}"></open-scd>`
   );
   document.body.prepend(ed);
 
@@ -144,7 +141,7 @@ describe('goose', () => {
 
       // TODO: Does ca-d have any ideas about this?
       // webkit is especially fussy and appears to slowly change the layout?
-      await timeout(300);
+      await timeout(500);
       await resetMouseState();
       await visualDiff(plugin, testName(this));
     });

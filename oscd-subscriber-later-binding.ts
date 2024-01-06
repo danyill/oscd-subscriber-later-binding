@@ -17,8 +17,11 @@ import {
   find,
   identity,
   subscribe,
-  unsubscribe
+  unsubscribe,
+  instantiateSubscriptionSupervision
 } from '@openenergytools/scl-lib';
+
+// not exported: removeSubscriptionSupervision
 
 import '@material/mwc-fab';
 import '@material/mwc-icon';
@@ -59,11 +62,8 @@ import {
   getOrderedIeds,
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
-  instantiateSubscriptionSupervision,
   isPartiallyConfigured,
-  isSubscribed,
-  canRemoveSubscriptionSupervision,
-  removeSubscriptionSupervision
+  isSubscribed
 } from './foundation/subscription/subscription.js';
 import {
   findFCDAs,
@@ -907,26 +907,9 @@ export default class SubscriberLaterBinding extends LitElement {
   private unsubscribeExtRef(extRef: Element): void {
     const editActions: Edit[] = [];
 
-    editActions.push(...unsubscribe([extRef], { ignoreSupervision: true }));
-
-    let controlBlock;
-
-    if (this.subscriberView) {
-      controlBlock = findControlBlock(extRef);
-    } else {
-      controlBlock = this.selectedControl;
-    }
-
-    if (
-      !this.ignoreSupervision &&
-      canRemoveSubscriptionSupervision(extRef) &&
-      controlBlock
-    ) {
-      const subscriberIed = extRef.closest('IED')!;
-      editActions.push(
-        ...removeSubscriptionSupervision(controlBlock, subscriberIed)
-      );
-    }
+    editActions.push(
+      ...unsubscribe([extRef], { ignoreSupervision: this.ignoreSupervision })
+    );
 
     this.dispatchEvent(newEditEvent(editActions));
   }
@@ -944,32 +927,40 @@ export default class SubscriberLaterBinding extends LitElement {
     // need to remove invalid existing subscription
     if (isSubscribed(extRef) || isPartiallyConfigured(extRef))
       this.dispatchEvent(
-        newEditEvent(unsubscribe([extRef], { ignoreSupervision: true }))
+        newEditEvent(
+          unsubscribe([extRef], { ignoreSupervision: this.ignoreSupervision })
+        )
       );
 
     const subscribeEdits: Edit[] = [];
-    let supEdits: Edit[] = [];
+
+    // TODO: Update to use specific basic type option
+    // see https://github.com/danyill/oscd-subscriber-later-binding/issues/10
+    //
+    // { checkOnlyBType: this.checkOnlyPreferredBasicType }
+
+    // TODO: Update for this.ignoreSupervision once it exists.
+    // https://github.com/OpenEnergyTools/scl-lib/issues/26
 
     subscribeEdits.push(
       subscribe(
         { sink: extRef, source: { fcda, controlBlock } },
-        // TODO: Update to use specific basic type option
-        // see https://github.com/danyill/oscd-subscriber-later-binding/issues/10
-        //
-        // { checkOnlyBType: this.checkOnlyPreferredBasicType }
-        this.checkOnlyPreferredBasicType ? { force: true } : { force: false }
+        {
+          force: this.checkOnlyPreferredBasicType
+        }
       )
     );
 
     if (!this.ignoreSupervision) {
       const subscriberIed = extRef.closest('IED')!;
-      supEdits = instantiateSubscriptionSupervision(
-        controlBlock,
-        subscriberIed
-      );
+      const supEdit = instantiateSubscriptionSupervision({
+        subscriberIedOrLn: subscriberIed,
+        sourceControlBlock: controlBlock
+      });
+      if (supEdit) subscribeEdits.push(supEdit);
     }
 
-    this.dispatchEvent(newEditEvent([subscribeEdits, ...supEdits]));
+    this.dispatchEvent(newEditEvent(subscribeEdits));
   }
 
   public getSubscribedExtRefElements(): Element[] {
@@ -2661,6 +2652,7 @@ Basic Type: ${spec?.bType ?? '?'}"
 
                 const { extref } = selectedListItem.dataset;
                 const selectedExtRef = find(this.doc, 'ExtRef', extref!);
+
                 if (!selectedExtRef) return;
 
                 if (
