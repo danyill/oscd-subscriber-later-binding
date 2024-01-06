@@ -144,7 +144,7 @@ describe('goose', () => {
 
       // TODO: Does ca-d have any ideas about this?
       // webkit is especially fussy and appears to slowly change the layout?
-      await timeout(300);
+      await timeout(500);
       await resetMouseState();
       await visualDiff(plugin, testName(this));
     });

@@ -14,6 +14,8 @@ import { repeat } from 'lit/directives/repeat.js';
 import {
   extRefTypeRestrictions,
   fcdaBaseTypes,
+  find,
+  identity,
   subscribe,
   unsubscribe,
   instantiateSubscriptionSupervision,
@@ -48,8 +50,6 @@ import type { ListItemBase } from '@material/mwc-list/mwc-list-item-base.js';
 import type { Menu } from '@material/mwc-menu';
 import type { TextField } from '@material/mwc-textfield';
 
-import { identity } from './foundation/identities/identity.js';
-import { selector } from './foundation/identities/selector.js';
 import {
   findControlBlock,
   findFCDA,
@@ -64,8 +64,6 @@ import {
   getUsedSupervisionInstances,
   isPartiallyConfigured,
   isSubscribed,
-  canRemoveSubscriptionSupervision,
-  removeSubscriptionSupervision,
 } from './foundation/subscription/subscription.js';
 import {
   findFCDAs,
@@ -929,19 +927,27 @@ export default class SubscriberLaterBinding extends LitElement {
     // need to remove invalid existing subscription
     if (isSubscribed(extRef) || isPartiallyConfigured(extRef))
       this.dispatchEvent(
-        newEditEvent(unsubscribe([extRef], { ignoreSupervision: this.ignoreSupervision }))
+        newEditEvent(
+          unsubscribe([extRef], { ignoreSupervision: this.ignoreSupervision })
+        )
       );
 
     const subscribeEdits: Edit[] = [];
 
+    // TODO: Update to use specific basic type option
+    // see https://github.com/danyill/oscd-subscriber-later-binding/issues/10
+    //
+    // { checkOnlyBType: this.checkOnlyPreferredBasicType }
+
+    // TODO: Update for this.ignoreSupervision once it exists.
+    // https://github.com/OpenEnergyTools/scl-lib/issues/26
+
     subscribeEdits.push(
       subscribe(
         { sink: extRef, source: { fcda, controlBlock } },
-        // TODO: Update to use specific basic type option
-        // see https://github.com/danyill/oscd-subscriber-later-binding/issues/10
-        //
-        // { checkOnlyBType: this.checkOnlyPreferredBasicType }
-         { {force: this.checkOnlyPreferredBasicType,  ignoreSupervision: this.ignoreSupervision }} 
+        {
+          force: this.checkOnlyPreferredBasicType,
+        }
       )
     );
 
@@ -1615,10 +1621,8 @@ Basic Type: ${spec?.bType ?? '?'}"
           if (!selectedListItem) return;
 
           const { control, fcda } = (<ListItem>selectedListItem).dataset;
-          this.selectedControl = this.doc.querySelector(
-            selector(this.controlTag, control!)
-          )!;
-          this.selectedFCDA = this.doc.querySelector(selector('FCDA', fcda!))!;
+          this.selectedControl = find(this.doc, this.controlTag, control!)!;
+          this.selectedFCDA = find(this.doc, 'FCDA', fcda!)!;
 
           // only continue if conditions for subscription met
           if (
@@ -1659,9 +1663,7 @@ Basic Type: ${spec?.bType ?? '?'}"
             if (nextActivatableItem) {
               const { extref } = (<ListItem>nextActivatableItem).dataset;
               const nextExtRef =
-                this.doc.querySelector(
-                  selector('ExtRef', extref ?? 'Unknown')
-                ) ?? undefined;
+                find(this.doc, 'ExtRef', extref ?? 'Unknown') ?? undefined;
               if (nextExtRef && !isSubscribed(nextExtRef)) {
                 nextActivatableItem.click();
               } else {
@@ -2578,8 +2580,10 @@ Basic Type: ${spec?.bType ?? '?'}"
                   // TODO: The selector function does not work correctly when there are multiple ExtRefs with the
                   // same desc and intAddr.
                   // See: https://github.com/openscd/open-scd/issues/1214
-                  const selectedExtRefElement = this.doc.querySelector(
-                    selector('ExtRef', extref!)
+                  const selectedExtRefElement = find(
+                    this.doc,
+                    'ExtRef',
+                    extref!
                   )!;
 
                   if (
@@ -2647,9 +2651,7 @@ Basic Type: ${spec?.bType ?? '?'}"
                 if (!selectedListItem) return;
 
                 const { extref } = selectedListItem.dataset;
-                const selectedExtRef = <Element>(
-                  this.doc.querySelector(selector('ExtRef', extref!))
-                );
+                const selectedExtRef = find(this.doc, 'ExtRef', extref!);
 
                 if (!selectedExtRef) return;
 
