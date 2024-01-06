@@ -1,4 +1,3 @@
-import { Insert, Remove } from '@openscd/open-scd-core';
 import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
 export type fcdaData = {
     spec: {
@@ -7,7 +6,6 @@ export type fcdaData = {
     } | undefined;
     desc: fcdaDesc;
 };
-export declare const SCL_NAMESPACE = "http://www.iec.ch/61850/2003/SCL";
 export declare function getFcdaOrExtRefTitle(fcdaElement: Element): string;
 export declare function getExtRefElements(rootElement: Element, fcdaElement: Element | undefined, includeLaterBinding: boolean): Element[];
 /**
@@ -38,27 +36,6 @@ export declare function isSubscribed(extRefElement: Element): boolean;
  * @param extRefElement - The Ext Ref Element to check.
  */
 export declare function isPartiallyConfigured(extRefElement: Element): boolean;
-/**
- * Returns an array with a single Insert Edit to create a new
- * supervision element for the given GOOSE/SMV message and subscriber IED.
- *
- * @param controlBlock The GOOSE or SMV message element
- * @param subscriberIED The subscriber IED
- * @returns an empty array if instantiation is not possible or an array with a single Create action
- */
-export declare function instantiateSubscriptionSupervision(controlBlock: Element | undefined, subscriberIED: Element | undefined): (Insert | Remove)[];
-export declare function canRemoveSubscriptionSupervision(subscribedExtRef: Element): boolean;
-/**
- * Return an array with a single Remove action to delete the supervision element
- * for the given GOOSE/SMV message and subscriber IED.
- *
- * @param controlBlock The GOOSE or SMV message element
- * @param subscriberIED The subscriber IED
- * @returns an empty array if removing the supervision is not possible or an array
- * with a single Delete action that removes the LN if it was created in OpenSCD
- * or only the supervision structure DOI/DAI/Val if it was created by the user.
- */
-export declare function removeSubscriptionSupervision(controlBlock: Element | undefined, subscriberIED: Element | undefined): Remove[];
 export declare function getOrderedIeds(doc: XMLDocument): Element[];
 /**
  * Returns the used supervision LN instances for a given service type.
