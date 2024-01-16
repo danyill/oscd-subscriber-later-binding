@@ -17,8 +17,7 @@ import {
   find,
   identity,
   subscribe,
-  unsubscribe,
-  instantiateSubscriptionSupervision
+  unsubscribe
 } from '@openenergytools/scl-lib';
 
 // not exported: removeSubscriptionSupervision
@@ -154,7 +153,7 @@ type StoredConfiguration = {
   sortFcda: FcdaSortOrder;
 };
 
-export type DoesFcdaMeetExtRefRestrictionsOptions = {
+type DoesFcdaMeetExtRefRestrictionsOptions = {
   /** The control block type to check against `pServT` */
   controlBlockType?: 'GOOSE' | 'Report' | 'SMV' | 'Poll';
   /** Whether to only check against basic type. Skips check against pDO and pLN */
@@ -932,34 +931,13 @@ export default class SubscriberLaterBinding extends LitElement {
         )
       );
 
-    const subscribeEdits: Edit[] = [];
-
-    // TODO: Update to use specific basic type option
-    // see https://github.com/danyill/oscd-subscriber-later-binding/issues/10
-    //
-    // { checkOnlyBType: this.checkOnlyPreferredBasicType }
-
-    // TODO: Update for this.ignoreSupervision once it exists.
-    // https://github.com/OpenEnergyTools/scl-lib/issues/26
-
-    subscribeEdits.push(
-      subscribe(
-        { sink: extRef, source: { fcda, controlBlock } },
-        {
-          force: this.checkOnlyPreferredBasicType
-        }
-      )
+    const subscribeEdits: Edit[] = subscribe(
+      { sink: extRef, source: { fcda, controlBlock } },
+      {
+        force: this.checkOnlyPreferredBasicType,
+        ignoreSupervision: this.ignoreSupervision
+      }
     );
-
-    if (!this.ignoreSupervision) {
-      const subscriberIed = extRef.closest('IED')!;
-      const supEdit = instantiateSubscriptionSupervision({
-        subscriberIedOrLn: subscriberIed,
-        sourceControlBlock: controlBlock
-      });
-      if (supEdit) subscribeEdits.push(supEdit);
-    }
-
     this.dispatchEvent(newEditEvent(subscribeEdits));
   }
 
