@@ -29,7 +29,7 @@ declare enum ExtRefSortOrder {
     Description = 2,
     MappedReference = 3
 }
-export type DoesFcdaMeetExtRefRestrictionsOptions = {
+type DoesFcdaMeetExtRefRestrictionsOptions = {
     /** The control block type to check against `pServT` */
     controlBlockType?: 'GOOSE' | 'Report' | 'SMV' | 'Poll';
     /** Whether to only check against basic type. Skips check against pDO and pLN */
