@@ -11131,14 +11131,6 @@ function newEditEvent(edit) {
     });
 }
 
-function getSclSchemaVersion(doc) {
-    var _a, _b, _c;
-    const scl = doc.documentElement;
-    const edition = ((_a = scl.getAttribute('version')) !== null && _a !== void 0 ? _a : '2003') +
-        ((_b = scl.getAttribute('revision')) !== null && _b !== void 0 ? _b : '') +
-        ((_c = scl.getAttribute('release')) !== null && _c !== void 0 ? _c : '');
-    return edition;
-}
 const serviceTypes = {
     ReportControl: 'Report',
     GSEControl: 'GOOSE',
@@ -11229,42 +11221,23 @@ function sameAttributeValue(leftElement, rightElement, attributeName) {
     return (((_a = leftElement === null || leftElement === void 0 ? void 0 : leftElement.getAttribute(attributeName)) !== null && _a !== void 0 ? _a : '') ===
         ((_b = rightElement === null || rightElement === void 0 ? void 0 : rightElement.getAttribute(attributeName)) !== null && _b !== void 0 ? _b : ''));
 }
-/**
- * Simple function to check if the attribute of the Left Side has the same value as the attribute of the Right Element.
- *
- * @param leftElement        - The Left Element to check against.
- * @param leftAttributeName  - The name of the attribute (left) to check against.
- * @param rightElement       - The Right Element to check.
- * @param rightAttributeName - The name of the attribute (right) to check.
- */
-function sameAttributeValueDiffName(leftElement, leftAttributeName, rightElement, rightAttributeName) {
-    var _a, _b;
-    return (((_a = leftElement === null || leftElement === void 0 ? void 0 : leftElement.getAttribute(leftAttributeName)) !== null && _a !== void 0 ? _a : '') ===
-        ((_b = rightElement === null || rightElement === void 0 ? void 0 : rightElement.getAttribute(rightAttributeName)) !== null && _b !== void 0 ? _b : ''));
-}
-/**
- * If needed check version specific attributes against FCDA Element.
- *
- * @param controlTag     - Indicates which type of control element.
- * @param controlElement - The Control Element to check against.
- * @param extRefElement  - The Ext Ref Element to check.
- */
-function checkEditionSpecificRequirements(controlTag, controlElement, extRefElement) {
-    var _a, _b, _c;
-    // For 2003 Edition no extra check needed.
-    if (getSclSchemaVersion(extRefElement.ownerDocument) === '2003') {
-        return true;
-    }
-    const lDeviceElement = (_a = controlElement === null || controlElement === void 0 ? void 0 : controlElement.closest('LDevice')) !== null && _a !== void 0 ? _a : undefined;
-    const lnElement = (_b = controlElement === null || controlElement === void 0 ? void 0 : controlElement.closest('LN0')) !== null && _b !== void 0 ? _b : undefined;
-    // For the 2007B and 2007B4 Edition we need to check some extra attributes.
-    return (((_c = extRefElement.getAttribute('serviceType')) !== null && _c !== void 0 ? _c : '') ===
-        serviceTypes[controlTag] &&
-        sameAttributeValueDiffName(extRefElement, 'srcLDInst', lDeviceElement, 'inst') &&
-        sameAttributeValueDiffName(extRefElement, 'srcPrefix', lnElement, 'prefix') &&
-        sameAttributeValueDiffName(extRefElement, 'srcLNClass', lnElement, 'lnClass') &&
-        sameAttributeValueDiffName(extRefElement, 'srcLNInst', lnElement, 'inst') &&
-        sameAttributeValueDiffName(extRefElement, 'srcCBName', controlElement, 'name'));
+// taken from scl-lib function of the same name.
+// Can be removed when isSubscribed is improved, exported and some bugs fixed.
+// https://github.com/OpenEnergyTools/scl-lib/issues/78
+// https://github.com/OpenEnergyTools/scl-lib/issues/85
+function matchSrcAttributes(extRef, control) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const cbName = control.getAttribute('name');
+    const srcLDInst = (_a = control.closest('LDevice')) === null || _a === void 0 ? void 0 : _a.getAttribute('inst');
+    const srcPrefix = (_c = (_b = control.closest('LN0, LN')) === null || _b === void 0 ? void 0 : _b.getAttribute('prefix')) !== null && _c !== void 0 ? _c : '';
+    const srcLNClass = (_d = control.closest('LN0, LN')) === null || _d === void 0 ? void 0 : _d.getAttribute('lnClass');
+    const srcLNInst = (_e = control.closest('LN0, LN')) === null || _e === void 0 ? void 0 : _e.getAttribute('inst');
+    return (extRef.getAttribute('srcCBName') === cbName &&
+        extRef.getAttribute('srcLDInst') === srcLDInst &&
+        ((_f = extRef.getAttribute('srcPrefix')) !== null && _f !== void 0 ? _f : '') === srcPrefix &&
+        ((_g = extRef.getAttribute('srcLNInst')) !== null && _g !== void 0 ? _g : '') === srcLNInst &&
+        ((_h = extRef.getAttribute('srcLNClass')) !== null && _h !== void 0 ? _h : 'LLN0') === srcLNClass &&
+        extRef.getAttribute('serviceType') === serviceTypes[control.tagName]);
 }
 /**
  * Check if specific attributes from the ExtRef Element are the same as the ones from the FCDA Element
@@ -11276,7 +11249,7 @@ function checkEditionSpecificRequirements(controlTag, controlElement, extRefElem
  * @param fcdaElement    - The FCDA Element to check against.
  * @param extRefElement  - The Ext Ref Element to check.
  */
-function isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement) {
+function isSubscribedTo(controlElement, fcdaElement, extRefElement) {
     var _a;
     return (extRefElement.getAttribute('iedName') ===
         ((_a = fcdaElement === null || fcdaElement === void 0 ? void 0 : fcdaElement.closest('IED')) === null || _a === void 0 ? void 0 : _a.getAttribute('name')) &&
@@ -11286,10 +11259,10 @@ function isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement) 
         sameAttributeValue(fcdaElement, extRefElement, 'lnInst') &&
         sameAttributeValue(fcdaElement, extRefElement, 'doName') &&
         sameAttributeValue(fcdaElement, extRefElement, 'daName') &&
-        checkEditionSpecificRequirements(controlTag, controlElement, extRefElement));
+        matchSrcAttributes(extRefElement, controlElement));
 }
-function getSubscribedExtRefElements(rootElement, controlTag, fcdaElement, controlElement, includeLaterBinding) {
-    return getExtRefElements(rootElement, fcdaElement, includeLaterBinding).filter(extRefElement => isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement));
+function getSubscribedExtRefElements(rootElement, fcdaElement, controlElement, includeLaterBinding) {
+    return getExtRefElements(rootElement, fcdaElement, includeLaterBinding).filter(extRefElement => isSubscribedTo(controlElement, fcdaElement, extRefElement));
 }
 // TODO: scl-lib export
 function getCbReference(extRef) {
@@ -11908,8 +11881,7 @@ class SubscriberLaterBinding extends s$h {
     getExtRefCount(fcda, control) {
         const controlBlockFcdaId = `${identity(control)} ${identity(fcda)}`;
         if (!this.controlBlockFcdaInfo.has(controlBlockFcdaId)) {
-            const extRefCount = getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, fcda, control, true // TODO: do we need this?
-            ).length;
+            const extRefCount = getSubscribedExtRefElements(this.doc.getRootNode(), fcda, control, true).length;
             this.controlBlockFcdaInfo.set(controlBlockFcdaId, extRefCount);
         }
         return this.controlBlockFcdaInfo.get(controlBlockFcdaId);
@@ -12075,7 +12047,7 @@ class SubscriberLaterBinding extends s$h {
         this.dispatchEvent(newEditEvent(subscribeEdits));
     }
     getSubscribedExtRefElements() {
-        return getSubscribedExtRefElements(this.doc.getRootNode(), this.controlTag, this.selectedFCDA, this.selectedControl, true);
+        return getSubscribedExtRefElements(this.doc.getRootNode(), this.selectedFCDA, this.selectedControl, true);
     }
     /**
      * Retrieve ExtRefs which match current control block type settings in
