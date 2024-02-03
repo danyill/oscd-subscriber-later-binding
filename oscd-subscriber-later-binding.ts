@@ -720,10 +720,9 @@ export default class SubscriberLaterBinding extends LitElement {
     if (!this.controlBlockFcdaInfo.has(controlBlockFcdaId)) {
       const extRefCount = getSubscribedExtRefElements(
         <Element>this.doc.getRootNode(),
-        this.controlTag,
         fcda,
         control!,
-        true // TODO: do we need this?
+        true
       ).length;
       this.controlBlockFcdaInfo.set(controlBlockFcdaId, extRefCount);
     }
@@ -944,7 +943,6 @@ export default class SubscriberLaterBinding extends LitElement {
   public getSubscribedExtRefElements(): Element[] {
     return getSubscribedExtRefElements(
       <Element>this.doc.getRootNode(),
-      this.controlTag,
       this.selectedFCDA,
       this.selectedControl,
       true

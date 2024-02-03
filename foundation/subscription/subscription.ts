@@ -1,8 +1,4 @@
-import {
-  compareNames,
-  getSclSchemaVersion,
-  serviceTypes
-} from '../foundation.js';
+import { compareNames, serviceTypes } from '../foundation.js';
 import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
 
 export type fcdaData = {
@@ -58,75 +54,24 @@ function sameAttributeValue(
   );
 }
 
-/**
- * Simple function to check if the attribute of the Left Side has the same value as the attribute of the Right Element.
- *
- * @param leftElement        - The Left Element to check against.
- * @param leftAttributeName  - The name of the attribute (left) to check against.
- * @param rightElement       - The Right Element to check.
- * @param rightAttributeName - The name of the attribute (right) to check.
- */
-function sameAttributeValueDiffName(
-  leftElement: Element | undefined,
-  leftAttributeName: string,
-  rightElement: Element | undefined,
-  rightAttributeName: string
-): boolean {
+// taken from scl-lib function of the same name.
+// Can be removed when isSubscribed is improved, exported and some bugs fixed.
+// https://github.com/OpenEnergyTools/scl-lib/issues/78
+// https://github.com/OpenEnergyTools/scl-lib/issues/85
+function matchSrcAttributes(extRef: Element, control: Element): boolean {
+  const cbName = control.getAttribute('name');
+  const srcLDInst = control.closest('LDevice')?.getAttribute('inst');
+  const srcPrefix = control.closest('LN0, LN')?.getAttribute('prefix') ?? '';
+  const srcLNClass = control.closest('LN0, LN')?.getAttribute('lnClass');
+  const srcLNInst = control.closest('LN0, LN')?.getAttribute('inst');
+
   return (
-    (leftElement?.getAttribute(leftAttributeName) ?? '') ===
-    (rightElement?.getAttribute(rightAttributeName) ?? '')
-  );
-}
-
-/**
- * If needed check version specific attributes against FCDA Element.
- *
- * @param controlTag     - Indicates which type of control element.
- * @param controlElement - The Control Element to check against.
- * @param extRefElement  - The Ext Ref Element to check.
- */
-export function checkEditionSpecificRequirements(
-  controlTag: 'SampledValueControl' | 'GSEControl',
-  controlElement: Element | undefined,
-  extRefElement: Element
-): boolean {
-  // For 2003 Edition no extra check needed.
-  if (getSclSchemaVersion(extRefElement.ownerDocument) === '2003') {
-    return true;
-  }
-
-  const lDeviceElement = controlElement?.closest('LDevice') ?? undefined;
-  const lnElement = controlElement?.closest('LN0') ?? undefined;
-
-  // For the 2007B and 2007B4 Edition we need to check some extra attributes.
-  return (
-    (extRefElement.getAttribute('serviceType') ?? '') ===
-      serviceTypes[controlTag] &&
-    sameAttributeValueDiffName(
-      extRefElement,
-      'srcLDInst',
-      lDeviceElement,
-      'inst'
-    ) &&
-    sameAttributeValueDiffName(
-      extRefElement,
-      'srcPrefix',
-      lnElement,
-      'prefix'
-    ) &&
-    sameAttributeValueDiffName(
-      extRefElement,
-      'srcLNClass',
-      lnElement,
-      'lnClass'
-    ) &&
-    sameAttributeValueDiffName(extRefElement, 'srcLNInst', lnElement, 'inst') &&
-    sameAttributeValueDiffName(
-      extRefElement,
-      'srcCBName',
-      controlElement,
-      'name'
-    )
+    extRef.getAttribute('srcCBName') === cbName &&
+    extRef.getAttribute('srcLDInst') === srcLDInst &&
+    (extRef.getAttribute('srcPrefix') ?? '') === srcPrefix &&
+    (extRef.getAttribute('srcLNInst') ?? '') === srcLNInst &&
+    (extRef.getAttribute('srcLNClass') ?? 'LLN0') === srcLNClass &&
+    extRef.getAttribute('serviceType') === serviceTypes[control.tagName]
   );
 }
 
@@ -141,7 +86,6 @@ export function checkEditionSpecificRequirements(
  * @param extRefElement  - The Ext Ref Element to check.
  */
 function isSubscribedTo(
-  controlTag: 'SampledValueControl' | 'GSEControl',
   controlElement: Element | undefined,
   fcdaElement: Element | undefined,
   extRefElement: Element
@@ -155,13 +99,12 @@ function isSubscribedTo(
     sameAttributeValue(fcdaElement, extRefElement, 'lnInst') &&
     sameAttributeValue(fcdaElement, extRefElement, 'doName') &&
     sameAttributeValue(fcdaElement, extRefElement, 'daName') &&
-    checkEditionSpecificRequirements(controlTag, controlElement, extRefElement)
+    matchSrcAttributes(extRefElement, controlElement!)
   );
 }
 
 export function getSubscribedExtRefElements(
   rootElement: Element,
-  controlTag: 'SampledValueControl' | 'GSEControl',
   fcdaElement: Element | undefined,
   controlElement: Element | undefined,
   includeLaterBinding: boolean
@@ -171,7 +114,7 @@ export function getSubscribedExtRefElements(
     fcdaElement,
     includeLaterBinding
   ).filter(extRefElement =>
-    isSubscribedTo(controlTag, controlElement, fcdaElement, extRefElement)
+    isSubscribedTo(controlElement, fcdaElement, extRefElement)
   );
 }
 
