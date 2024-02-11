@@ -16,6 +16,7 @@ import {
   fcdaBaseTypes,
   find,
   identity,
+  sourceControlBlock,
   subscribe,
   unsubscribe
 } from '@openenergytools/scl-lib';
@@ -50,7 +51,6 @@ import type { Menu } from '@material/mwc-menu';
 import type { TextField } from '@material/mwc-textfield';
 
 import {
-  findControlBlock,
   findFCDA,
   getCbReference,
   getExistingSupervision,
@@ -536,7 +536,7 @@ export default class SubscriberLaterBinding extends LitElement {
       if (!isSubscribed(extRef)) return;
       this.extRefInfo.delete(`${identity(extRef)}`);
 
-      const controlElement = findControlBlock(extRef);
+      const controlElement = sourceControlBlock(extRef);
       let fcdaElement;
       if (controlElement) fcdaElement = findFCDA(extRef, controlElement);
       if (controlElement && fcdaElement) {

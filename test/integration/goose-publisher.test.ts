@@ -1959,10 +1959,10 @@ describe('goose', () => {
 
         const extRefListElement = plugin.extRefListPublisherUI!;
         await extRefListElement.updateComplete;
+        await resetMouseState();
         await timeout(standardWait);
 
         await visualDiff(plugin, `${testName(this)}-after-enable-option`);
-        await resetMouseState();
         expect(plugin).does.have.attribute('checkonlypreferredbasictype');
 
         const extref = getExtRefItem(

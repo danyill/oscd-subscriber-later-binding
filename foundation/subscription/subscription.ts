@@ -54,10 +54,9 @@ function sameAttributeValue(
   );
 }
 
-// taken from scl-lib function of the same name.
-// Can be removed when isSubscribed is improved and exported
-// https://github.com/OpenEnergyTools/scl-lib/issues/78
-
+// Taken from scl-lib function of the same name.
+// Can be removed when this is exported:
+// https://github.com/OpenEnergyTools/scl-lib/issues/87
 /** @returns Whether src... type ExtRef attributes match Control element */
 export function matchSrcAttributes(extRef: Element, control: Element): boolean {
   const cbName = control.getAttribute('name');
@@ -88,6 +87,8 @@ export function matchSrcAttributes(extRef: Element, control: Element): boolean {
   );
 }
 
+// Can be removed when isSubscribed is improved and exported
+// https://github.com/OpenEnergyTools/scl-lib/issues/78
 /**
  * Check if specific attributes from the ExtRef Element are the same as the ones from the FCDA Element
  * and also if the IED Name is the same. If that is the case this ExtRef subscribes to the selected FCDA
@@ -224,17 +225,6 @@ export function getOrderedIeds(doc: XMLDocument): Element[] {
     : [];
 }
 
-// export function getSupervisionCbRef(ln: Element): string | null {
-//   const supervisionType = ln.getAttribute('lnClass');
-//   const refSelector =
-//     supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
-
-//   const cbRef =
-//     ln!.querySelector(`:scope > ${refSelector}>DAI[name="setSrcRef"]>Val`)
-//       ?.textContent ?? null;
-//   return cbRef;
-// }
-
 /**
  * Returns the used supervision LN instances for a given service type.
  *
@@ -275,37 +265,6 @@ export function getExtRefControlBlockPath(extRefElement: Element): string {
   }${srcLDInst} / ${srcLNClass} ${srcCBName}`;
 }
 
-function findFCDAs(extRef: Element): Element[] {
-  if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) return [];
-
-  const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
-    'iedName',
-    'ldInst',
-    'prefix',
-    'lnClass',
-    'lnInst',
-    'doName',
-    'daName'
-  ].map(name => extRef.getAttribute(name));
-  const ied = Array.from(extRef.ownerDocument.getElementsByTagName('IED')).find(
-    element =>
-      element.getAttribute('name') === iedName && !element.closest('Private')
-  );
-  if (!ied) return [];
-
-  return Array.from(ied.getElementsByTagName('FCDA'))
-    .filter(item => !item.closest('Private'))
-    .filter(
-      fcda =>
-        (fcda.getAttribute('ldInst') ?? '') === (ldInst ?? '') &&
-        (fcda.getAttribute('prefix') ?? '') === (prefix ?? '') &&
-        (fcda.getAttribute('lnClass') ?? '') === (lnClass ?? '') &&
-        (fcda.getAttribute('lnInst') ?? '') === (lnInst ?? '') &&
-        (fcda.getAttribute('doName') ?? '') === (doName ?? '') &&
-        (fcda.getAttribute('daName') ?? '') === (daName ?? '')
-    );
-}
-
 export function getFcdaElements(controlElement: Element): Element[] {
   const lnElement = controlElement.parentElement;
   if (lnElement) {
@@ -318,62 +277,10 @@ export function getFcdaElements(controlElement: Element): Element[] {
   return [];
 }
 
-const serviceTypeControlBlockTags: Partial<Record<string, string[]>> = {
-  GOOSE: ['GSEControl'],
-  SMV: ['SampledValueControl'],
-  Report: ['ReportControl'],
-  NONE: ['LogControl', 'GSEControl', 'SampledValueControl', 'ReportControl']
-};
-
-/**
- * Locates the control block associated with an ExtRef.
- *
- * @param extRef - SCL ExtRef element
- * @returns - either a GSEControl or SampledValueControl block
- */
-export function findControlBlock(extRef: Element): Element {
-  const fcdas = findFCDAs(extRef);
-  const cbTags =
-    serviceTypeControlBlockTags[extRef.getAttribute('serviceType') ?? 'NONE'] ??
-    [];
-  const controlBlocks = new Set(
-    fcdas.flatMap(fcda => {
-      const dataSet = fcda.parentElement!;
-      const dsName = dataSet.getAttribute('name') ?? '';
-      const anyLN = dataSet.parentElement!;
-      return cbTags
-        .flatMap(tag => Array.from(anyLN.getElementsByTagName(tag)))
-        .filter(cb => {
-          if (extRef.getAttribute('srcCBName')) {
-            const ln = cb.closest('LN0')!;
-            const lnClass = ln.getAttribute('lnClass');
-            const lnPrefix = ln.getAttribute('prefix') ?? '';
-            const lnInst = ln.getAttribute('inst');
-
-            const ld = ln.closest('LDevice')!;
-            const ldInst = ld.getAttribute('inst');
-            const cbName = cb.getAttribute('name');
-
-            return (
-              extRef.getAttribute('srcCBName') === cbName &&
-              (extRef.getAttribute('srcLNInst') ?? '') === lnInst &&
-              (extRef.getAttribute('srcLNClass') ?? 'LLN0') === lnClass &&
-              (extRef.getAttribute('srcPrefix') ?? '') === lnPrefix &&
-              (extRef.getAttribute('srcLDInst') ??
-                extRef.getAttribute('ldInst')) === ldInst
-            );
-          }
-          return cb.getAttribute('datSet') === dsName;
-        });
-    })
-  );
-  return controlBlocks.values().next().value;
-}
-
 /**
  * Given an ExtRef SCL element, will locate the FCDA within the correct dataset the subscription comes from.
- * @param extRef  - SCL ExtRef Element.
- * @param controlBlock  - SCL GSEControl or SampledValueControl associated with the ExtRef.
+ * @param extRef - SCL ExtRef Element.
+ * @param controlBlock - SCL GSEControl or SampledValueControl associated with the ExtRef.
  * @returns - SCL FCDA element
  */
 export function findFCDA(
