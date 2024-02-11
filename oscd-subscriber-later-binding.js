@@ -11167,7 +11167,7 @@ function compareNames(a, b) {
         return ((_b = a.getAttribute('name')) !== null && _b !== void 0 ? _b : '').localeCompare((_c = b.getAttribute('name')) !== null && _c !== void 0 ? _c : '');
     return 0;
 }
-function findFCDAs$1(extRef) {
+function findFCDAs(extRef) {
     if (extRef.tagName !== 'ExtRef' || extRef.closest('Private'))
         return [];
     const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
@@ -11221,24 +11221,34 @@ function sameAttributeValue(leftElement, rightElement, attributeName) {
     return (((_a = leftElement === null || leftElement === void 0 ? void 0 : leftElement.getAttribute(attributeName)) !== null && _a !== void 0 ? _a : '') ===
         ((_b = rightElement === null || rightElement === void 0 ? void 0 : rightElement.getAttribute(attributeName)) !== null && _b !== void 0 ? _b : ''));
 }
-// taken from scl-lib function of the same name.
-// Can be removed when isSubscribed is improved, exported and some bugs fixed.
-// https://github.com/OpenEnergyTools/scl-lib/issues/78
-// https://github.com/OpenEnergyTools/scl-lib/issues/85
+// Taken from scl-lib function of the same name.
+// Can be removed when this is exported:
+// https://github.com/OpenEnergyTools/scl-lib/issues/87
+/** @returns Whether src... type ExtRef attributes match Control element */
 function matchSrcAttributes(extRef, control) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g;
     const cbName = control.getAttribute('name');
     const srcLDInst = (_a = control.closest('LDevice')) === null || _a === void 0 ? void 0 : _a.getAttribute('inst');
     const srcPrefix = (_c = (_b = control.closest('LN0, LN')) === null || _b === void 0 ? void 0 : _b.getAttribute('prefix')) !== null && _c !== void 0 ? _c : '';
     const srcLNClass = (_d = control.closest('LN0, LN')) === null || _d === void 0 ? void 0 : _d.getAttribute('lnClass');
     const srcLNInst = (_e = control.closest('LN0, LN')) === null || _e === void 0 ? void 0 : _e.getAttribute('inst');
+    const extRefSrcLNClass = extRef.getAttribute('srcLNClass');
+    const srcLnClassCheck = !extRefSrcLNClass || extRefSrcLNClass === ''
+        ? srcLNClass === 'LLN0'
+        : extRefSrcLNClass === srcLNClass;
+    const extRefSrcLDInst = extRef.getAttribute('srcLDInst');
+    const srcLdInstCheck = !extRefSrcLDInst || extRefSrcLDInst === ''
+        ? extRef.getAttribute('ldInst') === srcLDInst
+        : extRefSrcLDInst === srcLDInst;
     return (extRef.getAttribute('srcCBName') === cbName &&
-        extRef.getAttribute('srcLDInst') === srcLDInst &&
+        srcLdInstCheck &&
         ((_f = extRef.getAttribute('srcPrefix')) !== null && _f !== void 0 ? _f : '') === srcPrefix &&
         ((_g = extRef.getAttribute('srcLNInst')) !== null && _g !== void 0 ? _g : '') === srcLNInst &&
-        ((_h = extRef.getAttribute('srcLNClass')) !== null && _h !== void 0 ? _h : 'LLN0') === srcLNClass &&
+        srcLnClassCheck &&
         extRef.getAttribute('serviceType') === serviceTypes[control.tagName]);
 }
+// Can be removed when isSubscribed is improved and exported
+// https://github.com/OpenEnergyTools/scl-lib/issues/78
 /**
  * Check if specific attributes from the ExtRef Element are the same as the ones from the FCDA Element
  * and also if the IED Name is the same. If that is the case this ExtRef subscribes to the selected FCDA
@@ -11331,15 +11341,6 @@ function getOrderedIeds(doc) {
         ? Array.from(doc.querySelectorAll(':root > IED')).sort((a, b) => compareNames(a, b))
         : [];
 }
-// export function getSupervisionCbRef(ln: Element): string | null {
-//   const supervisionType = ln.getAttribute('lnClass');
-//   const refSelector =
-//     supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
-//   const cbRef =
-//     ln!.querySelector(`:scope > ${refSelector}>DAI[name="setSrcRef"]>Val`)
-//       ?.textContent ?? null;
-//   return cbRef;
-// }
 /**
  * Returns the used supervision LN instances for a given service type.
  *
@@ -11366,33 +11367,6 @@ function getExtRefControlBlockPath(extRefElement) {
     ].map(name => { var _a; return (_a = extRefElement.getAttribute(name)) !== null && _a !== void 0 ? _a : ''; });
     return `${srcPrefix ? `${srcPrefix} ` : ''}${srcLDInst} / ${srcLNClass} ${srcCBName}`;
 }
-function findFCDAs(extRef) {
-    if (extRef.tagName !== 'ExtRef' || extRef.closest('Private'))
-        return [];
-    const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
-        'iedName',
-        'ldInst',
-        'prefix',
-        'lnClass',
-        'lnInst',
-        'doName',
-        'daName'
-    ].map(name => extRef.getAttribute(name));
-    const ied = Array.from(extRef.ownerDocument.getElementsByTagName('IED')).find(element => element.getAttribute('name') === iedName && !element.closest('Private'));
-    if (!ied)
-        return [];
-    return Array.from(ied.getElementsByTagName('FCDA'))
-        .filter(item => !item.closest('Private'))
-        .filter(fcda => {
-        var _a, _b, _c, _d, _e, _f;
-        return ((_a = fcda.getAttribute('ldInst')) !== null && _a !== void 0 ? _a : '') === (ldInst !== null && ldInst !== void 0 ? ldInst : '') &&
-            ((_b = fcda.getAttribute('prefix')) !== null && _b !== void 0 ? _b : '') === (prefix !== null && prefix !== void 0 ? prefix : '') &&
-            ((_c = fcda.getAttribute('lnClass')) !== null && _c !== void 0 ? _c : '') === (lnClass !== null && lnClass !== void 0 ? lnClass : '') &&
-            ((_d = fcda.getAttribute('lnInst')) !== null && _d !== void 0 ? _d : '') === (lnInst !== null && lnInst !== void 0 ? lnInst : '') &&
-            ((_e = fcda.getAttribute('doName')) !== null && _e !== void 0 ? _e : '') === (doName !== null && doName !== void 0 ? doName : '') &&
-            ((_f = fcda.getAttribute('daName')) !== null && _f !== void 0 ? _f : '') === (daName !== null && daName !== void 0 ? daName : '');
-    });
-}
 function getFcdaElements(controlElement) {
     const lnElement = controlElement.parentElement;
     if (lnElement) {
@@ -11400,54 +11374,10 @@ function getFcdaElements(controlElement) {
     }
     return [];
 }
-const serviceTypeControlBlockTags = {
-    GOOSE: ['GSEControl'],
-    SMV: ['SampledValueControl'],
-    Report: ['ReportControl'],
-    NONE: ['LogControl', 'GSEControl', 'SampledValueControl', 'ReportControl']
-};
-/**
- * Locates the control block associated with an ExtRef.
- *
- * @param extRef - SCL ExtRef element
- * @returns - either a GSEControl or SampledValueControl block
- */
-function findControlBlock(extRef) {
-    var _a, _b;
-    const fcdas = findFCDAs(extRef);
-    const cbTags = (_b = serviceTypeControlBlockTags[(_a = extRef.getAttribute('serviceType')) !== null && _a !== void 0 ? _a : 'NONE']) !== null && _b !== void 0 ? _b : [];
-    const controlBlocks = new Set(fcdas.flatMap(fcda => {
-        var _a;
-        const dataSet = fcda.parentElement;
-        const dsName = (_a = dataSet.getAttribute('name')) !== null && _a !== void 0 ? _a : '';
-        const anyLN = dataSet.parentElement;
-        return cbTags
-            .flatMap(tag => Array.from(anyLN.getElementsByTagName(tag)))
-            .filter(cb => {
-            var _a, _b, _c, _d, _e;
-            if (extRef.getAttribute('srcCBName')) {
-                const ln = cb.closest('LN0');
-                const lnClass = ln.getAttribute('lnClass');
-                const lnPrefix = (_a = ln.getAttribute('prefix')) !== null && _a !== void 0 ? _a : '';
-                const lnInst = ln.getAttribute('inst');
-                const ld = ln.closest('LDevice');
-                const ldInst = ld.getAttribute('inst');
-                const cbName = cb.getAttribute('name');
-                return (extRef.getAttribute('srcCBName') === cbName &&
-                    ((_b = extRef.getAttribute('srcLNInst')) !== null && _b !== void 0 ? _b : '') === lnInst &&
-                    ((_c = extRef.getAttribute('srcLNClass')) !== null && _c !== void 0 ? _c : 'LLN0') === lnClass &&
-                    ((_d = extRef.getAttribute('srcPrefix')) !== null && _d !== void 0 ? _d : '') === lnPrefix &&
-                    ((_e = extRef.getAttribute('srcLDInst')) !== null && _e !== void 0 ? _e : extRef.getAttribute('ldInst')) === ldInst);
-            }
-            return cb.getAttribute('datSet') === dsName;
-        });
-    }));
-    return controlBlocks.values().next().value;
-}
 /**
  * Given an ExtRef SCL element, will locate the FCDA within the correct dataset the subscription comes from.
- * @param extRef  - SCL ExtRef Element.
- * @param controlBlock  - SCL GSEControl or SampledValueControl associated with the ExtRef.
+ * @param extRef - SCL ExtRef Element.
+ * @param controlBlock - SCL GSEControl or SampledValueControl associated with the ExtRef.
  * @returns - SCL FCDA element
  */
 function findFCDA(extRef, controlBlock) {
@@ -11727,7 +11657,7 @@ class SubscriberLaterBinding extends s$h {
             if (!isSubscribed(extRef))
                 return;
             this.extRefInfo.delete(`${identity(extRef)}`);
-            const controlElement = findControlBlock(extRef);
+            const controlElement = sourceControlBlock(extRef);
             let fcdaElement;
             if (controlElement)
                 fcdaElement = findFCDA(extRef, controlElement);
@@ -11887,6 +11817,91 @@ class SubscriberLaterBinding extends s$h {
         return this.controlBlockFcdaInfo.get(controlBlockFcdaId);
     }
     /**
+     * Build an initial count of how often each FCDA is used in an ExtRef.
+     * This is much more efficient than building the count and regenerating it
+     * piecemeal and is an optimisation for large SCL files.
+     * @returns nothing - cached on the class variable `controlBlockFcdaInfo`.
+     */
+    buildExtRefCount() {
+        if (!this.doc)
+            return;
+        const dsToCb = new Map();
+        // get only the FCDAs relevant to the current view
+        const fcdaData = new Map();
+        const fcdaCompare = new Map();
+        Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(cb => {
+            const isReferencedDs = cb.parentElement.querySelector(`DataSet[name="${cb.getAttribute('datSet')}"]`);
+            if (isReferencedDs) {
+                if (dsToCb.has(`${identity(isReferencedDs)}`)) {
+                    const existingValue = dsToCb.get(`${identity(isReferencedDs)}`);
+                    dsToCb.set(`${identity(isReferencedDs)}`, [...existingValue, cb]);
+                }
+                else {
+                    dsToCb.set(`${identity(isReferencedDs)}`, [cb]);
+                }
+            }
+        });
+        this.doc
+            .querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN > DataSet, 
+       :root > IED > AccessPoint > Server > LDevice > LN0 > DataSet`)
+            .forEach(dataSet => {
+            const controlBlocks = dsToCb.get(`${identity(dataSet)}`);
+            if (!controlBlocks)
+                return;
+            controlBlocks.forEach(thisCb => {
+                dataSet.querySelectorAll('FCDA').forEach(fcda => {
+                    const key = `${identity(thisCb)} ${identity(fcda)}`;
+                    fcdaData.set(fcda, {
+                        key,
+                        cb: thisCb
+                    });
+                    this.controlBlockFcdaInfo.set(key, 0);
+                    const iedName = fcda.closest('IED').getAttribute('name');
+                    const cbName = thisCb.getAttribute('name');
+                    const fcdaMatcher = `${iedName} ${cbName} ${[
+                        'ldInst',
+                        'prefix',
+                        'lnClass',
+                        'lnInst',
+                        'doName',
+                        'daName'
+                    ]
+                        .map(attr => fcda.getAttribute(attr))
+                        .join(' ')}`;
+                    fcdaCompare.set(fcdaMatcher, fcda);
+                });
+            });
+        });
+        // get all later binding ExtRefs
+        const extRefs = Array.from(this.doc.querySelectorAll(`:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
+       :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`)).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
+        // match the ExtRefs
+        extRefs.forEach(extRef => {
+            const extRefMatcher = [
+                'iedName',
+                'srcCBName',
+                'ldInst',
+                'prefix',
+                'lnClass',
+                'lnInst',
+                'doName',
+                'daName'
+            ]
+                .map(attr => extRef.getAttribute(attr))
+                .join(' ');
+            if (fcdaCompare.has(extRefMatcher)) {
+                const fcda = fcdaCompare.get(extRefMatcher);
+                if (!fcda)
+                    return;
+                const { key, cb } = fcdaData.get(fcda);
+                if (matchSrcAttributes(extRef, cb)) {
+                    const currentCountValue = this.controlBlockFcdaInfo.get(key);
+                    this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
+                }
+            }
+        });
+    }
+    /**
      * Store information about each FCDA, its specification (CDC and basic type)
      * and also how many times it is used in an ExtRef.
      * @param fcda - SCL FCDA element.
@@ -11932,7 +11947,7 @@ class SubscriberLaterBinding extends s$h {
         let fcdaDesc;
         let fcdaSpec;
         if (subscribed) {
-            subscriberFCDA = findFCDAs$1(extRef).find(x => x !== undefined);
+            subscriberFCDA = findFCDAs(extRef).find(x => x !== undefined);
             extRefPathValue = `${extRef.getAttribute('iedName')} ${getFcdaOrExtRefTitle(extRef)}`;
             if (subscriberFCDA) {
                 const fcdaInfo = this.getFcdaInfo(subscriberFCDA);
@@ -12071,7 +12086,7 @@ class SubscriberLaterBinding extends s$h {
      */
     getAvailableExtRefElements() {
         return getExtRefElements(this.doc.getRootNode(), this.selectedFCDA, true).filter(extRefElement => (!isSubscribed(extRefElement) ||
-            !findFCDAs$1(extRefElement).find(x => x !== undefined)) &&
+            !findFCDAs(extRefElement).find(x => x !== undefined)) &&
             this.isExtRefViewable(extRefElement));
     }
     /**
@@ -12690,7 +12705,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             ? x$1 `${availableExtRefs.map(extRef => {
                 var _a, _b;
                 const hasMissingMapping = isSubscribed(extRef) &&
-                    !findFCDAs$1(extRef).find(x => x !== undefined);
+                    !findFCDAs(extRef).find(x => x !== undefined);
                 const { spec } = this.getExtRefInfo(extRef);
                 const desc = getDescriptionAttribute(extRef);
                 const disabledExtRef = this.selectedFCDA &&
@@ -13048,7 +13063,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         let supervisionDescription;
         const subscribed = isSubscribed(extRef);
         if (subscribed) {
-            subscriberFCDA = findFCDAs$1(extRef).find(element => element !== undefined);
+            subscriberFCDA = findFCDAs(extRef).find(element => element !== undefined);
             supervisionNode = this.getCachedSupervision(extRef);
             controlBlockDescription = getExtRefControlBlockPath(extRef);
         }
@@ -13193,7 +13208,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         let supervisionDescription;
         const subscribed = isSubscribed(extRef);
         if (subscribed) {
-            subscriberFCDA = findFCDAs$1(extRef).find(element => element !== undefined);
+            subscriberFCDA = findFCDAs(extRef).find(element => element !== undefined);
             supervisionNode = this.getCachedSupervision(extRef);
             controlBlockDescription = getExtRefControlBlockPath(extRef);
         }
@@ -13322,7 +13337,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                     // See: https://github.com/openscd/open-scd/issues/1214
                     const selectedExtRefElement = find(this.doc, 'ExtRef', extref);
                     if (!isSubscribed(selectedExtRefElement) ||
-                        !findFCDAs$1(selectedExtRefElement).find(x => x !== undefined)) {
+                        !findFCDAs(selectedExtRefElement).find(x => x !== undefined)) {
                         this.subscribe(selectedExtRefElement, this.selectedControl, this.selectedFCDA);
                     }
                     else {
@@ -13470,6 +13485,9 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
     </mwc-fab>`;
     }
     render() {
+        // initial information caching
+        if (this.controlBlockFcdaInfo.size === 0)
+            this.buildExtRefCount();
         const classList = { 'subscriber-view': this.subscriberView };
         const result = x$1 `<div id="listContainer" class="${e$a(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}

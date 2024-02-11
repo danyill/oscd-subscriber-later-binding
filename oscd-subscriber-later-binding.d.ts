@@ -139,6 +139,13 @@ export default class SubscriberLaterBinding extends LitElement {
      */
     private getExtRefCount;
     /**
+     * Build an initial count of how often each FCDA is used in an ExtRef.
+     * This is much more efficient than building the count and regenerating it
+     * piecemeal and is an optimisation for large SCL files.
+     * @returns nothing - cached on the class variable `controlBlockFcdaInfo`.
+     */
+    private buildExtRefCount;
+    /**
      * Store information about each FCDA, its specification (CDC and basic type)
      * and also how many times it is used in an ExtRef.
      * @param fcda - SCL FCDA element.

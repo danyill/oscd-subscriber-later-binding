@@ -8,6 +8,8 @@ export type fcdaData = {
 };
 export declare function getFcdaOrExtRefTitle(fcdaElement: Element): string;
 export declare function getExtRefElements(rootElement: Element, fcdaElement: Element | undefined, includeLaterBinding: boolean): Element[];
+/** @returns Whether src... type ExtRef attributes match Control element */
+export declare function matchSrcAttributes(extRef: Element, control: Element): boolean;
 export declare function getSubscribedExtRefElements(rootElement: Element, fcdaElement: Element | undefined, controlElement: Element | undefined, includeLaterBinding: boolean): Element[];
 export declare function getCbReference(extRef: Element): string;
 /** Returns the subscriber's supervision LN for a given control block and extRef element
@@ -40,16 +42,9 @@ export declare function getUsedSupervisionInstances(doc: Document, serviceType: 
 export declare function getExtRefControlBlockPath(extRefElement: Element): string;
 export declare function getFcdaElements(controlElement: Element): Element[];
 /**
- * Locates the control block associated with an ExtRef.
- *
- * @param extRef - SCL ExtRef element
- * @returns - either a GSEControl or SampledValueControl block
- */
-export declare function findControlBlock(extRef: Element): Element;
-/**
  * Given an ExtRef SCL element, will locate the FCDA within the correct dataset the subscription comes from.
- * @param extRef  - SCL ExtRef Element.
- * @param controlBlock  - SCL GSEControl or SampledValueControl associated with the ExtRef.
+ * @param extRef - SCL ExtRef Element.
+ * @param controlBlock - SCL GSEControl or SampledValueControl associated with the ExtRef.
  * @returns - SCL FCDA element
  */
 export declare function findFCDA(extRef: Element, controlBlock: Element): Element | null;
