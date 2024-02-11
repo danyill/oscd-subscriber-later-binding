@@ -55,9 +55,10 @@ function sameAttributeValue(
 }
 
 // taken from scl-lib function of the same name.
-// Can be removed when isSubscribed is improved, exported and some bugs fixed.
+// Can be removed when isSubscribed is improved and exported
 // https://github.com/OpenEnergyTools/scl-lib/issues/78
-// https://github.com/OpenEnergyTools/scl-lib/issues/85
+
+/** @returns Whether src... type ExtRef attributes match Control element */
 export function matchSrcAttributes(extRef: Element, control: Element): boolean {
   const cbName = control.getAttribute('name');
   const srcLDInst = control.closest('LDevice')?.getAttribute('inst');
@@ -65,12 +66,24 @@ export function matchSrcAttributes(extRef: Element, control: Element): boolean {
   const srcLNClass = control.closest('LN0, LN')?.getAttribute('lnClass');
   const srcLNInst = control.closest('LN0, LN')?.getAttribute('inst');
 
+  const extRefSrcLNClass = extRef.getAttribute('srcLNClass');
+  const srcLnClassCheck =
+    !extRefSrcLNClass || extRefSrcLNClass === ''
+      ? srcLNClass === 'LLN0'
+      : extRefSrcLNClass === srcLNClass;
+
+  const extRefSrcLDInst = extRef.getAttribute('srcLDInst');
+  const srcLdInstCheck =
+    !extRefSrcLDInst || extRefSrcLDInst === ''
+      ? extRef.getAttribute('ldInst') === srcLDInst
+      : extRefSrcLDInst === srcLDInst;
+
   return (
     extRef.getAttribute('srcCBName') === cbName &&
-    extRef.getAttribute('srcLDInst') === srcLDInst &&
+    srcLdInstCheck &&
     (extRef.getAttribute('srcPrefix') ?? '') === srcPrefix &&
     (extRef.getAttribute('srcLNInst') ?? '') === srcLNInst &&
-    (extRef.getAttribute('srcLNClass') ?? 'LLN0') === srcLNClass &&
+    srcLnClassCheck &&
     extRef.getAttribute('serviceType') === serviceTypes[control.tagName]
   );
 }
