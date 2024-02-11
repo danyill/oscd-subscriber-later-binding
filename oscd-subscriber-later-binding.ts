@@ -62,7 +62,8 @@ import {
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
   isPartiallyConfigured,
-  isSubscribed
+  isSubscribed,
+  matchSrcAttributes
 } from './foundation/subscription/subscription.js';
 import {
   findFCDAs,
@@ -727,6 +728,103 @@ export default class SubscriberLaterBinding extends LitElement {
       this.controlBlockFcdaInfo.set(controlBlockFcdaId, extRefCount);
     }
     return this.controlBlockFcdaInfo.get(controlBlockFcdaId)!;
+  }
+
+  /**
+   * Build an initial count of how often each FCDA is used in an ExtRef.
+   * This is much more efficient than building the count and regenerating it
+   * piecemeal and is an optimisation for large SCL files.
+   * @returns nothing - cached on the class variable `controlBlockFcdaInfo`.
+   */
+  private buildExtRefCount(): void {
+    if (!this.doc) return;
+
+    const dsToCb = new Map<string, Element[]>();
+    // get only the FCDAs relevant to the current view
+    const fcdaData = new Map<Element, { key: string; cb: Element }>();
+    const fcdaCompare = new Map<string, Element>();
+    Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(
+      cb => {
+        const isReferencedDs = cb.parentElement!.querySelector(
+          `DataSet[name="${cb.getAttribute('datSet')}"]`
+        );
+
+        if (isReferencedDs) {
+          if (dsToCb.has(`${identity(isReferencedDs)}`)) {
+            const existingValue = dsToCb.get(`${identity(isReferencedDs)}`)!;
+            dsToCb.set(`${identity(isReferencedDs)}`, [...existingValue, cb]);
+          } else {
+            dsToCb.set(`${identity(isReferencedDs)}`, [cb]);
+          }
+        }
+      }
+    );
+
+    this.doc
+      .querySelectorAll(
+        `:root > IED > AccessPoint > Server > LDevice > LN > DataSet, 
+       :root > IED > AccessPoint > Server > LDevice > LN0 > DataSet`
+      )
+      .forEach(dataSet => {
+        const controlBlocks = dsToCb.get(`${identity(dataSet)}`);
+        if (!controlBlocks) return;
+        controlBlocks.forEach(thisCb => {
+          dataSet.querySelectorAll('FCDA').forEach(fcda => {
+            const key = `${identity(thisCb)} ${identity(fcda)}`;
+            fcdaData.set(fcda, {
+              key,
+              cb: thisCb
+            });
+            this.controlBlockFcdaInfo.set(key, 0);
+            const iedName = fcda.closest('IED')!.getAttribute('name');
+            const cbName = thisCb.getAttribute('name')!;
+            const fcdaMatcher = `${iedName} ${cbName} ${[
+              'ldInst',
+              'prefix',
+              'lnClass',
+              'lnInst',
+              'doName',
+              'daName'
+            ]
+              .map(attr => fcda.getAttribute(attr))
+              .join(' ')}`;
+            fcdaCompare.set(fcdaMatcher, fcda);
+          });
+        });
+      });
+
+    // get all later binding ExtRefs
+    const extRefs = Array.from(
+      this.doc.querySelectorAll(
+        `:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
+       :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`
+      )
+    ).filter(extRef => isSubscribed(extRef) && extRef.hasAttribute('intAddr'));
+
+    // match the ExtRefs
+    extRefs.forEach(extRef => {
+      const extRefMatcher = [
+        'iedName',
+        'srcCBName',
+        'ldInst',
+        'prefix',
+        'lnClass',
+        'lnInst',
+        'doName',
+        'daName'
+      ]
+        .map(attr => extRef.getAttribute(attr))
+        .join(' ');
+      if (fcdaCompare.has(extRefMatcher)) {
+        const fcda = fcdaCompare.get(extRefMatcher);
+        if (!fcda) return;
+        const { key, cb } = fcdaData.get(fcda)!;
+        if (matchSrcAttributes(extRef, cb)) {
+          const currentCountValue = this.controlBlockFcdaInfo.get(key)!;
+          this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
+        }
+      }
+    });
   }
 
   /**
@@ -2742,6 +2840,9 @@ Basic Type: ${spec?.bType ?? '?'}"
   }
 
   render(): TemplateResult {
+    // initial information caching
+    if (this.controlBlockFcdaInfo.size === 0) this.buildExtRefCount();
+
     const classList = { 'subscriber-view': this.subscriberView };
     const result = html`<div id="listContainer" class="${classMap(classList)}">
         ${this.renderPublisherFCDAs()} ${this.renderExtRefs()}

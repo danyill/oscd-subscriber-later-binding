@@ -58,7 +58,7 @@ function sameAttributeValue(
 // Can be removed when isSubscribed is improved, exported and some bugs fixed.
 // https://github.com/OpenEnergyTools/scl-lib/issues/78
 // https://github.com/OpenEnergyTools/scl-lib/issues/85
-function matchSrcAttributes(extRef: Element, control: Element): boolean {
+export function matchSrcAttributes(extRef: Element, control: Element): boolean {
   const cbName = control.getAttribute('name');
   const srcLDInst = control.closest('LDevice')?.getAttribute('inst');
   const srcPrefix = control.closest('LN0, LN')?.getAttribute('prefix') ?? '';
