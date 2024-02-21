@@ -16,6 +16,7 @@ import {
   fcdaBaseTypes,
   find,
   identity,
+  matchSrcAttributes,
   sourceControlBlock,
   subscribe,
   unsubscribe
@@ -62,8 +63,7 @@ import {
   getSubscribedExtRefElements,
   getUsedSupervisionInstances,
   isPartiallyConfigured,
-  isSubscribed,
-  matchSrcAttributes
+  isSubscribed
 } from './foundation/subscription/subscription.js';
 import {
   findFCDAs,
@@ -1031,8 +1031,9 @@ export default class SubscriberLaterBinding extends LitElement {
     const subscribeEdits: Edit[] = subscribe(
       { sink: extRef, source: { fcda, controlBlock } },
       {
-        force: this.checkOnlyPreferredBasicType,
-        ignoreSupervision: this.ignoreSupervision
+        force: false,
+        ignoreSupervision: this.ignoreSupervision,
+        checkOnlyBType: this.checkOnlyPreferredBasicType
       }
     );
     this.dispatchEvent(newEditEvent(subscribeEdits));

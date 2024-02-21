@@ -1,4 +1,8 @@
-import { compareNames, serviceTypes } from '../foundation.js';
+import {
+  matchDataAttributes,
+  matchSrcAttributes
+} from '@openenergytools/scl-lib';
+import { compareNames } from '../foundation.js';
 import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
 
 export type fcdaData = {
@@ -37,83 +41,25 @@ export function getExtRefElements(
 }
 
 /**
- * Simple function to check if the attribute of the Left Side has the same value as the attribute of the Right Element.
- *
- * @param leftElement   - The Left Element to check against.
- * @param rightElement  - The Right Element to check.
- * @param attributeName - The name of the attribute to check.
- */
-function sameAttributeValue(
-  leftElement: Element | undefined,
-  rightElement: Element | undefined,
-  attributeName: string
-): boolean {
-  return (
-    (leftElement?.getAttribute(attributeName) ?? '') ===
-    (rightElement?.getAttribute(attributeName) ?? '')
-  );
-}
-
-// Taken from scl-lib function of the same name.
-// Can be removed when this is exported:
-// https://github.com/OpenEnergyTools/scl-lib/issues/87
-/** @returns Whether src... type ExtRef attributes match Control element */
-export function matchSrcAttributes(extRef: Element, control: Element): boolean {
-  const cbName = control.getAttribute('name');
-  const srcLDInst = control.closest('LDevice')?.getAttribute('inst');
-  const srcPrefix = control.closest('LN0, LN')?.getAttribute('prefix') ?? '';
-  const srcLNClass = control.closest('LN0, LN')?.getAttribute('lnClass');
-  const srcLNInst = control.closest('LN0, LN')?.getAttribute('inst');
-
-  const extRefSrcLNClass = extRef.getAttribute('srcLNClass');
-  const srcLnClassCheck =
-    !extRefSrcLNClass || extRefSrcLNClass === ''
-      ? srcLNClass === 'LLN0'
-      : extRefSrcLNClass === srcLNClass;
-
-  const extRefSrcLDInst = extRef.getAttribute('srcLDInst');
-  const srcLdInstCheck =
-    !extRefSrcLDInst || extRefSrcLDInst === ''
-      ? extRef.getAttribute('ldInst') === srcLDInst
-      : extRefSrcLDInst === srcLDInst;
-
-  return (
-    extRef.getAttribute('srcCBName') === cbName &&
-    srcLdInstCheck &&
-    (extRef.getAttribute('srcPrefix') ?? '') === srcPrefix &&
-    (extRef.getAttribute('srcLNInst') ?? '') === srcLNInst &&
-    srcLnClassCheck &&
-    extRef.getAttribute('serviceType') === serviceTypes[control.tagName]
-  );
-}
-
-// Can be removed when isSubscribed is improved and exported
-// https://github.com/OpenEnergyTools/scl-lib/issues/78
-/**
  * Check if specific attributes from the ExtRef Element are the same as the ones from the FCDA Element
  * and also if the IED Name is the same. If that is the case this ExtRef subscribes to the selected FCDA
  * Element.
  *
- * @param controlTag     - Indicates which type of control element.
- * @param controlElement - The Control Element to check against.
- * @param fcdaElement    - The FCDA Element to check against.
- * @param extRefElement  - The Ext Ref Element to check.
+ * @param control - The Control Element to check against.
+ * @param fcda    - The FCDA Element to check against.
+ * @param extRef  - The Ext Ref Element to check.
  */
 function isSubscribedTo(
-  controlElement: Element | undefined,
-  fcdaElement: Element | undefined,
-  extRefElement: Element
+  control: Element | undefined,
+  fcda: Element | undefined,
+  extRef: Element
 ): boolean {
+  if (!control || !fcda) return false;
   return (
-    extRefElement.getAttribute('iedName') ===
-      fcdaElement?.closest('IED')?.getAttribute('name') &&
-    sameAttributeValue(fcdaElement, extRefElement, 'ldInst') &&
-    sameAttributeValue(fcdaElement, extRefElement, 'prefix') &&
-    sameAttributeValue(fcdaElement, extRefElement, 'lnClass') &&
-    sameAttributeValue(fcdaElement, extRefElement, 'lnInst') &&
-    sameAttributeValue(fcdaElement, extRefElement, 'doName') &&
-    sameAttributeValue(fcdaElement, extRefElement, 'daName') &&
-    matchSrcAttributes(extRefElement, controlElement!)
+    extRef.getAttribute('iedName') ===
+      fcda?.closest('IED')?.getAttribute('name') &&
+    matchDataAttributes(extRef, fcda) &&
+    matchSrcAttributes(extRef, control!)
   );
 }
 

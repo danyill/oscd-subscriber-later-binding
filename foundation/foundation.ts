@@ -1,9 +1,3 @@
-export const serviceTypes: Partial<Record<string, string>> = {
-  ReportControl: 'Report',
-  GSEControl: 'GOOSE',
-  SampledValueControl: 'SMV'
-};
-
 /**
  * Extract the 'name' attribute from the given XML element.
  * @param element - The element to extract name from.
