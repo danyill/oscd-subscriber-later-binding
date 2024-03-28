@@ -36,7 +36,7 @@ function timeout(ms: number) {
 
 mocha.timeout(14000 * factor);
 
-const standardWait = 350;
+const standardWait = 400;
 
 function testName(test: any): string {
   return test.test!.fullTitle();
@@ -1181,6 +1181,40 @@ describe('goose', () => {
         await plugin.updateComplete;
 
         const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extRef = getExtRefItem(
+          extRefListElement,
+          'Has_Only_Preconfigured>>QB2_Disconnector> XSWI 1>someRestrictedExtRef[1]'
+        )!;
+        extRef.scrollIntoView();
+
+        await resetMouseState();
+        await timeout(standardWait); // rendering ?
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and filters out ExtRefs with pDA is t', async function () {
+        const extRefFilterMenu = plugin.filterMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extRefFilterMenu!)
+        });
+        await timeout(standardWait); // opening dialog
+
+        const filterpDAq =
+          plugin.filterMenuExtRefSubscriberUI.querySelector('.show-pDAt');
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(filterpDAq!)
+        });
+        await plugin.filterMenuExtRefSubscriberUI.updateComplete;
+        await plugin.updateComplete;
+
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        // ExtRef above hidden ExtRefs
         const extRef = getExtRefItem(
           extRefListElement,
           'Has_Only_Preconfigured>>QB2_Disconnector> XSWI 1>someRestrictedExtRef[1]'

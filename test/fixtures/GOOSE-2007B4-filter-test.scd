@@ -250,6 +250,22 @@
 			</Server>
 		</AccessPoint>
 	</IED>
+	<IED name="Has_Only_Preconfigured_pDAt" desc="GOOSE publisher" manufacturer="Dummy">
+		<AccessPoint name="AP1">
+			<Server>
+				<Authentication/>
+				<LDevice inst="QB2_Disconnector">
+					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
+					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI">
+						<Inputs>
+							<ExtRef intAddr="someRestrictedExtRef" desc="Restricted To T" pLN="CSWI" pDO="Pos" pDA="t" pServT="GOOSE"/>
+							<ExtRef intAddr="someRestrictedExtRef2" desc="Restricted To T" pLN="CSWI" pDO="Pos" pDA="t" pServT="GOOSE"/>
+						</Inputs>
+					</LN>
+				</LDevice>
+			</Server>
+		</AccessPoint>
+	</IED>
 	<DataTypeTemplates>
 		<LNodeType lnClass="XSWI" id="Dummy.XSWI" desc="Switch: one phase represenation">
 			<DO name="Mod" type="OpenSCD_ENC_Mod"/>

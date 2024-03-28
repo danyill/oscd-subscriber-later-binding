@@ -149,6 +149,7 @@ type StoredConfiguration = {
   filterOutNotBound: boolean;
   strictServiceTypes: boolean;
   filterOutpDAq: boolean;
+  filterOutpDAt: boolean;
   sortExtRefPublisher: ExtRefSortOrder;
   sortExtRefSubscriber: ExtRefSortOrder;
   sortFcda: FcdaSortOrder;
@@ -182,6 +183,7 @@ const storedProperties: string[] = [
   'filterOutNotBound',
   'strictServiceTypes',
   'filterOutpDAq',
+  'filterOutpDAt',
   'sortExtRefPublisher',
   'sortExtRefSubscriber',
   'sortFcda'
@@ -269,6 +271,13 @@ function doesExtRefpDAIncludeQ(extRef: Element): boolean {
   return (
     extRef.hasAttribute('pDA') &&
     extRef.getAttribute('pDA')?.split('.').pop() === 'q'
+  );
+}
+
+function doesExtRefpDAIncludeT(extRef: Element): boolean {
+  return (
+    extRef.hasAttribute('pDA') &&
+    extRef.getAttribute('pDA')?.split('.').pop() === 't'
   );
 }
 
@@ -373,6 +382,9 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @property({ type: Boolean })
   filterOutpDAq!: boolean;
+
+  @property({ type: Boolean })
+  filterOutpDAt!: boolean;
 
   @property({ type: String })
   sortExtRefPublisher!: ExtRefSortOrder;
@@ -630,6 +642,7 @@ export default class SubscriberLaterBinding extends LitElement {
       filterOutNotBound: this.filterOutNotBound,
       strictServiceTypes: this.strictServiceTypes,
       filterOutpDAq: this.filterOutpDAq,
+      filterOutpDAt: this.filterOutpDAt,
       sortExtRefPublisher: this.sortExtRefPublisher,
       sortExtRefSubscriber: this.sortExtRefSubscriber,
       sortFcda: this.sortFcda
@@ -680,6 +693,7 @@ export default class SubscriberLaterBinding extends LitElement {
     this.filterOutNotBound = storedConfiguration?.filterOutNotBound ?? false;
     this.strictServiceTypes = storedConfiguration?.strictServiceTypes ?? false;
     this.filterOutpDAq = storedConfiguration?.filterOutpDAq ?? false;
+    this.filterOutpDAt = storedConfiguration?.filterOutpDAt ?? false;
 
     this.sortExtRefPublisher =
       storedConfiguration?.sortExtRefPublisher ?? ExtRefSortOrder.DataModel;
@@ -1161,6 +1175,9 @@ export default class SubscriberLaterBinding extends LitElement {
         this.filterOutpDAq = !(<Set<number>>(
           this.filterMenuExtRefSubscriberUI.index
         )).has(3);
+        this.filterOutpDAt = !(<Set<number>>(
+          this.filterMenuExtRefSubscriberUI.index
+        )).has(4);
       });
 
       this.settingsMenuExtRefSubscriberUI.anchor = <HTMLElement>(
@@ -1351,6 +1368,7 @@ export default class SubscriberLaterBinding extends LitElement {
   ): boolean {
     // If daName is missing, we have an FCDO which is not currently supported
     // TODO: Remove this and actually support FCDOs
+    // https://github.com/danyill/oscd-subscriber-later-binding/issues/1
     const isFcdo = !fcda.getAttribute('daName');
     const isPreconfiguredNotMatching =
       this.subscriberView &&
@@ -2081,7 +2099,8 @@ Basic Type: ${spec?.bType ?? '?'}"
         this.filterOutBound ||
         this.filterOutNotBound ||
         this.strictServiceTypes ||
-        this.filterOutpDAq
+        this.filterOutpDAq ||
+        this.filterOutpDAt
     };
 
     const selectedExtRefTitle = this.selectedExtRef
@@ -2152,6 +2171,13 @@ Basic Type: ${spec?.bType ?? '?'}"
           ?selected=${!this.filterOutpDAq}
         >
           <span>Preconfigured Quality Attribute</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="show-pDAt"
+          left
+          ?selected=${!this.filterOutpDAt}
+        >
+          <span>Preconfigured Time Attribute</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
@@ -2399,6 +2425,11 @@ Basic Type: ${spec?.bType ?? '?'}"
           (this.filterOutpDAq &&
             extRefs.some(
               candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)
+            ))) &&
+        (!this.filterOutpDAt ||
+          (this.filterOutpDAt &&
+            extRefs.some(
+              candidateExtRef => !doesExtRefpDAIncludeT(candidateExtRef)
             )))
       );
     });
@@ -2413,7 +2444,9 @@ Basic Type: ${spec?.bType ?? '?'}"
                   this.getExtRefSubscriberSearchString(extRef)
                 ) &&
                 (!this.filterOutpDAq ||
-                  (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef)))
+                  (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))) &&
+                (!this.filterOutpDAt ||
+                  (this.filterOutpDAt && !doesExtRefpDAIncludeT(extRef)))
             )
             .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b))
         );
@@ -2556,6 +2589,11 @@ Basic Type: ${spec?.bType ?? '?'}"
           (this.filterOutpDAq &&
             extRefs.some(
               candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)
+            ))) &&
+        (!this.filterOutpDAt ||
+          (this.filterOutpDAt &&
+            extRefs.some(
+              candidateExtRef => !doesExtRefpDAIncludeT(candidateExtRef)
             )))
       );
     });
@@ -2572,7 +2610,9 @@ Basic Type: ${spec?.bType ?? '?'}"
                   this.getExtRefSubscriberSearchString(extRef)
                 ) &&
                 (!this.filterOutpDAq ||
-                  (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef)))
+                  (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))) &&
+                (!this.filterOutpDAt ||
+                  (this.filterOutpDAt && !doesExtRefpDAIncludeT(extRef)))
             )
             .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b))
         );
