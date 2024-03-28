@@ -11517,6 +11517,7 @@ const storedProperties = [
     'filterOutNotBound',
     'strictServiceTypes',
     'filterOutpDAq',
+    'filterOutpDAt',
     'sortExtRefPublisher',
     'sortExtRefSubscriber',
     'sortFcda'
@@ -11587,6 +11588,11 @@ function doesExtRefpDAIncludeQ(extRef) {
     var _a;
     return (extRef.hasAttribute('pDA') &&
         ((_a = extRef.getAttribute('pDA')) === null || _a === void 0 ? void 0 : _a.split('.').pop()) === 'q');
+}
+function doesExtRefpDAIncludeT(extRef) {
+    var _a;
+    return (extRef.hasAttribute('pDA') &&
+        ((_a = extRef.getAttribute('pDA')) === null || _a === void 0 ? void 0 : _a.split('.').pop()) === 't');
 }
 /**
  * Creates a regular expression to allow case-insensitive searching of list
@@ -11745,6 +11751,7 @@ class SubscriberLaterBinding extends s$h {
             filterOutNotBound: this.filterOutNotBound,
             strictServiceTypes: this.strictServiceTypes,
             filterOutpDAq: this.filterOutpDAq,
+            filterOutpDAt: this.filterOutpDAt,
             sortExtRefPublisher: this.sortExtRefPublisher,
             sortExtRefSubscriber: this.sortExtRefSubscriber,
             sortFcda: this.sortFcda
@@ -11756,7 +11763,7 @@ class SubscriberLaterBinding extends s$h {
      * if not set.
      */
     restoreSettings() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         const storedSettings = localStorage.getItem('oscd-subscriber-later-binding');
         const storedConfiguration = storedSettings
             ? JSON.parse(storedSettings)
@@ -11782,11 +11789,12 @@ class SubscriberLaterBinding extends s$h {
         this.filterOutNotBound = (_g = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutNotBound) !== null && _g !== void 0 ? _g : false;
         this.strictServiceTypes = (_h = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.strictServiceTypes) !== null && _h !== void 0 ? _h : false;
         this.filterOutpDAq = (_j = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutpDAq) !== null && _j !== void 0 ? _j : false;
+        this.filterOutpDAt = (_k = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutpDAt) !== null && _k !== void 0 ? _k : false;
         this.sortExtRefPublisher =
-            (_k = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefPublisher) !== null && _k !== void 0 ? _k : ExtRefSortOrder.DataModel;
+            (_l = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefPublisher) !== null && _l !== void 0 ? _l : ExtRefSortOrder.DataModel;
         this.sortExtRefSubscriber =
-            (_l = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefSubscriber) !== null && _l !== void 0 ? _l : ExtRefSortOrder.DataModel;
-        this.sortFcda = (_m = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortFcda) !== null && _m !== void 0 ? _m : FcdaSortOrder.DataModel;
+            (_m = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortExtRefSubscriber) !== null && _m !== void 0 ? _m : ExtRefSortOrder.DataModel;
+        this.sortFcda = (_o = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.sortFcda) !== null && _o !== void 0 ? _o : FcdaSortOrder.DataModel;
     }
     /**
      * Retrieve matching control blocks in the SCL document to allow UI display
@@ -12143,6 +12151,7 @@ class SubscriberLaterBinding extends s$h {
                 this.filterOutNotBound = !(this.filterMenuExtRefSubscriberUI.index).has(1);
                 this.strictServiceTypes = !(this.filterMenuExtRefSubscriberUI.index).has(2);
                 this.filterOutpDAq = !(this.filterMenuExtRefSubscriberUI.index).has(3);
+                this.filterOutpDAt = !(this.filterMenuExtRefSubscriberUI.index).has(4);
             });
             this.settingsMenuExtRefSubscriberUI.anchor = (this.settingsMenuExtRefSubscriberButtonUI);
             this.settingsMenuExtRefSubscriberUI.addEventListener('closed', () => {
@@ -12263,6 +12272,7 @@ class SubscriberLaterBinding extends s$h {
     isFcdaDisabled(fcda, control, withFilter = false) {
         // If daName is missing, we have an FCDO which is not currently supported
         // TODO: Remove this and actually support FCDOs
+        // https://github.com/danyill/oscd-subscriber-later-binding/issues/1
         const isFcdo = !fcda.getAttribute('daName');
         const isPreconfiguredNotMatching = this.subscriberView &&
             this.selectedExtRef !== undefined &&
@@ -12893,7 +12903,8 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             'filter-off': this.filterOutBound ||
                 this.filterOutNotBound ||
                 this.strictServiceTypes ||
-                this.filterOutpDAq
+                this.filterOutpDAq ||
+                this.filterOutpDAt
         };
         const selectedExtRefTitle = this.selectedExtRef
             ? `${getNameAttribute((_a = this.selectedExtRef) === null || _a === void 0 ? void 0 : _a.closest('IED'))} > ${objectReferenceInIed(this.selectedExtRef)}: ${this.selectedExtRef.getAttribute('intAddr')}`
@@ -12958,6 +12969,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           ?selected=${!this.filterOutpDAq}
         >
           <span>Preconfigured Quality Attribute</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="show-pDAt"
+          left
+          ?selected=${!this.filterOutpDAt}
+        >
+          <span>Preconfigured Time Attribute</span>
         </mwc-check-list-item>
       </mwc-menu>
       <mwc-icon-button
@@ -13173,14 +13191,19 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             return (extRefs.some(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef))) &&
                 (!this.filterOutpDAq ||
                     (this.filterOutpDAq &&
-                        extRefs.some(candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)))));
+                        extRefs.some(candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)))) &&
+                (!this.filterOutpDAt ||
+                    (this.filterOutpDAt &&
+                        extRefs.some(candidateExtRef => !doesExtRefpDAIncludeT(candidateExtRef)))));
         });
         return `${ieds
             .map(ied => {
             const extRefs = Array.from(this.getExtRefElementsByIED(ied)
                 .filter(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)) &&
                 (!this.filterOutpDAq ||
-                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))))
+                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))) &&
+                (!this.filterOutpDAt ||
+                    (this.filterOutpDAt && !doesExtRefpDAIncludeT(extRef))))
                 .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b)));
             const hasBoundToBeHidden = this.filterOutBound && extRefs.every(extRef => isSubscribed(extRef));
             const hasNotBoundToBeHidden = this.filterOutNotBound &&
@@ -13270,13 +13293,18 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             return (extRefs.some(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef))) &&
                 (!this.filterOutpDAq ||
                     (this.filterOutpDAq &&
-                        extRefs.some(candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)))));
+                        extRefs.some(candidateExtRef => !doesExtRefpDAIncludeQ(candidateExtRef)))) &&
+                (!this.filterOutpDAt ||
+                    (this.filterOutpDAt &&
+                        extRefs.some(candidateExtRef => !doesExtRefpDAIncludeT(candidateExtRef)))));
         });
         return x$1 `${c$2(ieds, i => `${identity(i)} ${this.controlTag}`, ied => {
             const extRefs = Array.from(this.getExtRefElementsByIED(ied)
                 .filter(extRef => this.searchExtRefSubscriberRegex.test(this.getExtRefSubscriberSearchString(extRef)) &&
                 (!this.filterOutpDAq ||
-                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))))
+                    (this.filterOutpDAq && !doesExtRefpDAIncludeQ(extRef))) &&
+                (!this.filterOutpDAt ||
+                    (this.filterOutpDAt && !doesExtRefpDAIncludeT(extRef))))
                 .sort((a, b) => sortExtRefItems(this.sortExtRefSubscriber, a, b)));
             const someBound = extRefs.some(extRef => isSubscribed(extRef));
             const someNotBound = extRefs.some(extRef => !isSubscribed(extRef));
@@ -13862,6 +13890,9 @@ __decorate([
 __decorate([
     n$h({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "filterOutpDAq", void 0);
+__decorate([
+    n$h({ type: Boolean })
+], SubscriberLaterBinding.prototype, "filterOutpDAt", void 0);
 __decorate([
     n$h({ type: String })
 ], SubscriberLaterBinding.prototype, "sortExtRefPublisher", void 0);

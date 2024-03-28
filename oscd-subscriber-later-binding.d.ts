@@ -60,6 +60,7 @@ export default class SubscriberLaterBinding extends LitElement {
     filterOutNotBound: boolean;
     strictServiceTypes: boolean;
     filterOutpDAq: boolean;
+    filterOutpDAt: boolean;
     sortExtRefPublisher: ExtRefSortOrder;
     sortExtRefSubscriber: ExtRefSortOrder;
     sortFcda: FcdaSortOrder;
