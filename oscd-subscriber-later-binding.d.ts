@@ -47,6 +47,7 @@ export default class SubscriberLaterBinding extends LitElement {
     identity: string;
     allowExternalPlugins: boolean;
     checkOnlyPreferredBasicType: boolean;
+    readOnlyView: boolean;
     controlTag: controlTagType;
     subscriberView: boolean;
     filterOutSubscribed: boolean;

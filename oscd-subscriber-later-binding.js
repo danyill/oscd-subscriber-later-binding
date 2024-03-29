@@ -11513,6 +11513,7 @@ const storedProperties = [
     'ignoreSupervision',
     'allowExternalPlugins',
     'checkOnlyPreferredBasicType',
+    'readOnlyView',
     'filterOutBound',
     'filterOutNotBound',
     'strictServiceTypes',
@@ -11747,6 +11748,7 @@ class SubscriberLaterBinding extends s$h {
             ignoreSupervision: this.ignoreSupervision,
             allowExternalPlugins: this.allowExternalPlugins,
             checkOnlyPreferredBasicType: this.checkOnlyPreferredBasicType,
+            readOnlyView: this.readOnlyView,
             filterOutBound: this.filterOutBound,
             filterOutNotBound: this.filterOutNotBound,
             strictServiceTypes: this.strictServiceTypes,
@@ -11785,6 +11787,7 @@ class SubscriberLaterBinding extends s$h {
             (_e = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.allowExternalPlugins) !== null && _e !== void 0 ? _e : true;
         this.checkOnlyPreferredBasicType =
             (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.checkOnlyPreferredBasicType) || false;
+        this.readOnlyView = (storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.readOnlyView) || false;
         this.filterOutBound = (_f = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutBound) !== null && _f !== void 0 ? _f : false;
         this.filterOutNotBound = (_g = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.filterOutNotBound) !== null && _g !== void 0 ? _g : false;
         this.strictServiceTypes = (_h = storedConfiguration === null || storedConfiguration === void 0 ? void 0 : storedConfiguration.strictServiceTypes) !== null && _h !== void 0 ? _h : false;
@@ -12159,7 +12162,7 @@ class SubscriberLaterBinding extends s$h {
                 this.ignoreSupervision = !(this.settingsMenuExtRefSubscriberUI.index).has(1);
                 this.allowExternalPlugins = (this.settingsMenuExtRefSubscriberUI.index).has(2);
                 this.checkOnlyPreferredBasicType = (this.settingsMenuExtRefSubscriberUI.index).has(3);
-                // required for checkOnlyPreferredBasic type to refresh
+                this.readOnlyView = (this.settingsMenuExtRefSubscriberUI.index).has(4);
                 this.requestUpdate();
             });
             this.sortMenuExtRefSubscriberUI.anchor = (this.sortMenuExtRefSubscriberButtonUI);
@@ -12189,6 +12192,7 @@ class SubscriberLaterBinding extends s$h {
                 this.allowExternalPlugins = (this.settingsMenuExtRefPublisherUI.index).has(1);
                 this.checkOnlyPreferredBasicType = (this.settingsMenuExtRefPublisherUI.index).has(2);
                 // required for checkOnlyPreferredBasic type to refresh
+                this.readOnlyView = (this.settingsMenuExtRefPublisherUI.index).has(3);
                 this.requestUpdate();
             });
         }
@@ -12382,11 +12386,14 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         ${this.renderControlTypeSelector()}
         ${this.selectedControl && this.selectedFCDA && !this.subscriberView
             ? x$1 `<span
-              class="selected title-element text"
+              class="selected title-element text ${this.readOnlyView
+                ? 'read-only'
+                : ''}"
               title="${selectedFcdaTitle}"
               >${selectedFcdaTitle}</span
             >`
-            : x$1 `<span class="title-element text"
+            : x$1 `<span
+              class="title-element text ${this.readOnlyView ? 'read-only' : ''}"
               >${this.controlTag === 'SampledValueControl'
                 ? 'Select SV Publisher'
                 : 'Select GOOSE Publisher'}</span
@@ -12564,7 +12571,8 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             'show-not-subscribed': !this.filterOutNotSubscribed,
             'show-pxx-mismatch': !this.filterOutPreconfiguredUnmatched,
             'show-data-objects': !this.filterOutDataObjects,
-            'show-quality': !this.filterOutQuality
+            'show-quality': !this.filterOutQuality,
+            'read-only': this.readOnlyView
         };
         return x$1 `<div class="searchField">
         <abbr title="Search"
@@ -12604,12 +12612,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                 // conditions for a subscription have not been met
                 return;
             }
-            this.subscribe(this.selectedExtRef, this.selectedControl, this.selectedFCDA);
+            if (!this.readOnlyView)
+                this.subscribe(this.selectedExtRef, this.selectedControl, this.selectedFCDA);
             this.selectedExtRef = undefined;
             // if incrementing, click on next ExtRef list item if not subscribed
             if (this.extRefListSubscriberSelectedUI && this.autoIncrement) {
                 const nextActivatableItem = (this.extRefListSubscriberUI.querySelector('mwc-list-item[activated].extref ~ mwc-list-item.extref'));
-                if (nextActivatableItem) {
+                if (nextActivatableItem && !this.readOnlyView) {
                     const { extref } = nextActivatableItem.dataset;
                     const nextExtRef = (_a = find(this.doc, 'ExtRef', extref !== null && extref !== void 0 ? extref : 'Unknown')) !== null && _a !== void 0 ? _a : undefined;
                     if (nextExtRef && !isSubscribed(nextExtRef)) {
@@ -12780,7 +12789,9 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
             'title-element': true
         };
         return x$1 `<h1 class="fcda-title">
-      <span class="title-element text">Select Subscriber Input</span>
+      <span class="title-element text ${this.readOnlyView ? 'read-only' : ''}"
+        >Select Subscriber Input</span
+      >
       <mwc-icon-button
         id="filterExtRefPublisherIcon"
         class="${e$a(filterMenuClasses)}"
@@ -12889,6 +12900,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         >
           <span>Check Only Preconfigured Service and Basic Types</span>
         </mwc-check-list-item>
+        <mwc-check-list-item
+          class="read-only-view"
+          left
+          ?selected=${this.readOnlyView}
+        >
+          <span>Read-only view</span>
+        </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
     }
@@ -12912,11 +12930,16 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         return x$1 `<h1 class="subscriber-title">
       ${this.selectedExtRef
             ? x$1 `<span
-            class="selected title-element text"
+            class="selected title-element text ${this.readOnlyView
+                ? 'read-only'
+                : ''}"
             title="${selectedExtRefTitle}"
             >${selectedExtRefTitle}</span
           >`
-            : x$1 `<span class="title-element text">Select Subscriber Input</span>`}
+            : x$1 `<span
+            class="title-element text ${this.readOnlyView ? 'read-only' : ''}"
+            >Select Subscriber Input</span
+          >`}
       <mwc-icon-button
         id="saveSubscriberExtRefToMarkdown"
         title="Copy to Clipboard as Markdown"
@@ -13066,6 +13089,13 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
           ?selected=${this.checkOnlyPreferredBasicType}
         >
           <span>Check Only Preconfigured Service and Basic Types</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="read-only-view"
+          left
+          ?selected=${this.readOnlyView}
+        >
+          <span>Read-only view</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -13370,12 +13400,14 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                     // same desc and intAddr.
                     // See: https://github.com/openscd/open-scd/issues/1214
                     const selectedExtRefElement = find(this.doc, 'ExtRef', extref);
-                    if (!isSubscribed(selectedExtRefElement) ||
-                        !findFCDAs(selectedExtRefElement).find(x => x !== undefined)) {
-                        this.subscribe(selectedExtRefElement, this.selectedControl, this.selectedFCDA);
-                    }
-                    else {
-                        this.unsubscribeExtRef(selectedExtRefElement);
+                    if (!this.readOnlyView) {
+                        if (!isSubscribed(selectedExtRefElement) ||
+                            !findFCDAs(selectedExtRefElement).find(x => x !== undefined)) {
+                            this.subscribe(selectedExtRefElement, this.selectedControl, this.selectedFCDA);
+                        }
+                        else {
+                            this.unsubscribeExtRef(selectedExtRefElement);
+                        }
                     }
                     // without this statement, neither the ExtRef list or the FCDA list
                     // (with the count) update correctly. It is unclear why.
@@ -13391,7 +13423,8 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         }
         const filteredListClasses = {
             'show-bound': !this.filterOutBound,
-            'show-not-bound': !this.filterOutNotBound
+            'show-not-bound': !this.filterOutNotBound,
+            'read-only': this.readOnlyView
         };
         const hasExtRefs = (_a = this.doc) === null || _a === void 0 ? void 0 : _a.querySelector(`:root > IED > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, 
        :root > IED > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`);
@@ -13423,7 +13456,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
                 const selectedExtRef = find(this.doc, 'ExtRef', extref);
                 if (!selectedExtRef)
                     return;
-                if (isSubscribed(selectedExtRef) ||
+                if ((!this.readOnlyView && isSubscribed(selectedExtRef)) ||
                     isPartiallyConfigured(selectedExtRef)) {
                     this.unsubscribeExtRef(selectedExtRef);
                     // deselect in UI
@@ -13593,6 +13626,11 @@ SubscriberLaterBinding.styles = i$9 `
       text-overflow: ellipsis;
     }
 
+    .read-only.text {
+      font-weight: 400;
+      color: var(--mdc-theme-secondary, #018786);
+    }
+
     h1 .selected {
       font-weight: 400;
       color: var(--mdc-theme-primary, #6200ee);
@@ -13756,6 +13794,10 @@ SubscriberLaterBinding.styles = i$9 `
       display: none;
     }
 
+    mwc-list.read-only > mwc-list-item[activated] {
+      --mdc-theme-primary: var(--mdc-theme-secondary, #018786);
+    }
+
     .searchField {
       display: flex;
       flex: auto;
@@ -13851,6 +13893,9 @@ __decorate([
 __decorate([
     n$h({ type: Boolean, reflect: true })
 ], SubscriberLaterBinding.prototype, "checkOnlyPreferredBasicType", void 0);
+__decorate([
+    n$h({ type: Boolean })
+], SubscriberLaterBinding.prototype, "readOnlyView", void 0);
 __decorate([
     n$h({ type: Boolean })
 ], SubscriberLaterBinding.prototype, "controlTag", void 0);
