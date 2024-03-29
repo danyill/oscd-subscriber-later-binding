@@ -145,6 +145,7 @@ type StoredConfiguration = {
   ignoreSupervision: boolean;
   allowExternalPlugins: boolean;
   checkOnlyPreferredBasicType: boolean;
+  readOnlyView: boolean;
   filterOutBound: boolean;
   filterOutNotBound: boolean;
   strictServiceTypes: boolean;
@@ -179,6 +180,7 @@ const storedProperties: string[] = [
   'ignoreSupervision',
   'allowExternalPlugins',
   'checkOnlyPreferredBasicType',
+  'readOnlyView',
   'filterOutBound',
   'filterOutNotBound',
   'strictServiceTypes',
@@ -343,6 +345,9 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @property({ type: Boolean, reflect: true })
   checkOnlyPreferredBasicType!: boolean;
+
+  @property({ type: Boolean })
+  readOnlyView!: boolean;
 
   @property({ type: Boolean })
   controlTag!: controlTagType;
@@ -638,6 +643,7 @@ export default class SubscriberLaterBinding extends LitElement {
       ignoreSupervision: this.ignoreSupervision,
       allowExternalPlugins: this.allowExternalPlugins,
       checkOnlyPreferredBasicType: this.checkOnlyPreferredBasicType,
+      readOnlyView: this.readOnlyView,
       filterOutBound: this.filterOutBound,
       filterOutNotBound: this.filterOutNotBound,
       strictServiceTypes: this.strictServiceTypes,
@@ -688,6 +694,7 @@ export default class SubscriberLaterBinding extends LitElement {
       storedConfiguration?.allowExternalPlugins ?? true;
     this.checkOnlyPreferredBasicType =
       storedConfiguration?.checkOnlyPreferredBasicType || false;
+    this.readOnlyView = storedConfiguration?.readOnlyView || false;
 
     this.filterOutBound = storedConfiguration?.filterOutBound ?? false;
     this.filterOutNotBound = storedConfiguration?.filterOutNotBound ?? false;
@@ -1197,7 +1204,9 @@ export default class SubscriberLaterBinding extends LitElement {
         this.checkOnlyPreferredBasicType = (<Set<number>>(
           this.settingsMenuExtRefSubscriberUI.index
         )).has(3);
-        // required for checkOnlyPreferredBasic type to refresh
+        this.readOnlyView = (<Set<number>>(
+          this.settingsMenuExtRefSubscriberUI.index
+        )).has(4);
         this.requestUpdate();
       });
 
@@ -1251,6 +1260,9 @@ export default class SubscriberLaterBinding extends LitElement {
           this.settingsMenuExtRefPublisherUI.index
         )).has(2);
         // required for checkOnlyPreferredBasic type to refresh
+        this.readOnlyView = (<Set<number>>(
+          this.settingsMenuExtRefPublisherUI.index
+        )).has(3);
         this.requestUpdate();
       });
     }
@@ -1498,11 +1510,14 @@ Basic Type: ${spec?.bType ?? '?'}"
         ${this.renderControlTypeSelector()}
         ${this.selectedControl && this.selectedFCDA && !this.subscriberView
           ? html`<span
-              class="selected title-element text"
+              class="selected title-element text ${this.readOnlyView
+                ? 'read-only'
+                : ''}"
               title="${selectedFcdaTitle}"
               >${selectedFcdaTitle}</span
             >`
-          : html`<span class="title-element text"
+          : html`<span
+              class="title-element text ${this.readOnlyView ? 'read-only' : ''}"
               >${this.controlTag === 'SampledValueControl'
                 ? 'Select SV Publisher'
                 : 'Select GOOSE Publisher'}</span
@@ -1686,7 +1701,8 @@ Basic Type: ${spec?.bType ?? '?'}"
       'show-not-subscribed': !this.filterOutNotSubscribed,
       'show-pxx-mismatch': !this.filterOutPreconfiguredUnmatched,
       'show-data-objects': !this.filterOutDataObjects,
-      'show-quality': !this.filterOutQuality
+      'show-quality': !this.filterOutQuality,
+      'read-only': this.readOnlyView
     };
 
     return html`<div class="searchField">
@@ -1737,11 +1753,12 @@ Basic Type: ${spec?.bType ?? '?'}"
             return;
           }
 
-          this.subscribe(
-            this.selectedExtRef,
-            this.selectedControl,
-            this.selectedFCDA
-          );
+          if (!this.readOnlyView)
+            this.subscribe(
+              this.selectedExtRef,
+              this.selectedControl,
+              this.selectedFCDA
+            );
 
           this.selectedExtRef = undefined;
 
@@ -1753,7 +1770,7 @@ Basic Type: ${spec?.bType ?? '?'}"
               )
             );
 
-            if (nextActivatableItem) {
+            if (nextActivatableItem && !this.readOnlyView) {
               const { extref } = (<ListItem>nextActivatableItem).dataset;
               const nextExtRef =
                 find(this.doc, 'ExtRef', extref ?? 'Unknown') ?? undefined;
@@ -1975,7 +1992,9 @@ Basic Type: ${spec?.bType ?? '?'}"
     };
 
     return html`<h1 class="fcda-title">
-      <span class="title-element text">Select Subscriber Input</span>
+      <span class="title-element text ${this.readOnlyView ? 'read-only' : ''}"
+        >Select Subscriber Input</span
+      >
       <mwc-icon-button
         id="filterExtRefPublisherIcon"
         class="${classMap(filterMenuClasses)}"
@@ -2084,6 +2103,13 @@ Basic Type: ${spec?.bType ?? '?'}"
         >
           <span>Check Only Preconfigured Service and Basic Types</span>
         </mwc-check-list-item>
+        <mwc-check-list-item
+          class="read-only-view"
+          left
+          ?selected=${this.readOnlyView}
+        >
+          <span>Read-only view</span>
+        </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
   }
@@ -2114,11 +2140,16 @@ Basic Type: ${spec?.bType ?? '?'}"
     return html`<h1 class="subscriber-title">
       ${this.selectedExtRef
         ? html`<span
-            class="selected title-element text"
+            class="selected title-element text ${this.readOnlyView
+              ? 'read-only'
+              : ''}"
             title="${selectedExtRefTitle}"
             >${selectedExtRefTitle}</span
           >`
-        : html`<span class="title-element text">Select Subscriber Input</span>`}
+        : html`<span
+            class="title-element text ${this.readOnlyView ? 'read-only' : ''}"
+            >Select Subscriber Input</span
+          >`}
       <mwc-icon-button
         id="saveSubscriberExtRefToMarkdown"
         title="Copy to Clipboard as Markdown"
@@ -2268,6 +2299,13 @@ Basic Type: ${spec?.bType ?? '?'}"
           ?selected=${this.checkOnlyPreferredBasicType}
         >
           <span>Check Only Preconfigured Service and Basic Types</span>
+        </mwc-check-list-item>
+        <mwc-check-list-item
+          class="read-only-view"
+          left
+          ?selected=${this.readOnlyView}
+        >
+          <span>Read-only view</span>
         </mwc-check-list-item>
       </mwc-menu>
     </h1>`;
@@ -2701,17 +2739,21 @@ Basic Type: ${spec?.bType ?? '?'}"
                     extref!
                   )!;
 
-                  if (
-                    !isSubscribed(selectedExtRefElement) ||
-                    !findFCDAs(selectedExtRefElement).find(x => x !== undefined)
-                  ) {
-                    this.subscribe(
-                      selectedExtRefElement,
-                      this.selectedControl!,
-                      this.selectedFCDA!
-                    );
-                  } else {
-                    this.unsubscribeExtRef(selectedExtRefElement);
+                  if (!this.readOnlyView) {
+                    if (
+                      !isSubscribed(selectedExtRefElement) ||
+                      !findFCDAs(selectedExtRefElement).find(
+                        x => x !== undefined
+                      )
+                    ) {
+                      this.subscribe(
+                        selectedExtRefElement,
+                        this.selectedControl!,
+                        this.selectedFCDA!
+                      );
+                    } else {
+                      this.unsubscribeExtRef(selectedExtRefElement);
+                    }
                   }
                   // without this statement, neither the ExtRef list or the FCDA list
                   // (with the count) update correctly. It is unclear why.
@@ -2728,7 +2770,8 @@ Basic Type: ${spec?.bType ?? '?'}"
 
     const filteredListClasses = {
       'show-bound': !this.filterOutBound,
-      'show-not-bound': !this.filterOutNotBound
+      'show-not-bound': !this.filterOutNotBound,
+      'read-only': this.readOnlyView
     };
 
     const hasExtRefs = this.doc?.querySelector(
@@ -2771,7 +2814,7 @@ Basic Type: ${spec?.bType ?? '?'}"
                 if (!selectedExtRef) return;
 
                 if (
-                  isSubscribed(selectedExtRef) ||
+                  (!this.readOnlyView && isSubscribed(selectedExtRef)) ||
                   isPartiallyConfigured(selectedExtRef)
                 ) {
                   this.unsubscribeExtRef(selectedExtRef);
@@ -2955,6 +2998,11 @@ Basic Type: ${spec?.bType ?? '?'}"
       text-overflow: ellipsis;
     }
 
+    .read-only.text {
+      font-weight: 400;
+      color: var(--mdc-theme-secondary, #018786);
+    }
+
     h1 .selected {
       font-weight: 400;
       color: var(--mdc-theme-primary, #6200ee);
@@ -3116,6 +3164,10 @@ Basic Type: ${spec?.bType ?? '?'}"
 
     mwc-list-item.hidden[noninteractive] + li[divider] {
       display: none;
+    }
+
+    mwc-list.read-only > mwc-list-item[activated] {
+      --mdc-theme-primary: var(--mdc-theme-secondary, #018786);
     }
 
     .searchField {

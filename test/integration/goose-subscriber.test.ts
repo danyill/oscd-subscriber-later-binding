@@ -1944,6 +1944,10 @@ describe('goose', () => {
         expect(plugin).has.attribute('allowexternalplugins');
       });
 
+      it('which is not read-only by default', async function () {
+        expect(plugin.readOnlyView).to.be.false;
+      });
+
       it('can disable external plugins', async function () {
         const button = plugin.settingsMenuExtRefSubscriberButtonUI;
 
@@ -2075,6 +2079,129 @@ describe('goose', () => {
         await resetMouseState();
         await timeout(standardWait); // selection
         await visualDiff(plugin, `${testName(this)}-after-subscribe`);
+      });
+    });
+
+    describe('has a read-only view setting', () => {
+      beforeEach(async function () {
+        const button = plugin.settingsMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!)
+        });
+        await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
+        await timeout(standardWait); // selection
+
+        const readOnlyViewPluginSettings =
+          plugin.settingsMenuExtRefSubscriberUI.querySelector(
+            '.read-only-view'
+          );
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(readOnlyViewPluginSettings!)
+        });
+        await plugin.settingsMenuExtRefSubscriberUI!.updateComplete;
+        await plugin.updateComplete;
+        await timeout(standardWait); // selection
+      });
+
+      it('uses the secondary colours after enabling the setting', async function () {
+        await resetMouseState();
+        await timeout(standardWait); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('uses the primary colours after disabling the setting', async function () {
+        const button = plugin.settingsMenuExtRefSubscriberButtonUI;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(button!)
+        });
+        await plugin.settingsMenuExtRefSubscriberUI.updateComplete;
+        await timeout(standardWait); // selection
+
+        const readOnlyViewPluginSettings =
+          plugin.settingsMenuExtRefSubscriberUI.querySelector(
+            '.read-only-view'
+          );
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(readOnlyViewPluginSettings!)
+        });
+        await plugin.settingsMenuExtRefSubscriberUI!.updateComplete;
+        await plugin.updateComplete;
+
+        await resetMouseState();
+        await timeout(standardWait); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and does not subscribe to an FCDA', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]'
+        )!;
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!)
+        });
+        await extref.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        const fcdaListElement = plugin.fcdaListUI!;
+
+        const fcda = getFcdaItem(
+          fcdaListElement,
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1',
+          'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1sDataSet>QB1_Disconnector/ CSWI 1.Pos stVal (ST)'
+        );
+        fcda?.scrollIntoView();
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(fcda!)
+        });
+
+        await fcda!.updateComplete;
+        await fcdaListElement.updateComplete;
+        await extRefListElement.updateComplete;
+        await plugin.updateComplete;
+
+        await resetMouseState();
+        await timeout(standardWait); // selection
+        await visualDiff(plugin, testName(this));
+      });
+
+      it('and does not unsubscribe an ExtRef', async function () {
+        const extRefListElement = plugin.extRefListSubscriberUI!;
+        const extref = getExtRefItem(
+          extRefListElement,
+          'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]'
+        )!;
+
+        await sendMouse({
+          type: 'click',
+          button: 'left',
+          position: midEl(extref!)
+        });
+        await extref!.updateComplete;
+        await extRefListElement!.updateComplete;
+        await plugin.updateComplete;
+
+        await resetMouseState();
+        await timeout(standardWait); // selection
+        expect(plugin).does.not.have.attribute('ignoresupervision');
+        await visualDiff(plugin, testName(this));
       });
     });
   });
