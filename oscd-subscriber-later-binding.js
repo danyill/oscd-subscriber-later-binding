@@ -12461,7 +12461,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         </mwc-menu>
         <mwc-icon-button
           id="sortFcdaIcon"
-          title="Sort')}"
+          title="Sort"
           icon="sort"
           @click=${() => {
             if (!this.sortMenuFcdaUI.open)
@@ -13488,7 +13488,7 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
         id="switchControlType"
         class="title-element"
         ?on=${this.controlTag === 'GSEControl'}
-        title="Change between GOOSE and Sampled Value publishers"
+        title="Switch between GOOSE and Sampled Value publishers"
         @click=${() => {
             if (this.controlTag === 'GSEControl') {
                 this.controlTag = 'SampledValueControl';
