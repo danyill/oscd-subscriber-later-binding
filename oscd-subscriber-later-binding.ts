@@ -1486,6 +1486,12 @@ Basic Type: ${spec?.bType ?? '?'}"
     </mwc-list-item>`;
   }
 
+  renderReadOnlyIcon(forceIcon: boolean): TemplateResult {
+    return html`${this.readOnlyView && (!this.subscriberView || forceIcon)
+      ? html`<mwc-icon class="read-only-icon">lock</mwc-icon>`
+      : ''}`;
+  }
+
   renderFCDAListTitle(): TemplateResult {
     const menuClasses = {
       'title-element': true,
@@ -1514,13 +1520,15 @@ Basic Type: ${spec?.bType ?? '?'}"
                 ? 'read-only'
                 : ''}"
               title="${selectedFcdaTitle}"
-              >${selectedFcdaTitle}</span
+              >${selectedFcdaTitle}${this.renderReadOnlyIcon(false)}</span
             >`
           : html`<span
               class="title-element text ${this.readOnlyView ? 'read-only' : ''}"
               >${this.controlTag === 'SampledValueControl'
                 ? 'Select SV Publisher'
-                : 'Select GOOSE Publisher'}</span
+                : 'Select GOOSE Publisher'}${this.renderReadOnlyIcon(
+                false
+              )}</span
             >`}
         <mwc-icon-button
           id="filterFcdaIcon"
@@ -2144,11 +2152,11 @@ Basic Type: ${spec?.bType ?? '?'}"
               ? 'read-only'
               : ''}"
             title="${selectedExtRefTitle}"
-            >${selectedExtRefTitle}</span
+            >${selectedExtRefTitle}${this.renderReadOnlyIcon(true)}</span
           >`
         : html`<span
             class="title-element text ${this.readOnlyView ? 'read-only' : ''}"
-            >Select Subscriber Input</span
+            >Select Subscriber Input${this.renderReadOnlyIcon(true)}</span
           >`}
       <mwc-icon-button
         id="saveSubscriberExtRefToMarkdown"
@@ -2998,9 +3006,10 @@ Basic Type: ${spec?.bType ?? '?'}"
       text-overflow: ellipsis;
     }
 
-    .read-only.text {
-      font-weight: 400;
-      color: var(--mdc-theme-secondary, #018786);
+    .read-only-icon {
+      margin: 10px;
+      vertical-align: middle;
+      color: var(--mdc-theme-on-surface, black);
     }
 
     h1 .selected {
