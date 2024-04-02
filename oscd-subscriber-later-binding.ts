@@ -1488,7 +1488,9 @@ Basic Type: ${spec?.bType ?? '?'}"
 
   renderReadOnlyIcon(forceIcon: boolean): TemplateResult {
     return html`${this.readOnlyView && (!this.subscriberView || forceIcon)
-      ? html`<mwc-icon class="read-only-icon">lock</mwc-icon>`
+      ? html`<mwc-icon class="read-only-icon" title="Read-only view"
+          >lock</mwc-icon
+        >`
       : ''}`;
   }
 
