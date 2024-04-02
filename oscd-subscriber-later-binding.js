@@ -12371,7 +12371,9 @@ Basic Type: ${(_c = spec === null || spec === void 0 ? void 0 : spec.bType) !== 
     }
     renderReadOnlyIcon(forceIcon) {
         return x$1 `${this.readOnlyView && (!this.subscriberView || forceIcon)
-            ? x$1 `<mwc-icon class="read-only-icon">lock</mwc-icon>`
+            ? x$1 `<mwc-icon class="read-only-icon" title="Read-only view"
+          >lock</mwc-icon
+        >`
             : ''}`;
     }
     renderFCDAListTitle() {
