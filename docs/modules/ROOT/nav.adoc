@@ -1,0 +1,6 @@
+* xref:installing-the-plugin.adoc[]
+* Using the Plugin
+** xref:publisher-view.adoc[]
+** xref:subscriber-view.adoc[]
+* xref:support.adoc[]
+* xref:credit.adoc[]
