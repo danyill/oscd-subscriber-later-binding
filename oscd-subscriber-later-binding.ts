@@ -324,6 +324,26 @@ function debounce(callback: any, delay = 100) {
   };
 }
 
+/*
+ * IMPORTANT: This function  is an exact copy of the same function in
+ * scl-lib.
+ *
+ * TODO: Add tests to scl-lib and export
+ */
+function isBasicTypeEqual(
+  bTypeFcda: string | undefined,
+  bTypeExtRef: string | undefined
+): boolean {
+  // Basic types not the same
+  return (
+    // eslint-disable-next-line eqeqeq
+    bTypeFcda === bTypeExtRef ||
+    // Enum to INT32 mappings specifically allowed, Ed 1 to Ed 2 compatibility
+    (bTypeFcda === 'INT32' && bTypeExtRef === 'Enum') ||
+    (bTypeFcda === 'Enum' && bTypeExtRef === 'INT32')
+  );
+}
+
 /**
  * A plugin to allow subscriptions of GOOSE and SV using the
  * later binding method as described in IEC 61850-6 Ed 2.1 providing
@@ -1318,9 +1338,8 @@ export default class SubscriberLaterBinding extends LitElement {
    * ExtRef element
    *
    * IMPORTANT: This function  is an _almost_ exact copy of the same function in
-   * scl-lib and is different only in that it uses cached values for performance,
-   * uses the UI option for the control block type and short circuits at the top
-   * for missing elements
+   * scl-lib and is different only in that it uses cached values for performance
+   * and short circuits at the top for missing elements.
    *
    */
   doesFcdaMeetExtRefRestrictions(
@@ -1329,7 +1348,6 @@ export default class SubscriberLaterBinding extends LitElement {
     options: DoesFcdaMeetExtRefRestrictionsOptions = { checkOnlyBType: false }
   ): boolean {
     if (!extRef || !fcda) return true;
-
     // Vendor does not provide data for the check so any FCDA meets restriction
     if (!extRef.hasAttribute('pDO')) return true;
 
@@ -1339,6 +1357,7 @@ export default class SubscriberLaterBinding extends LitElement {
     // Check cannot be performed assume restriction check to fail
     if (!extRefSpec || !fcdaTypes) return false;
 
+    // If service type specified it must match
     if (
       extRef.getAttribute('pServT') &&
       options.controlBlockType &&
@@ -1347,7 +1366,8 @@ export default class SubscriberLaterBinding extends LitElement {
       return false;
 
     // Some vendors allow subscribing of e.g. ACT to SPS, both bType BOOLEAN
-    if (options.checkOnlyBType) return fcdaTypes.bType === extRefSpec.bType;
+    if (options.checkOnlyBType)
+      return isBasicTypeEqual(fcdaTypes.bType, extRefSpec.bType);
 
     if (
       extRef.getAttribute('pLN') &&
@@ -1355,9 +1375,21 @@ export default class SubscriberLaterBinding extends LitElement {
     )
       return false;
 
-    if (fcdaTypes.cdc !== extRefSpec.cdc) return false;
+    // Ed 1 to Ed 2 compatibility. The following are compatible:
+    // ENS <> INS, ENC <> INC
+    if (
+      fcdaTypes.cdc !== extRefSpec.cdc &&
+      !(fcdaTypes.cdc === 'ENS' && extRefSpec.cdc === 'INS') &&
+      !(fcdaTypes.cdc === 'INS' && extRefSpec.cdc === 'ENS') &&
+      !(fcdaTypes.cdc === 'ENC' && extRefSpec.cdc === 'INC') &&
+      !(fcdaTypes.cdc === 'INC' && extRefSpec.cdc === 'ENC')
+    )
+      return false;
 
-    if (extRef.getAttribute('pDA') && fcdaTypes.bType !== extRefSpec.bType)
+    if (
+      extRef.getAttribute('pDA') &&
+      !isBasicTypeEqual(fcdaTypes.bType, extRefSpec.bType)
+    )
       return false;
 
     return true;
