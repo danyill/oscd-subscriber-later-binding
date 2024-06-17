@@ -370,13 +370,22 @@
 						<GSEControl name="GOOSE1" type="GOOSE" appID="GOOSE1" confRev="1" datSet="GOOSE1sDataSet"/>
 					</LN0>
 					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO" desc="Chordata"/>
-					<LN lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="Arthropoda"/>
+					<LN lnClass="CSWI" inst="1" lnType="Dummy.CSWI" desc="Arthropoda">
+						<DOI name="Pos" desc="SpiderLegs">
+						</DOI>
+					</LN>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI" desc="Nematoda"/>
 				</LDevice>
 				<LDevice inst="QB1_Disconnector">
 					<LN0 lnClass="LLN0" inst="" lnType="Dummy.LLN0"/>
 					<LN prefix="" lnClass="CILO" inst="1" lnType="Dummy.CILO"/>
-					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI"/>
+					<LN prefix="" lnClass="CSWI" inst="1" lnType="Dummy.CSWI">
+						<DOI name="Pos">
+							<DAI name="d" valImport="true" valKind="Conf">
+								<Val>Triangles</Val>
+							</DAI>
+						</DOI>
+					</LN>
 					<LN prefix="" lnClass="XSWI" inst="1" lnType="Dummy.XSWI"/>
 				</LDevice>
 			</Server>

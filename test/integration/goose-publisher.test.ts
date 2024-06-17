@@ -1208,7 +1208,7 @@ describe('goose', () => {
           await visualDiff(plugin, testName(this));
         });
 
-        it('for a Data Object description', async function () {
+        it('for a LN description', async function () {
           const fcdaTextInput = plugin.filterFcdaInputUI!;
 
           await sendMouse({
@@ -1217,6 +1217,40 @@ describe('goose', () => {
             position: midEl(fcdaTextInput!)
           });
           await sendKeys({ type: 'Birch' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a Data Object description', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!)
+          });
+          await sendKeys({ type: 'SpiderLegs' });
+          await plugin.fcdaListUI!.updateComplete;
+          await plugin.updateComplete;
+
+          await resetMouseState();
+          await timeout(standardWait);
+          await visualDiff(plugin, testName(this));
+        });
+
+        it('for a data object description using DAI d', async function () {
+          const fcdaTextInput = plugin.filterFcdaInputUI!;
+
+          await sendMouse({
+            type: 'click',
+            button: 'left',
+            position: midEl(fcdaTextInput!)
+          });
+          await sendKeys({ type: 'Triangles' });
           await plugin.fcdaListUI!.updateComplete;
           await plugin.updateComplete;
 
