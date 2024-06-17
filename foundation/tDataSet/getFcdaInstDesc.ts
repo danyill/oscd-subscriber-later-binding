@@ -45,7 +45,8 @@ export function getFcdaInstDesc(fcda: Element): fcdaDesc {
   let doiDesc = doi?.getAttribute('desc');
 
   if (!doiDesc) {
-    doiDesc = doi?.querySelector(':scope > DAI[name="d"] > Val')?.textContent ?? null
+    doiDesc =
+      doi?.querySelector(':scope > DAI[name="d"] > Val')?.textContent ?? null;
   }
 
   descs = { ...descs, ...(doiDesc && doiDesc !== '' && { DOI: doiDesc }) };
