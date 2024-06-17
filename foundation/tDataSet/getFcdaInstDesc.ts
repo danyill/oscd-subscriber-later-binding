@@ -42,7 +42,12 @@ export function getFcdaInstDesc(fcda: Element): fcdaDesc {
 
   if (!doi) return descs;
 
-  const doiDesc = doi?.getAttribute('desc');
+  let doiDesc = doi?.getAttribute('desc');
+
+  if (!doiDesc) {
+    doiDesc = doi?.querySelector(':scope > DAI[name="d"] > Val')?.textContent ?? null
+  }
+
   descs = { ...descs, ...(doiDesc && doiDesc !== '' && { DOI: doiDesc }) };
 
   let previousDI: Element = doi;
