@@ -1,0 +1,2 @@
+Change between views using the change view button in the lower right image:change_view.png[width=30px].
+Change between GOOSE and SV using the image:change_cb_type_goose.png[width=30px] or image:change_cb_type_smv.png[width=30px] buttons.

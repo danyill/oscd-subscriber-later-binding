@@ -1,0 +1,32 @@
+= Introduction
+include::partial$base.adoc[]
+:sectnums!:
+
+The Subscriber Later Binding plugin is for mapping IEC 61850 GOOSE and SV data attributes between publishers and subscribers.
+
+It has the following features:
+
+* Supports GOOSE and SMV
+* Provides fast search with a range of filtering and sort options
+* Allows subscriptions from either a publisher or subscriber view
+* Will instantiate supervisions
+* Will show basic type and common data class on hover
+* Supports preferred/pre-configured types to IEC 61850-6 Ed 2.1
+* Provides copy-to-clipboard in Markdown format
+
+== Limitations
+
+The plugin is not targeted for IEC 61850 Ed 1 devices and does not currently support mapping of data objects (only data attributes are supported).
+
+[#addOnPlugins]
+== Add On Plugins
+
+This plugin works with several other plugins which provide manufacturer-specific functionality.
+
+* Subscriber LB - NR Electric
+// TODO: Add xref
+* Subscriber LB - Siemens
+// TODO: Add xref
+* Subscriber LB - SEL
+// TODO: Add xref
+

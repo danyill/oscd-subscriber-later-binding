@@ -1,0 +1,13 @@
+= Views and modes
+include::partial$base.adoc[]
+
+The plugin has two different views which can be configured by clicking on the change view button image:change_view.png[width=30px] in the lower right.
+
+Publisher mode:: The user clicks on a published data attribute and then on an External Reference in a subscribing device
+
+Subscriber mode:: The user clicks on an External Reference in a subscribing device and then a published data attribute
+
+To change modes between configuring GOOSE and SV, click on
+image:change_cb_type_goose.png[width=30px] or
+image:change_cb_type_smv.png[width=30px] buttons at the top.
+

@@ -1,0 +1,3 @@
+* _Data model_ - the order of the file
+* _Internal address_ - the `intAddr` of each External Reference
+* _Description_ - the `desc` attribute of each External Reference
