@@ -782,7 +782,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
     const dsToCb = new Map<string, Element[]>();
     // get only the FCDAs relevant to the current view
-    const fcdaData = new Map<Element, { key: string; cb: Element }>();
+    const fcdaData = new Map<Element, { key: string; cb: Element }[]>();
     const fcdaCompare = new Map<string, Element>();
     Array.from(this.doc.querySelectorAll(`LN0 > ${this.controlTag}`)).forEach(
       cb => {
@@ -812,10 +812,24 @@ export default class SubscriberLaterBinding extends LitElement {
         controlBlocks.forEach(thisCb => {
           dataSet.querySelectorAll('FCDA').forEach(fcda => {
             const key = `${identity(thisCb)} ${identity(fcda)}`;
-            fcdaData.set(fcda, {
-              key,
-              cb: thisCb
-            });
+
+            if (fcdaData.has(fcda)) {
+              fcdaData.set(fcda, [
+                ...fcdaData.get(fcda)!,
+                {
+                  key,
+                  cb: thisCb
+                }
+              ]);
+            } else {
+              fcdaData.set(fcda, [
+                {
+                  key,
+                  cb: thisCb
+                }
+              ]);
+            }
+
             this.controlBlockFcdaInfo.set(key, 0);
             const iedName = fcda.closest('IED')!.getAttribute('name');
             const cbName = thisCb.getAttribute('name')!;
@@ -859,11 +873,14 @@ export default class SubscriberLaterBinding extends LitElement {
       if (fcdaCompare.has(extRefMatcher)) {
         const fcda = fcdaCompare.get(extRefMatcher);
         if (!fcda) return;
-        const { key, cb } = fcdaData.get(fcda)!;
-        if (matchSrcAttributes(extRef, cb)) {
-          const currentCountValue = this.controlBlockFcdaInfo.get(key)!;
-          this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
-        }
+        const fcdaMatches = fcdaData.get(fcda)!;
+        fcdaMatches.forEach(match => {
+          const { key, cb } = match;
+          if (matchSrcAttributes(extRef, cb)) {
+            const currentCountValue = this.controlBlockFcdaInfo.get(key)!;
+            this.controlBlockFcdaInfo.set(key, currentCountValue + 1);
+          }
+        });
       }
     });
   }
