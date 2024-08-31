@@ -1,0 +1,3 @@
+* _Unspecified service types_.
+Both GOOSE and SV traffic when configured have a `serviceType` or `pServT` attribute which specified GOOSE or SV traffic. It is an optional field and can be missing.
+For some devices it may be useful to ignore traffic without a service type.

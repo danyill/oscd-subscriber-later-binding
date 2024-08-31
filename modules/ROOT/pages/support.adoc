@@ -1,0 +1,5 @@
+= Support
+include::partial$base.adoc[]
+
+The plugin authors are often available on https://openscd.zulipchat.com/[Zulip].
+Feel free to log an {url-issues}[issue] seeking fixes, improvements or help.

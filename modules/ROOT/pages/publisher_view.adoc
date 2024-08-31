@@ -1,0 +1,52 @@
+= Publisher view
+include::partial$base.adoc[]
+
+include::partial$view_initial_overview.adoc[]
+
+.Publisher View
+image::publisher_view.png[]
+
+// created using ln -s -r "../../../test/screenshots/baseline/goose publisher view can change subscriptions by unsubscribing an FCDA without supervisions-Chromium.png" "publisher_view.png"
+
+To subscribe:
+
+. Click on a published FCDA in the left column
+. Click on an External Reference in the right column, under the heading "Available to subscribe"
+. When a subscription is done a supervision is automatically allocated unless this option is disabled (see <<Settings>>)
+A small heart-beat icon image:supervision.png[width=25] is shown and details of the supervision are shown (also shown when hovering over the icon)
+. On the right of each FCDA a number shows the total subscriptions to that FCDA within the file
+
+To unsubscribe:
+
+. Click on a published FCDA in the left column
+. Click on an External Reference in the right column, under the heading "Subscribed"
+
+== Invalid or Missing Subscriptions
+
+include::partial$invalid_or_missing.adoc[]
+
+== Filtering
+
+include::partial$filtering_published.adoc[]
+
+Subscribed data can be filtered by:
+
+include::partial$filtering_unspecified_service_types.adoc[]
+
+* _Non-matching preconfigured_.
+Where preconfigured types are used, any types which don't match are hidden when this option is enabled instead of being shown as disabled.
+
+== Sorting
+
+include::partial$sorting_publisher.adoc[]
+
+Subscribed data can be sorted by:
+
+include::partial$sorting_subscribed.adoc[]
+
+[#Settings]
+== Settings
+
+The following setting options can be selected by clicking on the settings button image:settings.png[width=25px].
+
+include::partial$common_settings.adoc[]

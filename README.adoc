@@ -5,34 +5,17 @@
 :imagesdir: docs/media
 :icons: font
 :experimental:
-:uri-nvm: https://github.com/creationix/nvm
-:uri-nvm-install: {uri-nvm}#installation
-:uri-action-translate-ci-bundle: https://jakobvogelsang.github.io/oscd-action-translate/oscd-action-translate.js
-:uri-openscd-core: https://github.com/openscd/open-scd-core#readme
-:uri-openscd: https://github.com/openscd
-:uri-openscd-app: https://openscd.github.io
-:uri-openscd-core-app: https://openscd.github.io/open-scd/
-:uri-openscd-core-plugin: pass:v[https://openscd.github.io/open-scd/?plugins=%7B%22menu%22:%5B%7B%22name%22:%22Open%20File%22,%22translations%22:%7B%22de%22:%22Datei%20%C3%B6ffnen%22%7D,%22icon%22:%22folder_open%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-open/oscd-open.js%22%7D,%7B%22name%22:%22Save%20File%22,%22translations%22:%7B%22de%22:%22Datei%20speichern%22%7D,%22icon%22:%22save%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-save/oscd-save.js%22%7D%5D,%22editor%22:%5B%7B%22name%22:%22Subscriber%20Later%20Binding%22,%22translations%22:%7B%22de%22:%22Sp%C3%A4te%20Bindung%20des%20Abonnenten%22,%22pt%22:%22Associa%C3%A7%C3%A3o%20Tardia%20de%20Assinante%22%7D,%22icon%22:%22link%22,%22active%22:true,%22requireDoc%22:false,%22src%22:%22https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js%22%7D%5D%7D]
-// TIP:
-// the above URI is done by taking the plugins object from demo.html and updating to 
-// the correct {uri-ci-bundle} value and then in the browser calling:
-// 
-//   console.log(`https://openscd.github.io/open-scd/?plugins=${encodeURI(JSON.stringify(plugins))}`)
-// 
-// Don't forget the last bracket in the attribute definition.
-:uri-openwc: https://github.com/open-wc/open-wc
-:uri-plugin: https://github.com/danyill/oscd-subscriber-later-binding
-:uri-ci-bundle: https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js
-:uri-material-icons: https://fonts.google.com/icons
 :uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
+:uri-openwc: https://github.com/open-wc/open-wc
 :uri-addon-plugin-siemens: https://github.com/danyill/oscd-subscriber-lb-siemens
 :uri-addon-plugin-sel: https://github.com/danyill/oscd-subscriber-lb-sel
 :uri-addon-plugin-nr: https://github.com/danyill/oscd-subscriber-lb-nr
+:uri-docs: https://danyill.github.io/tpnz-openscd-docs/subscriber-later-binding
 
 // badges
 image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[title='Build Status']
 image:https://img.shields.io/badge/built%20with-open--wc-blue.svg[link={uri-openwc},title='Built with open-wc recommendations']
-image:https://img.shields.io/badge/LF%20Energy%20Slack-%20%23OpenSCD%20chat-purple?logo=slack&color=2aa198&labelColor=6c71c4[link=https://lfenergy.slack.com/archives/C03LH7EUP34,title='Slack LF Energy']
+image:https://img.shields.io/badge/Zulip%20-%20%23OpenSCD%20chat-purple?logo=zulip&color=2aa198&labelColor=6c71c4[link=https://openscd.zulipchat.com/]
 
 toc::[]
 
@@ -66,235 +49,7 @@ image::../../test/screenshots/baseline/smv publisher view can change subscriptio
 
 Feel free to log issues to request fixes, improvements or new features.
 
-=== Features
-
-* Supports GOOSE and SMV
-* Allows subscriptions from either a publisher or subscriber view
-* Will instantiate supervisions if possible (if `valImport=true` and `valKind=RO` or `valKind=Conf` on the first LGOS/LSVS instance or the datatype)
-* Will show basic type and common data class on hover of FCDA elements or ExtRef elements (if available via preconfigured types)
-* Supports preferred/pre-configured types
-* Allows filtering to only used/unused subscriptions
-* Provides copy-to-clipboard in Markdown format
-
-== How to use?
-
-=== Online Using the Latest open-scd-core
-
-==== Using a URL
-
-Open SCD core allows plugins to be loaded from a URL.
-
-You can click on {uri-openscd-core-plugin}[this link] to trial this plugin.
-
-In this view it is without theming and only presents this plugin along with the open and save plugins.
-
-==== Manually
-
-. The latest core is available at {uri-openscd-core-app}.
-
-. Go to menu:Menu[Add plugins...]
-
-. Select Cancel - this is an editor plugin.
-
-. Select OK to required a loaded document.
-
-. Choose a plugin name of 'Subscriber Later Binding'.
-
-. Choose a plugin icon of 'link'
-
-. Provide a plugin source URI of: {uri-ci-bundle}
-
-. Click OK on the summary, it should like similar to that shown below:
-+
-image::screenshot-openscd-core-add.png[width=250]
-
-. Open a file and enjoy!
-
-=== Locally for testing
-
-See <<Development>>
-
-=== As part of the OpenSCD distribution
-
-NOTE: OpenSCD is transitioning to use of `open-scd-core`, these instructions will require updating at the end of this transition.
-
-. Open your OpenSCD distribution or use {uri-openscd-app}.
-
-. Create a custom extension by going to menu:menu[Extensions>Add Custom Extension].
-
-. Enter the name 'Subscriber Later Binding', select 'Editor tab' and enter {uri-ci-bundle} as the URL.
-+
-This is the URL of the bundle built by CI and is always the latest alpha version of this plugin.
-+
-.OpenSCD Add Custom Extension Screen
-image::screenshot-add-extension.png[width=300]
-
-. Click on menu:Add[].
-
-. Until OpenSCD is fully transitioned to open-scd-core, a conversion plugin is also required to interface between the old and new APIs.
-
-. Create another custom extension by going to menu:menu[Extensions>Add Custom Extension].
-
-. Enter the name 'Action Translate', select 'Menu entry' and enter {uri-action-translate-ci-bundle} as the URL.
-+
-This is the URL of the bundle built by CI and is always the latest alpha version of this plugin.
-
-. You should now be able to scroll across in the menu-bar and find a tab, "Subscriber Later Binding"
-+
-TIP: If there are too many editor plugin, hold down shift and wheel-mouse up and down to scroll them easily.
-
-=== As part of your own distribution
-
-==== Within the current OpenSCD distribution
-
-. Within the current OpenSCD distribution, plugins are stored in the `public/js/plugins.js` folder. 
-Each plugin appears in the following form:
-+
-[source,js,subs=+attributes]
-----
-{
-    name: 'Subscriber Later Binding', // <.>
-    src: '{uri-ci-bundle}', //  <.>
-    icon: 'link', // <.>
-    default: true, // <.>
-    kind: 'editor', // <.>
-    requireDoc: true, // <.>
-    position: 'middle' // <.>
-  }
-----
-<.> Name of the plugin which appears in the editor menu at top of screen
-<.> URL which can be a local or remote resource. 
-For a local resource, begins without a forward slash, e.g. `plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js`. 
-In this case what is shown is loading a plugin from the build process.
-<.> A material icon, see others at {uri-material-icons}[Material Symbols and Icons]
-<.> Whether the plugin is enabled by default or has to be enabled in the plugins menu
-<.> The type of plugin, either `menu` or `editor`. This is an `editor` plugin.
-<.> Whether a document must be loaded for this plugin to be available
-<.> A string, either `top`, `middle` or `bottom` to give a location in the menu. 
-Otherwise inferred from the order in the file relative to other plugins.
-
-. You need to copy an entry like the above, ensure the `src` URL resolves and the plugin should be loaded when the distribution is built.
-
-. If you are building locally you likely need to run an `npm run bundle` command in each plugin to make the `dist` folder, containing a single JavaScript file with the plugin available to OpenSCD.
-
-==== Within an OpenSCD core distribution
-
-Within an OpenSCD core distribution, plugins are also loaded from a json file with a slightly different schema.
-
-. Typically the distribution will be served from a static web page and within the web page there will be a plugins property declared on an `open-scd` object, for instance:
-+
-[source,js]
-----
-<open-scd
-  plugins='{
-  "menu": 
-  [
-    {"name": "Open File", "translations": {"de": "Datei öffnen"}, "icon": "folder_open", "active": true, "src": "https://openscd.github.io/oscd-open/oscd-open.js"}, 
-    {"name": "Save File", "translations": {"de": "Datei speichern"}, "icon": "save", "active": true, "src": "https://openscd.github.io/oscd-save/oscd-save.js"}
-  ],
-  "editor": 
-  [
-    {"name": "Subscriber Later Binding", "translations": {"de": "Späte Bindung des Abonnenten", "pt": "Associação Tardia de Assinante"}, "icon": "link", "active": true, "requireDoc": true, "src": "/plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js"}
-  ]
-}'
-></open-scd>
-----
-
-. This plugin is an editor plugin, editor plugins are an array of JSON of the following form:
-+
-[source,js,subs=+attributes]
-----
-{
-  "name": "Subscriber Later Binding", // <.>
-  "translations": { // <.>
-    "de": "Späte Bindung des Abonnenten",
-    "pt": "Associação Tardia de Assinante"
-  },
-  "icon": "link", // <.>
-  "active": true, // <.>
-  "requireDoc": true, // <.>
-  "src": "{uri-ci-bundle}" // <.>
-}
-----
-<.> Name of the plugin which appears in the editor menu at top of screen
-<.> Translations of the plugin name as required using standard locale names.
-<.> A material icon, see others at {uri-material-icons}[Material Symbols and Icons]
-<.> Whether the plugin is enabled by default or has to be enabled in the plugins menu
-<.> Whether a document must be loaded for this plugin to be available
-<.> URL which can be a local or remote resource. 
-For a local resource, begins without a forward slash, e.g. `plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js`. 
-In this case what is shown is loading a plugin from the internet using the continuous integration build process.
-
-. You need to copy an entry like the above, ensure the `src` URL resolves and the plugin should be loaded when the distribution is built.
-
-. If you are building locally you likely need to run an `npm run bundle` command in each plugin to make the `dist` folder, containing a single JavaScript file with the plugin available to OpenSCD.
-
-== Development
-
-=== Prerequisites
-
-This plugin uses Node.js and the npm package ecosystem and is verified to work on Linux.
-
-For development, you'll need Node.js (including npm, which is bundled with Node.js) on your system.
-
-To check whether you have Node.js installed, and which version, open a terminal and type:
-
- $ node -v
-
-A good way to install Node.js is to use {uri-nvm}[nvm] (Node Version Manager), however system-wide installations may also work.
-
-If you're using Linux or macOS, follow {uri-nvm-install}[the nvm installation instructions] to set up nvm on your machine.
-
-Once you've installed nvm, open a *new* terminal and install the active Node.js LTS release using:
-
- $ nvm install --lts
-
-Now that you have Node.js installed, you can install this plugin.
-
-=== Cloning and Demo Server
-
-TIP: This repository uses Git LFS so ensure this is is installed on your system prior 
-(on Debian based systems `sudo apt install git-lfs`). 
-Then clone this repository using:
-
-[subs=+attributes]
- $ git clone {uri-plugin}
-
-Now, install dependencies
-
- $ npm i
-
-Start up a demo server 
-
- $ npm run start
-
-Now open in your browser locally to http://localhost:8000/demo/ to use the plugin.
-
-=== Linting and formatting
-
-To scan the project for linting and formatting errors, run
-
- $ npm run lint
-
-To automatically fix linting and formatting errors, run
-
- $ npm run format
-
-=== Testing with Web Test Runner
-
-To execute a single test run:
-
- $ npm run test
-
-To run the tests in interactive watch mode run:
-
- $ npm run test:watch
-
-=== Tooling configs
-
-For most of the tools, the configuration is in the `package.json` to reduce the number of files in your project.
-
-If you customize the configuration a lot, you can consider moving them to individual files.
+See the {uri-docs}[documentation] for more information.
 
 == Credit
 
@@ -305,4 +60,4 @@ This plugin was refactored from base code in OpenSCD and relies on the code, arc
 * Jakob Vogelsang
 * Juan Munoz
 
-© 2023 OpenSCD Daniel Mulholland, Christian Dinkel
+© 2024 OpenSCD Daniel Mulholland, Christian Dinkel, Jakob Vogelsang

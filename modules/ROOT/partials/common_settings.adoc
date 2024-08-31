@@ -1,0 +1,18 @@
+* _Change Supervision LNs_.
+This option is on by default.
+If turned off, supervisions will not be allocated as subscriptions are mapped.
++
+NOTE: For some manufacturers (notably, GE) this may result in subscriptions not being fully configured/functional
+
+* _Allow External Plugins_ - see xref:introduction.adoc#addOnPlugins[add on plugins].
+This option is on by default.
+
+* _Check Only Preconfigured Service and Basic Types_.
+This option is _off_ by default.
+When on, the CDC (common data class) checks for IEC 61850-6 Ed 2.1 are not carried out and mapping is allowed between incompatible CDCs.
+This would be required, for instance when mapping a trip signal (LN `PTRC` and CDC `ACT` on the published data) to an input (with CDC `SPS` in preconfigured attributes on an External Reference).
+
+[#ReadOnlyView]
+* _Read-only view_.
+In this view, the user may click on published or subscribed data without risk of creating or removing a mapping.
+The highlight colour changes and a small padlock image:padlock.png[width=25]  is shown near the top of the left hand column.

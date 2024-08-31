@@ -1,0 +1,8 @@
+Files may have missing or invalid subscriptions for a number of reasons.
+
+* A missing subscription may be shown if the SCL file is only a partial representation of the substation configuration (e.g. an icd or cid file)
+
+* Some manufacturer's use the ExtRef information for indicating internal information to the IED (e.g. SEL's proprietary message quality mapping)
+
+If a subscription is missing in the open file, a yellow triangle with an exclamation mark is shown.
+If a subscription is invalid an exclamation mark will be shown inside a red circle.

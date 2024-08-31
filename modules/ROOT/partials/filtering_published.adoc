@@ -1,0 +1,12 @@
+Published data can be filtered by one or more of:
+
+* Subscribed
+* Not Subscribed
+* Data Objects
+* Quality
+
+It can be convenient to filter by "Not Subscribed" while carrying out mappings as items will be removed from the list once they are subscribed.
+
+If using add-on plugins to provide manufacturer-specific functionality, it can be convenient to filter out quality where it will automatically be mapped for the user (see xref:introduction.adoc#addOnPlugins[add on plugins]).
+
+TIP: It is recommended only to filter out quality and rely on an additional plugin as part of an engineering process where it is known that quality will be mapped correctly.

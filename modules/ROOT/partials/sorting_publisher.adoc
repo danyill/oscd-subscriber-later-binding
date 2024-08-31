@@ -1,0 +1,8 @@
+Within the publishing view, published data can be sorted by:
+
+* _Data Model_ - the order of the file
+* _Object Reference_ - the full path of the object within the SCL file
+* _Full Description_ - the concatenated descriptions (based on the `desc` attribute) of Logical Device, Logical Node, Data Object
+and Data Attribute description
+* _Data Object and Data Attribute_
+* _Data Attribute_

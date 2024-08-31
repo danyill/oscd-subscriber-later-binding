@@ -1,0 +1,94 @@
+= Subscriber view
+include::partial$base.adoc[]
+
+include::partial$view_initial_overview.adoc[]
+
+The subscriber view looks similar to that shown below:
+
+.Subscriber View
+image::subscriber_view.png[]
+
+To subscribe:
+
+. Click on an External Reference in the left column
+. Click on a published FCDA in the right column
+. When a subscription is done a supervision is automatically allocated unless this option is disabled (see <<Settings>>)
+A small heart-beat icon image:supervision.png[width=25] is shown and details of the supervision are shown (also shown when hovering over the icon).
+. To the right of each FCDA a number shows the total subscriptions to that FCDA within the file
+
+To unsubscribe click on an External Reference in the left column
+
+TIP: If you find it too easy to unsubscribe while viewing mappings, use the <<ReadOnlyView,read-only view>> setting.
+
+== Invalid or Missing Subscriptions
+
+include::partial$invalid_or_missing.adoc[]
+
+== Export to Markdown:
+
+When clicking on the "Export to Markdown" button
+image:export_to_markdown.png[width=25px], the results of the current filter are copied to the clipboard.
+This can be pasted into documents or spreadsheets and may be useful for recording test results.
+
+An illustrative output is shown below:
+
+.Markdown Output
+[source,markdown]
+----
+* 📦 XAT_2242_MU1
+  MERGING UNIT - TP version: 2.0.0 - NRR - PCS-221S
+
+  * 🔗 MUGO / LLN0: 1-A:MUGO/GOINGGIO1.SPCSO1.stVal ⬅ XAT_T1_P1 > ANN / PSV GGIO 1 Ind60.stVal
+    Bay Trip - 3 Pole ⬅ Annunciation > MV/LV CB Trip (CFG / LLN0 Ctl, 💓 LD0 >  LGOS 1)
+
+  * 🔗 MUGO / LLN0: 1-A:MUGO/GOINGGIO1.SPCSO1.q ⬅ XAT_T1_P1 > ANN / PSV GGIO 1 Ind60.q
+    Bay Trip - 3 Pole (q) ⬅ Annunciation > MV/LV CB Trip (CFG / LLN0 Ctl, 💓 LD0 >  LGOS 1)
+
+  * 🔗 MUGO / LLN0: 1-A:MUGO/GOINGGIO1.SPCSO6.stVal ⬅ XAT_T1_P1 > ANN / PSV GGIO 1 Ind59.stVal
+    Bay Manual Close - 3 Pole ⬅ Annunciation > MV/LV CB Close (CFG / LLN0 Ctl, 💓 LD0 >  LGOS 1)
+
+  * 🔗 MUGO / LLN0: 1-A:MUGO/GOINGGIO1.SPCSO6.q ⬅ XAT_T1_P1 > ANN / PSV GGIO 1 Ind59.q
+    Bay Manual Close - 3 Pole (q) ⬅ Annunciation > MV/LV CB Close (CFG / LLN0 Ctl, 💓 LD0 >  LGOS 1)
+----
+
+
+
+== Filtering
+
+include::partial$filtering_published.adoc[]
+
+Subscribed data can be filtered by:
+
+* _Subscribed_
+
+* _Not Subscribed_
+
+include::partial$filtering_unspecified_service_types.adoc[]
+
+* _Preconfigured Quality Attribute_.
+Hides or shows ExtRef elements attributes which are defined as quality attributes (according to IEC 61850 Ed 2.1).
+
+* _Preconfigured Time Attribute_. Hides or shows ExtRef elements attributes which are defined as time attributes (according to IEC 61850 Ed 2.1).
+
+== Sorting
+
+include::partial$sorting_publisher.adoc[]
+
+Subscribed data can be sorted by:
+
+include::partial$sorting_subscribed.adoc[]
+
+* _Mapped Reference_.
+Sort according to the reference of the published data.
+If the published data (in the right hand column) is also sorted by "Object reference", the two columns may be directly compared.
+
+[#Settings]
+== Settings
+
+The following setting options can be selected by clicking on the settings button image:settings.png[width=25px].
+
+* _Auto-increment_.
+Move to the next External Reference when a mapping is complete.
+On by default.
+
+include::partial$common_settings.adoc[]
