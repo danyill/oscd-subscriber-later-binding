@@ -202,6 +202,21 @@ describe('goose', () => {
       await visualDiff(plugin, testName(this));
     });
 
+    it('shows subscription counts correctly for multiple control blocks with the same dataset', async function () {
+      doc = await fetch('/test/fixtures/GOOSE-2007B4-LGOS-two-cbs.scd')
+        .then(response => response.text())
+        .then(str => new DOMParser().parseFromString(str, 'application/xml'));
+
+      editor.docName = 'GOOSE-2007B4-LGOS-two-cbs.scd';
+      editor.docs[editor.docName] = doc;
+      await editor.updateComplete;
+      await plugin.updateComplete;
+      await timeout(500); // plugin loading and initial render?
+
+      await timeout(standardWait); // selection
+      await visualDiff(plugin, testName(this));
+    });
+
     describe('can change subscriptions by', () => {
       it('subscribing to an FCDA without supervisions', async function () {
         const fcdaListElement = plugin.fcdaListUI!;
