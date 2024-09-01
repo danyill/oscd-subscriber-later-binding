@@ -6,7 +6,7 @@
 :icons: font
 :experimental:
 :uri-openwc: https://github.com/open-wc/open-wc
-:uri-docs: https://danyill.github.io/tpnz-openscd-docs/subscriber-later-binding
+:uri-docs: https://danyill.github.io/tpnz-openscd-docs/oscd-subscriber-later-binding/dev/introduction.html
 :uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
 // badges
 image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[title='Build Status']
