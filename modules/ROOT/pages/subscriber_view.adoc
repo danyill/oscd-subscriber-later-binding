@@ -92,3 +92,7 @@ Move to the next External Reference when a mapping is complete.
 On by default.
 
 include::partial$common_settings.adoc[]
+
+== Datatype information
+
+include::partial$datatype_info.adoc[]

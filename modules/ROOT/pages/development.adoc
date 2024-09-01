@@ -2,6 +2,15 @@
 include::partial$base.adoc[]
 :uri-nvm: https://github.com/creationix/nvm
 :uri-nvm-install: {uri-nvm}#installation
+:uri-openwc: https://github.com/open-wc/open-wc
+:uri-docs: https://danyill.github.io/tpnz-openscd-docs/subscriber-later-binding
+:uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
+
+== License
+
+* This plugin is a web component and follows the  {uri-openwc}[open-wc] recommendations.
+
+* This plugin uses the Apache License and is intended for you to use, study, share and improve.
 
 == Prerequisites
 

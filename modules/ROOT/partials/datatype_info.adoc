@@ -1,0 +1,3 @@
+By hovering over a published item, the common data class and the basic type are displayed.
+
+TIP: These can only be shown for external references unless preferred attributes are configured.

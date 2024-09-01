@@ -5,13 +5,9 @@
 :imagesdir: docs/media
 :icons: font
 :experimental:
-:uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
 :uri-openwc: https://github.com/open-wc/open-wc
-:uri-addon-plugin-siemens: https://github.com/danyill/oscd-subscriber-lb-siemens
-:uri-addon-plugin-sel: https://github.com/danyill/oscd-subscriber-lb-sel
-:uri-addon-plugin-nr: https://github.com/danyill/oscd-subscriber-lb-nr
 :uri-docs: https://danyill.github.io/tpnz-openscd-docs/subscriber-later-binding
-
+:uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
 // badges
 image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[title='Build Status']
 image:https://img.shields.io/badge/built%20with-open--wc-blue.svg[link={uri-openwc},title='Built with open-wc recommendations']
@@ -23,29 +19,11 @@ toc::[]
 
 This plugin is intended to allow a user to carry out later-binding subscriptions for IEC 61850 GOOSE and SMV.
 
-* This is a plugin for {uri-openscd-core}[open-scd-core], the core
-editor engine for {uri-openscd}[OpenSCD].
+This is a plugin for OpenSCD core, the core editor engine for OpenSCD.
 
-* This plugin is a web component and follows the
-{uri-openwc}[open-wc] recommendations.
 
-* This plugin uses the link:LICENSE[Apache License] and is intended for you to use, study, share and improve.
 
 It offers a publisher and subscriber view to allow efficient and intuitive use.
-
-{uri-openscd-core-plugin-demo}[Try it out online]!
-
-This demo also includes some add-on plugins to provide specific functionality for {uri-addon-plugin-siemens}[Siemens], {uri-addon-plugin-sel}[SEL] and {uri-addon-plugin-nr}[NR Electric] IEDs. To use this, enable it first by opening the menu plugin and checking "Enable".
-
-// TODO: Update screenshots
-|===
-a|.Subscriber View
-image::../../test/screenshots/baseline/goose subscriber view can search in Extrefs for an IED manufacturer-Chromium.png[width=800,link=../../test/screenshots/baseline/goose subscriber view can search in Extrefs for an IED manufacturer-Chromium.png]
-
-a|.Publisher View
-image::../../test/screenshots/baseline/smv publisher view can change subscriptions by unsubscribing an FCDA with supervisions-Chromium.png[width=800,link=../../test/screenshots/baseline/smv publisher view can change subscriptions by unsubscribing an FCDA with supervisions-Chromium.png]
-
-|===
 
 Feel free to log issues to request fixes, improvements or new features.
 
@@ -57,7 +35,6 @@ This plugin was refactored from base code in OpenSCD and relies on the code, arc
 
 * Rob Tjalma
 * Dennis Labordus
-* Jakob Vogelsang
 * Juan Munoz
 
 © 2024 OpenSCD Daniel Mulholland, Christian Dinkel, Jakob Vogelsang

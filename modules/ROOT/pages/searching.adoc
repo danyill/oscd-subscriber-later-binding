@@ -1,0 +1,19 @@
+= Searching
+include::partial$base.adoc[]
+
+This plugin features powerful search.
+If it is displayed on the screen it should be searchable.
+Search is case-sensitive and multiple terms can be used.
+
+To search, enter text in the search field.
+Common searches include: IED name, control block name, the `desc` field on an `LDevice`, `LNode`, Data Object or `ExtRef`.
+
+You can also:
+
+* search on a common data class, e.g. `ACT` or `SPS`
+* search on a basic type, e.g. `Quality` or `Dbpos`
+* search across spaces, e.g. `"XCBR 4"` or `'XCBR 4'`
+* search with wildcards, e.g. `VB01?` or `Bay*Close`
+
+NOTE: We are interested in  what additional search capability users would like, please {url-issues}[log an issue] or {url-chat}[visit the chat].
+

@@ -50,3 +50,7 @@ include::partial$sorting_subscribed.adoc[]
 The following setting options can be selected by clicking on the settings button image:settings.png[width=25px].
 
 include::partial$common_settings.adoc[]
+
+== Datatype information
+
+include::partial$datatype_info.adoc[]

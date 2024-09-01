@@ -2,5 +2,4 @@
 :url-issues: https://github.com/danyill/oscd-subscriber-later-binding/issues
 :url-chat: https://openscd.zulipchat.com/
 :sectnums:
-:toc:
 :experimental:
