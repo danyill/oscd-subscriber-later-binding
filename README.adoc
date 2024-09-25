@@ -1,4 +1,5 @@
 = OpenSCD Plugin: Subscriber Later Binding
+:plugin-name: oscd-subscriber-later-binding
 :sectnums:
 :sectlinks:
 :toc: macro
@@ -6,8 +7,8 @@
 :icons: font
 :experimental:
 :uri-openwc: https://github.com/open-wc/open-wc
-:uri-docs: https://danyill.github.io/tpnz-openscd-docs/subscriber-later-binding
-:uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
+:uri-docs: https://danyill.github.io/tpnz-openscd-docs
+:uri-openscd-core-plugin-demo: https://danyill.github.io/{plugin-name}/index.deploy.html
 // badges
 image:https://github.com/danyill/oscd-subscriber-later-binding/actions/workflows/test.yml/badge.svg[title='Build Status']
 image:https://img.shields.io/badge/built%20with-open--wc-blue.svg[link={uri-openwc},title='Built with open-wc recommendations']
@@ -21,13 +22,11 @@ This plugin is intended to allow a user to carry out later-binding subscriptions
 
 This is a plugin for OpenSCD core, the core editor engine for OpenSCD.
 
-
-
 It offers a publisher and subscriber view to allow efficient and intuitive use.
 
 Feel free to log issues to request fixes, improvements or new features.
 
-See the {uri-docs}[documentation] for more information.
+See the {uri-docs}[documentation] for more information or {uri-openscd-core-plugin-demo}[try it out standalone].
 
 == Credit
 

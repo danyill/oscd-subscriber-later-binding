@@ -2,7 +2,7 @@
 include::partial$base.adoc[]
 :uri-material-icons: https://fonts.google.com/icons
 :uri-action-translate-ci-bundle: https://jakobvogelsang.github.io/oscd-action-translate/oscd-action-translate.js
-:uri-ci-bundle: https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js
+:uri-ci-bundle: https://danyill.github.io/{plugin-name}/{plugin-name}.js
 :uri-openscd-core: https://github.com/OMICRONEnergyOSS/open-scd-core
 :uri-openscd: https://github.com/openscd
 :uri-openscd-app: https://openscd.github.io
@@ -12,8 +12,8 @@ include::partial$base.adoc[]
 :uri-addon-plugin-siemens: https://github.com/danyill/oscd-subscriber-lb-siemens
 :uri-addon-plugin-sel: https://github.com/danyill/oscd-subscriber-lb-sel
 :uri-addon-plugin-nr: https://github.com/danyill/oscd-subscriber-lb-nr
-:uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
-:uri-openscd-core-plugin: pass:v[https://openscd.github.io/open-scd/?plugins=%7B%22menu%22:%5B%7B%22name%22:%22Open%20File%22,%22translations%22:%7B%22de%22:%22Datei%20%C3%B6ffnen%22%7D,%22icon%22:%22folder_open%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-open/oscd-open.js%22%7D,%7B%22name%22:%22Save%20File%22,%22translations%22:%7B%22de%22:%22Datei%20speichern%22%7D,%22icon%22:%22save%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-save/oscd-save.js%22%7D%5D,%22editor%22:%5B%7B%22name%22:%22Subscriber%20Later%20Binding%22,%22translations%22:%7B%22de%22:%22Sp%C3%A4te%20Bindung%20des%20Abonnenten%22,%22pt%22:%22Associa%C3%A7%C3%A3o%20Tardia%20de%20Assinante%22%7D,%22icon%22:%22link%22,%22active%22:true,%22requireDoc%22:false,%22src%22:%22https://danyill.github.io/oscd-subscriber-later-binding/oscd-subscriber-later-binding.js%22%7D%5D%7D]
+:uri-openscd-core-plugin-demo: https://danyill.github.io/{plugin-name}/index.deploy.html
+:uri-openscd-core-plugin: pass:v[https://openscd.github.io/open-scd/?plugins=%7B%22menu%22:%5B%7B%22name%22:%22Open%20File%22,%22translations%22:%7B%22de%22:%22Datei%20%C3%B6ffnen%22%7D,%22icon%22:%22folder_open%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-open/oscd-open.js%22%7D,%7B%22name%22:%22Save%20File%22,%22translations%22:%7B%22de%22:%22Datei%20speichern%22%7D,%22icon%22:%22save%22,%22active%22:true,%22src%22:%22https://openscd.github.io/oscd-save/oscd-save.js%22%7D%5D,%22editor%22:%5B%7B%22name%22:%22Subscriber%20Later%20Binding%22,%22translations%22:%7B%22de%22:%22Sp%C3%A4te%20Bindung%20des%20Abonnenten%22,%22pt%22:%22Associa%C3%A7%C3%A3o%20Tardia%20de%20Assinante%22%7D,%22icon%22:%22link%22,%22active%22:true,%22requireDoc%22:false,%22src%22:%22https://danyill.github.io/{plugin-name}/{plugin-name}.js%22%7D%5D%7D]
 // TIP:
 // the above URI is done by taking the plugins object from demo.html and updating to
 // the correct {uri-ci-bundle} value and then in the browser calling:
@@ -43,7 +43,7 @@ include::partial$base.adoc[]
 //
 // . Select OK to required a loaded document.
 //
-// . Choose a plugin name of 'Subscriber Later Binding'.
+// . Choose a plugin name of '{plugin-title}'.
 //
 // . Choose a plugin icon of 'link'
 //
@@ -73,7 +73,7 @@ NOTE: OpenSCD is transitioning to use of `open-scd-core`, these instructions wil
 
 . Create a custom extension by going to menu:menu[Extensions>Add Custom Extension].
 
-. Enter the name 'Subscriber Later Binding', select 'Editor tab' and enter {uri-ci-bundle} as the URL.
+. Enter the name '{plugin-title}', select 'Editor tab' and enter {uri-ci-bundle} as the URL.
 +
 This is the URL of the bundle built by CI and is always the latest alpha version of this plugin.
 +
@@ -90,7 +90,7 @@ image::screenshot-add-extension.png[width=300]
 +
 This is the URL of the bundle built by CI and is always the latest alpha version of this plugin.
 
-. You should now be able to scroll across in the menu-bar and find a tab, "Subscriber Later Binding"
+. You should now be able to scroll across in the menu-bar and find a tab, "{plugin-title}"
 +
 TIP: If there are too many editor plugin, hold down shift and wheel-mouse up and down to scroll them easily.
 
@@ -104,7 +104,7 @@ Each plugin appears in the following form:
 [source,js,subs=+attributes]
 ----
 {
-    name: 'Subscriber Later Binding', // <.>
+    name: '{plugin-title}', // <.>
     src: '{uri-ci-bundle}', //  <.>
     icon: 'link', // <.>
     default: true, // <.>
@@ -115,7 +115,7 @@ Each plugin appears in the following form:
 ----
 <.> Name of the plugin which appears in the editor menu at top of screen
 <.> URL which can be a local or remote resource.
-For a local resource, begins without a forward slash, e.g. `plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js`.
+For a local resource, begins without a forward slash, e.g. `plugins/{plugin-name}/dist/{plugin-name}.js`.
 In this case what is shown is loading a plugin from the build process.
 <.> A material icon, see others at {uri-material-icons}[Material Symbols and Icons]
 <.> Whether the plugin is enabled by default or has to be enabled in the plugins menu
@@ -134,7 +134,7 @@ Within an OpenSCD core distribution, plugins are also loaded from a json file wi
 
 . Typically, the distribution will be served from a static web page and within the web page there will be a plugins property declared on an `open-scd` object, for instance:
 +
-[source,js]
+[source,js,subs="+attributes"]
 ----
 <open-scd
   plugins='{
@@ -145,7 +145,7 @@ Within an OpenSCD core distribution, plugins are also loaded from a json file wi
   ],
   "editor":
   [
-    {"name": "Subscriber Later Binding", "translations": {"de": "Späte Bindung des Abonnenten", "pt": "Associação Tardia de Assinante"}, "icon": "link", "active": true, "requireDoc": true, "src": "/plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js"}
+    {"name": "{plugin-title}", "translations": {"de": "Späte Bindung des Abonnenten", "pt": "Associação Tardia de Assinante"}, "icon": "link", "active": true, "requireDoc": true, "src": "/plugins/{plugin-name}/dist/{plugin-name}.js"}
   ]
 }'
 ></open-scd>
@@ -156,11 +156,7 @@ Within an OpenSCD core distribution, plugins are also loaded from a json file wi
 [source,js,subs=+attributes]
 ----
 {
-  "name": "Subscriber Later Binding", // <.>
-  "translations": { // <.>
-    "de": "Späte Bindung des Abonnenten",
-    "pt": "Associação Tardia de Assinante"
-  },
+  "name": "{plugin-title}", // <.>
   "icon": "link", // <.>
   "active": true, // <.>
   "requireDoc": true, // <.>
@@ -173,7 +169,7 @@ Within an OpenSCD core distribution, plugins are also loaded from a json file wi
 <.> Whether the plugin is enabled by default or has to be enabled in the plugins menu
 <.> Whether a document must be loaded for this plugin to be available
 <.> URL which can be a local or remote resource.
-For a local resource, begins without a forward slash, e.g. `plugins/oscd-subscriber-later-binding/dist/oscd-subscriber-later-binding.js`.
+For a local resource, begins without a forward slash, e.g. `plugins/{plugin-name}/dist/{plugin-name}.js`.
 In this case what is shown is loading a plugin from the internet using the continuous integration build process.
 
 . You need to copy an entry like the above, ensure the `src` URL resolves and the plugin should be loaded when the distribution is built.
