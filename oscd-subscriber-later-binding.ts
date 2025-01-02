@@ -537,7 +537,7 @@ export default class SubscriberLaterBinding extends LitElement {
   subscriberExtRefMarkdownSaveButton?: Icon;
 
   @query('#savePublisherToMarkdown')
-  savePublisherToMarkdown?: Icon;
+  savePublisherToMarkdownButton?: Icon;
 
   constructor() {
     super();

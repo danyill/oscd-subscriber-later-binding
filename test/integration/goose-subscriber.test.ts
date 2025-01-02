@@ -11,7 +11,7 @@ import '@openscd/open-scd-core/open-scd.js';
 
 import { LitElement } from 'lit';
 
-import { stub } from 'sinon';
+import * as sinon from 'sinon';
 
 import type { CheckListItem } from '@material/mwc-list/mwc-check-list-item.js';
 
@@ -1886,10 +1886,29 @@ describe('goose', () => {
       await visualDiff(plugin, testName(this));
     });
 
-    it('provides a markdown export', async function () {
-      const clipboardStub = stub(navigator.clipboard, 'writeText').callsFake(
-        () => Promise.resolve()
+    it('provides a copy to markdown export for FCDAs', async function () {
+      const clipboardStub = sinon
+        .stub(navigator.clipboard, 'writeText')
+        .callsFake(() => Promise.resolve());
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(plugin.savePublisherToMarkdownButton!)
+      });
+      await plugin.updateComplete;
+
+      // Copy and paste and replace \n with \\n in VS Code
+      expect(clipboardStub).to.have.been.calledWith(
+        '* GOOSE_Publisher > GOOSE2\n  \n  QB2_Disconnector / LLN0 \n\n    * QB2_Disconnector / CSWI 1 Pos.stVal\n\n      Animalia > Arthropoda > SpiderLegs (3 subscriptions)\n\n      (DPC, Dbpos)\n\n    * QB2_Disconnector / CSWI 1 Pos.q\n\n      Animalia > Arthropoda > SpiderLegs (2 subscriptions)\n\n      (DPC, Quality)\n\n\n* GOOSE_Publisher > GOOSE1\n  \n  QB2_Disconnector / LLN0 \n\n    * QB1_Disconnector / CSWI 1 Pos.stVal\n\n      Triangles (1 subscription)\n\n      (DPC, Dbpos)\n\n    * QB1_Disconnector / CSWI 1 Pos.q\n\n      Triangles \n\n      (DPC, Quality)\n\n\n* GOOSE_Publisher2 > GOOSE2\n  \n  QB2_Disconnector / LLN0  - Botany1\n\n    * QB2_Disconnector / CSWI 1 Pos.stVal\n\n       (1 subscription)\n\n      (DPC, Dbpos)\n\n    * QB2_Disconnector / CSWI 1 Pos.q\n\n       \n\n      (DPC, Quality)\n\n\n* GOOSE_Publisher2 > GOOSE1\n  \n  QB2_Disconnector / LLN0  - Botany2\n\n    * QB1_Disconnector / CSWI 1 Pos.stVal\n\n      Tree > Birch \n\n      (DPC, Dbpos)\n\n    * QB1_Disconnector / CSWI 1 Pos.q\n\n      Tree > Birch \n\n      (DPC, Quality)\n\n'
       );
+      sinon.restore();
+    });
+
+    it('provides a copy to markdown export for ExtRefs', async function () {
+      const clipboardStub = sinon
+        .stub(navigator.clipboard, 'writeText')
+        .callsFake(() => Promise.resolve());
 
       await sendMouse({
         type: 'click',
@@ -1902,9 +1921,7 @@ describe('goose', () => {
       expect(clipboardStub).to.have.been.calledWith(
         '* 📦 GOOSE_Subscriber\n  Dummy\n\n  * 🔗 Earth_Switch / CILO 1: Pos;CSWI1/Pos/stVal ⬅ SomethingNotPresent > QB2_Disconnector / CSWI 1 Pos.stVal  \n    Missing IED (QB2_Disconnector / LLN0 GOOSE2) (⚠️ Missing Mapping)\n\n  * Earth_Switch / CILO 1: Pos;CSWI1/Pos/q ⬅  Invalid Mapping \n    Missing attributes (❌ Invalid)\n\n  * 🔗 Earth_Switch / CSWI 1: Pos;CSWI1/Pos/stVal ⬅ GOOSE_Publisher > QB2_Disconnector / CSWI 1 Pos.stVal  \n    Interlocking.Input2 ⬅ Animalia > Arthropoda > SpiderLegs (QB2_Disconnector / LLN0 GOOSE2)\n\n  * 🔗 Earth_Switch / CSWI 1: Pos;CSWI1/Pos/q ⬅ GOOSE_Publisher > QB2_Disconnector / CSWI 1 Pos.q  \n    Interlocking.Input2 ⬅ Animalia > Arthropoda > SpiderLegs (QB2_Disconnector / LLN0 GOOSE2)\n\n  * Earth_Switch / CSWI 1: someRestrictedExtRef\n    Restricted To Pos\n\n\n* 📦 GOOSE_Subscriber1\n  GOOSE subscriber - Dummy - Taxonomist\n\n  * Earth_Switch / CILO 1: Pos;CSWI1/Pos/stVal\n    Interlocking.Input\n\n  * Earth_Switch / CILO 1: Pos;CSWI1/Pos/q\n    Interlocking.Input\n\n  * 🔗 Earth_Switch / CSWI 1: Pos;CSWI1/Pos/stVal ⬅ GOOSE_Publisher > QB2_Disconnector / CSWI 1 Pos.stVal  \n    Interlocking.Input2 ⬅ Animalia > Arthropoda > SpiderLegs (QB2_Disconnector / LLN0 GOOSE2, 💓 GOOSE_supervision >  LGOS 1)\n\n  * 🔗 Earth_Switch / CSWI 1: Pos;CSWI1/Pos/q ⬅ GOOSE_Publisher > QB2_Disconnector / CSWI 1 Pos.q  \n    Interlocking.Input2 ⬅ Animalia > Arthropoda > SpiderLegs (QB2_Disconnector / LLN0 GOOSE2, 💓 GOOSE_supervision >  LGOS 1)\n\n  * Earth_Switch / CSWI 1: someRestrictedExtRef\n    Restricted To Pos\n\n\n* 📦 GOOSE_Subscriber3\n  GOOSE subscriber - Dummy\n\n  * 🔗 Earth_Switch / CILO 1: ESW_Thing ⬅ GOOSE_Publisher > QB2_Disconnector / CSWI 1 Pos.stVal  \n    A Place to Bind ⬅ Animalia > Arthropoda > SpiderLegs (QB2_Disconnector / LLN0 GOOSE2, 💓 GOOSE_supervision >  LGOS 1)\n\n  * 🔗 Earth_Switch / CILO 1: ESW_Thing2 ⬅ GOOSE_Publisher > QB1_Disconnector / CSWI 1 Pos.stVal  \n    A Place to Bind 2 ⬅ Triangles (QB2_Disconnector / LLN0 GOOSE1, 💓 GOOSE_supervision >  LGOS 2)\n\n  * 🔗 Earth_Switch / CILO 1: ESW_Thing3 ⬅ GOOSE_Publisher2 > QB2_Disconnector / CSWI 1 Pos.stVal  \n    A Place to Bind 3 (QB2_Disconnector / LLN0 GOOSE2, 💓 GOOSE_supervision >  LGOS 3)\n\n'
       );
-
-      await resetMouseState();
-      await timeout(standardWait); // button selection
+      sinon.restore();
     });
 
     describe('has settings', () => {
