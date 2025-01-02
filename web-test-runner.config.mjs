@@ -40,7 +40,8 @@ const browsers = [
       ],
     },
   }),
-  playwrightLauncher({ product: 'firefox' }),
+  // TODO: Firefox  disabled, not stable on Ubuntu 24.10
+  // playwrightLauncher({ product: 'firefox' }),
   // TODO: Webkit disabled as unable to get consistent screenshots between
   // local and CI environment
   // playwrightLauncher({ product: 'webkit' }),
