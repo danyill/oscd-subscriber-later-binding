@@ -13,6 +13,8 @@ import { LitElement } from 'lit';
 
 import type { CheckListItem } from '@material/mwc-list/mwc-check-list-item.js';
 
+import * as sinon from 'sinon';
+
 import {
   getExtRefItem,
   getFcdaItem,
@@ -1831,6 +1833,25 @@ describe('goose', () => {
       await resetMouseState();
       await timeout(standardWait); // button selection
       await visualDiff(plugin, testName(this));
+    });
+
+    it('provides a copy to markdown export for FCDAs', async function () {
+      const clipboardStub = sinon
+        .stub(navigator.clipboard, 'writeText')
+        .callsFake(() => Promise.resolve());
+
+      await sendMouse({
+        type: 'click',
+        button: 'left',
+        position: midEl(plugin.savePublisherToMarkdownButton!)
+      });
+      await plugin.updateComplete;
+
+      // Copy and paste and replace \n with \\n in VS Code
+      expect(clipboardStub).to.have.been.calledWith(
+        '* GOOSE_Publisher > GOOSE2\n  \n  QB2_Disconnector / LLN0 \n\n    * QB2_Disconnector / CSWI 1 Pos.stVal\n\n      Animalia > Arthropoda > SpiderLegs (3 subscriptions)\n\n      (DPC, Dbpos)\n\n    * QB2_Disconnector / CSWI 1 Pos.q\n\n      Animalia > Arthropoda > SpiderLegs (2 subscriptions)\n\n      (DPC, Quality)\n\n\n* GOOSE_Publisher > GOOSE1\n  \n  QB2_Disconnector / LLN0 \n\n    * QB1_Disconnector / CSWI 1 Pos.stVal\n\n      Triangles (1 subscription)\n\n      (DPC, Dbpos)\n\n    * QB1_Disconnector / CSWI 1 Pos.q\n\n      Triangles \n\n      (DPC, Quality)\n\n\n* GOOSE_Publisher2 > GOOSE2\n  \n  QB2_Disconnector / LLN0  - Botany1\n\n    * QB2_Disconnector / CSWI 1 Pos.stVal\n\n       (1 subscription)\n\n      (DPC, Dbpos)\n\n    * QB2_Disconnector / CSWI 1 Pos.q\n\n       \n\n      (DPC, Quality)\n\n\n* GOOSE_Publisher2 > GOOSE1\n  \n  QB2_Disconnector / LLN0  - Botany2\n\n    * QB1_Disconnector / CSWI 1 Pos.stVal\n\n      Tree > Birch \n\n      (DPC, Dbpos)\n\n    * QB1_Disconnector / CSWI 1 Pos.q\n\n      Tree > Birch \n\n      (DPC, Quality)\n\n'
+      );
+      sinon.restore();
     });
 
     it('resets selection when a new document is opened', async function () {

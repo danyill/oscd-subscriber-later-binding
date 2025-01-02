@@ -536,6 +536,9 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#saveSubscriberExtRefToMarkdown')
   subscriberExtRefMarkdownSaveButton?: Icon;
 
+  @query('#savePublisherToMarkdown')
+  savePublisherToMarkdownButton?: Icon;
+
   constructor() {
     super();
 
@@ -1543,6 +1546,103 @@ Basic Type: ${spec?.bType ?? '?'}"
       : ''}`;
   }
 
+  /**
+   * Render an FCDA element associated with a control block.
+   * @param control - an SCL control block GSEControl or SampledValueControl.
+   * @param fcda - an SCL FCDA element within a dataset.
+   * @returns A string representing a list element for Markdown copy
+   */
+  renderFCDAtoMarkdown(control: Element, fcda: Element): string {
+    const fcdaCount = this.getExtRefCount(fcda, control);
+    const { spec, desc } = this.getFcdaInfo(fcda);
+    const fcdaDesc = Object.values(desc)
+      .flat(Infinity as 1)
+      .join(' > ');
+
+    return `    * ${getFcdaOrExtRefTitle(fcda)}
+
+      ${fcdaDesc} ${
+        fcdaCount
+          ? `(${fcdaCount} subscription${fcdaCount > 1 ? 's' : ''})`
+          : ''
+      }
+
+      (${spec?.cdc ?? '?'}, ${spec?.bType ?? '?'})
+`;
+  }
+
+  includeFcda(control: Element, fcda: Element): boolean {
+    const hasWithinSearch = this.searchFcdaRegex.test(
+      `${this.getFcdaSearchString(control, fcda)}`
+    );
+    const subscriptions = this.getExtRefCount(fcda, control);
+    const isQuality = fcda.getAttribute('daName')?.split('.').pop() === 'q';
+    const hasSubscribed = subscriptions > 0 && this.filterOutSubscribed;
+    const hasNotSubscribed = subscriptions === 0 && this.filterOutNotSubscribed;
+    return (
+      hasWithinSearch &&
+      (!(hasSubscribed && this.filterOutSubscribed) ||
+        !this.filterOutSubscribed) &&
+      (!(hasNotSubscribed && this.filterOutNotSubscribed) ||
+        !this.filterOutNotSubscribed) &&
+      (!(isQuality && this.filterOutQuality) || !this.filterOutQuality) &&
+      !this.isFcdaDisabled(fcda, control, true)
+    );
+  }
+
+  /**
+   * Render control blocks and their FCDAs.
+   * @param controls - an array of GSEControl or SampledValueControl elements.
+   * @returns - a string composed of a Markdown list
+   */
+  renderControlListToMarkdown(controls: Element[]): string {
+    return `${controls
+      .filter(controlCandidate => {
+        const fcdaCandidates = getFcdaElements(controlCandidate);
+        // if disabled (non-matching pXX or DOs) are filtered
+        // then don't show them
+        const onlyHasDisabledItems = fcdaCandidates.every(fcda =>
+          this.isFcdaDisabled(fcda, controlCandidate, true)
+        );
+        const hasAtLeastOneItem = fcdaCandidates.some(fcda =>
+          this.includeFcda(controlCandidate, fcda)
+        );
+
+        return (
+          fcdaCandidates.length && !onlyHasDisabledItems && hasAtLeastOneItem
+        );
+      })
+      .map(control => {
+        const fcdas = getFcdaElements(control)
+          .filter(fcda => this.includeFcda(control, fcda))
+          .sort((a, b) => this.sortFcdaSubscriberItems(a, b));
+
+        const iedName = control.closest('IED')!.getAttribute('name');
+
+        return `* ${iedName} > ${getNameAttribute(control)}
+  
+  ${objectReferenceInIed(control)} ${
+    getDescriptionAttribute(control)
+      ? ` - ${getDescriptionAttribute(control)}`
+      : ''
+  }
+
+${fcdas.map(fcda => this.renderFCDAtoMarkdown(control, fcda)).join('\n')}
+`;
+      })
+      .join('\n')}`;
+  }
+
+  renderPublisherInfoMarkdown(): string {
+    const controlElements = this.getControlElements(this.controlTag);
+    return this.renderControlListToMarkdown(controlElements);
+  }
+
+  copyPublisherInfoToMarkdown(): void {
+    const markdown = this.renderPublisherInfoMarkdown();
+    navigator.clipboard.writeText(markdown);
+  }
+
   renderFCDAListTitle(): TemplateResult {
     const menuClasses = {
       'title-element': true,
@@ -1581,6 +1681,14 @@ Basic Type: ${spec?.bType ?? '?'}"
                 false
               )}</span
             >`}
+        <mwc-icon-button
+          id="savePublisherToMarkdown"
+          title="Copy to Clipboard as Markdown"
+          icon="content_copy"
+          @click=${() => {
+            this.copyPublisherInfoToMarkdown();
+          }}
+        ></mwc-icon-button>
         <mwc-icon-button
           id="filterFcdaIcon"
           class="${classMap(menuClasses)}"
