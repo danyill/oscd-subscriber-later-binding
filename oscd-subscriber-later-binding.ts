@@ -593,6 +593,7 @@ export default class SubscriberLaterBinding extends LitElement {
     };
 
     const isSupervision = (element: Element) => {
+      if (!element) return false;
       if (['LN', 'DOI', 'DAI', 'Val'].includes(element.tagName)) {
         return (
           (element.tagName === 'LN' &&
@@ -632,9 +633,8 @@ export default class SubscriberLaterBinding extends LitElement {
         element = edit.node as Element;
       }
 
-      if (element) {
+      if (element && element.nodeType === Node.ELEMENT_NODE) {
         if (element.tagName === 'ExtRef') handleExtRef(element);
-
         if (element.tagName === 'FCDA') handleFCDA(element);
 
         // need to track before and after to ensure that appropriate values
@@ -643,6 +643,21 @@ export default class SubscriberLaterBinding extends LitElement {
           handleSupervision(element, true);
         if (isSupervision(element) && when === 'after' && !isRemove(edit))
           handleSupervision(element);
+      }
+
+      // handle text content of Val element
+      if (
+        (isRemove(edit) || isInsert(edit)) &&
+        edit.node.nodeType === Node.TEXT_NODE
+      ) {
+        const valElement = edit.node?.parentElement!;
+
+        if (isSupervision(valElement)) {
+          if (isSupervision(valElement) && when === 'before' && isRemove(edit))
+            handleSupervision(valElement, true);
+          if (isSupervision(valElement) && when === 'after' && !isRemove(edit))
+            handleSupervision(valElement);
+        }
       }
     });
   }
