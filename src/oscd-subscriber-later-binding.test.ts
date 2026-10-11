@@ -1,3 +1,4 @@
+import { expect } from '@open-wc/testing';
 import { setViewport } from '@web/test-runner-commands';
 import { visualDiff } from '@web/test-runner-visual-regression';
 
@@ -50,6 +51,27 @@ describe('oscd-subscriber-later-binding screenshots', () => {
 
   const shot = (name: string) => visualDiff(mounted.plugin, name);
 
+  /**
+   * A screenshot of a selection is of no use if the selected item is scrolled
+   * out of the captured area, so fail rather than record that.
+   */
+  function expectSelectionShown(): void {
+    const selected = Array.from(
+      mounted.plugin.shadowRoot!.querySelectorAll<HTMLElement>(
+        'mwc-list-item[activated], mwc-list-item[selected]'
+      )
+    );
+    expect(selected.length, 'an item is selected').to.be.greaterThan(0);
+    const area = mounted.plugin.getBoundingClientRect();
+    selected.forEach((item) => {
+      const box = item.getBoundingClientRect();
+      expect(
+        box.top >= area.top && box.bottom <= area.bottom,
+        `the selected item "${item.textContent?.trim().slice(0, 40)}" is within the screenshot`
+      ).to.equal(true);
+    });
+  }
+
   describe('publisher view', () => {
     it('initially', async () => {
       await mount('GOOSE-2007B4-LGOS.scd');
@@ -59,6 +81,7 @@ describe('oscd-subscriber-later-binding screenshots', () => {
     it('with an FCDA selected', async () => {
       await mount('GOOSE-2007B4-LGOS.scd');
       await driver.selectFcda(GOOSE2, GOOSE2_STVAL);
+      expectSelectionShown();
       await shot('publisher with an FCDA selected');
     });
 
@@ -89,6 +112,7 @@ describe('oscd-subscriber-later-binding screenshots', () => {
     it('as a read-only view', async () => {
       await mount('GOOSE-2007B4-LGOS.scd', { readOnlyView: true });
       await driver.selectFcda(GOOSE2, GOOSE2_STVAL);
+      expectSelectionShown();
       await shot('publisher as a read-only view');
     });
   });
@@ -107,6 +131,7 @@ describe('oscd-subscriber-later-binding screenshots', () => {
         'GOOSE_Subscriber>>Earth_Switch> CSWI 1>someRestrictedExtRef[0]',
         'subscriber'
       );
+      expectSelectionShown();
       await shot('subscriber with an ExtRef selected');
     });
 
@@ -141,7 +166,11 @@ describe('oscd-subscriber-later-binding screenshots', () => {
   describe('sampled values', () => {
     it('in the publisher view with an FCDA selected', async () => {
       await mount('SMV-2007B4-LSVS.scd', { controlTag: 'SampledValueControl' });
+      // the document has 120 FCDAs, so show only this control block to keep
+      // the selected FCDA within the screenshot
+      await driver.search('fcda', CURRENT_ONLY);
       await driver.selectFcda(CURRENT_ONLY, CURRENT_ONLY_TCTR1_I);
+      expectSelectionShown();
       await shot('sampled values publisher with an FCDA selected');
     });
 

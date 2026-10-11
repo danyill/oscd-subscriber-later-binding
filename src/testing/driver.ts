@@ -290,7 +290,13 @@ export class PluginDriver {
    * @param menuId - id of the menu element.
    */
   async showMenu(menuId: string): Promise<void> {
-    await this.open(menuId, this.menu(menuId));
+    const menu = this.menu(menuId);
+    // wait for the menu to finish opening, otherwise it is captured mid-way
+    const opened = new Promise<void>((resolve) => {
+      menu.addEventListener('opened', () => resolve(), { once: true });
+    });
+    await this.open(menuId, menu);
+    await opened;
     await this.mounted.settle();
   }
 
