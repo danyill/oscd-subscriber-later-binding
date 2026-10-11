@@ -39,6 +39,8 @@ export type MountOptions = {
   doc?: XMLDocument;
   /** Settings to put in local storage before the plugin is connected. */
   settings?: Record<string, unknown>;
+  /** Exact text to put in local storage, e.g. to test corrupt settings. */
+  rawSettings?: string;
 };
 
 export type MountedPlugin = {
@@ -67,6 +69,9 @@ export async function mountPlugin(
   localStorage.clear();
   if (options.settings !== undefined) {
     localStorage.setItem(settingsKey, JSON.stringify(options.settings));
+  }
+  if (options.rawSettings !== undefined) {
+    localStorage.setItem(settingsKey, options.rawSettings);
   }
 
   const doc =
