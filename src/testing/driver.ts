@@ -17,6 +17,8 @@ export type ListedItem = {
   /** Text shown at the end of the item, e.g. a subscription count. */
   meta: string;
   disabled: boolean;
+  /** Whether the item is shown to the user, i.e. not hidden by a filter. */
+  visible: boolean;
   /** The underlying list item, for interacting with it. */
   element: HTMLElement;
 };
@@ -66,6 +68,7 @@ export class PluginDriver {
         title: element.getAttribute('title') ?? '',
         meta: normalize(element.querySelector('[slot="meta"]')?.textContent),
         disabled: element.hasAttribute('disabled'),
+        visible: element.checkVisibility(),
         element
       })
     );
@@ -213,12 +216,7 @@ export class PluginDriver {
    * @param selected - positions of the items which should be selected.
    */
   async chooseMenuItems(menuId: string, selected: number[]): Promise<void> {
-    const menu = this.query(`#${menuId}`) as HTMLElement & {
-      items: HTMLElement[];
-      show: () => void;
-      close: () => void;
-      updateComplete: Promise<unknown>;
-    };
+    const menu = this.menu(menuId);
     menu.show();
     await menu.updateComplete;
     menu.items.forEach((item, index) => {
@@ -227,7 +225,9 @@ export class PluginDriver {
       }
     });
     await menu.updateComplete;
+    const closed = this.closed(menu);
     menu.close();
+    await closed;
     await this.mounted.settle();
   }
 
@@ -237,14 +237,50 @@ export class PluginDriver {
    * @param index - position of the item to choose.
    */
   async chooseMenuItem(menuId: string, index: number): Promise<void> {
-    const menu = this.query(`#${menuId}`) as HTMLElement & {
-      items: HTMLElement[];
-      show: () => void;
-      updateComplete: Promise<unknown>;
-    };
+    const menu = this.menu(menuId);
     menu.show();
     await menu.updateComplete;
+    const closed = this.closed(menu);
     menu.items[index].click();
+    await closed;
     await this.mounted.settle();
   }
+
+  /**
+   * The positions of the selected items in a menu, as the user sees the
+   * ticks, without opening it.
+   * @param menuId - id of the menu element.
+   * @returns the selected positions.
+   */
+  menuSelection(menuId: string): number[] {
+    return this.menu(menuId)
+      .items.map((item, index) => (item.hasAttribute('selected') ? index : -1))
+      .filter(index => index !== -1);
+  }
+
+  /** The labels of the items in a menu. */
+  menuLabels(menuId: string): string[] {
+    return this.menu(menuId).items.map(item => normalize(item.textContent));
+  }
+
+  private menu(menuId: string): MenuElement {
+    const menu = this.query(`#${menuId}`) as MenuElement | null;
+    if (menu === null) {
+      throw new Error(`Menu ${menuId} is not displayed`);
+    }
+    return menu;
+  }
+
+  private closed(menu: MenuElement): Promise<void> {
+    return new Promise((resolve) => {
+      menu.addEventListener('closed', () => resolve(), { once: true });
+    });
+  }
 }
+
+type MenuElement = HTMLElement & {
+  items: HTMLElement[];
+  show: () => void;
+  close: () => void;
+  updateComplete: Promise<unknown>;
+};
