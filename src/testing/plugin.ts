@@ -37,6 +37,8 @@ export type MountOptions = {
   fixture?: string;
   /** An already parsed document, used instead of a fixture. */
   doc?: XMLDocument;
+  /** Mount without a document, as before the host has opened a file. */
+  noDocument?: boolean;
   /** Settings to put in local storage before the plugin is connected. */
   settings?: Record<string, unknown>;
   /** Exact text to put in local storage, e.g. to test corrupt settings. */
@@ -79,9 +81,10 @@ export async function mountPlugin(
     localStorage.setItem(settingsKey, options.rawSettings);
   }
 
-  const doc =
-    options.doc ??
-    (await loadFixture(options.fixture ?? 'GOOSE-2007B4-LGOS.scd'));
+  const doc = options.noDocument
+    ? (undefined as unknown as XMLDocument)
+    : (options.doc ??
+      (await loadFixture(options.fixture ?? 'GOOSE-2007B4-LGOS.scd')));
 
   const container = document.createElement('div');
   document.body.appendChild(container);

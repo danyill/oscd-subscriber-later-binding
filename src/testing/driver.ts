@@ -38,6 +38,18 @@ const searchRegexes: Record<SearchField, string> = {
   subscriberExtRef: 'searchExtRefSubscriberRegex'
 };
 
+/** The button which opens each menu. */
+const menuButtons: Record<string, string> = {
+  filterFcdaMenu: '#filterFcdaIcon',
+  sortFcdaMenu: '#sortFcdaIcon',
+  filterExtRefMenuPublisher: '#filterExtRefPublisherIcon',
+  sortExtRefPublisherMenu: '#sortExtRefPublisherIcon',
+  settingsExtRefPublisherMenu: '#settingsExtRefPublisherIcon',
+  filterExtRefMenuSubscriber: '#filterExtRefSubscriberIcon',
+  sortExtRefSubscriberMenu: '#sortExtRefSubscriberIcon',
+  settingsExtRefSubscriberMenu: '#settingsExtRefSubscriberIcon'
+};
+
 const normalize = (text: string | null | undefined): string =>
   (text ?? '').replace(/\s+/g, ' ').trim();
 
@@ -243,7 +255,7 @@ export class PluginDriver {
    */
   async chooseMenuItems(menuId: string, selected: number[]): Promise<void> {
     const menu = this.menu(menuId);
-    await this.open(menu);
+    await this.open(menuId, menu);
     menu.items.forEach((item, index) => {
       if (item.hasAttribute('selected') !== selected.includes(index)) {
         item.click();
@@ -264,7 +276,7 @@ export class PluginDriver {
    */
   async chooseMenuItem(menuId: string, index: number): Promise<void> {
     const menu = this.menu(menuId);
-    await this.open(menu);
+    await this.open(menuId, menu);
     const closed = this.closed(menu);
     menu.items[index].click();
     await closed;
@@ -308,8 +320,13 @@ export class PluginDriver {
     });
   }
 
-  private async open(menu: MenuElement): Promise<void> {
-    menu.show();
+  /** Opens a menu by clicking its button, as a user does. */
+  private async open(menuId: string, menu: MenuElement): Promise<void> {
+    const button = this.query(menuButtons[menuId]);
+    if (button === null) {
+      throw new Error(`The button for menu ${menuId} is not displayed`);
+    }
+    button.click();
     await menu.updateComplete;
   }
 
