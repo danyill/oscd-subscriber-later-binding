@@ -503,11 +503,11 @@ files in parallel (done) halved it.
 * **Phase 3 follows the project's agent guidance, not the Docker idea.** That
   guidance says screenshot baselines are owned by CI and must not be regenerated
   or committed locally. So there is no `test:update` script and no container:
-  the `Update visual baselines` workflow (`workflow_dispatch`) regenerates and
-  commits baselines in CI, and a screenshot without a baseline fails the run.
+  the `Update visual baselines` workflow regenerates and commits baselines in CI
+  (add the `update-visual-baselines` label to a pull request, or run it by hand
+  once it is on the default branch), and a screenshot without a baseline fails the run.
   Chromium font flags were kept as they cost nothing. The 15 curated screenshots
-  have no committed baselines yet: run that workflow on the branch once to
-  create them.
+  have no committed baselines yet: label the pull request once to create them.
 * **No accessibility smoke tests or shell smoke test yet.** These are cheap to add
   once the UI components are chosen, because the driver is the only place that
   knows the DOM.

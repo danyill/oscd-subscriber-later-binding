@@ -111,6 +111,7 @@ Fonts come from `node_modules`, not the network.
 
 Rendering differs between operating systems, so the baselines are owned by CI.
 Do not create, update or commit them locally.
-When you add a screenshot test or change how the plugin looks on purpose, run the `Update visual baselines` workflow in GitHub Actions for your branch and review the images it commits.
+When you add a screenshot test or change how the plugin looks on purpose, add the `update-visual-baselines` label to your pull request, which runs the `Update visual baselines` workflow and commits the images, and review them.
+The workflow can also be run by hand from the Actions tab once it is on the default branch.
 A screenshot without a baseline fails the run.
 Failures leave the new screenshot and a diff in `test/screenshots/failed`, which you can use to see what changed.

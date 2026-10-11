@@ -74,7 +74,7 @@ jobs:
       - name: Explain how to fix visual test failures
         if: failure()
         run: |
-          echo "::error::Visual tests failed. If baselines are missing or the change is intended, run the 'Update visual baselines' workflow on this branch and review the committed images."
+          echo "::error::Visual tests failed. If baselines are missing or the change is intended, add the 'update-visual-baselines' label to this pull request (or run the 'Update visual baselines' workflow) and review the committed images."
 
       - name: Create visual test failures artifact
         uses: actions/upload-artifact@v4

@@ -1,23 +1,38 @@
 name: Update visual baselines
 
 # Screenshot baselines are owned by CI because rendering differs between
-# machines. Run this workflow, choosing the branch, to create or update them
-# after a deliberate visual change or when a screenshot test is added. Review the
-# committed images in the pull request.
+# machines. Create or update them after a deliberate visual change or when a
+# screenshot test is added, then review the committed images in the pull request.
+#
+# Two ways to run this:
+# * Add the `update-visual-baselines` label to a pull request. This works from
+#   the pull request's branch, so it needs nothing on the default branch. The
+#   label is removed when the run finishes so it can be added again.
+# * Run it by hand from the Actions tab. GitHub only lists a manually triggered
+#   workflow once this file is on the default branch.
 on:
   workflow_dispatch:
+  pull_request:
+    types: [labeled]
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update:
     name: Update baselines
+    # Pull requests from forks cannot be pushed to
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.label.name == 'update-visual-baselines' &&
+      github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref || github.ref_name }}
           lfs: true
 
       - name: Set up Node.js
@@ -46,3 +61,9 @@ jobs:
             git commit -m "test: update visual baselines"
             git push
           fi
+
+      - name: Remove the label so it can be added again
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr edit ${{ github.event.pull_request.number }} --remove-label update-visual-baselines
