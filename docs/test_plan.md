@@ -523,6 +523,10 @@ files in parallel (done) halved it.
 
 ### Known gaps and findings for the refactor
 
+* Fixed: `oscd test --visual` and `--update` collect coverage too, so the unit
+  coverage thresholds failed the baseline workflow and would have failed the
+  pull request visual job. The thresholds now apply to unit runs only.
+
 * Fixed: the plugin used `<mwc-icon-button>` without importing it and relied on the
   `open-scd` host to define it. Mounted on its own, the filter, sort, settings and
   copy buttons had no icons. Found by looking at the first screenshots, and now

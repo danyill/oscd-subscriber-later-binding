@@ -16,6 +16,13 @@ import { visualRunnerHtml } from './test/support/visual-runner-html.js';
  *   updated locally. Fonts are served from node_modules.
  */
 
+// `oscd test --visual` and `--update` also collect coverage, but screenshot tests
+// are not meant to cover the code, so only unit runs are held to the thresholds.
+const groupIndex = process.argv.indexOf('--group');
+const isVisualRun =
+  process.argv.includes('--update-visual-baseline') ||
+  (groupIndex !== -1 && process.argv[groupIndex + 1] === 'visual');
+
 // Thresholds only ever go up. Raise them as each phase of docs/test_plan.md lands.
 const coverageThreshold = {
   statements: 97,
@@ -64,7 +71,7 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
       '**/*.test.js',
       'dist/**/testing/**'
     ],
-    threshold: coverageThreshold
+    threshold: isVisualRun ? undefined : coverageThreshold
   },
 
   plugins: [
