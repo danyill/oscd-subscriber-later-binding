@@ -61,12 +61,49 @@ To automatically fix linting and formatting errors, run
 
  $ npm run format
 
-== Testing with Web Test Runner
+== Tooling
 
-To execute a single test run:
+Build, lint, test and bundling are provided by the shared `oscd` command from `@omicronenergy/oscd-tooling`.
+The npm scripts in `package.json` call it, for example `npm run build` and `npm run bundle`.
+Formatting is done by the shared ESLint configuration, Prettier is not used.
 
- $ npm run test
+The shared `oscd clean` command does not remove anything on Linux, so `npm run build`, `npm test` and `npm run bundle` run their own `npm run clean` first.
+
+== Testing
+
+Tests use https://modern-web.dev/docs/test-runner/overview/[Web Test Runner] with Chromium.
+There are two kinds:
+
+`*.spec.ts`:: Fast unit and component tests, which are what `npm test` runs.
+`*.test.ts`:: Screenshot tests, which are run with `npm run test:visual`.
+
+To execute the unit tests, with coverage:
+
+ $ npm test
+
+Coverage thresholds are enforced, the run fails if coverage falls below them (see `web-test-runner.config.js`).
+A coverage report is written to `coverage/lcov-report/index.html`.
+
+To run a single spec after building:
+
+ $ SPEC=dist/filters.spec.js npm test
 
 To run the tests in interactive watch mode run:
 
  $ npm run test:watch
+
+The tests are laid out as follows:
+
+`src/foundation/**/*.spec.ts`:: Unit tests for functions which work on SCL, search expressions, sorting and so on.
+`src/*.spec.ts`:: Component tests. These mount the plugin on its own, interact with it as a user does and check the edits it dispatches and the SCL document which results.
+`src/testing/`:: Helpers shared by specs. `plugin.ts` mounts the plugin and applies the edits it dispatches as the host would, `driver.ts` is the only place which knows how the plugin's DOM is built.
+`test/fixtures/`:: SCL files used by the specs.
+
+Specs should not use fixed waits or pixel coordinates.
+See `docs/test_plan.md` for the reasoning and the remaining work.
+
+=== Screenshot tests
+
+The tests in `src/legacy-visual` compare screenshots with baselines in `test/screenshots/baseline`.
+Rendering differs between operating systems and font versions, so these baselines are owned by CI.
+Do not update them locally.
