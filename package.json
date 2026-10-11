@@ -28,6 +28,8 @@
     "pretest:visual": "npm run clean"
   },
   "dependencies": {
+    "@lit-labs/virtualizer": "^2.1.1",
+    "@lit/localize": "^0.12.2",
     "@material/mwc-checkbox": "^0.27.0",
     "@material/mwc-fab": "^0.27.0",
     "@material/mwc-formfield": "^0.27.0",
@@ -37,17 +39,26 @@
     "@material/mwc-list": "^0.27.0",
     "@material/mwc-menu": "^0.27.0",
     "@material/mwc-textfield": "^0.27.0",
+    "@omicronenergy/oscd-ui": "^0.0.12",
+    "@open-wc/scoped-elements": "^3.0.10",
     "@openenergytools/scl-lib": "^1.3.1",
     "@openscd/open-scd-core": "^0.0.2",
+    "@openscd/oscd-api": "^0.1.6",
+    "@openscd/scl-lib": "^2.0.1",
     "lit": "^3.1.0"
   },
   "devDependencies": {
     "@fontsource/roboto": "^5.3.0",
+    "@omicronenergy/oscd-menu-open": "^0.0.6",
+    "@omicronenergy/oscd-menu-save": "^0.0.2",
+    "@omicronenergy/oscd-shell": "^0.0.13",
     "@omicronenergy/oscd-tooling": "0.0.6",
     "@open-wc/testing": "^4.0.0",
+    "@openscd/oscd-editor": "^1.8.0",
     "@types/node": "^20.10.5",
     "@web/test-runner-commands": "^0.9.0",
     "@web/test-runner-visual-regression": "^0.9.0",
+    "@webcomponents/scoped-custom-element-registry": "^0.0.10",
     "material-icons": "^1.13.14",
     "rollup-plugin-copy": "^3.5.0",
     "sinon": "^17.0.1"
