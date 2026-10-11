@@ -1,3 +1,4 @@
+import { msg } from '@lit/localize';
 import { identity } from '@openscd/scl-lib';
 
 import { doesExtRefpDAIncludeQ, doesExtRefpDAIncludeT } from './extref.js';
@@ -347,20 +348,20 @@ export function buildPublisherExtRefRows(
     .sort(sort);
 
   return [
-    { type: 'heading', key: 'heading subscribed', text: 'Subscribed' },
+    { type: 'heading', key: 'heading subscribed', text: msg('Subscribed') },
     ...(subscribed.length
       ? subscribed
       : [
         {
           type: 'placeholder' as const,
           key: 'none subscribed',
-          text: 'No subscribed inputs'
+          text: msg('No subscribed inputs')
         }
       ]),
     {
       type: 'heading',
       key: 'heading available',
-      text: 'Available to subscribe'
+      text: msg('Available to subscribe')
     },
     ...(available.length
       ? available
@@ -368,7 +369,7 @@ export function buildPublisherExtRefRows(
         {
           type: 'placeholder' as const,
           key: 'none available',
-          text: 'No available inputs to subscribe'
+          text: msg('No available inputs to subscribe')
         }
       ])
   ];
@@ -497,7 +498,7 @@ function toSubscriberRow(
     extRef,
     extRefId: `${identity(extRef)}`,
     title: `${objectReferenceInIed(extRef)}: ${extRef.getAttribute('intAddr')}`,
-    mapping: subscribed ? mappedName : invalidMapping ? 'Invalid Mapping' : '',
+    mapping: subscribed ? mappedName : invalidMapping ? msg('Invalid Mapping') : '',
     dataDescription,
     description: getDescriptionAttribute(extRef) ?? '',
     controlPath,

@@ -199,20 +199,20 @@ describe('settings', () => {
       expect(mounted.plugin.autoIncrement).to.equal(true);
     });
 
-    // Known defects, see "Upstream issues to file" in docs/test_plan.md.
-    // The names written when storing differ from the names read when restoring
-    // and the list of stored properties.
-    it.skip('restores the filter for FCDAs which are not subscribed', async () => {
+    // These were stored under one name and read under another, and corrupt
+    // stored settings stopped the plugin loading.
+    it('restores the filter for FCDAs which are not subscribed', async () => {
       await mount();
       mounted.plugin.filterOutNotSubscribed = true;
       await mounted.settle();
-      expect(storedSettings().filterOutNotSubscribed).to.equal(true);
+      const stored = storedSettings();
+      expect(stored.filterOutNotSubscribed).to.equal(true);
       mounted.unmount();
-      await mount(storedSettings());
+      await mount(stored);
       expect(mounted.plugin.filterOutNotSubscribed).to.equal(true);
     });
 
-    it.skip('restores the filter for non-matching preconfigured FCDAs', async () => {
+    it('restores the filter for non-matching preconfigured FCDAs', async () => {
       await mount();
       mounted.plugin.filterOutPreconfiguredUnmatched = true;
       await mounted.settle();
@@ -222,7 +222,7 @@ describe('settings', () => {
       expect(mounted.plugin.filterOutPreconfiguredUnmatched).to.equal(true);
     });
 
-    it.skip('falls back to defaults when the stored settings are not valid JSON', async () => {
+    it('falls back to defaults when the stored settings are not valid JSON', async () => {
       mounted = await mountPlugin({
         fixture: 'GOOSE-2007B4-LGOS.scd',
         rawSettings: '{not json'

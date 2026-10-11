@@ -1,7 +1,12 @@
-import { waitUntil } from '@open-wc/testing';
 import * as sinon from 'sinon';
 
-import { getSearchRegex } from '../foundation/search.js';
+import {
+  clickFilterButtonItem,
+  closeFilterButton,
+  openFilterButton
+} from './filter-button.js';
+import type { FilterButton } from './filter-button.js';
+import { deepQueryAll, normalize, slotText } from './dom.js';
 import type { MountedPlugin } from './plugin.js';
 
 export type ListedItem = {
@@ -20,38 +25,20 @@ export type ListedItem = {
   disabled: boolean;
   /** Whether the item is shown to the user, i.e. not hidden by a filter. */
   visible: boolean;
+  /** Whether the item is the one chosen. */
+  selected: boolean;
   /** The underlying list item, for interacting with it. */
   element: HTMLElement;
 };
 
 export type SearchField = 'fcda' | 'publisherExtRef' | 'subscriberExtRef';
 
-const searchInputs: Record<SearchField, string> = {
-  fcda: '#filterFcdaInput',
-  publisherExtRef: '#filterExtRefPublisherInput',
-  subscriberExtRef: '#filterExtRefSubscriberInput'
+/** The list each search field is in. */
+const searchLists: Record<SearchField, string> = {
+  fcda: 'fcda-list',
+  publisherExtRef: 'publisher-extref-list',
+  subscriberExtRef: 'subscriber-extref-list'
 };
-
-const searchRegexes: Record<SearchField, string> = {
-  fcda: 'searchFcdaRegex',
-  publisherExtRef: 'searchExtRefPublisherRegex',
-  subscriberExtRef: 'searchExtRefSubscriberRegex'
-};
-
-/** The button which opens each menu. */
-const menuButtons: Record<string, string> = {
-  filterFcdaMenu: '#filterFcdaIcon',
-  sortFcdaMenu: '#sortFcdaIcon',
-  filterExtRefMenuPublisher: '#filterExtRefPublisherIcon',
-  sortExtRefPublisherMenu: '#sortExtRefPublisherIcon',
-  settingsExtRefPublisherMenu: '#settingsExtRefPublisherIcon',
-  filterExtRefMenuSubscriber: '#filterExtRefSubscriberIcon',
-  sortExtRefSubscriberMenu: '#sortExtRefSubscriberIcon',
-  settingsExtRefSubscriberMenu: '#settingsExtRefSubscriberIcon'
-};
-
-const normalize = (text: string | null | undefined): string =>
-  (text ?? '').replace(/\s+/g, ' ').trim();
 
 /**
  * The only place which knows how the plugin's DOM is built. Specs interact
@@ -65,36 +52,46 @@ export class PluginDriver {
     return this.mounted.plugin.shadowRoot!;
   }
 
-  private query(selector: string): HTMLElement | null {
-    return this.root.querySelector<HTMLElement>(selector);
+  private all(selector: string, within: ParentNode = this.root): HTMLElement[] {
+    return deepQueryAll(within, selector);
   }
 
-  private items(selector: string, idAttribute: string): ListedItem[] {
-    return Array.from(this.root.querySelectorAll<HTMLElement>(selector)).map(
-      element => ({
-        id: element.getAttribute(idAttribute) ?? '',
-        label: normalize(element.querySelector('span:not([slot])')?.textContent),
-        secondary: normalize(
-          element.querySelector('span[slot="secondary"]')?.textContent
-        ),
-        text: normalize(element.textContent),
-        title: element.getAttribute('title') ?? '',
-        meta: normalize(element.querySelector('[slot="meta"]')?.textContent),
-        disabled: element.hasAttribute('disabled'),
-        visible: element.checkVisibility(),
-        element
-      })
-    );
+  private first(selector: string): HTMLElement | null {
+    return this.all(selector)[0] ?? null;
+  }
+
+  private list(tag: string): ParentNode {
+    return this.first(tag)?.shadowRoot ?? document.createDocumentFragment();
+  }
+
+  private items(
+    list: string | undefined,
+    selector: string,
+    idAttribute: string
+  ): ListedItem[] {
+    const within: ParentNode = list ? this.list(list) : this.root;
+    return this.all(selector, within).map(element => ({
+      id: element.getAttribute(idAttribute) ?? '',
+      label: slotText(element, 'headline'),
+      secondary: slotText(element, 'supporting-text'),
+      text: normalize(element.textContent),
+      title: element.getAttribute('title') ?? '',
+      meta: slotText(element, 'end'),
+      disabled: element.hasAttribute('disabled'),
+      visible: element.checkVisibility(),
+      selected: element.classList.contains('selected'),
+      element
+    }));
   }
 
   /** Control block headings in the publisher list. */
   controls(): ListedItem[] {
-    return this.items('#fcdaList mwc-list-item.control', 'data-control');
+    return this.items('fcda-list', 'oscd-list-item.control', 'data-control');
   }
 
   /** FCDAs in the data attribute list, in displayed order. */
   fcdas(): ListedItem[] {
-    return this.items('#fcdaList mwc-list-item.fcda', 'data-fcda');
+    return this.items('fcda-list', 'oscd-list-item.fcda', 'data-fcda');
   }
 
   /** Control block headings in the publisher list as displayed. */
@@ -112,61 +109,59 @@ export class PluginDriver {
 
   /** ExtRefs in the publisher view, subscribed and available. */
   publisherExtRefs(): ListedItem[] {
-    return this.items('#publisherExtRefList mwc-list-item.extref', 'data-extref');
+    return this.items(
+      'publisher-extref-list',
+      'oscd-list-item.extref',
+      'data-extref'
+    );
   }
 
   /** ExtRefs already subscribed to the selected FCDA in the publisher view. */
   publisherSubscribedExtRefs(): ListedItem[] {
-    return this.publisherExtRefs().filter(
-      item => this.graphicIcon(item) === 'link'
+    return this.publisherExtRefs().filter(item =>
+      item.element.classList.contains('subscribed')
     );
   }
 
   /** ExtRefs which can be subscribed to the selected FCDA. */
   publisherAvailableExtRefs(): ListedItem[] {
-    return this.publisherExtRefs().filter(
-      item => this.graphicIcon(item) === 'link_off'
-    );
-  }
-
-  private graphicIcon(item: ListedItem): string {
-    return normalize(
-      item.element.querySelector('mwc-icon[slot="graphic"]')?.textContent
+    return this.publisherExtRefs().filter(item =>
+      item.element.classList.contains('available')
     );
   }
 
   /** IED headings in the subscriber view. */
   ieds(): ListedItem[] {
-    return this.items('#subscriberExtRefList mwc-list-item.ied', 'data-extref');
+    return this.items('subscriber-extref-list', 'oscd-list-item.ied', 'data-ied');
   }
 
   /** ExtRefs in the subscriber view, in displayed order. */
   subscriberExtRefs(): ListedItem[] {
     return this.items(
-      '#subscriberExtRefList mwc-list-item.extref',
+      'subscriber-extref-list',
+      'oscd-list-item.extref',
       'data-extref'
     );
   }
 
-  /** Messages such as "No inputs", shown instead of a list. */
+  /** Titles and messages shown instead of a list, e.g. "No inputs". */
   headings(): string[] {
-    return Array.from(this.root.querySelectorAll('h1, h3')).map(h =>
-      normalize(h.textContent)
-    );
+    return [
+      ...this.all('.list-title'),
+      ...this.all('h3')
+    ].map(heading => normalize(heading.textContent));
   }
 
-  /** Text of all non-interactive list items, e.g. "No subscribed inputs". */
+  /** Messages in a list, e.g. "No subscribed inputs". */
   placeholders(): string[] {
-    return Array.from(
-      this.root.querySelectorAll('mwc-list-item[noninteractive]')
-    )
-      .map(item => normalize(item.textContent))
+    return this.items(undefined, 'oscd-list-item.placeholder', 'data-none')
+      .map(item => item.label)
       .filter(text => text !== '');
   }
 
   /** Whether the read-only lock icon is displayed. */
   get showsReadOnlyIcon(): boolean {
-    return this.query('.read-only-icon') !== null;
+    return this.first('.read-only-icon') !== null;
   }
 
   async click(item: ListedItem | undefined): Promise<void> {
@@ -200,10 +195,12 @@ export class PluginDriver {
         view === 'publisher'
           ? '#savePublisherToMarkdown'
           : '#saveSubscriberExtRefToMarkdown';
-      this.query(id)!.click();
+      this.first(id)!.click();
       await this.mounted.settle();
       if (writeText.callCount !== 1) {
-        throw new Error(`Expected one clipboard write, got ${writeText.callCount}`);
+        throw new Error(
+          `Expected one clipboard write, got ${writeText.callCount}`
+        );
       }
       return writeText.firstCall.args[0];
     } finally {
@@ -211,16 +208,25 @@ export class PluginDriver {
     }
   }
 
+  private async choose(selector: string): Promise<void> {
+    const segment = this.all(selector).find(
+      candidate => !candidate.hasAttribute('selected')
+    );
+    if (segment === undefined) {
+      throw new Error(`Nothing to switch to for ${selector}`);
+    }
+    segment.click();
+    await this.mounted.settle();
+  }
+
   /** Toggles between the publisher and subscriber views. */
   async switchView(): Promise<void> {
-    this.query('#switchView')!.click();
-    await this.mounted.settle();
+    await this.choose('#viewSwitch > oscd-outlined-segmented-button');
   }
 
   /** Toggles between GOOSE and sampled value control blocks. */
   async switchControlType(): Promise<void> {
-    this.query('#switchControlType')!.click();
-    await this.mounted.settle();
+    await this.choose('#controlSwitch > oscd-outlined-segmented-button');
   }
 
   /**
@@ -229,133 +235,95 @@ export class PluginDriver {
    * @param text - the search expression.
    */
   async search(field: SearchField, text: string): Promise<void> {
-    const input = this.query(searchInputs[field]) as HTMLInputElement | null;
-    if (input === null) {
+    const input = this.all(
+      'oscd-outlined-text-field',
+      this.list(searchLists[field])
+    )[0] as HTMLInputElement | undefined;
+    if (input === undefined) {
       throw new Error(`Search field ${field} is not displayed`);
     }
     input.value = text;
     input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
-    const expected = getSearchRegex(text).source;
-    await waitUntil(
-      () =>
-        (this.mounted.plugin as unknown as Record<string, RegExp>)[
-          searchRegexes[field]
-        ].source === expected,
-      `search for "${text}" was not applied`,
-      { interval: 10, timeout: 2000 }
-    );
     await this.mounted.settle();
+  }
+
+  private filterButton(menuId: string): FilterButton {
+    const button = this.first(`#${menuId}`) as FilterButton | null;
+    if (button === null) {
+      throw new Error(`Menu ${menuId} is not displayed`);
+    }
+    return button;
   }
 
   /**
    * Chooses menu options as a user would: opening the menu, setting which
-   * check items are selected and closing it, which applies the choice.
-   * @param menuId - id of the menu element.
+   * options are ticked and applying them.
+   * @param menuId - id of the menu.
    * @param selected - positions of the items which should be selected.
    */
   async chooseMenuItems(menuId: string, selected: number[]): Promise<void> {
-    const menu = this.menu(menuId);
-    await this.open(menuId, menu);
-    menu.items.forEach((item, index) => {
-      if (item.hasAttribute('selected') !== selected.includes(index)) {
-        item.click();
-      }
-    });
-    await menu.updateComplete;
-    const closed = this.closed(menu);
-    menu.close();
-    await closed;
-    await this.menuSettled();
+    const button = this.filterButton(menuId);
+    await openFilterButton(button);
+    const toggles = button.items
+      .map((item, index) => (item.selected !== selected.includes(index) ? index : -1))
+      .filter(index => index !== -1);
+    for (const index of toggles) {
+       
+      await clickFilterButtonItem(button, index);
+    }
+    await closeFilterButton(button, 'apply');
     await this.mounted.settle();
   }
 
   /**
    * Chooses a single menu option, e.g. a sort order.
-   * @param menuId - id of the menu element.
+   * @param menuId - id of the menu.
    * @param index - position of the item to choose.
    */
   async chooseMenuItem(menuId: string, index: number): Promise<void> {
-    const menu = this.menu(menuId);
-    await this.open(menuId, menu);
-    const closed = this.closed(menu);
-    menu.items[index].click();
-    await closed;
-    await this.menuSettled();
+    const button = this.filterButton(menuId);
+    await openFilterButton(button);
+    await clickFilterButtonItem(button, index);
+    await closeFilterButton(button, 'apply');
     await this.mounted.settle();
   }
 
   /**
-   * Opens a menu by clicking its button and leaves it open, e.g. to take a
-   * screenshot of it.
-   * @param menuId - id of the menu element.
+   * Opens a menu, ticks or unticks an item and cancels, which changes nothing.
+   * @param menuId - id of the menu.
+   * @param index - position of the item to change.
+   */
+  async cancelMenuChange(menuId: string, index: number): Promise<void> {
+    const button = this.filterButton(menuId);
+    await openFilterButton(button);
+    await clickFilterButtonItem(button, index);
+    await closeFilterButton(button, 'cancel');
+    await this.mounted.settle();
+  }
+
+  /**
+   * Opens a menu and leaves it open, e.g. to take a screenshot of it.
+   * @param menuId - id of the menu.
    */
   async showMenu(menuId: string): Promise<void> {
-    const menu = this.menu(menuId);
-    // wait for the menu to finish opening, otherwise it is captured mid-way
-    const opened = new Promise<void>((resolve) => {
-      menu.addEventListener('opened', () => resolve(), { once: true });
-    });
-    await this.open(menuId, menu);
-    await opened;
+    await openFilterButton(this.filterButton(menuId));
     await this.mounted.settle();
   }
 
   /**
    * The positions of the selected items in a menu, as the user sees the
    * ticks, without opening it.
-   * @param menuId - id of the menu element.
+   * @param menuId - id of the menu.
    * @returns the selected positions.
    */
   menuSelection(menuId: string): number[] {
-    return this.menu(menuId)
-      .items.map((item, index) => (item.hasAttribute('selected') ? index : -1))
+    return this.filterButton(menuId)
+      .items.map((item, index) => (item.selected ? index : -1))
       .filter(index => index !== -1);
   }
 
   /** The labels of the items in a menu. */
   menuLabels(menuId: string): string[] {
-    return this.menu(menuId).items.map(item => normalize(item.textContent));
-  }
-
-  private menu(menuId: string): MenuElement {
-    const menu = this.query(`#${menuId}`) as MenuElement | null;
-    if (menu === null) {
-      throw new Error(`Menu ${menuId} is not displayed`);
-    }
-    return menu;
-  }
-
-  /**
-   * Menus emit a trailing `opened` event shortly after closing. Wait for it so
-   * that it cannot arrive after the view has changed and the menu has been
-   * removed. A timer is used as animation frames do not run in background tabs.
-   */
-  private async menuSettled(): Promise<void> {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 80);
-    });
-  }
-
-  /** Opens a menu by clicking its button, as a user does. */
-  private async open(menuId: string, menu: MenuElement): Promise<void> {
-    const button = this.query(menuButtons[menuId]);
-    if (button === null) {
-      throw new Error(`The button for menu ${menuId} is not displayed`);
-    }
-    button.click();
-    await menu.updateComplete;
-  }
-
-  private closed(menu: MenuElement): Promise<void> {
-    return new Promise((resolve) => {
-      menu.addEventListener('closed', () => resolve(), { once: true });
-    });
+    return this.filterButton(menuId).items.map(item => item.headline);
   }
 }
-
-type MenuElement = HTMLElement & {
-  items: HTMLElement[];
-  show: () => void;
-  close: () => void;
-  updateComplete: Promise<unknown>;
-};
