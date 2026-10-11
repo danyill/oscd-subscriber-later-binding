@@ -1,4 +1,4 @@
-import { handleEdit } from '@openscd/open-scd-core';
+import { handleEdit, newEditEvent } from '@openscd/open-scd-core';
 import type { Edit, EditEvent } from '@openscd/open-scd-core';
 
 import SubscriberLaterBinding from '../oscd-subscriber-later-binding.js';
@@ -48,6 +48,11 @@ export type MountedPlugin = {
   doc: XMLDocument;
   /** Every `oscd-edit` event dispatched by the plugin, in order. */
   edits: Edit[];
+  /**
+   * Dispatches an edit as another plugin would, e.g. a menu plugin which maps
+   * data for a specific manufacturer. The host applies it to the document.
+   */
+  applyEdit: (edit: Edit | Edit[]) => Promise<void>;
   /** Replaces the document, as the host does when another file is opened. */
   openDocument: (doc: XMLDocument, docName: string) => Promise<void>;
   /** Waits for the plugin and its list children to finish rendering. */
@@ -116,6 +121,10 @@ export async function mountPlugin(
     doc,
     edits,
     settle,
+    applyEdit: async (edit) => {
+      container.dispatchEvent(newEditEvent(edit));
+      await settle();
+    },
     openDocument: async (newDoc, docName) => {
       plugin.doc = newDoc;
       plugin.docName = docName;
