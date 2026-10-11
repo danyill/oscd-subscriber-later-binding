@@ -436,3 +436,20 @@ replacement.
   (`customElements.define` once at the top of the spec file).
 - **Open question:** should the nightly cross-browser job also gate releases?
   Recommendation: yes, once it has been stable for two weeks.
+
+## 9. Upstream issues to file
+
+Found while implementing this plan. File each upstream, then link the issue
+here and remove the workaround when it is fixed.
+
+| Where | Issue | Workaround here |
+| --- | --- | --- |
+| `@omicronenergy/oscd-tooling` 0.0.6 | `oscd clean` (and so `oscd build`, `oscd test`) does nothing on Linux. It passes the glob `'dist/!(__snapshots__)'` to `rimraf` with the single quotes still in it, so nothing matches. Stale compiled files stay in `dist/`, and removed specs keep running. | `clean` script using Node `fs.rmSync`, run from `build` and `pretest*` in `package.json` |
+| `@omicronenergy/oscd-tooling` 0.0.6 | The shared WTR config counts `*.spec.js`/`*.test.js` in coverage (`coverageConfig.include` is `dist/**/*.js` with no test exclusion) and has no coverage threshold. | Local `web-test-runner.config.js` overrides `coverageConfig` |
+| `@omicronenergy/oscd-tooling` 0.0.6 | `oscd install-hooks` refuses to run while `core.hooksPath` is `.husky`, which makes `npm install` fail in the `prepare` step when migrating from Husky. It needs `--force`, which `prepare` does not pass. | Run `npx oscd install-hooks --force` once after migrating |
+| `@omicronenergy/oscd-tooling` 0.0.6 | The shared ESLint rule `import-x/no-extraneous-dependencies` allows devDependencies only in `*.spec.ts`, so shared test helpers (for example `src/testing/`) fail lint when they import `@open-wc/testing`. | Local `eslint.config.js` override for `src/testing/**` |
+| `@omicronenergy/oscd-tooling` 0.0.6 | The shared WTR `visual` group has no Chromium flags for stable fonts and no way to set the screenshot directory or baseline names. | Legacy visual group overrides browsers, plugin and runner page locally |
+| Playwright | `playwright install` fails on Ubuntu 26.04 (`does not support chromium on ubuntu26.04-x64`). | `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64 npx playwright install chromium` |
+| `oscd-subscriber-later-binding` | Settings persistence is inconsistent: `storeSettings` writes `filterOutNotSubscribed` and `filterOutPreconfiguredUnmatched`, but `restoreSettings` reads `filterOutUnsubscribed` and `filterOutPreconfiguredNotMatching`, and `storedProperties` lists the latter names, so changing those two filters does not save settings and they are never restored. | Specs for this are skipped with a reference to the issue until it is fixed |
+| `@openenergytools/scl-lib` | `isBasicTypeEqual` is copied into this plugin because it is not exported (see the comment above it). | Local copy in `src/foundation/extref.ts`, now unit tested |
+| `@openscd/open-scd-core` | The host reuses the same document object when the same file is opened twice, so a plugin cannot detect a re-opened document (see the TODO in `updated()`, issue openscd/open-scd-core#92). | None needed yet |
