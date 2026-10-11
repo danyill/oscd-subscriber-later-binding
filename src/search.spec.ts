@@ -83,6 +83,30 @@ describe('search', () => {
     });
   });
 
+  describe('of FCDAs by logical device and node descriptions', () => {
+    beforeEach(async () => {
+      await mount('GOOSE-2007B4-LGOS-sorting.scd');
+    });
+
+    it('finds FCDAs by a logical device description', async () => {
+      await driver.search('fcda', 'LDeviceDescX');
+      expect(driver.fcdas()).to.have.length(4);
+      expect(
+        driver.fcdas().every(f => f.secondary.includes('LDeviceDescX'))
+      ).to.equal(true);
+    });
+
+    it('finds FCDAs by a logical node description', async () => {
+      await driver.search('fcda', 'LNDesc3');
+      expect(driver.fcdas()).to.have.length(2);
+    });
+
+    it('finds FCDAs by a data attribute description', async () => {
+      await driver.search('fcda', '"DAIDesc Y"');
+      expect(driver.fcdas()).to.have.length(1);
+    });
+  });
+
   describe('of ExtRefs in the publisher view', () => {
     beforeEach(async () => {
       await mount();
