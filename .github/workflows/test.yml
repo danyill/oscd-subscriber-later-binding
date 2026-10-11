@@ -44,8 +44,8 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # Screenshot tests are slow, so run them for pull requests only. Baselines are
-  # owned by CI: they are not updated locally.
+  # Screenshot tests run for pull requests only. A missing baseline fails the
+  # run. Baselines are owned by CI and are not updated locally.
   visual:
     name: Visual regression tests
     if: github.event_name == 'pull_request'
@@ -70,6 +70,11 @@ jobs:
 
       - name: Run visual regression tests
         run: npm run test:visual
+
+      - name: Explain how to fix visual test failures
+        if: failure()
+        run: |
+          echo "::error::Visual tests failed. If baselines are missing or the change is intended, run the 'Update visual baselines' workflow on this branch and review the committed images."
 
       - name: Create visual test failures artifact
         uses: actions/upload-artifact@v4
