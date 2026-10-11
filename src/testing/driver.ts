@@ -1,4 +1,5 @@
 import { waitUntil } from '@open-wc/testing';
+import * as sinon from 'sinon';
 
 import { getSearchRegex } from '../foundation/search.js';
 import type { MountedPlugin } from './plugin.js';
@@ -172,6 +173,30 @@ export class PluginDriver {
     const items =
       view === 'publisher' ? this.publisherExtRefs() : this.subscriberExtRefs();
     await this.click(items.find(item => item.id === extRefId));
+  }
+
+  /**
+   * Clicks the button which copies the listed items to the clipboard as
+   * Markdown.
+   * @param view - which view's button to use.
+   * @returns the text which was copied.
+   */
+  async copyMarkdown(view: 'publisher' | 'subscriber'): Promise<string> {
+    const writeText = sinon.stub(navigator.clipboard, 'writeText').resolves();
+    try {
+      const id =
+        view === 'publisher'
+          ? '#savePublisherToMarkdown'
+          : '#saveSubscriberExtRefToMarkdown';
+      this.query(id)!.click();
+      await this.mounted.settle();
+      if (writeText.callCount !== 1) {
+        throw new Error(`Expected one clipboard write, got ${writeText.callCount}`);
+      }
+      return writeText.firstCall.args[0];
+    } finally {
+      writeText.restore();
+    }
   }
 
   /** Toggles between the publisher and subscriber views. */
