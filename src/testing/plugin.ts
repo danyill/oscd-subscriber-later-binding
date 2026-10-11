@@ -3,6 +3,9 @@ import type { EditEventV2, EditV2 } from '@openscd/oscd-api';
 import { newEditEventV2 } from '@openscd/oscd-api/utils.js';
 
 import SubscriberLaterBinding from '../oscd-subscriber-later-binding.js';
+import { loadFixture } from './fixtures.js';
+
+export { loadFixture };
 
 const tagName = 'oscd-subscriber-later-binding-spec';
 
@@ -11,27 +14,6 @@ if (customElements.get(tagName) === undefined) {
 }
 
 export const settingsKey = 'oscd-subscriber-later-binding';
-
-const fixtureCache = new Map<string, string>();
-
-/**
- * Loads an SCL fixture from `test/fixtures` as a fresh document. Each call
- * returns a new document as specs apply edits to it.
- * @param name - File name within `test/fixtures`.
- * @returns the parsed SCL document.
- */
-export async function loadFixture(name: string): Promise<XMLDocument> {
-  let text = fixtureCache.get(name);
-  if (text === undefined) {
-    const response = await fetch(`/test/fixtures/${name}`);
-    if (!response.ok) {
-      throw new Error(`Could not load fixture ${name}: ${response.status}`);
-    }
-    text = await response.text();
-    fixtureCache.set(name, text);
-  }
-  return new DOMParser().parseFromString(text, 'application/xml');
-}
 
 export type MountOptions = {
   /** File name within `test/fixtures`. */
