@@ -292,4 +292,50 @@ describe('subscriber view', () => {
       );
     });
   });
+
+  describe('supervisions when subscribing', () => {
+    // GOOSE_Subscriber1 has three supervision logical nodes, all in use. Free
+    // one so that a new control block can be supervised.
+    const P2_GOOSE1 = 'GOOSE_Publisher2>>QB2_Disconnector>GOOSE1';
+    const P2_GOOSE1_FCDA = (): string =>
+      driver.fcdas().find(f => f.element.dataset.control === P2_GOOSE1)!.id;
+    const NEW_REFERENCE = 'GOOSE_Publisher2QB2_Disconnector/LLN0.GOOSE1';
+
+    async function freeASupervision(): Promise<void> {
+      const val = mounted.doc.querySelector(
+        'IED[name="GOOSE_Subscriber1"] LN[lnClass="LGOS"][inst="2"] Val'
+      )!;
+      await mounted.applyEdit({ node: val.firstChild! });
+    }
+
+    it('creates a supervision in a free LGOS for a new control block', async () => {
+      await freeASupervision();
+      await driver.selectExtRef(SUB1_CILO_STVAL, 'subscriber');
+      await driver.selectFcda(P2_GOOSE1, P2_GOOSE1_FCDA());
+      expect(supervisionReferences(mounted.doc, 'GOOSE_Subscriber1')).to.include(
+        NEW_REFERENCE
+      );
+    });
+
+    it('does not change supervisions when the setting to change them is off', async () => {
+      mounted.plugin.ignoreSupervision = true;
+      await mounted.settle();
+      await freeASupervision();
+      await driver.selectExtRef(SUB1_CILO_STVAL, 'subscriber');
+      await driver.selectFcda(P2_GOOSE1, P2_GOOSE1_FCDA());
+      expect(
+        supervisionReferences(mounted.doc, 'GOOSE_Subscriber1')
+      ).to.not.include(NEW_REFERENCE);
+    });
+
+    it('removes all supervisions when every ExtRef using them is unsubscribed', async () => {
+      expect(supervisionReferences(mounted.doc, 'GOOSE_Subscriber3')).to.have.length(3);
+      await driver.selectExtRef(`${SUB3} CILO 1>ESW_Thing[0]`, 'subscriber');
+      await driver.selectExtRef(`${SUB3} CILO 1>ESW_Thing2[0]`, 'subscriber');
+      await driver.selectExtRef(`${SUB3} CILO 1>ESW_Thing3[0]`, 'subscriber');
+      expect(supervisionReferences(mounted.doc, 'GOOSE_Subscriber3')).to.deep.equal(
+        []
+      );
+    });
+  });
 });
