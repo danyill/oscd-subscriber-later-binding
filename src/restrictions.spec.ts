@@ -90,6 +90,19 @@ describe('preconfigured ExtRef restrictions', () => {
       expect(enabledInFirstControl()).to.deep.equal(['Pos.stVal']);
     });
 
+    it('subscribes an ExtRef to an FCDA of the same basic type when only the basic type is checked', async () => {
+      mounted.plugin.checkOnlyPreferredBasicType = true;
+      await mounted.settle();
+      await driver.selectExtRef(RESTRICTED_SPS, 'subscriber');
+      await driver.click(
+        driver.fcdas().find(f => !f.disabled && f.label.endsWith('Op.general'))
+      );
+      const attrs = subscriptionAttributes(extRefById(mounted.doc, RESTRICTED_SPS));
+      expect(attrs.lnClass).to.equal('PTOC');
+      expect(attrs.doName).to.equal('Op');
+      expect(attrs.daName).to.equal('general');
+    });
+
     it('enables FCDAs again once the ExtRef is no longer selected', async () => {
       await driver.selectExtRef(RESTRICTED, 'subscriber');
       await driver.selectExtRef(UNRESTRICTED, 'subscriber');
@@ -138,6 +151,21 @@ describe('preconfigured ExtRef restrictions', () => {
         e.id.endsWith('someRestrictedExtRefSPS[0]')
       )!;
       expect(sps.disabled).to.equal(false);
+    });
+
+    it('hides non-matching preconfigured ExtRefs when filtered', async () => {
+      await driver.click(driver.fcdas().find(f => f.label.endsWith('Op.general')));
+      expect(restrictedItems().every(e => e.visible)).to.equal(true);
+      await driver.chooseMenuItems('filterExtRefMenuPublisher', [0]);
+      expect(restrictedItems().every(e => !e.visible)).to.equal(true);
+    });
+
+    it('keeps matching preconfigured ExtRefs visible when filtering', async () => {
+      await driver.click(driver.fcdas().find(f => f.label.endsWith('Pos.stVal')));
+      await driver.chooseMenuItems('filterExtRefMenuPublisher', [0]);
+      const matching = restrictedItems().filter(e => !e.disabled);
+      expect(matching.length).to.be.greaterThan(0);
+      expect(matching.every(e => e.visible)).to.equal(true);
     });
 
     it('does not subscribe a disabled ExtRef', async () => {
