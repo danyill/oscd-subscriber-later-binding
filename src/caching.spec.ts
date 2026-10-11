@@ -194,6 +194,21 @@ describe('edits made by other plugins', () => {
       expect(driver.headings()).to.include('No published item selected');
     });
 
+    it('clears the selected ExtRef in the subscriber view', async () => {
+      await driver.switchView();
+      await driver.click(
+        driver.subscriberExtRefs().find(e => e.id === SUB_MISSING_IED)
+      );
+      expect(mounted.plugin.selectedExtRef).to.not.equal(undefined);
+      const other = new DOMParser().parseFromString(
+        mounted.doc.documentElement.outerHTML,
+        'application/xml'
+      );
+      await mounted.openDocument(other, 'other.scd');
+      expect(mounted.plugin.selectedExtRef).to.equal(undefined);
+      expect(driver.headings().join(' ')).to.contain('Select Subscriber Input');
+    });
+
     it('clears search text', async () => {
       await driver.search('fcda', 'Birch');
       expect(driver.fcdas()).to.have.length(2);
