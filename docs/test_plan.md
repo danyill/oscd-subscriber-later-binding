@@ -523,6 +523,12 @@ files in parallel (done) halved it.
 
 ### Known gaps and findings for the refactor
 
+* Fixed: the plugin used `<mwc-icon-button>` without importing it and relied on the
+  `open-scd` host to define it. Mounted on its own, the filter, sort, settings and
+  copy buttons had no icons. Found by looking at the first screenshots, and now
+  guarded by `src/oscd-subscriber-later-binding.spec.ts`. It is also a reminder
+  that screenshots need to be looked at when they are created.
+
 * Settings persistence defects and corrupt-settings crash are captured as skipped
   specs in `src/settings.spec.ts`; section 9 lists them.
 * `doesFcdaMeetExtRefRestrictions` is a public method with branches no spec
