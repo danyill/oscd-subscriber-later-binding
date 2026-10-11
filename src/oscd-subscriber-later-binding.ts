@@ -77,6 +77,22 @@ import {
   smvActionIcon
 } from './foundation/icons.js';
 
+import { debounce } from './foundation/debounce.js';
+import {
+  doesExtRefpDAIncludeQ,
+  doesExtRefpDAIncludeT,
+  isBasicTypeEqual
+} from './foundation/extref.js';
+import {
+  objectReferenceInIed,
+  trimIdentityParent
+} from './foundation/identity.js';
+import { getSearchRegex } from './foundation/search.js';
+import {
+  ExtRefSortOrder,
+  FcdaSortOrder,
+  sortExtRefItems
+} from './foundation/sort.js';
 import { getFcdaInstDesc } from './foundation/tDataSet/getFcdaInstDesc.js';
 
 import type { fcdaDesc } from './foundation/tDataSet/getFcdaInstDesc.js';
@@ -117,21 +133,6 @@ const serviceTypeLookup: ServiceTypeLookup = {
   GSEControl: 'GOOSE',
   SampledValueControl: 'SMV'
 };
-
-enum FcdaSortOrder {
-  DataModel,
-  Path,
-  FullDescription,
-  DODescription,
-  DADescription
-}
-
-enum ExtRefSortOrder {
-  DataModel,
-  InternalAddress,
-  Description,
-  MappedReference
-}
 
 type StoredConfiguration = {
   subscriberView: boolean;
@@ -190,168 +191,6 @@ const storedProperties: string[] = [
   'sortExtRefSubscriber',
   'sortFcda'
 ];
-
-/**
- * Given an identity string prefixed with an IED name, remove the IED
- * name and make more human readable by adding spaces around carets.
- * @param idString
- * @returns - an identity string without the iedName.
- */
-function trimIdentityParent(idString: string): string {
-  return idString
-    .split('>')
-    .filter(s => s !== '')
-    .slice(1)
-    .join(' > ');
-}
-
-/**
- * Sort ExtRefs according to an enumerated value allowing:
- * data model, internal address, description or mapped refernece.
- * Intended to be used with a sort function.
- * @param sortSetting - An enumeration for the above.
- * @param aExtRef - An SCL ExtRef element.
- * @param bExtRef - An SCL ExtRef element.
- * @returns a number.
- */
-function sortExtRefItems(
-  sortSetting: ExtRefSortOrder,
-  aExtRef: Element,
-  bExtRef: Element
-): number {
-  if (sortSetting === ExtRefSortOrder.InternalAddress) {
-    return (aExtRef.getAttribute('intAddr') ?? '').localeCompare(
-      bExtRef.getAttribute('intAddr') ?? ''
-    );
-  }
-
-  if (sortSetting === ExtRefSortOrder.Description) {
-    const hasDescFirstnotSecond = (a: Element, b: Element) =>
-      (!b.hasAttribute('desc') || b.getAttribute('desc') === '') &&
-      a.hasAttribute('desc') &&
-      a.getAttribute('desc') !== '';
-
-    // descriptions always come first
-    if (hasDescFirstnotSecond(aExtRef, bExtRef)) {
-      return -1;
-    }
-    if (hasDescFirstnotSecond(bExtRef, aExtRef)) {
-      return 1;
-    }
-
-    return (aExtRef.getAttribute('desc') ?? '').localeCompare(
-      bExtRef.getAttribute('desc') ?? ''
-    );
-  }
-
-  const getFcdaName = (ext: Element) =>
-    `${ext.getAttribute('iedName') ?? 'Unknown'} > ${getFcdaOrExtRefTitle(
-      ext
-    )}`;
-
-  if (sortSetting === ExtRefSortOrder.MappedReference) {
-    return getFcdaName(aExtRef).localeCompare(getFcdaName(bExtRef));
-  }
-
-  // data model order
-  return 0;
-}
-
-/**
- * Given an SCL element, returns an object reference up to the
- * Logical Device.
- * @param sclElement - an SCL  element.
- * @returns a string.
- */
-function objectReferenceInIed(sclElement: Element): string {
-  const lN = sclElement.closest('LN') ?? sclElement.closest('LN0');
-  const lDevice = lN!.closest('LDevice')!;
-
-  const ldInst = lDevice.getAttribute('inst');
-  const lnPrefix = lN!.getAttribute('prefix') ?? '';
-  const lnClass = lN!.getAttribute('lnClass');
-  const lnInst = lN!.getAttribute('inst');
-
-  return [ldInst, '/', lnPrefix, lnClass, lnInst].filter(a => !!a).join(' ');
-}
-
-function doesExtRefpDAIncludeQ(extRef: Element): boolean {
-  return (
-    extRef.hasAttribute('pDA') &&
-    extRef.getAttribute('pDA')?.split('.').pop() === 'q'
-  );
-}
-
-function doesExtRefpDAIncludeT(extRef: Element): boolean {
-  return (
-    extRef.hasAttribute('pDA') &&
-    extRef.getAttribute('pDA')?.split('.').pop() === 't'
-  );
-}
-
-/**
- * Creates a regular expression to allow case-insensitive searching of list
- * items.
- *
- * * Supports globbing with * and
- * * Supports quoting using both ' and " and is an AND-ing search which
- *   narrows as further search text is added.
- *
- * @param searchExpression
- * @returns a regular expression
- */
-function getSearchRegex(searchExpression: string): RegExp {
-  if (searchExpression === '') {
-    return /.*/i;
-  }
-  const terms: string[] =
-    searchExpression
-      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-      .trim()
-      .match(/(?:[^\s"']+|['"][^'"]*["'])+/g) ?? [];
-
-  const expandedTerms = terms.map(term =>
-    term.replace(/\*/g, '.*').replace(/\?/g, '.{1}').replace(/"|'/g, '')
-  );
-
-  const regexString = expandedTerms.map(term => `(?=.*${term})`);
-
-  return new RegExp(`${regexString.join('')}.*`, 'i');
-}
-
-function debounce<Args extends unknown[]>(
-  callback: (...args: Args) => void,
-  delay = 100
-): (...args: Args) => void {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-
-  return (...args: Args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      callback(...args);
-    }, delay);
-  };
-}
-
-/*
- * IMPORTANT: This function  is an exact copy of the same function in
- * scl-lib.
- *
- * TODO: Add tests to scl-lib and export
- */
-function isBasicTypeEqual(
-  bTypeFcda: string | undefined,
-  bTypeExtRef: string | undefined
-): boolean {
-  // Basic types not the same
-  return (
-     
-    bTypeFcda === bTypeExtRef ||
-    // Enum to INT32 mappings specifically allowed, Ed 1 to Ed 2 compatibility
-    (bTypeFcda === 'INT32' && bTypeExtRef === 'Enum') ||
-    (bTypeFcda === 'Enum' && bTypeExtRef === 'INT32')
-  );
-}
 
 /**
  * A plugin to allow subscriptions of GOOSE and SV using the
