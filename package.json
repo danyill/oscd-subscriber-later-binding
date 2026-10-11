@@ -21,13 +21,11 @@
     "test": "oscd test",
     "test:watch": "oscd test --watch",
     "test:visual": "oscd test --visual",
-    "test:update": "oscd test --update",
     "updates": "oscd updates",
     "deploy": "oscd deploy",
     "prepare": "oscd install-hooks",
     "pretest": "npm run clean",
-    "pretest:visual": "npm run clean",
-    "pretest:update": "npm run clean"
+    "pretest:visual": "npm run clean"
   },
   "dependencies": {
     "@material/mwc-checkbox": "^0.27.0",
@@ -44,11 +42,13 @@
     "lit": "^3.1.0"
   },
   "devDependencies": {
+    "@fontsource/roboto": "^5.3.0",
     "@omicronenergy/oscd-tooling": "0.0.6",
     "@open-wc/testing": "^4.0.0",
     "@types/node": "^20.10.5",
     "@web/test-runner-commands": "^0.9.0",
     "@web/test-runner-visual-regression": "^0.9.0",
+    "material-icons": "^1.13.14",
     "rollup-plugin-copy": "^3.5.0",
     "sinon": "^17.0.1"
   }

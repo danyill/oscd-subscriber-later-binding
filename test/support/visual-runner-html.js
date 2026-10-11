@@ -1,10 +1,13 @@
 /* eslint-disable no-undef */
-// Runner page for the legacy screenshot suite (src/legacy-visual); deleted with it.
-export const legacyVisualHtml = testFramework => `
+// Runner page for the screenshot tests. Fonts are served from node_modules so that
+// rendering does not depend on the network.
+export const visualRunnerHtml = testFramework => `
 <html>
   <head>
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet">
+    <link rel="stylesheet" href="/node_modules/@fontsource/roboto/300.css">
+    <link rel="stylesheet" href="/node_modules/@fontsource/roboto/400.css">
+    <link rel="stylesheet" href="/node_modules/@fontsource/roboto/500.css">
+    <link rel="stylesheet" href="/node_modules/material-icons/iconfont/material-icons.css">
   </head>
   <body>
     <style class="deanimator">

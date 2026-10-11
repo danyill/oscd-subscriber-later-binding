@@ -5,15 +5,15 @@ import { playwrightLauncher } from '@web/test-runner-playwright';
 import { visualRegressionPlugin } from '@web/test-runner-visual-regression/plugin';
 import oscdConfig from '@omicronenergy/oscd-tooling/configs/web-test-runner.config.js';
 
-import { legacyVisualHtml } from './test/support/legacy-visual-html.js';
+import { visualRunnerHtml } from './test/support/visual-runner-html.js';
 
 /**
  * Extends the shared oscd-tooling config:
  * - `unit` group: `dist/**\/*.spec.js`, the default `npm test`. Only this group
  *   counts towards coverage, which is enforced by the thresholds below.
- * - `visual` group: screenshot tests, `npm run test:visual`. Currently the
- *   legacy suite in `src/legacy-visual`, kept unchanged until its behaviour is
- *   covered by specs.
+ * - `visual` group: screenshot tests, `npm run test:visual`. Baselines are owned
+ *   by CI (see `.github/workflows/update-visual-baselines.yml`) and are not
+ *   updated locally. Fonts are served from node_modules.
  */
 
 // Thresholds only ever go up. Raise them as each phase of docs/test_plan.md lands.
@@ -24,8 +24,8 @@ const coverageThreshold = {
   lines: 97
 };
 
-// The legacy baselines were generated with these Chromium flags.
-const legacyBrowsers = [
+// Chromium flags which reduce differences in text rendering.
+const visualBrowsers = [
   playwrightLauncher({
     product: 'chromium',
     launchOptions: {
@@ -40,7 +40,7 @@ const legacyBrowsers = [
   })
 ];
 
-const legacyVisualRegression = visualRegressionPlugin({
+const visualRegression = visualRegressionPlugin({
   update: process.argv.includes('--update-visual-baseline'),
   baseDir: 'test/screenshots',
   diffOptions: { includeAA: true },
@@ -62,7 +62,6 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
       '**/__wds-outside-root__/**',
       '**/*.spec.js',
       '**/*.test.js',
-      'dist/legacy-visual/**',
       'dist/**/testing/**'
     ],
     threshold: coverageThreshold
@@ -70,7 +69,7 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
 
   plugins: [
     ...oscdConfig.plugins.filter(p => p.name !== 'visual-regression'),
-    legacyVisualRegression
+    visualRegression
   ],
 
   groups: oscdConfig.groups.map(group => {
@@ -78,8 +77,8 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
       group.name === 'visual'
         ? {
             ...group,
-            browsers: legacyBrowsers,
-            testRunnerHtml: legacyVisualHtml
+            browsers: visualBrowsers,
+            testRunnerHtml: visualRunnerHtml
           }
         : group;
     // `SPEC=dist/filters.spec.js npm test` runs a single spec
