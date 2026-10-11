@@ -1,6 +1,6 @@
 # Test Plan: Fast, Modern Test Suite Before the Refactor
 
-Status: proposed · Date: 2026-10-11
+Status: Phases 0 to 2 implemented, see section 10 · Date: 2026-10-11
 
 ## 1. Purpose
 
@@ -455,3 +455,79 @@ here and remove the workaround when it is fixed.
 | `oscd-subscriber-later-binding` | The menu `closed` handlers registered in `updateView()` and `firstUpdated()` read `@query` elements without a null check. If the view is switched within a few frames of a menu closing, MDC emits a late event for a removed menu and the handler throws `Cannot read properties of null (reading 'index')`. Handlers are also added again each time the view is toggled. | The test driver waits for menus to settle |
 | `@openenergytools/scl-lib` | `isBasicTypeEqual` is copied into this plugin because it is not exported (see the comment above it). | Local copy in `src/foundation/extref.ts`, now unit tested |
 | `@openscd/open-scd-core` | The host reuses the same document object when the same file is opened twice, so a plugin cannot detect a re-opened document (see the TODO in `updated()`, issue openscd/open-scd-core#92). | None needed yet |
+
+## 10. Implementation status
+
+Phases 0, 1 and 2 are done on branch `test-suite-overhaul`. Results, measured
+on an 8 core Linux machine:
+
+| Metric | Before | Now |
+| --- | --- | --- |
+| `npm test` wall time (build, clean, tests with coverage) | ~6.5 min locally | **~38 s**; tests alone 26 to 33 s |
+| Tests | 152 screenshot tests | **457 passing**, 3 skipped for known defects |
+| Tests with a behavioural assertion | 26 | **all** |
+| Fixed sleeps in tests | ~390 s per run | **none** (the driver waits on events, `updateComplete` and `waitUntil`) |
+| Coverage | not enforced, incidental | **98.6 %** overall, thresholds enforced at 97 / 95 / 95 / 97 (statements, branches, functions, lines) |
+
+The wall time target of 30 s is met by the tests themselves but not by the
+build, clean and coverage collection around them. Most remaining time is each
+test file loading Material Web components through the dev server; running the
+files in parallel (done) halved it.
+
+### What was done
+
+* Phase 0: `@omicronenergy/oscd-tooling`, `src/` layout, `unit` and `visual`
+  groups, a local WTR config extending the shared one, CI split into a
+  lint-and-unit job and a pull-request-only visual job, test dependencies moved
+  to `devDependencies`. The legacy screenshot suite was moved unchanged to
+  `src/legacy-visual` and still runs with `npm run test:visual`.
+* Phase 1: search, sort, identity, ExtRef and debounce helpers were moved out of
+  the 3,400 line component into `src/foundation` and have unit tests. The
+  `window` listener leak was fixed.
+* Phase 2: `src/testing` holds a mount helper which applies edits as the host
+  does, a page-object driver and SCL query helpers. Component specs cover the
+  publisher and subscriber views, filters, sorting, search, settings, Markdown
+  export, preconfigured ExtRef restrictions, sampled values, view state and cache
+  invalidation from edits by other plugins. `docs/legacy_test_mapping.md` maps
+  each legacy test to its replacement. Mutation checks (disabling cache
+  invalidation) confirm the cache specs fail when the behaviour breaks.
+
+### Differences from the plan
+
+* **Phase 3 is not done.** The curated screenshot suite and Docker based baselines
+  were not created, and the legacy suite and its 145 baselines were not deleted.
+  The project's agent guidance says screenshot baselines are owned by CI and must
+  not be regenerated or committed locally, which conflicts with generating them in
+  a container here. Decide which policy to follow before the UI is rebuilt. Until
+  then the legacy suite keeps protecting how the plugin looks, in the pull-request
+  job.
+* **No accessibility smoke tests or shell smoke test yet.** These are cheap to add
+  once the UI components are chosen, because the driver is the only place that
+  knows the DOM.
+* **Coverage thresholds are global**, not per folder, because Web Test Runner
+  supports only one set. `src/foundation` is at or near 100 % lines.
+* **GOOSE and sampled values are not fully parameterised.** The sampled value
+  specs are separate because the fixtures differ in structure. They cover the
+  same operations: listing, counts, subscribing, unsubscribing, supervisions,
+  Markdown export and switching.
+* **Menus are driven through their buttons** (`mwc-menu` has a `closed` event
+  which applies the choice), but the driver waits 80 ms after each menu closes.
+  See the menu race in section 9.
+
+### Known gaps and findings for the refactor
+
+* Settings persistence defects and corrupt-settings crash are captured as skipped
+  specs in `src/settings.spec.ts`; section 9 lists them.
+* `doesFcdaMeetExtRefRestrictions` is a public method with branches no spec
+  reaches: the `controlBlockType` / `pServT` check is dead code (no caller passes
+  `controlBlockType`) and the Edition 1 to 2 `INC`/`ENC` compatibility rule needs
+  a document with those CDCs. Extract the function and unit test it with inline
+  SCL, as `foundation/subscription.spec.ts` does for the other helpers.
+* The subscriber Markdown export returns `'\n\n'`, not an empty string, when both
+  the subscribed and not subscribed filters are on.
+* More logic should move out of the component, with its tests, as the refactor
+  touches it: Markdown rendering, the FCDA and ExtRef count caches, the
+  supervision cache, `includeFcda`, and the settings (de)serialisation.
+* After the refactor to `@openscd/oscd-api`, only `src/testing/plugin.ts` (how
+  edits are applied) and `src/testing/driver.ts` (selectors, menus) should need
+  changes. Test bodies change only when behaviour changes on purpose.
