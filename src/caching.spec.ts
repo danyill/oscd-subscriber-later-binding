@@ -134,6 +134,26 @@ describe('edits made by other plugins', () => {
       );
     });
 
+    it('stops showing a supervision when the text of its reference is cleared', async () => {
+      const val = mounted.doc.querySelector(
+        'IED[name="GOOSE_Subscriber3"] LN[lnClass="LGOS"][inst="1"] Val'
+      )!;
+      await mounted.applyEdit({ element: val, textContent: '' });
+      expect(supervisionOf(SUB3_SUPERVISED).secondary).to.not.contain('LGOS');
+    });
+
+    it('shows a supervision when the text of its reference is set', async () => {
+      const val = mounted.doc.querySelector(
+        'IED[name="GOOSE_Subscriber3"] LN[lnClass="LGOS"][inst="1"] Val'
+      )!;
+      const original = val.textContent!;
+      await mounted.applyEdit({ element: val, textContent: '' });
+      await mounted.applyEdit({ element: val, textContent: original });
+      expect(supervisionOf(SUB3_SUPERVISED).secondary).to.contain(
+        'GOOSE_supervision > LGOS 1'
+      );
+    });
+
     it('shows a supervision which is added', async () => {
       const extRef = SUB_BOUND;
       expect(supervisionOf(extRef).secondary).to.not.contain('LGOS');
