@@ -4,28 +4,26 @@
   "license": "Apache-2.0",
   "author": "Daniel Mulholland, Christian Dinkel",
   "version": "0.0.0",
+  "type": "module",
   "main": "dist/oscd-subscriber-later-binding.js",
   "module": "dist/oscd-subscriber-later-binding.js",
   "exports": {
     ".": "./dist/oscd-subscriber-later-binding.js"
   },
   "scripts": {
-    "start": "npm run build && concurrently -k -r \"tsc -b --watch --preserveWatchOutput\" \"wds\"",
-    "start:build": "npm run build && es-dev-server --root-dir dist --app-index index.html --compatibility none --open",
-    "start:bundle": "npm run bundle && es-dev-server --root-dir dist --app-index index.html --compatibility none --open",
-    "test": "playwright install && wtr --coverage",
-    "test:watch": "npm run build && concurrently -k -r \"tsc -b --watch --preserveWatchOutput\" \"wtr --watch --coverage\"",
-    "test:update": "npm run build && wtr --update-visual-baseline",
-    "analyze": "cem analyze --litelement",
-    "deploy": "npm run bundle && gh-pages --dist 'dist'",
-    "build": "npm run compile",
-    "compile": "tsc -b",
-    "bundle": "rimraf dist && rollup -c rollup.config.js",
-    "doc": "npm run analyze -- --exclude dist && typedoc --out dist/doc oscd-subscriber-later-binding.ts",
-    "prepublish": "npm run lint && npm run build && npm run doc",
-    "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
-    "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
-    "prepare": "husky install"
+    "lint": "oscd lint",
+    "format": "oscd lint --format",
+    "start": "oscd start",
+    "start:bundle": "oscd start-bundle",
+    "build": "oscd build",
+    "bundle": "oscd bundle",
+    "test": "oscd test",
+    "test:watch": "oscd test --watch",
+    "test:visual": "oscd test --visual",
+    "test:update": "oscd test --update",
+    "updates": "oscd updates",
+    "deploy": "oscd deploy",
+    "prepare": "oscd install-hooks"
   },
   "dependencies": {
     "@material/mwc-checkbox": "^0.27.0",
@@ -37,92 +35,17 @@
     "@material/mwc-list": "^0.27.0",
     "@material/mwc-menu": "^0.27.0",
     "@material/mwc-textfield": "^0.27.0",
-    "@open-wc/testing": "^4.0.0",
     "@openenergytools/scl-lib": "^1.3.1",
     "@openscd/open-scd-core": "^0.0.2",
-    "@web/test-runner-commands": "^0.9.0",
-    "@web/test-runner-visual-regression": "^0.9.0",
-    "lit": "^3.1.0",
-    "sinon": "^17.0.1"
+    "lit": "^3.1.0"
   },
   "devDependencies": {
-    "@custom-elements-manifest/analyzer": "^0.9.0",
-    "@open-wc/building-rollup": "^2.0.2",
-    "@open-wc/eslint-config": "^12.0.2",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-typescript": "^11.1.5",
-    "@types/mocha": "^10.0.6",
+    "@omicronenergy/oscd-tooling": "0.0.6",
+    "@open-wc/testing": "^4.0.0",
     "@types/node": "^20.10.5",
-    "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.16.0",
-    "@web/dev-server": "^0.4.1",
-    "@web/rollup-plugin-import-meta-assets": "^2.2.1",
-    "@web/test-runner": "^0.18.0",
-    "@web/test-runner-playwright": "^0.11.0",
-    "concurrently": "^8.2.2",
-    "es-dev-server": "^2.1.0",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-tsdoc": "^0.2.17",
-    "gh-pages": "^6.1.1",
-    "husky": "^8.0.3",
-    "lint-staged": "^15.2.0",
-    "pixelmatch": "^5.3.0",
-    "pngjs": "^7.0.0",
-    "prettier": "^3.1.1",
-    "rimraf": "^5.0.5",
+    "@web/test-runner-commands": "^0.9.0",
+    "@web/test-runner-visual-regression": "^0.9.0",
     "rollup-plugin-copy": "^3.5.0",
-    "tslib": "^2.6.2",
-    "typedoc": "^0.25.4",
-    "typescript": "^5.3.3"
-  },
-  "customElements": "custom-elements.json",
-  "eslintConfig": {
-    "parser": "@typescript-eslint/parser",
-    "extends": [
-      "@open-wc",
-      "prettier"
-    ],
-    "plugins": [
-      "@typescript-eslint"
-    ],
-    "rules": {
-      "@typescript-eslint/no-unused-vars": [
-        "error"
-      ],
-      "@typescript-eslint/no-non-null-assertion": "off",
-      "import/no-unresolved": "off",
-      "import/extensions": [
-        "error",
-        "always",
-        {
-          "ignorePackages": true
-        }
-      ],
-      "import/no-extraneous-dependencies": [
-        "error",
-        {
-          "devDependencies": [
-            "**/*.spec.ts"
-          ]
-        }
-      ],
-      "lit/no-classfield-shadowing": "off",
-      "no-duplicate-imports": "off",
-      "no-unused-vars": "off",
-      "no-redeclare": "off",
-      "no-shadow": "off"
-    }
-  },
-  "prettier": {
-    "arrowParens": "avoid",
-    "singleQuote": true,
-    "trailingComma": "none"
-  },
-  "lint-staged": {
-    "*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ]
+    "sinon": "^17.0.1"
   }
 }

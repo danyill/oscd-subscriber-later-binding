@@ -23,7 +23,7 @@ import {
   setViewPort
 } from './test-support.js';
 
-import type SubscriberLaterBinding from '../../oscd-subscriber-later-binding.js';
+import type SubscriberLaterBinding from '../oscd-subscriber-later-binding.js';
 
 const factor = window.process && process.env.CI ? 4 : 2;
 
