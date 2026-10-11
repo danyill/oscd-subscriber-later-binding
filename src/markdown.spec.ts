@@ -116,6 +116,26 @@ describe('Markdown export', () => {
       expect(markdown).to.not.contain('🔗');
     });
 
+    it('leaves out subscribed inputs when they are filtered', async () => {
+      await driver.chooseMenuItems('filterExtRefMenuSubscriber', [1, 2, 3, 4]);
+      const markdown = await driver.copyMarkdown('subscriber');
+      expect(markdown).to.not.contain('🔗');
+      expect(markdown).to.contain('📦 GOOSE_Subscriber1');
+      expect(markdown).to.not.contain('📦 GOOSE_Subscriber3');
+    });
+
+    it('leaves out inputs which are not subscribed when they are filtered', async () => {
+      await driver.chooseMenuItems('filterExtRefMenuSubscriber', [0, 2, 3, 4]);
+      const markdown = await driver.copyMarkdown('subscriber');
+      expect(markdown).to.contain('🔗');
+      expect(markdown).to.not.contain('Interlocking.Input\n');
+    });
+
+    it('is empty when both subscribed and not subscribed are filtered', async () => {
+      await driver.chooseMenuItems('filterExtRefMenuSubscriber', [2, 3, 4]);
+      expect((await driver.copyMarkdown('subscriber')).trim()).to.equal('');
+    });
+
     it('is empty when nothing matches the search', async () => {
       await driver.search('subscriberExtRef', 'nothing like this');
       expect(await driver.copyMarkdown('subscriber')).to.equal('');

@@ -2,7 +2,7 @@ import { expect } from '@open-wc/testing';
 
 import { PluginDriver } from './testing/driver.js';
 import type { ListedItem } from './testing/driver.js';
-import { mountPlugin } from './testing/plugin.js';
+import { loadFixture, mountPlugin } from './testing/plugin.js';
 import type { MountedPlugin } from './testing/plugin.js';
 
 const FIXTURE = 'GOOSE-2007B4-LGOS-sorting.scd';
@@ -120,6 +120,51 @@ describe('sorting', () => {
         'GOOSE_Publisher2 > GOOSE2',
         'GOOSE_Publisher2 > GOOSE1'
       ]);
+    });
+  });
+
+  describe('of FCDAs without descriptions', () => {
+    const first = 'GOOSE_Publisher > GOOSE2';
+    const undescribed = 'QB2_Disconnector / XSWI 9 Pos.stVal';
+
+    beforeEach(async () => {
+      mounted.unmount();
+      const doc = await loadFixture(FIXTURE);
+      const dataSet = doc.querySelector(
+        'IED[name="GOOSE_Publisher"] DataSet[name="GOOSE2sDataSet"]'
+      )!;
+      const fcda = dataSet.firstElementChild!.cloneNode() as Element;
+      ['ldInst', 'lnClass', 'lnInst', 'doName', 'daName'].forEach((name) => {
+        fcda.setAttribute(
+          name,
+          { ldInst: 'QB2_Disconnector', lnClass: 'XSWI', lnInst: '9', doName: 'Pos', daName: 'stVal' }[name]!
+        );
+      });
+      dataSet.insertBefore(fcda, dataSet.firstElementChild);
+      mounted = await mountPlugin({ doc });
+      driver = new PluginDriver(mounted);
+    });
+
+    it('lists the FCDA first in data model order', () => {
+      expect(fcdasOf(driver, first)[0]).to.equal(undescribed);
+    });
+
+    it('puts them last when sorting by full description', async () => {
+      await driver.chooseMenuItem('sortFcdaMenu', 2);
+      expect(fcdasOf(driver, first).pop()).to.equal(undescribed);
+    });
+
+    [
+      ['data object and attribute description', 3],
+      ['data attribute description', 4]
+    ].forEach(([name, index]) => {
+      it(`puts them after those with a ${name}`, async () => {
+        await driver.chooseMenuItem('sortFcdaMenu', index as number);
+        const order = fcdasOf(driver, first);
+        expect(order.indexOf(undescribed)).to.be.greaterThan(
+          order.indexOf('QB2_Disconnector / CSWI 1 Pos.stVal')
+        );
+      });
     });
   });
 
