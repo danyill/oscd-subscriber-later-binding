@@ -1,28 +1,75 @@
 name: Test
-on: push
+on:
+  push:
+  pull_request:
 
 jobs:
-  test:
+  unit:
+    name: Lint and unit tests
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          lfs: 'true'
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install playwright browsers
-        run: npx playwright install --with-deps
+      - name: Lint
+        run: npm run lint
 
-      - name: Run tests
-        run: npm run-script test
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run unit tests with coverage
+        run: npm test
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/lcov-report
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Screenshot tests are slow, so run them for pull requests only. Baselines are
+  # owned by CI: they are not updated locally.
+  visual:
+    name: Visual regression tests
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run visual regression tests
+        run: npm run test:visual
 
       - name: Create visual test failures artifact
         uses: actions/upload-artifact@v4

@@ -17,7 +17,7 @@
     "start": "oscd start",
     "start:bundle": "oscd start-bundle",
     "build": "npm run clean && oscd build --no-clean",
-    "bundle": "oscd bundle",
+    "bundle": "npm run clean && oscd bundle --no-clean",
     "test": "oscd test",
     "test:watch": "oscd test --watch",
     "test:visual": "oscd test --visual",
