@@ -27,7 +27,9 @@ export function getFcdaInstDesc(fcda: Element): fcdaDesc {
       (lN.getAttribute('inst') ?? '') === (fcda.getAttribute('lnInst') ?? '')
   );
 
-  if (!anyLn) return {};
+  if (!anyLn) {
+    return {};
+  }
 
   let descs: fcdaDesc = {};
 
@@ -40,7 +42,9 @@ export function getFcdaInstDesc(fcda: Element): fcdaDesc {
 
   const doi = anyLn.querySelector(`DOI[name="${doNames[0]}"`);
 
-  if (!doi) return descs;
+  if (!doi) {
+    return descs;
+  }
 
   let doiDesc = doi?.getAttribute('desc');
 
@@ -52,19 +56,25 @@ export function getFcdaInstDesc(fcda: Element): fcdaDesc {
   descs = { ...descs, ...(doiDesc && doiDesc !== '' && { DOI: doiDesc }) };
 
   let previousDI: Element = doi;
-  doNames.slice(1).forEach(sdiName => {
+  doNames.slice(1).forEach((sdiName) => {
     const sdi = previousDI.querySelector(`SDI[name="${sdiName}"]`);
-    if (sdi) previousDI = sdi;
+    if (sdi) {
+      previousDI = sdi;
+    }
     const sdiDesc = sdi?.getAttribute('desc');
     if (!('SDI' in descs)) {
       descs = {
         ...descs,
         ...(sdiDesc && sdiDesc !== '' && { SDI: [sdiDesc] })
       };
-    } else if (sdiDesc) descs.SDI!.push(sdiDesc);
+    } else if (sdiDesc) {
+      descs.SDI!.push(sdiDesc);
+    }
   });
 
-  if (!daName) return descs;
+  if (!daName) {
+    return descs;
+  }
 
   const daNames = daName?.split('.');
   const dai = previousDI.querySelector(`DAI[name="${daNames[0]}"]`);

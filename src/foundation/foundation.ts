@@ -20,24 +20,31 @@ export function getDescriptionAttribute(element: Element): string | undefined {
 
 /** Sorts selected `ListItem`s to the top and disabled ones to the bottom. */
 export function compareNames(a: Element | string, b: Element | string): number {
-  if (typeof a === 'string' && typeof b === 'string') return a.localeCompare(b);
+  if (typeof a === 'string' && typeof b === 'string') {
+    return a.localeCompare(b);
+  }
 
-  if (typeof a === 'object' && typeof b === 'string')
+  if (typeof a === 'object' && typeof b === 'string') {
     return (a.getAttribute('name') ?? '').localeCompare(b);
+  }
 
-  if (typeof a === 'string' && typeof b === 'object')
+  if (typeof a === 'string' && typeof b === 'object') {
     return a.localeCompare(b.getAttribute('name')!);
+  }
 
-  if (typeof a === 'object' && typeof b === 'object')
+  if (typeof a === 'object' && typeof b === 'object') {
     return (a.getAttribute('name') ?? '').localeCompare(
       b.getAttribute('name') ?? ''
     );
+  }
 
   return 0;
 }
 
 export function findFCDAs(extRef: Element): Element[] {
-  if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) return [];
+  if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) {
+    return [];
+  }
 
   const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
     'iedName',
@@ -52,7 +59,9 @@ export function findFCDAs(extRef: Element): Element[] {
     element =>
       element.getAttribute('name') === iedName && !element.closest('Private')
   );
-  if (!ied) return [];
+  if (!ied) {
+    return [];
+  }
 
   return Array.from(ied.getElementsByTagName('FCDA'))
     .filter(item => !item.closest('Private'))

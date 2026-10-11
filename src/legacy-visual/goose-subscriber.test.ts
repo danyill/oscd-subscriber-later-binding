@@ -1,5 +1,5 @@
-/* eslint-disable func-names */
-/* eslint-disable prefer-arrow-callback */
+ 
+ 
 
 import { visualDiff } from '@web/test-runner-visual-regression';
 
@@ -29,7 +29,7 @@ import type SubscriberLaterBinding from '../oscd-subscriber-later-binding.js';
 const factor = window.process && process.env.CI ? 4 : 2;
 
 function timeout(ms: number) {
-  return new Promise(res => {
+  return new Promise((res) => {
     setTimeout(res, ms * factor);
   });
 }

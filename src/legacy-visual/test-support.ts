@@ -4,7 +4,7 @@ import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
 import { setViewport, resetMouse, sendMouse } from '@web/test-runner-commands';
 
 function timeout(ms: number) {
-  return new Promise(res => {
+  return new Promise((res) => {
     setTimeout(res, ms);
   });
 }

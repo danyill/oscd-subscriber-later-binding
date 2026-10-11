@@ -54,7 +54,9 @@ function isSubscribedTo(
   fcda: Element | undefined,
   extRef: Element
 ): boolean {
-  if (!control || !fcda) return false;
+  if (!control || !fcda) {
+    return false;
+  }
   return (
     extRef.getAttribute('iedName') ===
       fcda?.closest('IED')?.getAttribute('name') &&
@@ -98,7 +100,9 @@ export function getCbReference(extRef: Element): string {
  * @returns The supervision LN instance or null if not found
  */
 export function getExistingSupervision(extRef: Element | null): Element | null {
-  if (extRef === null) return null;
+  if (extRef === null) {
+    return null;
+  }
 
   // TODO: This seems inadequate. ServiceType may not be defined but we could search
   // both LGOS and LSVS instances.
@@ -166,8 +170,8 @@ export function isPartiallyConfigured(extRefElement: Element): boolean {
 export function getOrderedIeds(doc: XMLDocument): Element[] {
   return doc
     ? Array.from(doc.querySelectorAll(':root > IED')).sort((a, b) =>
-        compareNames(a, b)
-      )
+      compareNames(a, b)
+    )
     : [];
 }
 
@@ -182,7 +186,9 @@ export function getUsedSupervisionInstances(
   doc: Document,
   serviceType: string
 ): Element[] {
-  if (!doc) return [];
+  if (!doc) {
+    return [];
+  }
   const supervisionType = serviceType === 'GOOSE' ? 'LGOS' : 'LSVS';
   const refSelector =
     supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
@@ -233,7 +239,9 @@ export function findFCDA(
   extRef: Element,
   controlBlock: Element
 ): Element | null {
-  if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) return null;
+  if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) {
+    return null;
+  }
 
   const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
     'iedName',
@@ -248,7 +256,9 @@ export function findFCDA(
     element =>
       element.getAttribute('name') === iedName && !element.closest('Private')
   );
-  if (!ied) return null;
+  if (!ied) {
+    return null;
+  }
 
   const dataSetRef = controlBlock.getAttribute('datSet');
 
