@@ -3,6 +3,7 @@ import { setViewport } from '@web/test-runner-commands';
 import { visualDiff } from '@web/test-runner-visual-regression';
 
 import { PluginDriver } from './testing/driver.js';
+import { deepQueryAll } from './testing/dom.js';
 import { mountPlugin } from './testing/plugin.js';
 import type { MountedPlugin } from './testing/plugin.js';
 
@@ -42,9 +43,9 @@ describe('oscd-subscriber-later-binding screenshots', () => {
   ): Promise<void> {
     await Promise.all([
       document.fonts.load('400 16px Roboto'),
-      document.fonts.load('24px "Material Icons"')
+      document.fonts.load('24px "Material Symbols Outlined"')
     ]);
-    mounted = await mountPlugin({ fixture, settings });
+    mounted = await mountPlugin({ fixture, settings, layout: 'fit' });
     driver = new PluginDriver(mounted);
     await document.fonts.ready;
   }
@@ -57,9 +58,7 @@ describe('oscd-subscriber-later-binding screenshots', () => {
    */
   function expectSelectionShown(): void {
     const selected = Array.from(
-      mounted.plugin.shadowRoot!.querySelectorAll<HTMLElement>(
-        'mwc-list-item[activated], mwc-list-item[selected]'
-      )
+      deepQueryAll(mounted.plugin.shadowRoot!, 'oscd-list-item.selected')
     );
     expect(selected.length, 'an item is selected').to.be.greaterThan(0);
     const area = mounted.plugin.getBoundingClientRect();

@@ -394,6 +394,10 @@ replacement.
 
 ### Phase 4: Start the refactor
 
+Status: done except baselines (see `docs/migration.md`). Only the driver and
+the harness changed for the UI and library moves, apart from the intentional
+behaviour changes listed there.
+
 - When `mwc-*` is replaced with `oscd-ui` components, update **the driver
   only**. A test body should change only when behaviour changes on purpose.
 - Rebaseline the curated visual suite once per deliberate visual change, in a

@@ -7,7 +7,7 @@ export const visualRunnerHtml = testFramework => `
     <link rel="stylesheet" href="/node_modules/@fontsource/roboto/300.css">
     <link rel="stylesheet" href="/node_modules/@fontsource/roboto/400.css">
     <link rel="stylesheet" href="/node_modules/@fontsource/roboto/500.css">
-    <link rel="stylesheet" href="/node_modules/material-icons/iconfont/material-icons.css">
+    <link rel="stylesheet" href="/node_modules/@fontsource/material-symbols-outlined/400.css">
   </head>
   <body>
     <style class="deanimator">
