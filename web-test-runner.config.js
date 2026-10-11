@@ -67,15 +67,17 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
     legacyVisualRegression
   ],
 
-  groups: oscdConfig.groups.map(group =>
-    group.name === 'visual'
-      ? {
-          ...group,
-          browsers: legacyBrowsers,
-          testRunnerHtml: legacyVisualHtml
-        }
-      : group
-  ),
+  groups: oscdConfig.groups.map(group => {
+    if (group.name === 'visual') {
+      return {
+        ...group,
+        browsers: legacyBrowsers,
+        testRunnerHtml: legacyVisualHtml
+      };
+    }
+    // `SPEC=dist/filters.spec.js npm test` runs a single spec
+    return process.env.SPEC ? { ...group, files: process.env.SPEC } : group;
+  }),
 
   filterBrowserLogs(log) {
     const noise = [
@@ -88,6 +90,8 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
       arg => typeof arg === 'string' && noise.some(n => arg.includes(n))
     );
   },
+
+  testFramework: { config: { timeout: 10000 } },
 
   testsFinishTimeout: 30 * 60 * 1000
 });

@@ -217,8 +217,7 @@ export class PluginDriver {
    */
   async chooseMenuItems(menuId: string, selected: number[]): Promise<void> {
     const menu = this.menu(menuId);
-    menu.show();
-    await menu.updateComplete;
+    await this.open(menu);
     menu.items.forEach((item, index) => {
       if (item.hasAttribute('selected') !== selected.includes(index)) {
         item.click();
@@ -228,6 +227,7 @@ export class PluginDriver {
     const closed = this.closed(menu);
     menu.close();
     await closed;
+    await this.menuSettled();
     await this.mounted.settle();
   }
 
@@ -238,11 +238,11 @@ export class PluginDriver {
    */
   async chooseMenuItem(menuId: string, index: number): Promise<void> {
     const menu = this.menu(menuId);
-    menu.show();
-    await menu.updateComplete;
+    await this.open(menu);
     const closed = this.closed(menu);
     menu.items[index].click();
     await closed;
+    await this.menuSettled();
     await this.mounted.settle();
   }
 
@@ -269,6 +269,22 @@ export class PluginDriver {
       throw new Error(`Menu ${menuId} is not displayed`);
     }
     return menu;
+  }
+
+  /**
+   * Menus emit a trailing `opened` event shortly after closing. Wait for it so
+   * that it cannot arrive after the view has changed and the menu has been
+   * removed. A timer is used as animation frames do not run in background tabs.
+   */
+  private async menuSettled(): Promise<void> {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 80);
+    });
+  }
+
+  private async open(menu: MenuElement): Promise<void> {
+    menu.show();
+    await menu.updateComplete;
   }
 
   private closed(menu: MenuElement): Promise<void> {
