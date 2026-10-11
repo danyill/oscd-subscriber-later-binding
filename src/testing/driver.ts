@@ -285,6 +285,16 @@ export class PluginDriver {
   }
 
   /**
+   * Opens a menu by clicking its button and leaves it open, e.g. to take a
+   * screenshot of it.
+   * @param menuId - id of the menu element.
+   */
+  async showMenu(menuId: string): Promise<void> {
+    await this.open(menuId, this.menu(menuId));
+    await this.mounted.settle();
+  }
+
+  /**
    * The positions of the selected items in a menu, as the user sees the
    * ticks, without opening it.
    * @param menuId - id of the menu element.
