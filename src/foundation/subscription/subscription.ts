@@ -1,7 +1,7 @@
 import {
   matchDataAttributes,
   matchSrcAttributes
-} from '@openenergytools/scl-lib';
+} from '@openscd/scl-lib';
 import { compareNames } from '../foundation.js';
 import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
 

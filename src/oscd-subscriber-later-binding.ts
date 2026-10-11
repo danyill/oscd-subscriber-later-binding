@@ -20,7 +20,7 @@ import {
   sourceControlBlock,
   subscribe,
   unsubscribe
-} from '@openenergytools/scl-lib';
+} from '@openscd/scl-lib';
 
 // not exported: removeSubscriptionSupervision
 
@@ -35,14 +35,14 @@ import '@material/mwc-list/mwc-radio-list-item';
 import '@material/mwc-menu';
 import '@material/mwc-textfield';
 
+import type { EditEventV2, EditV2 } from '@openscd/oscd-api';
 import {
-  Edit,
-  EditEvent,
   isInsert,
   isRemove,
-  isUpdate,
-  newEditEvent
-} from '@openscd/open-scd-core';
+  isSetAttributes,
+  isSetTextContent,
+  newEditEventV2
+} from '@openscd/oscd-api/utils.js';
 
 import type { Icon } from '@material/mwc-icon';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
@@ -204,7 +204,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
   @property() docName!: string;
 
-  @property() editCount!: number;
+  @property({ attribute: false }) docVersion?: unknown;
 
   @property({ type: String, reflect: true })
   identity = 'danyill.oscd-subscriber-later-binding';
@@ -389,22 +389,22 @@ export default class SubscriberLaterBinding extends LitElement {
   savePublisherToMarkdownButton?: Icon;
 
   private readonly handleEditBefore = (event: Event): void =>
-    this.updateCaching(event as EditEvent, 'before');
+    this.updateCaching(event as EditEventV2, 'before');
 
   private readonly handleEditAfter = (event: Event): void =>
-    this.updateCaching(event as EditEvent, 'after');
+    this.updateCaching(event as EditEventV2, 'after');
 
   /**
    * Updates caching of control blocks, used FCDAs and supervision LNs.
    * Done through even listening to all menu plugins to use events and be able
    * to expect caching to be updated.
-   * @param event - `oscd-edit` event.
+   * @param event - `oscd-edit-v2` event.
    * @param when - 'before' or 'after' the event occurs.
    */
-  protected updateCaching(event: EditEvent, when: 'before' | 'after'): void {
+  protected updateCaching(event: EditEventV2, when: 'before' | 'after'): void {
     // Infinity as 1 due to error type instantiation error
     // https://github.com/microsoft/TypeScript/issues/49280
-    const flatEdits = [event.detail].flat(Infinity as 1);
+    const flatEdits = [event.detail.edit].flat(Infinity as 1);
 
     // ExtRef information will be regenerated as required, just remove it
     const handleExtRef = (extRef: Element) => {
@@ -469,7 +469,7 @@ export default class SubscriberLaterBinding extends LitElement {
 
     flatEdits.forEach((edit) => {
       let element: Element | undefined;
-      if (isUpdate(edit)) {
+      if (isSetAttributes(edit) || isSetTextContent(edit)) {
         element = edit.element;
       } else if (
         (isRemove(edit) || isInsert(edit)) &&
@@ -489,6 +489,14 @@ export default class SubscriberLaterBinding extends LitElement {
         // need to track before and after to ensure that appropriate values
         // can be extracted
         if (isSupervision(element) && when === 'before' && isRemove(edit)) {
+          handleSupervision(element, true);
+        }
+        // setting the text of a supervision value replaces the old reference
+        if (
+          isSupervision(element) &&
+          when === 'before' &&
+          isSetTextContent(edit)
+        ) {
           handleSupervision(element, true);
         }
         if (isSupervision(element) && when === 'after' && !isRemove(edit)) {
@@ -940,13 +948,13 @@ export default class SubscriberLaterBinding extends LitElement {
    * @param extRef - The Ext Ref Element to clean from attributes.
    */
   private unsubscribeExtRef(extRef: Element): void {
-    const editActions: Edit[] = [];
+    const editActions: EditV2[] = [];
 
     editActions.push(
       ...unsubscribe([extRef], { ignoreSupervision: this.ignoreSupervision })
     );
 
-    this.dispatchEvent(newEditEvent(editActions));
+    this.dispatchEvent(newEditEventV2(editActions));
   }
 
   /**
@@ -962,13 +970,13 @@ export default class SubscriberLaterBinding extends LitElement {
     // need to remove invalid existing subscription
     if (isSubscribed(extRef) || isPartiallyConfigured(extRef)) {
       this.dispatchEvent(
-        newEditEvent(
+        newEditEventV2(
           unsubscribe([extRef], { ignoreSupervision: this.ignoreSupervision })
         )
       );
     }
 
-    const subscribeEdits: Edit[] = subscribe(
+    const subscribeEdits: EditV2[] = subscribe(
       { sink: extRef, source: { fcda, controlBlock } },
       {
         force: false,
@@ -976,7 +984,7 @@ export default class SubscriberLaterBinding extends LitElement {
         checkOnlyBType: this.checkOnlyPreferredBasicType
       }
     );
-    this.dispatchEvent(newEditEvent(subscribeEdits));
+    this.dispatchEvent(newEditEventV2(subscribeEdits));
   }
 
   public getSubscribedExtRefElements(): Element[] {
@@ -1201,19 +1209,19 @@ export default class SubscriberLaterBinding extends LitElement {
     // allowing e.g. .stVal and .q to be single-click mapped.
 
     // before edit occurs
-    window.addEventListener('oscd-edit', this.handleEditBefore, {
+    window.addEventListener('oscd-edit-v2', this.handleEditBefore, {
       capture: true
     });
 
     // after edit occurs
-    window.addEventListener('oscd-edit', this.handleEditAfter);
+    window.addEventListener('oscd-edit-v2', this.handleEditAfter);
   }
 
   disconnectedCallback(): void {
-    window.removeEventListener('oscd-edit', this.handleEditBefore, {
+    window.removeEventListener('oscd-edit-v2', this.handleEditBefore, {
       capture: true
     });
-    window.removeEventListener('oscd-edit', this.handleEditAfter);
+    window.removeEventListener('oscd-edit-v2', this.handleEditAfter);
     super.disconnectedCallback();
   }
 
