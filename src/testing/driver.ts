@@ -229,7 +229,8 @@ export class PluginDriver {
         (this.mounted.plugin as unknown as Record<string, RegExp>)[
           searchRegexes[field]
         ].source === expected,
-      `search for "${text}" was not applied`
+      `search for "${text}" was not applied`,
+      { interval: 10, timeout: 2000 }
     );
     await this.mounted.settle();
   }

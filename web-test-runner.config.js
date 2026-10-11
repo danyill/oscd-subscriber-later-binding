@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+import os from 'os';
 import path from 'path';
 import { playwrightLauncher } from '@web/test-runner-playwright';
 import { visualRegressionPlugin } from '@web/test-runner-visual-regression/plugin';
@@ -90,6 +91,9 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
       arg => typeof arg === 'string' && noise.some(n => arg.includes(n))
     );
   },
+
+  // Test files run in parallel pages. The shared config runs them one at a time.
+  concurrency: Math.min(6, Math.max(1, os.cpus().length - 1)),
 
   testFramework: { config: { timeout: 10000 } },
 
