@@ -75,7 +75,7 @@ Tests use https://modern-web.dev/docs/test-runner/overview/[Web Test Runner] wit
 There are two kinds:
 
 `*.spec.ts`:: Fast unit and component tests, which are what `npm test` runs.
-`*.test.ts`:: Screenshot tests, which are run with `npm run test:visual`.
+`*.test.ts`:: A small set of screenshot tests, which are run with `npm run test:visual`.
 
 To execute the unit tests, with coverage:
 
@@ -104,6 +104,13 @@ See `docs/test_plan.md` for the reasoning and the remaining work.
 
 === Screenshot tests
 
-The tests in `src/legacy-visual` compare screenshots with baselines in `test/screenshots/baseline`.
-Rendering differs between operating systems and font versions, so these baselines are owned by CI.
-Do not update them locally.
+`src/oscd-subscriber-later-binding.test.ts` takes screenshots of the plugin's main visual states (both views, selection, open menus, empty states, read-only and sampled values) and compares them with baselines in `test/screenshots/baseline`.
+Fonts come from `node_modules`, not the network.
+
+ $ npm run test:visual
+
+Rendering differs between operating systems, so the baselines are owned by CI.
+Do not create, update or commit them locally.
+When you add a screenshot test or change how the plugin looks on purpose, run the `Update visual baselines` workflow in GitHub Actions for your branch and review the images it commits.
+A screenshot without a baseline fails the run.
+Failures leave the new screenshot and a diff in `test/screenshots/failed`, which you can use to see what changed.

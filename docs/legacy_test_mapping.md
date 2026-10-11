@@ -3,9 +3,9 @@
 The 152 tests in `src/legacy-visual` (formerly `test/integration`) each took a
 screenshot and only 26 `expect()` calls were made across all of them. This maps every one of
 them to the behavioural specs which now check the same behaviour. The legacy
-suite stays in place, run with `npm run test:visual`, until the curated
-screenshot suite described in `docs/test_plan.md` exists. This list is the
-checklist for deleting it.
+suite has been deleted along with its 145 baselines, and replaced by the
+curated screenshot tests in `src/oscd-subscriber-later-binding.test.ts`. This
+list records where each old test went.
 
 "Publisher" and "subscriber" are the two views. Unless stated, GOOSE and
 sampled value variants of a test are both covered by the specs named.
@@ -64,12 +64,12 @@ sampled value variants of a test are both covered by the specs named.
 
 ## Visual only
 
-These check how the plugin looks and are what the curated screenshot suite should
-keep, once there is a UI to take baselines of:
+These check how the plugin looks and are covered by the curated screenshot tests
+in `src/oscd-subscriber-later-binding.test.ts`:
 
 * The four "read-only: uses the secondary or primary colours" tests, which check
-  theme colours of the title.
-* The initial state of each view, for layout and iconography.
+  theme colours of the title. See the "as a read-only view" screenshots.
+* The initial state of each view, for layout and iconography. See "initially".
 
 ## Behaviour the legacy tests did not check
 

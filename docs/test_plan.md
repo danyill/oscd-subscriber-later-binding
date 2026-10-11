@@ -1,6 +1,6 @@
 # Test Plan: Fast, Modern Test Suite Before the Refactor
 
-Status: Phases 0 to 2 implemented, see section 10 · Date: 2026-10-11
+Status: Phases 0 to 3 implemented, see section 10 · Date: 2026-10-11
 
 ## 1. Purpose
 
@@ -385,10 +385,10 @@ replacement.
 
 ### Phase 3: Curate the visual suite (≈1–2 days)
 
-- [ ] Write the ~10–15 curated `*.test.ts` screenshots, with self-hosted fonts,
-      running in the Playwright container.
-- [ ] Delete `test/integration/` and its 145 baselines. Remove the
-      Chromium font flags, OS fuzz thresholds and `factor` sleeps.
+- [x] Write the ~10–15 curated `*.test.ts` screenshots, with self-hosted fonts.
+      (15 written. Baselines come from the CI workflow, see section 10.)
+- [x] Delete the legacy suite and its 145 baselines, and the `factor` sleeps and
+      OS fuzz thresholds. (Chromium font flags were kept.)
 
 **Exit:** targets in §1 met. `npm test` < 30 s; visual suite < 2 min in CI.
 
@@ -476,11 +476,17 @@ files in parallel (done) halved it.
 
 ### What was done
 
+* Phase 3: the 152 legacy screenshot tests and 145 baselines were deleted. 15
+  curated screenshots in `src/oscd-subscriber-later-binding.test.ts` cover both
+  views, selection, the open filter, sort and settings menus, search, empty
+  states, read-only and sampled values. Fonts (Roboto, Material Icons) are served
+  from `node_modules` instead of Google Fonts.
+
 * Phase 0: `@omicronenergy/oscd-tooling`, `src/` layout, `unit` and `visual`
   groups, a local WTR config extending the shared one, CI split into a
   lint-and-unit job and a pull-request-only visual job, test dependencies moved
-  to `devDependencies`. The legacy screenshot suite was moved unchanged to
-  `src/legacy-visual` and still runs with `npm run test:visual`.
+  to `devDependencies`. The legacy screenshot suite was first moved unchanged to
+  `src/legacy-visual`, then replaced in Phase 3.
 * Phase 1: search, sort, identity, ExtRef and debounce helpers were moved out of
   the 3,400 line component into `src/foundation` and have unit tests. The
   `window` listener leak was fixed.
@@ -494,13 +500,14 @@ files in parallel (done) halved it.
 
 ### Differences from the plan
 
-* **Phase 3 is not done.** The curated screenshot suite and Docker based baselines
-  were not created, and the legacy suite and its 145 baselines were not deleted.
-  The project's agent guidance says screenshot baselines are owned by CI and must
-  not be regenerated or committed locally, which conflicts with generating them in
-  a container here. Decide which policy to follow before the UI is rebuilt. Until
-  then the legacy suite keeps protecting how the plugin looks, in the pull-request
-  job.
+* **Phase 3 follows the project's agent guidance, not the Docker idea.** That
+  guidance says screenshot baselines are owned by CI and must not be regenerated
+  or committed locally. So there is no `test:update` script and no container:
+  the `Update visual baselines` workflow (`workflow_dispatch`) regenerates and
+  commits baselines in CI, and a screenshot without a baseline fails the run.
+  Chromium font flags were kept as they cost nothing. The 15 curated screenshots
+  have no committed baselines yet: run that workflow on the branch once to
+  create them.
 * **No accessibility smoke tests or shell smoke test yet.** These are cheap to add
   once the UI components are chosen, because the driver is the only place that
   knows the DOM.
