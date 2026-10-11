@@ -17,7 +17,12 @@ import { legacyVisualHtml } from './test/support/legacy-visual-html.js';
  */
 
 // Thresholds only ever go up. Raise them as each phase of docs/test_plan.md lands.
-const coverageThreshold = { statements: 0, branches: 0, functions: 0, lines: 0 };
+const coverageThreshold = {
+  statements: 97,
+  branches: 95,
+  functions: 95,
+  lines: 97
+};
 
 // The legacy baselines were generated with these Chromium flags.
 const legacyBrowsers = [
@@ -69,28 +74,17 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   ],
 
   groups: oscdConfig.groups.map(group => {
-    if (group.name === 'visual') {
-      return {
-        ...group,
-        browsers: legacyBrowsers,
-        testRunnerHtml: legacyVisualHtml
-      };
-    }
+    const configured =
+      group.name === 'visual'
+        ? {
+            ...group,
+            browsers: legacyBrowsers,
+            testRunnerHtml: legacyVisualHtml
+          }
+        : group;
     // `SPEC=dist/filters.spec.js npm test` runs a single spec
-    return process.env.SPEC ? { ...group, files: process.env.SPEC } : group;
+    return process.env.SPEC ? { ...configured, files: process.env.SPEC } : configured;
   }),
-
-  filterBrowserLogs(log) {
-    const noise = [
-      'Running in dev mode',
-      'Lit is in dev mode',
-      'scheduled an update',
-      'Multiple versions of Lit loaded'
-    ];
-    return !log.args.some(
-      arg => typeof arg === 'string' && noise.some(n => arg.includes(n))
-    );
-  },
 
   // Test files run in parallel pages. The shared config runs them one at a time.
   concurrency: Math.min(6, Math.max(1, os.cpus().length - 1)),
