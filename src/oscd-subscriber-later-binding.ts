@@ -387,25 +387,11 @@ export default class SubscriberLaterBinding extends LitElement {
   @query('#savePublisherToMarkdown')
   savePublisherToMarkdownButton?: Icon;
 
-  constructor() {
-    super();
+  private readonly handleEditBefore = (event: Event): void =>
+    this.updateCaching(event as EditEvent, 'before');
 
-    // edits are processed to allow updating of cached values from
-    // menu plugins which provide manufacturer-specific functionality
-    // allowing e.g. .stVal and .q to be single-click mapped.
-
-    // before edit occurs
-    window.addEventListener(
-      'oscd-edit',
-      event => this.updateCaching(event as EditEvent, 'before'),
-      { capture: true }
-    );
-
-    // after edit occurs
-    window.addEventListener('oscd-edit', event =>
-      this.updateCaching(event as EditEvent, 'after')
-    );
-  }
+  private readonly handleEditAfter = (event: Event): void =>
+    this.updateCaching(event as EditEvent, 'after');
 
   /**
    * Updates caching of control blocks, used FCDAs and supervision LNs.
@@ -1208,6 +1194,26 @@ export default class SubscriberLaterBinding extends LitElement {
     super.connectedCallback();
     // restore settings from local storage on plugin loading
     this.restoreSettings();
+
+    // edits are processed to allow updating of cached values from
+    // menu plugins which provide manufacturer-specific functionality
+    // allowing e.g. .stVal and .q to be single-click mapped.
+
+    // before edit occurs
+    window.addEventListener('oscd-edit', this.handleEditBefore, {
+      capture: true
+    });
+
+    // after edit occurs
+    window.addEventListener('oscd-edit', this.handleEditAfter);
+  }
+
+  disconnectedCallback(): void {
+    window.removeEventListener('oscd-edit', this.handleEditBefore, {
+      capture: true
+    });
+    window.removeEventListener('oscd-edit', this.handleEditAfter);
+    super.disconnectedCallback();
   }
 
   protected async firstUpdated(): Promise<void> {
