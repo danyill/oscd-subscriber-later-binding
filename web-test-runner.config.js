@@ -77,5 +77,17 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
       : group
   ),
 
+  filterBrowserLogs(log) {
+    const noise = [
+      'Running in dev mode',
+      'Lit is in dev mode',
+      'scheduled an update',
+      'Multiple versions of Lit loaded'
+    ];
+    return !log.args.some(
+      arg => typeof arg === 'string' && noise.some(n => arg.includes(n))
+    );
+  },
+
   testsFinishTimeout: 30 * 60 * 1000
 });

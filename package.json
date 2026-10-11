@@ -11,11 +11,12 @@
     ".": "./dist/oscd-subscriber-later-binding.js"
   },
   "scripts": {
+    "clean": "node -e \"require(\\\"fs\\\").rmSync(\\\"dist\\\",{recursive:true,force:true})\"",
     "lint": "oscd lint",
     "format": "oscd lint --format",
     "start": "oscd start",
     "start:bundle": "oscd start-bundle",
-    "build": "oscd build",
+    "build": "npm run clean && oscd build --no-clean",
     "bundle": "oscd bundle",
     "test": "oscd test",
     "test:watch": "oscd test --watch",
@@ -23,7 +24,10 @@
     "test:update": "oscd test --update",
     "updates": "oscd updates",
     "deploy": "oscd deploy",
-    "prepare": "oscd install-hooks"
+    "prepare": "oscd install-hooks",
+    "pretest": "npm run clean",
+    "pretest:visual": "npm run clean",
+    "pretest:update": "npm run clean"
   },
   "dependencies": {
     "@material/mwc-checkbox": "^0.27.0",
