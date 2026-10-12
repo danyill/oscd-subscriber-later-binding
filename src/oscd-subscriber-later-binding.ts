@@ -399,6 +399,7 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
       display: block;
       container-type: inline-size;
       background-color: var(--oscd-base2);
+      font-family: var(--oscd-theme-text-font, 'Roboto'), sans-serif;
     }
 
     .header {

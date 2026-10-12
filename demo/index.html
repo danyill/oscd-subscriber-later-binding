@@ -9,12 +9,24 @@
       href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300&family=Roboto:wght@300;400;500&display=swap"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Material+Symbols+Outlined&display=block"
     />
     <style>
+      * {
+        --oscd-theme-text-font: 'Roboto';
+        --oscd-theme-icon-font: 'Material Symbols Outlined';
+
+        margin: 0px;
+        padding: 0px;
+      }
+
+      oscd-shell {
+        display: block;
+        height: 100vh;
+      }
+
       body {
-        margin: 0;
         background: white;
       }
     </style>
@@ -23,54 +35,25 @@
     <oscd-shell></oscd-shell>
 
     <script type="module">
+      // scoped registries must be polyfilled before any element is defined
+      import '@webcomponents/scoped-custom-element-registry';
       import '@omicronenergy/oscd-shell/oscd-shell.js';
-
-      // bundled, the plugin is next to the demo folder; served from source it
-      // is built into dist/
-      const bundled = new URL(
-        '../oscd-subscriber-later-binding.js',
-        window.location.href
-      ).href;
-      const isBundled = (await fetch(bundled, { method: 'HEAD' })).ok;
-      const pluginSrc = isBundled
-        ? bundled
-        : new URL('/dist/oscd-subscriber-later-binding.js', window.location.href)
-            .href;
+      import { definePlugins, plugins } from './plugins.js';
 
       const shell = document.querySelector('oscd-shell');
-      shell.plugins = {
-        menu: [
-          {
-            name: 'Open File',
-            translations: { de: 'Datei öffnen' },
-            icon: 'folder_open',
-            src: 'https://cdn.jsdelivr.net/npm/@omicronenergy/oscd-menu-open@0.0.6/dist/oscd-menu-open.js'
-          },
-          {
-            name: 'Save File',
-            translations: { de: 'Datei speichern' },
-            icon: 'save',
-            src: 'https://cdn.jsdelivr.net/npm/@omicronenergy/oscd-menu-save@0.0.2/dist/oscd-menu-save.js'
-          }
-        ],
-        editor: [
-          {
-            name: 'Subscriber Later Binding',
-            translations: {
-              de: 'Späte Bindung des Abonnenten',
-              pt: 'Associação Tardia de Assinante'
-            },
-            icon: 'link',
-            requireDoc: true,
-            src: pluginSrc
-          }
-        ]
-      };
+      definePlugins(shell.registry);
+      shell.plugins = plugins;
 
       const params = new URL(document.location.href).searchParams;
       for (const [name, value] of params) {
         shell.setAttribute(name, value);
       }
+
+      const sample = await fetch('sample.scd').then(r => r.text());
+      shell.docs = {
+        'sample.scd': new DOMParser().parseFromString(sample, 'application/xml')
+      };
+      shell.docName = 'sample.scd';
     </script>
   </body>
 </html>
