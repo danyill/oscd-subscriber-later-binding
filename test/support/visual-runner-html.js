@@ -58,6 +58,7 @@ export const visualRunnerHtml = testFramework => `
 
     body {
       background: white;
+      font-family: Roboto, sans-serif;
     }
     </style>
   </body>
