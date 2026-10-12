@@ -32,6 +32,8 @@ import { findFCDAs } from './foundation/foundation.js';
 import { SubscriptionModel, TypeInfoCache } from './foundation/model.js';
 import {
   defaultSettings,
+  maxSubscriberSplit,
+  minSubscriberSplit,
   parseSettings,
   serializeSettings,
   settingsKeys,
@@ -129,15 +131,15 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
 
   @property({ type: Number }) sortFcda: FcdaSortOrder = defaultSettings.sortFcda;
 
+  /** Width of the left list in the subscriber view, as a percentage. */
+  @property({ type: Number }) subscriberSplit = defaultSettings.subscriberSplit;
+
   // What the user has chosen.
   @state() selectedControl: Element | undefined;
 
   @state() selectedFCDA: Element | undefined;
 
   @state() selectedExtRef: Element | undefined;
-
-  /** Width of the left list in the subscriber view, as a percentage. */
-  @state() private subscriberSplit = 50;
 
   @state() private model = new SubscriptionModel(undefined, 'GSEControl');
 
@@ -328,11 +330,6 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
     this.selectedExtRef = extRef;
   }
 
-  /** The lowest and highest share of the width the left list may take. */
-  private static readonly minSplit = 20;
-
-  private static readonly maxSplit = 80;
-
   /**
    * Follows a drag of the divider in the subscriber view and sets the width of
    * the left list to the share of the container the pointer is over.
@@ -352,8 +349,8 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
       }
       const share = Math.round(((moveEvent.clientX - left) / width) * 100);
       this.subscriberSplit = Math.min(
-        OscdEditorSubscriberLaterBinding.maxSplit,
-        Math.max(OscdEditorSubscriberLaterBinding.minSplit, share)
+        maxSubscriberSplit,
+        Math.max(minSubscriberSplit, share)
       );
     };
     const stop = (): void => {
@@ -375,12 +372,12 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
     const step = event.shiftKey ? 10 : 2;
     if (event.key === 'ArrowLeft') {
       this.subscriberSplit = Math.max(
-        OscdEditorSubscriberLaterBinding.minSplit,
+        minSubscriberSplit,
         this.subscriberSplit - step
       );
     } else if (event.key === 'ArrowRight') {
       this.subscriberSplit = Math.min(
-        OscdEditorSubscriberLaterBinding.maxSplit,
+        maxSubscriberSplit,
         this.subscriberSplit + step
       );
     } else {

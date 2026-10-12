@@ -129,6 +129,7 @@ describe('settings', () => {
   describe('persistence', () => {
     const roundTripped: [string, unknown][] = [
       ['subscriberView', true],
+      ['subscriberSplit', 65],
       ['filterOutSubscribed', true],
       ['filterOutDataObjects', true],
       ['filterOutQuality', true],
@@ -228,6 +229,65 @@ describe('settings', () => {
         rawSettings: '{not json'
       });
       expect(mounted.plugin.autoIncrement).to.equal(true);
+    });
+
+    const container = (): HTMLElement =>
+      mounted.plugin.shadowRoot!.querySelector('.container') as HTMLElement;
+    const divider = (): HTMLElement =>
+      mounted.plugin.shadowRoot!.querySelector('.divider') as HTMLElement;
+
+    it('applies a restored subscriber split to the divider', async () => {
+      await mount({ subscriberView: true, subscriberSplit: 70 });
+      expect(container().style.getPropertyValue('--subscriber-pane')).to.equal(
+        '70%'
+      );
+    });
+
+    it('falls back to an even split when the stored split is out of range', async () => {
+      await mount({ subscriberView: true, subscriberSplit: 5 });
+      expect(container().style.getPropertyValue('--subscriber-pane')).to.equal(
+        '50%'
+      );
+    });
+
+    it('remembers the subscriber split once the divider is moved', async () => {
+      await mount({ subscriberView: true });
+      const { left, width } = container().getBoundingClientRect();
+      divider().dispatchEvent(
+        new PointerEvent('pointerdown', {
+          clientX: left + width / 2,
+          bubbles: true
+        })
+      );
+      window.dispatchEvent(
+        new PointerEvent('pointermove', { clientX: left + width * 0.65 })
+      );
+      window.dispatchEvent(new PointerEvent('pointerup'));
+      await mounted.settle();
+      expect(storedSettings().subscriberSplit).to.equal(65);
+    });
+
+    it('moves the divider to the restored split after a remount', async () => {
+      await mount({ subscriberView: true });
+      const { left, width } = container().getBoundingClientRect();
+      divider().dispatchEvent(
+        new PointerEvent('pointerdown', {
+          clientX: left + width / 2,
+          bubbles: true
+        })
+      );
+      window.dispatchEvent(
+        new PointerEvent('pointermove', { clientX: left + width * 0.7 })
+      );
+      window.dispatchEvent(new PointerEvent('pointerup'));
+      await mounted.settle();
+
+      const stored = storedSettings();
+      mounted.unmount();
+      await mount(stored);
+      expect(container().style.getPropertyValue('--subscriber-pane')).to.equal(
+        '70%'
+      );
     });
   });
 

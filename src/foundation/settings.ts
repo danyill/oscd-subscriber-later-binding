@@ -6,12 +6,24 @@ import { ExtRefSortOrder, FcdaSortOrder } from './sort.js';
 export const settingsStorageKey = 'oscd-editor-subscriber-later-binding';
 
 /**
+ * The lowest and highest share of the width the divider in the subscriber view
+ * may give to the left list. Kept here so that the stored setting and the
+ * divider agree on the bounds.
+ */
+export const minSubscriberSplit = 20;
+
+export const maxSubscriberSplit = 80;
+
+/**
  * Settings which are kept between sessions. The names are the names of the
  * properties of the plugin, which external plugins and specs rely on.
  */
 export interface SubscriberSettings {
   subscriberView: boolean;
   controlTag: ControlTag;
+
+  /** Share of the width of the left list in the subscriber view, as a percentage. */
+  subscriberSplit: number;
 
   filterOutSubscribed: boolean;
   filterOutNotSubscribed: boolean;
@@ -39,6 +51,7 @@ export interface SubscriberSettings {
 export const defaultSettings: Readonly<SubscriberSettings> = {
   subscriberView: false,
   controlTag: 'GSEControl',
+  subscriberSplit: 50,
 
   filterOutSubscribed: false,
   filterOutNotSubscribed: false,
@@ -77,6 +90,14 @@ const sortOrderCounts: Partial<Record<keyof SubscriberSettings, number>> = {
 function isValidSetting(key: keyof SubscriberSettings, value: unknown): boolean {
   if (key === 'controlTag') {
     return isControlTag(value);
+  }
+  if (key === 'subscriberSplit') {
+    return (
+      typeof value === 'number' &&
+      Number.isFinite(value) &&
+      value >= minSubscriberSplit &&
+      value <= maxSubscriberSplit
+    );
   }
   const sortOrderCount = sortOrderCounts[key];
   if (sortOrderCount !== undefined) {

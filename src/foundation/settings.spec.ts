@@ -2,6 +2,8 @@ import { expect } from '@open-wc/testing';
 
 import {
   defaultSettings,
+  maxSubscriberSplit,
+  minSubscriberSplit,
   parseSettings,
   serializeSettings,
   settingsKeys
@@ -48,7 +50,19 @@ describe('settings', () => {
 
     it('lists every setting once', () => {
       expect(settingsKeys).to.have.length(new Set(settingsKeys).size);
-      expect(settingsKeys).to.have.length(20);
+      expect(settingsKeys).to.have.length(21);
+    });
+
+    it('share the subscriber width evenly', () => {
+      expect(defaultSettings.subscriberSplit).to.equal(50);
+    });
+
+    it('keep the subscriber split within its bounds', () => {
+      expect(minSubscriberSplit).to.be.lessThan(maxSubscriberSplit);
+      expect(defaultSettings.subscriberSplit).to.be.at.least(
+        minSubscriberSplit
+      );
+      expect(defaultSettings.subscriberSplit).to.be.at.most(maxSubscriberSplit);
     });
   });
 
@@ -71,6 +85,7 @@ describe('settings', () => {
       const stored: SubscriberSettings = {
         subscriberView: true,
         controlTag: 'SampledValueControl',
+        subscriberSplit: 65,
         filterOutSubscribed: true,
         filterOutNotSubscribed: true,
         filterOutDataObjects: true,
@@ -133,6 +148,27 @@ describe('settings', () => {
             key as keyof SubscriberSettings
           ]
         ).to.equal(0);
+      });
+    });
+
+    it('reads a subscriber split within its bounds', () => {
+      expect(parseSettings('{"subscriberSplit":70}').subscriberSplit).to.equal(
+        70
+      );
+    });
+
+    const invalidSplits: [string, unknown][] = [
+      ['too small', minSubscriberSplit - 1],
+      ['too large', maxSubscriberSplit + 1],
+      ['not a number', '70'],
+      ['not a value at all', null]
+    ];
+    invalidSplits.forEach(([description, value]) => {
+      it(`ignores a subscriber split which is ${description}`, () => {
+        expect(
+          parseSettings(JSON.stringify({ subscriberSplit: value }))
+            .subscriberSplit
+        ).to.equal(defaultSettings.subscriberSplit);
       });
     });
 
