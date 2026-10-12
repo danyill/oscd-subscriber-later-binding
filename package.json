@@ -49,7 +49,7 @@
     "@openscd/oscd-editor": "^1.8.0",
     "@types/node": "^20.19.43",
     "@web/test-runner-commands": "^0.9.0",
-    "@web/test-runner-visual-regression": "^0.9.0",
+    "@web/test-runner-visual-regression": "^0.10.0",
     "@webcomponents/scoped-custom-element-registry": "^0.0.10",
     "rollup-plugin-copy": "^3.5.0",
     "sinon": "^22.1.0"
