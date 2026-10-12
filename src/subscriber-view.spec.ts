@@ -293,6 +293,37 @@ describe('subscriber view', () => {
     });
   });
 
+  describe('undoable edits', () => {
+    // One user action must be one undoable edit, so that undo and redo move a
+    // whole subscription rather than part of one.
+    const undoDepth = (): number => mounted.editor.past.length;
+
+    it('selecting a subscribed ExtRef unsubscribes in one undoable edit', async () => {
+      const before = undoDepth();
+      await driver.selectExtRef(BOUND, 'subscriber');
+      expect(undoDepth() - before).to.equal(1);
+    });
+
+    it('subscribing the selected ExtRef adds one undoable edit', async () => {
+      mounted.plugin.autoIncrement = false;
+      await mounted.settle();
+      await driver.selectExtRef(SUB1_CILO_STVAL, 'subscriber');
+      const before = undoDepth();
+      await driver.selectFcda(GOOSE1, GOOSE1_QB1_STVAL);
+      expect(undoDepth() - before).to.equal(1);
+    });
+
+    it('auto-incrementing after a subscription adds one undoable edit', async () => {
+      await driver.selectExtRef(SUB1_CILO_STVAL, 'subscriber');
+      const before = undoDepth();
+      await driver.selectFcda(GOOSE1, GOOSE1_QB1_STVAL);
+      expect(undoDepth() - before).to.equal(1);
+      expect(mounted.plugin.selectedExtRef?.getAttribute('intAddr')).to.equal(
+        'Pos;CSWI1/Pos/q'
+      );
+    });
+  });
+
   describe('supervisions when subscribing', () => {
     // GOOSE_Subscriber1 has three supervision logical nodes, all in use. Free
     // one so that a new control block can be supervised.

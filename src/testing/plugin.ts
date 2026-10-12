@@ -1,6 +1,6 @@
 import { waitUntil } from '@open-wc/testing';
 import { setViewport } from '@web/test-runner-commands';
-import { handleEdit } from '@openscd/oscd-editor';
+import { XMLEditor } from '@openscd/oscd-editor';
 import type { EditEventV2, EditV2 } from '@openscd/oscd-api';
 import { newEditEventV2 } from '@openscd/oscd-api/utils.js';
 
@@ -93,8 +93,13 @@ export type MountOptions = {
 export type MountedPlugin = {
   plugin: SubscriberLaterBinding;
   doc: XMLDocument;
-  /** Every `oscd-edit-v2` edit dispatched by the plugin, in order. */
+  /**
+   * Every `oscd-edit-v2` edit dispatched by the plugin, in order, without
+   * merging squashed edits. Use `editor` to see the undoable commits.
+   */
   edits: EditV2[];
+  /** The undo/redo history, as the host keeps it. */
+  editor: XMLEditor;
   /**
    * Dispatches an edit as another plugin would, e.g. a menu plugin which maps
    * data for a specific manufacturer. The host applies it to the document.
@@ -163,15 +168,17 @@ export async function mountPlugin(
   document.body.appendChild(container);
 
   const plugin = document.createElement(tagName) as SubscriberLaterBinding;
+  const editor = new XMLEditor();
   const edits: EditV2[] = [];
 
   // Listening on the container, below `window`, mirrors the host shell: the
-  // edit is applied before the plugin's own "after" listener on `window`.
+  // edit is applied before the plugin's own "after" listener on `window`, and
+  // an edit marked `squash` is merged into the previous undoable commit.
   let version = 0;
   container.addEventListener('oscd-edit-v2', (event) => {
-    const { edit } = (event as EditEventV2).detail;
+    const { edit, title, squash } = (event as EditEventV2).detail;
     edits.push(edit);
-    handleEdit(edit);
+    editor.commit(edit, { title, squash });
     version += 1;
     plugin.docVersion = version;
   });
@@ -225,6 +232,7 @@ export async function mountPlugin(
     plugin,
     doc,
     edits,
+    editor,
     settle,
     applyEdit: async (edit) => {
       container.dispatchEvent(newEditEventV2(edit));

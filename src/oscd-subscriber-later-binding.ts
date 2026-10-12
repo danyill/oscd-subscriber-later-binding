@@ -210,25 +210,35 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
     this.selectedExtRef = undefined;
   }
 
-  private dispatchEdits(edits: EditV2[], title: string): void {
-    this.dispatchEvent(newEditEventV2(edits, { title }));
+  /**
+   * Dispatches one undoable edit. When `squash` is set the edit is merged into
+   * the previous commit, so that the several edits of a single user action
+   * undo and redo together.
+   */
+  private dispatchEdits(edits: EditV2[], title: string, squash = false): void {
+    this.dispatchEvent(newEditEventV2(edits, { title, squash }));
   }
 
-  private unsubscribe(extRef: Element): void {
+  private unsubscribe(extRef: Element, squash = false): void {
     this.dispatchEdits(
       unsubscribeEdits(extRef, this.settings),
-      msg('Unsubscribe')
+      msg('Unsubscribe'),
+      squash
     );
   }
 
   private subscribe(extRef: Element, control: Element, fcda: Element): void {
-    // an old subscription, even part of one, must be removed first
-    if (needsUnsubscribe(extRef)) {
+    // An old subscription, even part of one, must be removed first. The edits
+    // which subscribe are worked out from the document, so they are dispatched
+    // after those which unsubscribe, squashed into the same undoable edit.
+    const removedOldSubscription = needsUnsubscribe(extRef);
+    if (removedOldSubscription) {
       this.unsubscribe(extRef);
     }
     this.dispatchEdits(
       subscribeEdits(extRef, control, fcda, this.settings),
-      msg('Subscribe')
+      msg('Subscribe'),
+      removedOldSubscription
     );
   }
 
@@ -263,7 +273,8 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
 
     this.selectedExtRef = undefined;
     if (next) {
-      this.chooseSubscriberExtRef(next);
+      // moving to the next input is part of the same user action
+      this.chooseSubscriberExtRef(next, true);
     }
   }
 
@@ -300,13 +311,14 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
    * Choosing one which is subscribed removes the subscription so that it can be
    * subscribed again.
    * @param extRef - the ExtRef which was chosen.
+   * @param squash - whether the edits belong to the previous user action.
    */
-  private chooseSubscriberExtRef(extRef: Element): void {
+  private chooseSubscriberExtRef(extRef: Element, squash = false): void {
     if (
       !this.readOnlyView &&
       (isSubscribed(extRef) || isPartiallyConfigured(extRef))
     ) {
-      this.unsubscribe(extRef);
+      this.unsubscribe(extRef, squash);
     }
     this.selectedControl = undefined;
     this.selectedFCDA = undefined;
