@@ -306,7 +306,7 @@ export class PluginDriver {
    * @param menuId - id of the menu.
    */
   async showMenu(menuId: string): Promise<void> {
-    await openFilterButton(this.filterButton(menuId));
+    await openFilterButton(this.filterButton(menuId), true);
     await this.mounted.settle();
   }
 

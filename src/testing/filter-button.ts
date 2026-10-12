@@ -15,10 +15,23 @@ function dialogOf(button: FilterButton) {
 /**
  * Opens the dialog of a filter button by clicking its button, as a user does.
  * @param button - the filter button.
+ * @param animated - whether to wait for the dialog to finish fading in, which
+ * only a screenshot needs.
  */
-export async function openFilterButton(button: FilterButton): Promise<void> {
+export async function openFilterButton(
+  button: FilterButton,
+  animated = false
+): Promise<void> {
+  const opened = new Promise<void>((resolve) => {
+    dialogOf(button).addEventListener('opened', () => resolve(), {
+      once: true
+    });
+  });
   button.shadowRoot!.querySelector<HTMLElement>('oscd-icon-button')!.click();
   await waitUntil(() => dialogOf(button).open, 'the menu did not open');
+  if (animated) {
+    await opened;
+  }
   await button.updateComplete;
 }
 
