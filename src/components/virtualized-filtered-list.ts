@@ -53,6 +53,10 @@ export class VirtualizedFilteredList extends ScopedElementsMixin(LitElement) {
   @property({ attribute: false })
   matchItem?: (item: unknown, regex: RegExp) => boolean;
 
+  /** Shows the selection in a different colour: the lists cannot edit. */
+  @property({ type: Boolean, reflect: true })
+  readonly = false;
+
   @property()
   placeholder = msg('search');
 
@@ -163,9 +167,28 @@ export class VirtualizedFilteredList extends ScopedElementsMixin(LitElement) {
     }
 
     oscd-list-item.selected {
-      --md-sys-color-on-surface: var(--oscd-base3);
-      --md-sys-color-on-surface-variant: var(--oscd-base2);
-      background-color: var(--oscd-primary);
+      --md-sys-color-on-surface: var(--md-sys-color-on-primary);
+      --md-sys-color-on-surface-variant: var(--md-sys-color-on-primary);
+      background-color: var(--md-sys-color-primary);
+    }
+
+    /*
+     * The theme has no colour for a selection which cannot be acted on, so the
+     * plugin exposes its own tokens, which default to the secondary colour.
+     */
+    :host([readonly]) oscd-list-item.selected {
+      --md-sys-color-on-surface: var(
+        --oscd-subscriber-later-binding-read-only-selected-text,
+        var(--oscd-base3)
+      );
+      --md-sys-color-on-surface-variant: var(
+        --oscd-subscriber-later-binding-read-only-selected-text,
+        var(--oscd-base3)
+      );
+      background-color: var(
+        --oscd-subscriber-later-binding-read-only-selected,
+        var(--oscd-secondary)
+      );
     }
 
     oscd-list-item.control > div[slot='headline'],
@@ -175,7 +198,7 @@ export class VirtualizedFilteredList extends ScopedElementsMixin(LitElement) {
     }
 
     oscd-list-item.placeholder {
-      --md-sys-color-on-surface: var(--md-sys-color-on-surface-variant, #5f6368);
+      --md-sys-color-on-surface: var(--md-sys-color-on-surface-variant);
     }
 
     oscd-icon.arrow {
@@ -184,11 +207,11 @@ export class VirtualizedFilteredList extends ScopedElementsMixin(LitElement) {
     }
 
     oscd-icon.warning {
-      color: #f9a825;
+      color: var(--oscd-warning);
     }
 
     oscd-icon.error {
-      color: #d32f2f;
+      color: var(--md-sys-color-error);
     }
 
     .count {

@@ -93,7 +93,7 @@ export const sharedStyles = css`
   }
 
   .list-title .title.selected {
-    color: var(--oscd-primary);
+    color: var(--md-sys-color-primary);
   }
 
   .read-only-icon {
@@ -108,13 +108,13 @@ export const sharedStyles = css`
   }
 
   .option-button.filter-off {
-    color: var(--oscd-primary);
+    color: var(--md-sys-color-primary);
   }
 
   h3 {
     margin: 16px;
     font-size: 1rem;
     font-weight: 400;
-    color: var(--md-sys-color-on-surface-variant, #5f6368);
+    color: var(--md-sys-color-on-surface-variant);
   }
 `;

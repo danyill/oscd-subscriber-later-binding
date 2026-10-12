@@ -163,3 +163,14 @@ container.
 * DP-3: text is wrapped in `msg()` from `@lit/localize`, English only.
 * DP-4: the settings persistence defects found by the specs are fixed in the new
   settings module, and the skipped specs are enabled.
+
+## Theming
+
+The root component defines the internal `--oscd-*` palette from the distro's
+`--oscd-theme-*` variables, with the Solarized defaults of the theming guide, and
+maps the `oscd-ui` Material tokens to it (`src/theme.ts`). Nothing else sets a
+colour. The plugin exposes two tokens of its own, for the selection in the
+read-only view, which the theme has no colour for:
+
+* `--oscd-subscriber-later-binding-read-only-selected` (default `--oscd-secondary`)
+* `--oscd-subscriber-later-binding-read-only-selected-text` (default `--oscd-base3`)

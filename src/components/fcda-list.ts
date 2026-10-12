@@ -245,6 +245,7 @@ export class FcdaList extends ScopedElementsMixin(LitElement) {
       <virtualized-filtered-list
         class="control-block-list"
         .items=${this.rows}
+            ?readonly=${this.settings.readOnlyView}
         .searchValue=${this.searchValue}
         .keyFunction=${(row: unknown) => (row as FcdaListRow).key}
         .renderItem=${(row: unknown) => this.renderRow(row as FcdaListRow)}

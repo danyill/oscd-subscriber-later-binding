@@ -218,6 +218,7 @@ export class PublisherExtRefList extends ScopedElementsMixin(LitElement) {
         ? html`<virtualized-filtered-list
             class="extref-list"
             .items=${this.rows}
+            ?readonly=${this.settings.readOnlyView}
             .searchValue=${this.searchValue}
             .keyFunction=${(row: unknown) => (row as PublisherListRow).key}
             .renderItem=${(row: unknown) => this.renderRow(row as PublisherListRow)}

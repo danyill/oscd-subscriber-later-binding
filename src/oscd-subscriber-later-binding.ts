@@ -9,6 +9,7 @@ import { OscdOutlinedSegmentedButton } from '@omicronenergy/oscd-ui/labs/segment
 import { OscdOutlinedSegmentedButtonSet } from '@omicronenergy/oscd-ui/labs/segmentedbuttonset/OscdOutlinedSegmentedButtonSet.js';
 
 import { newEditEventV2 } from '@openscd/oscd-api/utils.js';
+import { oscdPaletteMd3 } from './theme.js';
 import type { EditV2 } from '@openscd/oscd-api';
 
 import { FcdaList } from './components/fcda-list.js';
@@ -388,18 +389,39 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
       </div>`;
   }
 
-  static styles = css`
-    * {
-      --oscd-primary: var(--oscd-theme-primary, #0b335b);
-      --oscd-base2: var(--oscd-theme-base2, #f3f5f6);
-      --oscd-base3: var(--oscd-theme-base3, white);
+  static styles = [
+    oscdPaletteMd3,
+    css`
+    /*
+     * Theming follows the OpenSCD theming guide: the internal palette comes from
+     * the distro's --oscd-theme-* variables with defaults, and the oscd-ui
+     * components are pointed at it.
+     */
+    :host {
+      --oscd-primary: var(--oscd-theme-primary, #2aa198);
+      --oscd-secondary: var(--oscd-theme-secondary, #6c71c4);
+      --oscd-error: var(--oscd-theme-error, #dc322f);
+      --oscd-warning: var(--oscd-theme-warning, #b58900);
+
+      --oscd-base03: var(--oscd-theme-base03, #002b36);
+      --oscd-base02: var(--oscd-theme-base02, #073642);
+      --oscd-base01: var(--oscd-theme-base01, #586e75);
+      --oscd-base00: var(--oscd-theme-base00, #657b83);
+      --oscd-base0: var(--oscd-theme-base0, #839496);
+      --oscd-base1: var(--oscd-theme-base1, #93a1a1);
+      --oscd-base2: var(--oscd-theme-base2, #eee8d5);
+      --oscd-base3: var(--oscd-theme-base3, #fdf6e3);
+
+      --oscd-text-font: var(--oscd-theme-text-font, 'Roboto');
+      --oscd-icon-font: var(--oscd-theme-icon-font, 'Material Symbols Outlined');
     }
 
     :host {
       display: block;
       container-type: inline-size;
-      background-color: var(--oscd-base2);
-      font-family: var(--oscd-theme-text-font, 'Roboto'), sans-serif;
+      background-color: var(--md-sys-color-surface-container);
+      font-family: var(--oscd-text-font), sans-serif;
+      color: var(--md-sys-color-on-surface);
     }
 
     .header {
@@ -408,36 +430,36 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
       gap: 16px;
       padding: 8px 12px;
       flex-wrap: wrap;
-      background-color: var(--oscd-base2);
+      background-color: var(--md-sys-color-surface-container);
     }
 
     .switch {
       flex-shrink: 0;
       inline-size: min(100%, 24rem);
       --md-outlined-segmented-button-selected-container-color: var(
-        --oscd-primary
+        --md-sys-color-primary
       );
       --md-outlined-segmented-button-selected-label-text-color: var(
-        --oscd-base3
+        --md-sys-color-on-primary
       );
-      --md-outlined-segmented-button-selected-icon-color: var(--oscd-base3);
+      --md-outlined-segmented-button-selected-icon-color: var(--md-sys-color-on-primary);
       --md-outlined-segmented-button-selected-hover-label-text-color: var(
-        --oscd-base3
+        --md-sys-color-on-primary
       );
       --md-outlined-segmented-button-selected-hover-icon-color: var(
-        --oscd-base3
+        --md-sys-color-on-primary
       );
       --md-outlined-segmented-button-selected-focus-label-text-color: var(
-        --oscd-base3
+        --md-sys-color-on-primary
       );
       --md-outlined-segmented-button-selected-focus-icon-color: var(
-        --oscd-base3
+        --md-sys-color-on-primary
       );
       --md-outlined-segmented-button-selected-pressed-label-text-color: var(
-        --oscd-base3
+        --md-sys-color-on-primary
       );
       --md-outlined-segmented-button-selected-pressed-icon-color: var(
-        --oscd-base3
+        --md-sys-color-on-primary
       );
     }
 
@@ -450,7 +472,7 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
       padding: 8px 6px 16px;
       height: var(--oscd-subscriber-later-binding-height, calc(100vh - 136px));
       gap: 12px;
-      background-color: var(--oscd-base2);
+      background-color: var(--md-sys-color-surface-container);
     }
 
     .column {
@@ -471,5 +493,6 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
         min-height: 24rem;
       }
     }
-  `;
+  `
+  ];
 }
