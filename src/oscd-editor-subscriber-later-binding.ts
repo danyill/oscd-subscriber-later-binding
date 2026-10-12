@@ -136,6 +136,9 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
 
   @state() selectedExtRef: Element | undefined;
 
+  /** Width of the left list in the subscriber view, as a percentage. */
+  @state() private subscriberSplit = 50;
+
   @state() private model = new SubscriptionModel(undefined, 'GSEControl');
 
   /** Data types worked out for the document, kept as it is edited. */
@@ -325,6 +328,80 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
     this.selectedExtRef = extRef;
   }
 
+  /** The lowest and highest share of the width the left list may take. */
+  private static readonly minSplit = 20;
+
+  private static readonly maxSplit = 80;
+
+  /**
+   * Follows a drag of the divider in the subscriber view and sets the width of
+   * the left list to the share of the container the pointer is over.
+   * @param event - the pointer down event on the divider.
+   */
+  private startResize(event: PointerEvent): void {
+    const container = (event.currentTarget as HTMLElement).parentElement;
+    if (!container) {
+      return;
+    }
+    event.preventDefault();
+
+    const move = (moveEvent: PointerEvent): void => {
+      const { left, width } = container.getBoundingClientRect();
+      if (width === 0) {
+        return;
+      }
+      const share = Math.round(((moveEvent.clientX - left) / width) * 100);
+      this.subscriberSplit = Math.min(
+        OscdEditorSubscriberLaterBinding.maxSplit,
+        Math.max(OscdEditorSubscriberLaterBinding.minSplit, share)
+      );
+    };
+    const stop = (): void => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+  }
+
+  /**
+   * Moves the divider with the arrow keys, so the lists can be resized without
+   * a pointer.
+   * @param event - the key event on the divider.
+   */
+  private resizeWithKeys(event: KeyboardEvent): void {
+    const step = event.shiftKey ? 10 : 2;
+    if (event.key === 'ArrowLeft') {
+      this.subscriberSplit = Math.max(
+        OscdEditorSubscriberLaterBinding.minSplit,
+        this.subscriberSplit - step
+      );
+    } else if (event.key === 'ArrowRight') {
+      this.subscriberSplit = Math.min(
+        OscdEditorSubscriberLaterBinding.maxSplit,
+        this.subscriberSplit + step
+      );
+    } else {
+      return;
+    }
+    event.preventDefault();
+  }
+
+  private renderDivider(): TemplateResult {
+    return html`<div
+      class="divider"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label=${msg('Resize the lists')}
+      aria-valuenow=${this.subscriberSplit}
+      tabindex="0"
+      @pointerdown=${(event: PointerEvent) => this.startResize(event)}
+      @keydown=${(event: KeyboardEvent) => this.resizeWithKeys(event)}
+    ></div>`;
+  }
+
   private renderSwitches(): TemplateResult {
     return html`<header class="header">
       <oscd-outlined-segmented-button-set class="switch" id="controlSwitch">
@@ -386,10 +463,13 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
 
   render(): TemplateResult {
     return html`${this.renderSwitches()}
-      <div class="container">
+      <div
+        class="container"
+        style="--subscriber-pane: ${this.subscriberSplit}%"
+      >
         ${this.subscriberView
           ? html`<subscriber-extref-list
-                class="column"
+                class="column subscriber-column"
                 .model=${this.model}
                 .settings=${this.settings}
                 .selectedExtRef=${this.selectedExtRef}
@@ -398,7 +478,7 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
                 @settings-change=${(event: SettingsChangeEvent) =>
                   this.handleSettingsChange(event)}
               ></subscriber-extref-list>
-              ${this.renderFcdaList()}`
+              ${this.renderDivider()} ${this.renderFcdaList()}`
           : html`${this.renderFcdaList()}
               <publisher-extref-list
                 class="column"
@@ -511,6 +591,38 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
       height: 100%;
     }
 
+    /* In the subscriber view the left list takes the width chosen with the
+       divider, and the right list takes what is left. */
+    .subscriber-column {
+      flex: 0 0 var(--subscriber-pane, 50%);
+    }
+
+    .divider {
+      flex: 0 0 12px;
+      align-self: stretch;
+      display: flex;
+      justify-content: center;
+      cursor: col-resize;
+      touch-action: none;
+    }
+
+    .divider::after {
+      content: '';
+      width: 2px;
+      border-radius: 1px;
+      background-color: var(--md-sys-color-outline-variant, #cac4d0);
+    }
+
+    .divider:hover::after,
+    .divider:focus-visible::after {
+      width: 4px;
+      background-color: var(--md-sys-color-primary);
+    }
+
+    .divider:focus-visible {
+      outline: none;
+    }
+
     @container (max-width: 900px) {
       .container {
         flex-direction: column;
@@ -520,6 +632,15 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
       .column {
         width: 100%;
         min-height: 24rem;
+      }
+
+      /* the lists are stacked, so there is nothing to drag left and right */
+      .subscriber-column {
+        flex: 1 1 0;
+      }
+
+      .divider {
+        display: none;
       }
     }
   `
