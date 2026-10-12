@@ -4,7 +4,7 @@ import OscdBackgroundEditV1 from '@omicronenergy/oscd-background-editv1';
 
 // built from src/ by `tsc --watch` when serving from source and by `npm run
 // bundle` before the demo is bundled
-import SubscriberLaterBinding from '../dist/oscd-subscriber-later-binding.js';
+import OscdEditorSubscriberLaterBinding from '../dist/oscd-editor-subscriber-later-binding.js';
 
 /**
  * The shell shows plugins in its own scoped registry, so they are defined there.
@@ -14,7 +14,7 @@ export function definePlugins(registry) {
   registry.define('oscd-menu-open', OscdMenuOpen);
   registry.define('oscd-menu-save', OscdMenuSave);
   registry.define('oscd-background-editv1', OscdBackgroundEditV1);
-  registry.define('oscd-subscriber-later-binding', SubscriberLaterBinding);
+  registry.define('oscd-editor-subscriber-later-binding', OscdEditorSubscriberLaterBinding);
 }
 
 export const plugins = {
@@ -42,7 +42,7 @@ export const plugins = {
       },
       icon: 'link',
       requireDoc: true,
-      tagName: 'oscd-subscriber-later-binding'
+      tagName: 'oscd-editor-subscriber-later-binding'
     }
   ],
   background: [

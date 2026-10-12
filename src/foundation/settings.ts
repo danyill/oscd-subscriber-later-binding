@@ -3,7 +3,7 @@ import type { ControlTag } from './control-tag.js';
 import { ExtRefSortOrder, FcdaSortOrder } from './sort.js';
 
 /** Where the settings are kept, a single JSON value for this plugin. */
-export const settingsStorageKey = 'oscd-subscriber-later-binding';
+export const settingsStorageKey = 'oscd-editor-subscriber-later-binding';
 
 /**
  * Settings which are kept between sessions. The names are the names of the

@@ -4,18 +4,18 @@ import { XMLEditor } from '@openscd/oscd-editor';
 import type { EditEventV2, EditV2 } from '@openscd/oscd-api';
 import { newEditEventV2 } from '@openscd/oscd-api/utils.js';
 
-import SubscriberLaterBinding from '../oscd-subscriber-later-binding.js';
+import OscdEditorSubscriberLaterBinding from '../oscd-editor-subscriber-later-binding.js';
 import { loadFixture } from './fixtures.js';
 
 export { loadFixture };
 
-const tagName = 'oscd-subscriber-later-binding-spec';
+const tagName = 'oscd-editor-subscriber-later-binding-spec';
 
 if (customElements.get(tagName) === undefined) {
-  customElements.define(tagName, SubscriberLaterBinding);
+  customElements.define(tagName, OscdEditorSubscriberLaterBinding);
 }
 
-export const settingsKey = 'oscd-subscriber-later-binding';
+export const settingsKey = 'oscd-editor-subscriber-later-binding';
 
 // Browsers report this when a resize observer, as used by lists which draw only
 // the rows in view, needs another frame to settle. It does not affect the page
@@ -91,7 +91,7 @@ export type MountOptions = {
 };
 
 export type MountedPlugin = {
-  plugin: SubscriberLaterBinding;
+  plugin: OscdEditorSubscriberLaterBinding;
   doc: XMLDocument;
   /**
    * Every `oscd-edit-v2` edit dispatched by the plugin, in order, without
@@ -161,13 +161,13 @@ export async function mountPlugin(
   container.style.width = '1280px';
   if (options.layout !== 'fit') {
     container.style.setProperty(
-      '--oscd-subscriber-later-binding-height',
+      '--oscd-editor-subscriber-later-binding-height',
       '11000px'
     );
   }
   document.body.appendChild(container);
 
-  const plugin = document.createElement(tagName) as SubscriberLaterBinding;
+  const plugin = document.createElement(tagName) as OscdEditorSubscriberLaterBinding;
   const editor = new XMLEditor();
   const edits: EditV2[] = [];
 

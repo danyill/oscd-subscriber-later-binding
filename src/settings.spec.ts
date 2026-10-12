@@ -91,7 +91,7 @@ describe('settings', () => {
     it('identifies the plugin', async () => {
       await mount();
       expect(mounted.plugin.getAttribute('identity')).to.equal(
-        'danyill.oscd-subscriber-later-binding'
+        'openpowershift.oscd-editor-subscriber-later-binding'
       );
     });
 

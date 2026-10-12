@@ -3,8 +3,8 @@ include::partial$base.adoc[]
 :uri-nvm: https://github.com/creationix/nvm
 :uri-nvm-install: {uri-nvm}#installation
 :uri-openwc: https://github.com/open-wc/open-wc
-:uri-docs: https://danyill.github.io/tpnz-openscd-docs/subscriber-later-binding
-:uri-openscd-core-plugin-demo: https://danyill.github.io/oscd-subscriber-later-binding/index.deploy.html
+:uri-docs: https://openpowershift.github.io/tpnz-openscd-docs/subscriber-later-binding
+:uri-openscd-core-plugin-demo: https://openpowershift.github.io/oscd-editor-subscriber-later-binding/index.deploy.html
 
 == License
 
@@ -104,7 +104,7 @@ See `docs/test_plan.md` for the reasoning and the remaining work.
 
 === Screenshot tests
 
-`src/oscd-subscriber-later-binding.test.ts` takes screenshots of the plugin's main visual states (both views, selection, open menus, empty states, read-only and sampled values) and compares them with baselines in `test/screenshots/baseline`.
+`src/oscd-editor-subscriber-later-binding.test.ts` takes screenshots of the plugin's main visual states (both views, selection, open menus, empty states, read-only and sampled values) and compares them with baselines in `test/screenshots/baseline`.
 Fonts come from `node_modules`, not the network.
 
  $ npm run test:visual

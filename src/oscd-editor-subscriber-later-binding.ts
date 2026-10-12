@@ -53,7 +53,7 @@ import {
  * This component keeps the state and turns choices into edits. The lists are
  * components which show it, and what they show is decided in `foundation/`.
  */
-export default class SubscriberLaterBinding extends ScopedElementsMixin(
+export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixin(
   LitElement
 ) {
   static scopedElements = {
@@ -75,7 +75,7 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
 
   // Properties read by external plugins to know how this plugin is set up.
   @property({ type: String, reflect: true })
-  identity = 'danyill.oscd-subscriber-later-binding';
+  identity = 'openpowershift.oscd-editor-subscriber-later-binding';
 
   @property({ type: Boolean, reflect: true })
   allowExternalPlugins = defaultSettings.allowExternalPlugins;
@@ -499,7 +499,7 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
     .container {
       display: flex;
       padding: 8px 6px 16px;
-      height: var(--oscd-subscriber-later-binding-height, calc(100vh - 136px));
+      height: var(--oscd-editor-subscriber-later-binding-height, calc(100vh - 136px));
       gap: 12px;
       background-color: var(--md-sys-color-surface-container);
     }

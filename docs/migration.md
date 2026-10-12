@@ -35,7 +35,7 @@ the sub-steps below.
 
 ### Files created / transformed
 
-* `src/oscd-subscriber-later-binding.ts` — root plugin (about 330 lines, was
+* `src/oscd-editor-subscriber-later-binding.ts` — root plugin (about 330 lines, was
   about 3,400): state, settings, model rebuild in `willUpdate`, edit flow.
 * `src/components/*.ts` — `fcda-list`, `publisher-extref-list`,
   `subscriber-extref-list`, `virtualized-filtered-list`, `menu-button`,
@@ -101,7 +101,7 @@ filtered list, and keeps SCL logic in plain modules.
 
 ```
 src/
-  oscd-subscriber-later-binding.ts   root: state, settings, layout, edit flow
+  oscd-editor-subscriber-later-binding.ts   root: state, settings, layout, edit flow
   components/
     virtualized-filtered-list.ts     search field plus @lit-labs/virtualizer
     fcda-list.ts                     control blocks and FCDAs
@@ -172,8 +172,8 @@ maps the `oscd-ui` Material tokens to it (`src/theme.ts`). Nothing else sets a
 colour. The plugin exposes two tokens of its own, for the selection in the
 read-only view, which the theme has no colour for:
 
-* `--oscd-subscriber-later-binding-read-only-selected` (default `--oscd-secondary`)
-* `--oscd-subscriber-later-binding-read-only-selected-text` (default `--oscd-base3`)
+* `--oscd-editor-subscriber-later-binding-read-only-selected` (default `--oscd-secondary`)
+* `--oscd-editor-subscriber-later-binding-read-only-selected-text` (default `--oscd-base3`)
 
 ## Performance
 

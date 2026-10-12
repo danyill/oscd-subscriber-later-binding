@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "667877739b5b7b634e2c30bb83a84e510b3ed2f1",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "@openpowershift/oscd-editor-subscriber-later-binding"
+    }
+  }
+}

@@ -21,7 +21,7 @@ function notUpgraded(root: ParentNode, found = new Set<string>()): Set<string> {
   return found;
 }
 
-describe('oscd-subscriber-later-binding', () => {
+describe('oscd-editor-subscriber-later-binding', () => {
   let mounted: MountedPlugin;
 
   afterEach(() => {

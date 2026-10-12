@@ -25,7 +25,7 @@ const CURRENT_ONLY = 'SMV_Publisher>>CurrentTransformer>currrentOnly';
 const CURRENT_ONLY_TCTR1_I =
   'SMV_Publisher>>CurrentTransformer>currrentOnlysDataSet>CurrentTransformer/L1 TCTR 1.AmpSv instMag.i (MX)';
 
-describe('oscd-subscriber-later-binding screenshots', () => {
+describe('oscd-editor-subscriber-later-binding screenshots', () => {
   let mounted: MountedPlugin;
   let driver: PluginDriver;
 

@@ -1,14 +1,18 @@
 {
-  "name": "oscd-subscriber-later-binding",
-  "description": "Webcomponent for later-binding GOOSE and SMV subscriptions of IEC 61850 SCL files",
+  "name": "@openpowershift/oscd-editor-subscriber-later-binding",
+  "description": "Plugin for later-binding GOOSE and SMV subscriptions of IEC 61850 SCL files for OpenSCD",
   "license": "Apache-2.0",
-  "author": "Daniel Mulholland, Christian Dinkel",
-  "version": "0.0.0",
+  "author": "OpenPowerShift",
+  "version": "0.8.0",
   "type": "module",
-  "main": "dist/oscd-subscriber-later-binding.js",
-  "module": "dist/oscd-subscriber-later-binding.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenPowerShift/oscd-editor-subscriber-later-binding.git"
+  },
+  "main": "dist/oscd-editor-subscriber-later-binding.js",
+  "module": "dist/oscd-editor-subscriber-later-binding.js",
   "exports": {
-    ".": "./dist/oscd-subscriber-later-binding.js"
+    ".": "./dist/oscd-editor-subscriber-later-binding.js"
   },
   "scripts": {
     "clean": "node -e \"require(\\\"fs\\\").rmSync(\\\"dist\\\",{recursive:true,force:true})\"",

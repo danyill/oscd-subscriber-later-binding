@@ -200,15 +200,15 @@ export class VirtualizedFilteredList extends ScopedElementsMixin(LitElement) {
      */
     :host([readonly]) oscd-list-item.selected {
       --md-sys-color-on-surface: var(
-        --oscd-subscriber-later-binding-read-only-selected-text,
+        --oscd-editor-subscriber-later-binding-read-only-selected-text,
         var(--oscd-base3)
       );
       --md-sys-color-on-surface-variant: var(
-        --oscd-subscriber-later-binding-read-only-selected-text,
+        --oscd-editor-subscriber-later-binding-read-only-selected-text,
         var(--oscd-base3)
       );
       background-color: var(
-        --oscd-subscriber-later-binding-read-only-selected,
+        --oscd-editor-subscriber-later-binding-read-only-selected,
         var(--oscd-secondary)
       );
     }
