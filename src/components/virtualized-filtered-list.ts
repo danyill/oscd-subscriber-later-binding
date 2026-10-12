@@ -19,6 +19,9 @@ export interface SearchChangeDetail {
   regex: RegExp;
 }
 
+/** How long to wait, in milliseconds, for a pause in typing before searching. */
+const searchDelay = 200;
+
 /**
  * A search field above a list which only renders the rows in view.
  *
@@ -84,13 +87,32 @@ export class VirtualizedFilteredList extends ScopedElementsMixin(LitElement) {
     );
   }
 
+  private searchTimer?: ReturnType<typeof setTimeout>;
+
+  /**
+   * Searching rebuilds the rows, so it waits for a pause in typing. The field
+   * itself shows what is typed straight away.
+   */
   private onInput(): void {
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.commitSearch(), searchDelay);
+  }
+
+  /** Searches for what is typed now, without waiting for a pause in typing. */
+  commitSearch(): void {
+    clearTimeout(this.searchTimer);
     if (this.searchField) {
       this.searchValue = this.searchField.value;
     }
   }
 
+  disconnectedCallback(): void {
+    clearTimeout(this.searchTimer);
+    super.disconnectedCallback();
+  }
+
   private clearSearch(): void {
+    clearTimeout(this.searchTimer);
     this.searchValue = '';
     this.searchField?.focus();
   }

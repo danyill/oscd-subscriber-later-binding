@@ -1,4 +1,4 @@
-import { expect, fixture, html } from '@open-wc/testing';
+import { expect, fixture, html, waitUntil } from '@open-wc/testing';
 import type { TemplateResult } from 'lit';
 
 import { deepQueryAll } from '../testing/dom.js';
@@ -39,7 +39,17 @@ const type = async (list: VirtualizedFilteredList, text: string) => {
   ) as unknown as HTMLInputElement;
   field.value = text;
   field.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+  list.commitSearch();
   await list.updateComplete;
+};
+
+/** Types without waiting, as a user does between key presses. */
+const typeWithoutWaiting = (list: VirtualizedFilteredList, text: string) => {
+  const field = list.shadowRoot!.querySelector(
+    'oscd-outlined-text-field'
+  ) as unknown as HTMLInputElement;
+  field.value = text;
+  field.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
 };
 
 const waitForRows = async (list: VirtualizedFilteredList, count: number) => {
@@ -100,6 +110,37 @@ describe('VirtualizedFilteredList', () => {
   });
 
   describe('search', () => {
+    it('waits for a pause in typing before searching', async () => {
+      const list = await mount(['one']);
+      const detail: SearchChangeDetail[] = [];
+      list.addEventListener('search-change', (event) => {
+        detail.push((event as CustomEvent<SearchChangeDetail>).detail);
+      });
+
+      typeWithoutWaiting(list, 't');
+      typeWithoutWaiting(list, 'tw');
+      typeWithoutWaiting(list, 'two');
+      await list.updateComplete;
+      expect(detail, 'nothing is searched while typing').to.have.length(0);
+
+      await waitUntil(() => detail.length === 1, 'the search did not happen', {
+        timeout: 2000
+      });
+      expect(detail[0].value, 'only the final text is searched').to.equal('two');
+    });
+
+    it('does not search for what was typed before the search was cleared', async () => {
+      const list = await mount(['one']);
+      await type(list, 'two');
+      typeWithoutWaiting(list, 'three');
+      (deepQueryAll(list.shadowRoot!, 'oscd-icon-button')[0] as HTMLElement).click();
+      await list.updateComplete;
+      await new Promise((resolve) => {
+        setTimeout(resolve, 400);
+      });
+      expect(list.searchValue).to.equal('');
+    });
+
     it('reports what is typed with an expression for it', async () => {
       const list = await mount(['one']);
       const detail: SearchChangeDetail[] = [];

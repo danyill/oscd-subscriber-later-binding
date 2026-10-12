@@ -244,6 +244,11 @@ export class PluginDriver {
     }
     input.value = text;
     input.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+    // search is delayed until typing pauses, which specs do not wait for
+    (this.all('virtualized-filtered-list', this.list(searchLists[field]))[0] as
+      | (HTMLElement & { commitSearch(): void })
+      | undefined
+    )?.commitSearch();
     await this.mounted.settle();
   }
 

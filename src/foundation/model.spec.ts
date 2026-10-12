@@ -3,7 +3,7 @@ import { find } from '@openscd/scl-lib';
 
 import { loadFixture } from '../testing/fixtures.js';
 import { mustQuery, parseScl } from '../testing/scl.js';
-import { SubscriptionModel } from './model.js';
+import { SubscriptionModel, TypeInfoCache } from './model.js';
 
 const control = (doc: XMLDocument, ied: string, name: string): Element =>
   mustQuery(doc, `IED[name="${ied}"] GSEControl[name="${name}"]`);
@@ -157,6 +157,79 @@ describe('SubscriptionModel', () => {
         'GOOSE_Subscriber1>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]'
       );
       expect(model.supervisionOf(plain)).to.equal(undefined);
+    });
+  });
+
+  describe('what is kept', () => {
+    let doc: XMLDocument;
+
+    beforeEach(async () => {
+      doc = await loadFixture('GOOSE-2007B4-LGOS.scd');
+    });
+
+    const someFcda = (): Element => mustQuery(doc, 'IED[name="GOOSE_Publisher"] FCDA');
+
+    it('finds the FCDA an ExtRef refers to', () => {
+      const model = new SubscriptionModel(doc, 'GSEControl');
+      const subscribed = Array.from(doc.querySelectorAll('ExtRef[intAddr]')).find(
+        e => model.fcdasOfExtRef(e).length > 0
+      )!;
+      expect(model.fcdasOfExtRef(subscribed)[0].tagName).to.equal('FCDA');
+    });
+
+    it('finds no FCDA for an ExtRef which is not subscribed or is not in the SCL', () => {
+      const model = new SubscriptionModel(doc, 'GSEControl');
+      const unbound = mustQuery(doc, 'ExtRef:not([iedName])');
+      expect(model.fcdasOfExtRef(unbound)).to.deep.equal([]);
+      expect(model.fcdasOfExtRef(someFcda())).to.deep.equal([]);
+      expect(new SubscriptionModel(undefined, 'GSEControl').fcdasOfExtRef(unbound))
+        .to.deep.equal([]);
+    });
+
+    it('works out something about an element once', () => {
+      const model = new SubscriptionModel(doc, 'GSEControl');
+      let calls = 0;
+      const make = () => {
+        calls += 1;
+        return calls;
+      };
+      expect(model.memo('kind', someFcda(), make)).to.equal(1);
+      expect(model.memo('kind', someFcda(), make)).to.equal(1);
+      expect(model.memo('other', someFcda(), make)).to.equal(2);
+    });
+
+    it('keeps the type of an FCDA for the next model of the same document', () => {
+      const cache = new TypeInfoCache();
+      const first = new SubscriptionModel(doc, 'GSEControl', cache).fcdaInfo(someFcda());
+      const second = new SubscriptionModel(doc, 'GSEControl', cache).fcdaInfo(someFcda());
+      expect(second).to.equal(first);
+    });
+
+    it('works out the type of an FCDA again when its data changes', () => {
+      const cache = new TypeInfoCache();
+      const fcda = someFcda();
+      const first = new SubscriptionModel(doc, 'GSEControl', cache).fcdaInfo(fcda);
+      fcda.setAttribute('doName', 'Beh');
+      const second = new SubscriptionModel(doc, 'GSEControl', cache).fcdaInfo(fcda);
+      expect(second).to.not.equal(first);
+    });
+
+    it('works out types again when the data type templates change', () => {
+      const cache = new TypeInfoCache();
+      const fcda = someFcda();
+      const first = new SubscriptionModel(doc, 'GSEControl', cache).fcdaInfo(fcda);
+      mustQuery(doc, 'DataTypeTemplates').appendChild(doc.createElement('DAType'));
+      const second = new SubscriptionModel(doc, 'GSEControl', cache).fcdaInfo(fcda);
+      expect(second).to.not.equal(first);
+    });
+
+    it('keeps the type of an ExtRef for the next model of the same document', () => {
+      const cache = new TypeInfoCache();
+      const ref = mustQuery(doc, 'ExtRef[intAddr]');
+      const first = new SubscriptionModel(doc, 'GSEControl', cache).extRefInfo(ref);
+      expect(new SubscriptionModel(doc, 'GSEControl', cache).extRefInfo(ref)).to.equal(first);
+      ref.setAttribute('pDO', 'Beh');
+      expect(new SubscriptionModel(doc, 'GSEControl', cache).extRefInfo(ref)).to.not.equal(first);
     });
   });
 

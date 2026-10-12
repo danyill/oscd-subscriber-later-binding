@@ -386,6 +386,19 @@ describe('rows', () => {
       expect(rows.find(row => row.subtitle === 'Missing attributes')?.invalidMapping).to.equal(true);
     });
 
+    it('gives the supervision and the problems with a mapping in the tooltip of the row', () => {
+      // the row is hovered, not the icons on it, so the tooltip says it all
+      const rows = extRefRows(buildPublisherExtRefRows(model, settings, control, fcda));
+      const supervised = rows.find(row => row.supervisionId)!;
+      expect(supervised.tooltip).to.contain(`Supervision: ${supervised.supervisionId}`);
+      expect(rows.find(row => row.invalidMapping)!.tooltip).to.contain('Invalid Mapping');
+      expect(rows.find(row => row.missingMapping)!.tooltip).to.contain(
+        'The subscription is valid but the element is not present'
+      );
+      expect(rows.find(row => !row.supervisionId && row.subscribed)!.tooltip)
+        .to.not.contain('Supervision');
+    });
+
     it('does not flag a mapping as missing or invalid for a subscribed ExtRef', () => {
       const rows = extRefRows(buildPublisherExtRefRows(model, settings, control, fcda));
       const subscribed = rows.filter(row => row.subscribed);
@@ -556,6 +569,16 @@ describe('rows', () => {
       expect(invalid.invalidMapping).to.equal(true);
       expect(invalid.mapping).to.equal('Invalid Mapping');
       expect(invalid.bound).to.equal(true);
+    });
+
+    it('gives the supervision and the problems with a mapping in the tooltip', () => {
+      const rows = extRefsOf(buildSubscriberRows(model, settings));
+      const supervised = rows.find(row => row.supervisionPath)!;
+      expect(supervised.tooltip).to.contain('Supervision: ');
+      expect(rows.find(row => row.invalidMapping)!.tooltip).to.contain('Invalid Mapping');
+      expect(rows.find(row => row.missingMapping)!.tooltip).to.contain(
+        'The subscription is valid but the element is not present'
+      );
     });
 
     it('describes the types of a preconfigured ExtRef', () => {

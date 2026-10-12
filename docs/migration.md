@@ -174,3 +174,30 @@ read-only view, which the theme has no colour for:
 
 * `--oscd-subscriber-later-binding-read-only-selected` (default `--oscd-secondary`)
 * `--oscd-subscriber-later-binding-read-only-selected-text` (default `--oscd-base3`)
+
+## Performance
+
+Measured on a document with 1,220 later binding ExtRefs and 488 FCDAs (the
+fixture repeated 60 times), in Chromium with the plugin mounted:
+
+| Action | Before | After |
+| ------ | ------ | ----- |
+| Select an FCDA | 561 ms | 169 ms |
+| Unsubscribe | 452 ms | 161 ms |
+| Search the subscriber list (per search) | 412 ms | 144 ms |
+| Search the FCDA list | 105 ms | 48 ms |
+| Build the publisher ExtRef rows | 293 ms | 15 to 36 ms |
+| Build the subscriber rows (cold, warm) | 321 ms, 337 ms | 85 ms, 9 ms |
+
+* `SubscriptionModel` indexes what was searched for each ExtRef: the FCDAs an
+  ExtRef refers to, the ExtRefs of each IED, the later binding ExtRefs and
+  element identities. `findFCDAs` scanned every IED and FCDA for each ExtRef.
+* Rows are kept per element for the life of a model (`memo`), so a search or a
+  selection filters the rows and does not build them again.
+* Data types of FCDAs and ExtRefs are kept between edits of a document
+  (`TypeInfoCache`) and are worked out again when the element's attributes or
+  the size of the data type templates change.
+* Searching waits for a pause in typing (200 ms). The field shows the text at
+  once.
+* The supervision and the mapping problems are in the tooltip of the row. The
+  row covers its icons, so a tooltip on an icon was never shown.

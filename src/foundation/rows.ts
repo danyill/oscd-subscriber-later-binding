@@ -1,12 +1,7 @@
 import { msg } from '@lit/localize';
-import { identity } from '@openscd/scl-lib';
 
 import { doesExtRefpDAIncludeQ, doesExtRefpDAIncludeT } from './extref.js';
-import {
-  getDescriptionAttribute,
-  getNameAttribute,
-  findFCDAs
-} from './foundation.js';
+import { getDescriptionAttribute, getNameAttribute } from './foundation.js';
 import { objectReferenceInIed, trimIdentityParent } from './identity.js';
 import type { DataSpec, SubscriptionModel } from './model.js';
 import { doesFcdaMeetExtRefRestrictions } from './restrictions.js';
@@ -14,10 +9,9 @@ import type { SubscriberSettings } from './settings.js';
 import { compareFcdas, sortExtRefItems } from './sort.js';
 import {
   getExtRefControlBlockPath,
-  getExtRefElements,
   getFcdaOrExtRefTitle,
   getOrderedIeds,
-  getSubscribedExtRefElements,
+  isSubscribedTo,
   isPartiallyConfigured,
   isSubscribed
 } from './subscription/subscription.js';
@@ -37,6 +31,18 @@ function fcdaDescription(model: SubscriptionModel, fcda: Element): string {
   return Object.values(model.fcdaInfo(fcda).desc)
     .flat(Infinity as 1)
     .join(' > ');
+}
+
+/**
+ * Said of a subscription to data which cannot be found. The row's own tooltip
+ * is used rather than one on its icons, as the row covers them when hovered.
+ */
+function missingMappingText(missing: boolean): string {
+  return missing
+    ? msg(
+      'The subscription is valid but the element is not present -- check that IED, control block and dataset are correct.'
+    )
+    : '';
 }
 
 /** The tooltip describing a data type, or an empty string without a type. */
@@ -126,7 +132,7 @@ export function fcdaSearchText(
   fcda: Element
 ): string {
   const info = model.fcdaInfo(fcda);
-  return `${identity(control)} ${getDescriptionAttribute(control) ?? ''} ${identity(
+  return `${model.identityOf(control)} ${getDescriptionAttribute(control) ?? ''} ${model.identityOf(
     fcda
   )} ${info.spec?.bType ?? ''} ${info.spec?.cdc ?? ''} ${getFcdaOrExtRefTitle(
     fcda
@@ -162,7 +168,7 @@ export function buildFcdaRows(
   );
 
   controls.forEach((control) => {
-    const controlId = `${identity(control)}`;
+    const controlId = model.identityOf(control);
     const fcdaRows: FcdaRow[] = model
       .fcdasOf(control)
       .map((fcda) => {
@@ -175,21 +181,26 @@ export function buildFcdaRows(
           !doesFcdaMeetExtRefRestrictions(model, selectedExtRef, fcda, {
             checkOnlyBType: settings.checkOnlyPreferredBasicType
           });
-        const info = model.fcdaInfo(fcda);
+        const base = model.memo(`fcda ${controlId}`, fcda, () => {
+          const info = model.fcdaInfo(fcda);
+          return {
+            key: `fcda ${controlId} ${model.identityOf(fcda)}`,
+            fcdaId: model.identityOf(fcda),
+            title: getFcdaOrExtRefTitle(fcda),
+            subtitle: fcdaDescription(model, fcda),
+            spec: info.spec,
+            tooltip: specTitle(info.spec, true),
+            searchText: fcdaSearchText(model, control, fcda)
+          };
+        });
         const row: FcdaRow = {
           type: 'fcda',
-          key: `fcda ${controlId} ${identity(fcda)}`,
           control,
           fcda,
           controlId,
-          fcdaId: `${identity(fcda)}`,
-          title: getFcdaOrExtRefTitle(fcda),
-          subtitle: fcdaDescription(model, fcda),
           count,
           disabled: isDataObject || isMismatch,
-          spec: info.spec,
-          tooltip: specTitle(info.spec, true),
-          searchText: fcdaSearchText(model, control, fcda)
+          ...base
         };
         const hidden =
           (settings.filterOutSubscribed && count !== 0) ||
@@ -291,22 +302,26 @@ export function buildPublisherExtRefRows(
   fcda: Element,
   search: RegExp = matchAll
 ): PublisherListRow[] {
-  const root = model.doc!.getRootNode() as Element;
+  const fcdaIed = fcda.closest('IED');
+  const candidates = model
+    .laterBindingExtRefs()
+    .filter(({ ied }) => ied !== fcdaIed)
+    .map(({ extRef }) => extRef);
   const sort = (a: PublisherExtRefRow, b: PublisherExtRefRow) =>
     sortExtRefItems(settings.sortExtRefPublisher, a.extRef, b.extRef);
 
   const toRow = (extRef: Element, subscribed: boolean): PublisherExtRefRow => {
     const supervision = subscribed ? model.supervisionOf(extRef) : undefined;
-    const supervisionId = supervision ? `${identity(supervision)}` : undefined;
+    const supervisionId = supervision ? model.identityOf(supervision) : undefined;
     const description = getDescriptionAttribute(extRef);
     const iedName = extRef.closest('IED')!.getAttribute('name');
     const missingMapping =
-      isSubscribed(extRef) && !findFCDAs(extRef).find(x => x !== undefined);
+      isSubscribed(extRef) && !model.fcdasOfExtRef(extRef)[0];
     return {
       type: 'extref',
-      key: `${subscribed ? 'subscribed' : 'available'} ${identity(extRef)}`,
+      key: `${subscribed ? 'subscribed' : 'available'} ${model.identityOf(extRef)}`,
       extRef,
-      extRefId: `${identity(extRef)}`,
+      extRefId: model.identityOf(extRef),
       subscribed,
       title: `${iedName} > ${objectReferenceInIed(extRef)}: ${extRef.getAttribute('intAddr')}`,
       subtitle: `${description ?? ''}${
@@ -320,23 +335,31 @@ export function buildPublisherExtRefRows(
         !doesFcdaMeetExtRefRestrictions(model, extRef, fcda, {
           checkOnlyBType: settings.checkOnlyPreferredBasicType
         }),
-      tooltip: specTitle(model.extRefInfo(extRef).spec),
-      searchText: `${identity(extRef)} ${description ?? ''}${
+      tooltip: [
+        specTitle(model.extRefInfo(extRef).spec),
+        supervisionId ? `${msg('Supervision')}: ${supervisionId}` : '',
+        !subscribed && isPartiallyConfigured(extRef) ? msg('Invalid Mapping') : '',
+        missingMappingText(!subscribed && missingMapping)
+      ]
+        .filter(line => line !== '')
+        .join('\n'),
+      searchText: `${model.identityOf(extRef)} ${description ?? ''}${
         supervisionId ? ` ${supervisionId}` : ''
       }`
     };
   };
 
-  const subscribed = getSubscribedExtRefElements(root, fcda, control, true)
+  const subscribed = candidates
+    .filter(extRef => isSubscribedTo(control, fcda, extRef))
     .map(extRef => toRow(extRef, true))
     .filter(row => search.test(row.searchText))
     .sort(sort);
 
-  const available = getExtRefElements(root, fcda, true)
+  const available = candidates
     .filter(
       extRef =>
         (!isSubscribed(extRef) ||
-          !findFCDAs(extRef).find(x => x !== undefined)) &&
+          !model.fcdasOfExtRef(extRef)[0]) &&
         isExtRefViewable(extRef, model, settings.strictServiceTypes)
     )
     .map(extRef => toRow(extRef, false))
@@ -445,12 +468,12 @@ function toSubscriberRow(
   const bound = subscribed || invalidMapping;
 
   const subscriberFcda = subscribed
-    ? findFCDAs(extRef).find(element => element !== undefined)
+    ? model.fcdasOfExtRef(extRef)[0]
     : undefined;
   const supervision = subscribed ? model.supervisionOf(extRef) : undefined;
   const controlPath = subscribed ? getExtRefControlBlockPath(extRef) : undefined;
   const supervisionPath = supervision
-    ? trimIdentityParent(`${identity(supervision)}`)
+    ? trimIdentityParent(model.identityOf(supervision))
     : undefined;
   const source = [controlPath, supervisionPath]
     .filter(part => part !== undefined)
@@ -494,9 +517,9 @@ function toSubscriberRow(
 
   return {
     type: 'extref',
-    key: `${identity(extRef)} ${model.controlTag}`,
+    key: `${model.identityOf(extRef)} ${model.controlTag}`,
     extRef,
-    extRefId: `${identity(extRef)}`,
+    extRefId: model.identityOf(extRef),
     title: `${objectReferenceInIed(extRef)}: ${extRef.getAttribute('intAddr')}`,
     mapping: subscribed ? mappedName : invalidMapping ? msg('Invalid Mapping') : '',
     dataDescription,
@@ -509,11 +532,19 @@ function toSubscriberRow(
     missingMapping,
     supervised: supervision !== undefined,
     bound,
-    tooltip: [specExtRefText, specFcdaText].join('\n'),
-    searchText: `${iedInfo(ied)} ${identity(extRef)} ${
-      supervision ? identity(supervision) : ''
+    tooltip: [
+      specExtRefText,
+      specFcdaText,
+      supervision ? `${msg('Supervision')}: ${model.identityOf(supervision)}` : '',
+      invalidMapping ? msg('Invalid Mapping') : '',
+      missingMappingText(missingMapping)
+    ]
+      .filter(line => line !== '')
+      .join('\n'),
+    searchText: `${iedInfo(ied)} ${model.identityOf(extRef)} ${
+      supervision ? model.identityOf(supervision) : ''
     } ${getDescriptionAttribute(extRef)} ${
-      subscriberFcda ? identity(subscriberFcda) : ''
+      subscriberFcda ? model.identityOf(subscriberFcda) : ''
     } ${fcdaSearchDesc} ${fcdaSpec} ${
       subscribed
         ? `${extRef.getAttribute('iedName')} ${getFcdaOrExtRefTitle(extRef)}`
@@ -542,19 +573,17 @@ export function buildSubscriberRows(
   const rows: SubscriberListRow[] = [];
 
   getOrderedIeds(model.doc).forEach((ied) => {
-    const extRefRows = Array.from(
-      ied.querySelectorAll(
-        `:scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef,
-         :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`
-      )
-    )
+    const extRefRows = model
+      .extRefsOfIed(ied)
       .filter(extRef => isExtRefViewable(extRef, model, settings.strictServiceTypes))
       .filter(
         extRef =>
           !(settings.filterOutpDAq && doesExtRefpDAIncludeQ(extRef)) &&
           !(settings.filterOutpDAt && doesExtRefpDAIncludeT(extRef))
       )
-      .map(extRef => toSubscriberRow(model, extRef))
+      .map(extRef =>
+        model.memo('subscriber row', extRef, () => toSubscriberRow(model, extRef))
+      )
       .filter(
         row =>
           search.test(row.searchText) &&
@@ -571,7 +600,7 @@ export function buildSubscriberRows(
 
     rows.push({
       type: 'ied',
-      key: `${identity(ied)} ${model.controlTag}`,
+      key: `${model.identityOf(ied)} ${model.controlTag}`,
       ied,
       name: getNameAttribute(ied) ?? '',
       info: iedInfo(ied)

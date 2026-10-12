@@ -34,6 +34,25 @@ const dataAttributes = [
 ];
 
 /**
+ * Data type information kept while the same document is edited. It is slow to
+ * work out and an edit seldom changes it, so each entry keeps the attributes it
+ * was worked out from, and the data type templates are checked by size.
+ */
+export class TypeInfoCache {
+  readonly fcdas = new WeakMap<Element, { key: string; info: FcdaInfo }>();
+
+  readonly extRefs = new WeakMap<Element, { key: string; info: ExtRefInfo }>();
+}
+
+/** All of an element's attributes as one string. */
+function attributesKey(element: Element): string {
+  return element
+    .getAttributeNames()
+    .map(name => `${name}=${element.getAttribute(name)}`)
+    .join('\u0000');
+}
+
+/**
  * What the plugin needs to know about one document for one type of control
  * block: how often each FCDA is subscribed, the data type of FCDAs and ExtRefs
  * and which supervision logical node supervises which subscription.
@@ -48,20 +67,33 @@ export class SubscriptionModel {
 
   private readonly counts = new Map<string, number>();
 
-  private readonly fcdaInfos = new Map<string, FcdaInfo>();
-
-  private readonly extRefInfos = new Map<string, ExtRefInfo>();
-
   private readonly supervisions = new Map<string, Element>();
+
+  private readonly identities = new WeakMap<Element, string>();
+
+  private readonly memos = new Map<string, WeakMap<Element, unknown>>();
+
+  private fcdaIndex?: Map<string, Element[]>;
+
+  private laterBinding?: { extRef: Element; ied: Element | null }[];
+
+  private iedExtRefs = new WeakMap<Element, Element[]>();
 
   /** Control blocks in document order, found once. */
   readonly controls: Element[];
 
+  /** Changes when the data type templates do, which makes cached types stale. */
+  private readonly templatesKey: string;
+
   constructor(
     readonly doc: XMLDocument | undefined,
-    readonly controlTag: ControlTag
+    readonly controlTag: ControlTag,
+    private readonly typeCache = new TypeInfoCache()
   ) {
     this.serviceType = serviceTypes[controlTag];
+    this.templatesKey = `${
+      doc?.querySelector('DataTypeTemplates')?.getElementsByTagName('*').length
+    }`;
     this.controls = doc
       ? Array.from(doc.querySelectorAll(`LN0 > ${controlTag}`))
       : [];
@@ -69,6 +101,99 @@ export class SubscriptionModel {
       this.countSubscriptions();
       this.indexSupervisions();
     }
+  }
+
+  /** The identity of an element, which is slow to work out, kept for reuse. */
+  identityOf(element: Element): string {
+    let id = this.identities.get(element);
+    if (id === undefined) {
+      id = `${identity(element)}`;
+      this.identities.set(element, id);
+    }
+    return id;
+  }
+
+  /**
+   * What is worked out about an element, e.g. its row in a list, kept until the
+   * document changes and the model is replaced.
+   * @param kind - what is kept, so that an element can have several.
+   * @param element - what it is about.
+   * @param make - works it out the first time.
+   * @returns the kept value.
+   */
+  memo<T>(kind: string, element: Element, make: () => T): T {
+    let kept = this.memos.get(kind);
+    if (kept === undefined) {
+      kept = new WeakMap();
+      this.memos.set(kind, kept);
+    }
+    if (!kept.has(element)) {
+      kept.set(element, make());
+    }
+    return kept.get(element) as T;
+  }
+
+  /**
+   * The FCDAs an ExtRef refers to, found with an index of all the FCDAs so that
+   * the document is searched once and not once for each ExtRef.
+   */
+  fcdasOfExtRef(extRef: Element): Element[] {
+    if (!this.doc || extRef.tagName !== 'ExtRef' || extRef.closest('Private')) {
+      return [];
+    }
+    if (this.fcdaIndex === undefined) {
+      this.fcdaIndex = new Map();
+      this.doc.querySelectorAll('FCDA').forEach((fcda) => {
+        const ied = fcda.closest('IED');
+        if (!ied || fcda.closest('Private')) {
+          return;
+        }
+        const key = this.referenceKey(ied.getAttribute('name'), fcda);
+        const found = this.fcdaIndex!.get(key);
+        if (found) {
+          found.push(fcda);
+        } else {
+          this.fcdaIndex!.set(key, [fcda]);
+        }
+      });
+    }
+    return (
+      this.fcdaIndex.get(
+        this.referenceKey(extRef.getAttribute('iedName'), extRef)
+      ) ?? []
+    );
+  }
+
+  private referenceKey(iedName: string | null, element: Element): string {
+    return [iedName, ...dataAttributes.map(name => element.getAttribute(name) ?? '')]
+      .join('\u0000');
+  }
+
+  /** Every ExtRef with an internal address and its IED, found once. */
+  laterBindingExtRefs(): { extRef: Element; ied: Element | null }[] {
+    if (this.laterBinding === undefined) {
+      this.laterBinding = this.doc
+        ? Array.from(this.doc.querySelectorAll('ExtRef[intAddr]')).map(
+          extRef => ({ extRef, ied: extRef.closest('IED') })
+        )
+        : [];
+    }
+    return this.laterBinding;
+  }
+
+  /** The ExtRefs of an IED which have an internal address, found once. */
+  extRefsOfIed(ied: Element): Element[] {
+    let found = this.iedExtRefs.get(ied);
+    if (found === undefined) {
+      found = Array.from(
+        ied.querySelectorAll(
+          `:scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef,
+           :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef`
+        )
+      );
+      this.iedExtRefs.set(ied, found);
+    }
+    return found;
   }
 
   /** The FCDAs of the data set of a control block. */
@@ -93,23 +218,26 @@ export class SubscriptionModel {
   }
 
   fcdaInfo(fcda: Element): FcdaInfo {
-    const id = `${identity(fcda)}`;
-    let info = this.fcdaInfos.get(id);
-    if (info === undefined) {
-      info = { spec: fcdaBaseTypes(fcda), desc: getFcdaInstDesc(fcda) };
-      this.fcdaInfos.set(id, info);
+    const key = `${this.templatesKey} ${attributesKey(fcda)}`;
+    let kept = this.typeCache.fcdas.get(fcda);
+    if (kept === undefined || kept.key !== key) {
+      kept = {
+        key,
+        info: { spec: fcdaBaseTypes(fcda), desc: getFcdaInstDesc(fcda) }
+      };
+      this.typeCache.fcdas.set(fcda, kept);
     }
-    return info;
+    return kept.info;
   }
 
   extRefInfo(extRef: Element): ExtRefInfo {
-    const id = `${identity(extRef)}`;
-    let info = this.extRefInfos.get(id);
-    if (info === undefined) {
-      info = { spec: extRefTypeRestrictions(extRef) };
-      this.extRefInfos.set(id, info);
+    const key = `${this.templatesKey} ${attributesKey(extRef)}`;
+    let kept = this.typeCache.extRefs.get(extRef);
+    if (kept === undefined || kept.key !== key) {
+      kept = { key, info: { spec: extRefTypeRestrictions(extRef) } };
+      this.typeCache.extRefs.set(extRef, kept);
     }
-    return info;
+    return kept.info;
   }
 
   /** The supervision logical node of the control block an ExtRef subscribes to. */
@@ -119,7 +247,7 @@ export class SubscriptionModel {
   }
 
   private countKey(control: Element, fcda: Element): string {
-    return `${identity(control)} ${identity(fcda)}`;
+    return `${this.identityOf(control)} ${this.identityOf(fcda)}`;
   }
 
   /**
@@ -135,7 +263,7 @@ export class SubscriptionModel {
         `DataSet[name="${control.getAttribute('datSet')}"]`
       );
       if (dataSet) {
-        const id = `${identity(dataSet)}`;
+        const id = this.identityOf(dataSet);
         controlsOfDataSet.set(id, [...(controlsOfDataSet.get(id) ?? []), control]);
       }
     });
@@ -149,7 +277,7 @@ export class SubscriptionModel {
          :root > IED > AccessPoint > Server > LDevice > LN0 > DataSet`
       )
       .forEach((dataSet) => {
-        const controls = controlsOfDataSet.get(`${identity(dataSet)}`);
+        const controls = controlsOfDataSet.get(this.identityOf(dataSet));
         if (!controls) {
           return;
         }

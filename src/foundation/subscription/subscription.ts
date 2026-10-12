@@ -49,7 +49,7 @@ export function getExtRefElements(
  * @param fcda    - The FCDA Element to check against.
  * @param extRef  - The Ext Ref Element to check.
  */
-function isSubscribedTo(
+export function isSubscribedTo(
   control: Element | undefined,
   fcda: Element | undefined,
   extRef: Element

@@ -91,7 +91,12 @@ export async function typeSearch(list: LitElement, text: string): Promise<void> 
   field.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
   // the inner list reports the search once it has updated, and then the
   // component draws the rows again
-  const inner = virtualLists(list) as unknown as { updateComplete: Promise<unknown> }[];
+  const inner = virtualLists(list) as unknown as {
+    updateComplete: Promise<unknown>;
+    commitSearch(): void;
+  }[];
+  // searching waits for a pause in typing, which specs do not wait for
+  inner.forEach(item => item.commitSearch());
   await Promise.all(inner.map(item => item.updateComplete));
   await list.updateComplete;
   await rowsDrawn(list);

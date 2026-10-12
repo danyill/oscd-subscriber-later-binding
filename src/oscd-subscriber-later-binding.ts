@@ -28,7 +28,7 @@ import {
 import { controlIconNames } from './foundation/control-tag.js';
 import type { ControlTag } from './foundation/control-tag.js';
 import { findFCDAs } from './foundation/foundation.js';
-import { SubscriptionModel } from './foundation/model.js';
+import { SubscriptionModel, TypeInfoCache } from './foundation/model.js';
 import {
   defaultSettings,
   parseSettings,
@@ -136,6 +136,9 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
 
   @state() private model = new SubscriptionModel(undefined, 'GSEControl');
 
+  /** Data types worked out for the document, kept as it is edited. */
+  private typeCache = new TypeInfoCache();
+
   @query('subscriber-extref-list')
   private subscriberList?: SubscriberExtRefList;
 
@@ -161,7 +164,14 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
       changed.has('docVersion') ||
       changed.has('controlTag')
     ) {
-      this.model = new SubscriptionModel(this.doc, this.controlTag);
+      if (changed.has('doc')) {
+        this.typeCache = new TypeInfoCache();
+      }
+      this.model = new SubscriptionModel(
+        this.doc,
+        this.controlTag,
+        this.typeCache
+      );
     }
 
     // a new document, or another type of control block, starts again
