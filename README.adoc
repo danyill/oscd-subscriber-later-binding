@@ -28,12 +28,4 @@ Feel free to log issues to request fixes, improvements or new features.
 
 See the {uri-docs}[documentation] for more information or {uri-openscd-core-plugin-demo}[try it out standalone].
 
-== Credit
-
-This plugin was refactored from base code in OpenSCD and relies on the code, architecture and review effort of multiple people other than the authors of this plugin, including:
-
-* Rob Tjalma
-* Dennis Labordus
-* Juan Munoz
-
-© 2024 OpenSCD Daniel Mulholland, Christian Dinkel, Jakob Vogelsang
+© 2026 OpenPowerShift
