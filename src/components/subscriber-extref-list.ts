@@ -4,7 +4,6 @@ import { property, state } from 'lit/decorators.js';
 import { msg } from '@lit/localize';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 
-import { OscdFilterButton } from '@omicronenergy/oscd-ui/filter-button/OscdFilterButton.js';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdIconButton.js';
 
@@ -24,8 +23,9 @@ import type {
 } from '../foundation/rows.js';
 import type { SubscriberSettings } from '../foundation/settings.js';
 import { ExtRefSortOrder } from '../foundation/sort.js';
+import { FilterButton } from './filter-button.js';
 import { renderOptionButton } from './menu-button.js';
-import type { SelectItem } from './menu-button.js';
+import type { OptionItem } from './menu-button.js';
 import {
   newExtRefSelectEvent,
   newSettingsChangeEvent,
@@ -40,7 +40,7 @@ import type { SearchChangeDetail } from './virtualized-filtered-list.js';
  */
 export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
-    'oscd-filter-button': OscdFilterButton,
+    'oscd-filter-button': FilterButton,
     'oscd-icon': OscdIcon,
     'oscd-icon-button': OscdIconButton,
     'virtualized-filtered-list': VirtualizedFilteredList
@@ -181,11 +181,38 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
       icon: 'filter_list',
       title: msg('Filter'),
       items: [
-        { headline: msg('Subscribed'), selected: !settings.filterOutBound },
-        { headline: msg('Not Subscribed'), selected: !settings.filterOutNotBound },
-        { headline: msg('Unspecified Service Types'), selected: !settings.strictServiceTypes },
-        { headline: msg('Preconfigured Quality Attribute'), selected: !settings.filterOutpDAq },
-        { headline: msg('Preconfigured Time Attribute'), selected: !settings.filterOutpDAt }
+        {
+          headline: msg('Subscribed'),
+          supportingText: msg('Inputs which subscribe to something.'),
+          selected: !settings.filterOutBound,
+          defaultSelected: true
+        },
+        {
+          headline: msg('Not Subscribed'),
+          supportingText: msg('Inputs which subscribe to nothing.'),
+          selected: !settings.filterOutNotBound,
+          defaultSelected: true
+        },
+        {
+          headline: msg('Unspecified Service Types'),
+          supportingText: msg(
+            'Inputs which do not say whether they use GOOSE or sampled values.'
+          ),
+          selected: !settings.strictServiceTypes,
+          defaultSelected: true
+        },
+        {
+          headline: msg('Preconfigured Quality Attribute'),
+          supportingText: msg('Inputs preconfigured for the quality attribute.'),
+          selected: !settings.filterOutpDAq,
+          defaultSelected: true
+        },
+        {
+          headline: msg('Preconfigured Time Attribute'),
+          supportingText: msg('Inputs preconfigured for the time attribute.'),
+          selected: !settings.filterOutpDAt,
+          defaultSelected: true
+        }
       ],
       multiselect: true,
       active:
@@ -207,22 +234,25 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
   }
 
   private renderSortButton(): TemplateResult {
-    const headlines = [
-      msg('Data Model'),
-      msg('Internal Address'),
-      msg('Description'),
-      msg('Mapped Reference')
+    const options: [string, string][] = [
+      [msg('Data Model'), msg('In the order of the data model.')],
+      [msg('Internal Address'), msg('By the internal address of the input.')],
+      [msg('Description'), msg('By the description of the input.')],
+      [msg('Mapped Reference'), msg('By the published item the input subscribes to.')]
     ];
     return renderOptionButton({
       id: 'sortExtRefSubscriberMenu',
       header: msg('Sort'),
       icon: 'sort',
       title: msg('Sort'),
-      items: headlines.map((headline, index) => ({
+      items: options.map(([headline, supportingText], index) => ({
         headline,
-        selected: this.settings.sortExtRefSubscriber === index
+        supportingText,
+        selected: this.settings.sortExtRefSubscriber === index,
+        defaultSelected: index === ExtRefSortOrder.DataModel
       })),
       multiselect: false,
+      active: this.settings.sortExtRefSubscriber !== ExtRefSortOrder.DataModel,
       onApply: (chosen) => {
         const index = chosen.findIndex(item => item.selected);
         this.change({
@@ -235,15 +265,32 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
 
   private renderSettingsButton(): TemplateResult {
     const { settings } = this;
-    const items: SelectItem[] = [
-      { headline: msg('Auto-increment'), selected: settings.autoIncrement },
-      { headline: msg('Change Supervision LNs'), selected: !settings.ignoreSupervision },
-      { headline: msg('Allow External Plugins'), selected: settings.allowExternalPlugins },
+    const items: OptionItem[] = [
+      {
+        headline: msg('Auto-increment'),
+        selected: settings.autoIncrement,
+        defaultSelected: true
+      },
+      {
+        headline: msg('Change Supervision LNs'),
+        selected: !settings.ignoreSupervision,
+        defaultSelected: true
+      },
+      {
+        headline: msg('Allow External Plugins'),
+        selected: settings.allowExternalPlugins,
+        defaultSelected: true
+      },
       {
         headline: msg('Check Only Preconfigured Service and Basic Types'),
-        selected: settings.checkOnlyPreferredBasicType
+        selected: settings.checkOnlyPreferredBasicType,
+        defaultSelected: false
       },
-      { headline: msg('Read-only view'), selected: settings.readOnlyView }
+      {
+        headline: msg('Read-only view'),
+        selected: settings.readOnlyView,
+        defaultSelected: false
+      }
     ];
     return renderOptionButton({
       id: 'settingsExtRefSubscriberMenu',

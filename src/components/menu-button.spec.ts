@@ -5,21 +5,22 @@ import { property } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import * as sinon from 'sinon';
 
-import { OscdFilterButton } from '@omicronenergy/oscd-ui/filter-button/OscdFilterButton.js';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 
 import {
   clickFilterButtonItem,
   closeFilterButton,
-  openFilterButton
+  openFilterButton,
+  resetFilterButton
 } from '../testing/filter-button.js';
 import type { FilterButton } from '../testing/filter-button.js';
+import { FilterButton as OptionFilterButton } from './filter-button.js';
 import { renderOptionButton } from './menu-button.js';
 import type { OptionButton } from './menu-button.js';
 
 class ButtonHost extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
-    'oscd-filter-button': OscdFilterButton,
+    'oscd-filter-button': OptionFilterButton,
     'oscd-icon': OscdIcon
   };
 
@@ -48,8 +49,8 @@ describe('renderOptionButton', () => {
       icon: 'tune',
       title: 'My title',
       items: [
-        { headline: 'First', selected: true },
-        { headline: 'Second', selected: false }
+        { headline: 'First', selected: true, defaultSelected: true },
+        { headline: 'Second', selected: false, defaultSelected: false }
       ],
       multiselect: true,
       onApply,
@@ -125,5 +126,26 @@ describe('renderOptionButton', () => {
     await openFilterButton(button);
     await closeFilterButton(button, 'apply');
     expect(seen.callCount).to.equal(0);
+  });
+
+  it('returns every item to its default with Reset, without applying', async () => {
+    const button = await mount();
+    await openFilterButton(button);
+    await clickFilterButtonItem(button, 1);
+    await clickFilterButtonItem(button, 0);
+    await resetFilterButton(button);
+    expect(button.items.map(item => item.selected)).to.deep.equal([true, false]);
+    expect(onApply.callCount).to.equal(0);
+  });
+
+  it('applies the defaults which Reset restored', async () => {
+    const button = await mount();
+    await openFilterButton(button);
+    await clickFilterButtonItem(button, 0);
+    await resetFilterButton(button);
+    await closeFilterButton(button, 'apply');
+    expect(
+      (onApply.firstCall.args[0] as { selected: boolean }[]).map(item => item.selected)
+    ).to.deep.equal([true, false]);
   });
 });

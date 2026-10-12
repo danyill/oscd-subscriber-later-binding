@@ -96,6 +96,13 @@ describe('oscd-editor-subscriber-later-binding screenshots', () => {
       await shot('publisher with the FCDA sort menu open');
     });
 
+    it('with a filter which differs from the default', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      // hide the subscribed FCDAs, so the filter icon is shown as off-nominal
+      await driver.chooseMenuItems('filterFcdaMenu', [1, 2, 3]);
+      await shot('publisher with an off-nominal filter');
+    });
+
     it('with a search which matches', async () => {
       await mount('GOOSE-2007B4-LGOS.scd');
       await driver.search('fcda', 'Birch');

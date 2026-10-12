@@ -3,7 +3,8 @@ import * as sinon from 'sinon';
 import {
   clickFilterButtonItem,
   closeFilterButton,
-  openFilterButton
+  openFilterButton,
+  resetFilterButton
 } from './filter-button.js';
 import type { FilterButton } from './filter-button.js';
 import { deepQueryAll, normalize, slotText } from './dom.js';
@@ -330,5 +331,30 @@ export class PluginDriver {
   /** The labels of the items in a menu. */
   menuLabels(menuId: string): string[] {
     return this.filterButton(menuId).items.map(item => item.headline);
+  }
+
+  /** The explanations of the items in a menu. */
+  menuExplanations(menuId: string): string[] {
+    return this.filterButton(menuId).items.map(
+      item => item.supportingText ?? ''
+    );
+  }
+
+  /** Whether the button of a menu shows that its option differs from default. */
+  menuActive(menuId: string): boolean {
+    return this.filterButton(menuId).classList.contains('filter-off');
+  }
+
+  /**
+   * Returns every option of a menu to its default, as a user does: open the
+   * menu, press Reset and apply.
+   * @param menuId - id of the menu.
+   */
+  async resetMenu(menuId: string): Promise<void> {
+    const button = this.filterButton(menuId);
+    await openFilterButton(button);
+    await resetFilterButton(button);
+    await closeFilterButton(button, 'apply');
+    await this.mounted.settle();
   }
 }

@@ -107,7 +107,10 @@ export const sharedStyles = css`
     color: var(--md-sys-color-on-surface);
   }
 
-  .option-button.filter-off {
+  /* a filter or sort which differs from its default is shown in the accent
+     colour, so that an off-nominal view is obvious */
+  .option-button.filter-off,
+  .option-button.filter-off oscd-icon {
     color: var(--md-sys-color-primary);
   }
 

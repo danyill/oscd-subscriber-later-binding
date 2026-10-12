@@ -2,7 +2,7 @@ import { waitUntil } from '@open-wc/testing';
 
 /** The parts of an `oscd-filter-button` which specs interact with. */
 export type FilterButton = HTMLElement & {
-  items: { headline: string; selected: boolean }[];
+  items: { headline: string; supportingText?: string; selected: boolean }[];
   updateComplete: Promise<unknown>;
 };
 
@@ -48,6 +48,16 @@ export async function clickFilterButtonItem(
     '.listitems oscd-list-item'
   );
   items[index].click();
+  await button.updateComplete;
+}
+
+/**
+ * Presses the Reset button of an open dialog, which returns the items to their
+ * defaults. The dialog stays open.
+ * @param button - the filter button.
+ */
+export async function resetFilterButton(button: FilterButton): Promise<void> {
+  button.shadowRoot!.querySelector<HTMLElement>('oscd-text-button')!.click();
   await button.updateComplete;
 }
 

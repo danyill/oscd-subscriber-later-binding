@@ -4,7 +4,6 @@ import { property, state } from 'lit/decorators.js';
 import { msg } from '@lit/localize';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 
-import { OscdFilterButton } from '@omicronenergy/oscd-ui/filter-button/OscdFilterButton.js';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdIconButton.js';
 
@@ -21,8 +20,9 @@ import type {
 import type { SubscriberSettings } from '../foundation/settings.js';
 import { FcdaSortOrder } from '../foundation/sort.js';
 import { getFcdaOrExtRefTitle } from '../foundation/subscription/subscription.js';
+import { FilterButton } from './filter-button.js';
 import { renderOptionButton } from './menu-button.js';
-import type { SelectItem } from './menu-button.js';
+import type { OptionItem } from './menu-button.js';
 import {
   newFcdaSelectEvent,
   newSettingsChangeEvent,
@@ -37,7 +37,7 @@ import type { SearchChangeDetail } from './virtualized-filtered-list.js';
  */
 export class FcdaList extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
-    'oscd-filter-button': OscdFilterButton,
+    'oscd-filter-button': FilterButton,
     'oscd-icon': OscdIcon,
     'oscd-icon-button': OscdIconButton,
     'virtualized-filtered-list': VirtualizedFilteredList
@@ -158,16 +158,40 @@ export class FcdaList extends ScopedElementsMixin(LitElement) {
 
   private renderFilterButton(): TemplateResult {
     const { settings } = this;
-    const items: SelectItem[] = [
-      { headline: msg('Subscribed'), selected: !settings.filterOutSubscribed },
-      { headline: msg('Not Subscribed'), selected: !settings.filterOutNotSubscribed },
-      { headline: msg('Data Objects'), selected: !settings.filterOutDataObjects },
-      { headline: msg('Quality'), selected: !settings.filterOutQuality }
+    const items: OptionItem[] = [
+      {
+        headline: msg('Subscribed'),
+        supportingText: msg('Published items which something subscribes to.'),
+        selected: !settings.filterOutSubscribed,
+        defaultSelected: true
+      },
+      {
+        headline: msg('Not Subscribed'),
+        supportingText: msg('Published items which nothing subscribes to.'),
+        selected: !settings.filterOutNotSubscribed,
+        defaultSelected: true
+      },
+      {
+        headline: msg('Data Objects'),
+        supportingText: msg('Published data objects, rather than single attributes.'),
+        selected: !settings.filterOutDataObjects,
+        defaultSelected: true
+      },
+      {
+        headline: msg('Quality'),
+        supportingText: msg('The quality attribute of published data.'),
+        selected: !settings.filterOutQuality,
+        defaultSelected: true
+      }
     ];
     if (settings.subscriberView) {
       items.push({
         headline: msg('Non-Matching Preconfigured'),
-        selected: !settings.filterOutPreconfiguredUnmatched
+        supportingText: msg(
+          'Preconfigured inputs which do not match the chosen published item.'
+        ),
+        selected: !settings.filterOutPreconfiguredUnmatched,
+        defaultSelected: true
       });
     }
     return renderOptionButton({
@@ -198,23 +222,32 @@ export class FcdaList extends ScopedElementsMixin(LitElement) {
   }
 
   private renderSortButton(): TemplateResult {
-    const headlines = [
-      msg('Data Model'),
-      msg('Object Reference'),
-      msg('Full Description'),
-      msg('Data Object and Attribute Description'),
-      msg('Data Attribute Description')
+    const options: [string, string][] = [
+      [msg('Data Model'), msg('In the order of the data model.')],
+      [msg('Object Reference'), msg('By the reference of the published item.')],
+      [msg('Full Description'), msg('By the full description.')],
+      [
+        msg('Data Object and Attribute Description'),
+        msg('By the description of the data object and its attribute.')
+      ],
+      [
+        msg('Data Attribute Description'),
+        msg('By the description of the attribute.')
+      ]
     ];
     return renderOptionButton({
       id: 'sortFcdaMenu',
       header: msg('Sort'),
       icon: 'sort',
       title: msg('Sort'),
-      items: headlines.map((headline, index) => ({
+      items: options.map(([headline, supportingText], index) => ({
         headline,
-        selected: this.settings.sortFcda === index
+        supportingText,
+        selected: this.settings.sortFcda === index,
+        defaultSelected: index === FcdaSortOrder.DataModel
       })),
       multiselect: false,
+      active: this.settings.sortFcda !== FcdaSortOrder.DataModel,
       onApply: (chosen) => {
         const index = chosen.findIndex(item => item.selected);
         this.change({
