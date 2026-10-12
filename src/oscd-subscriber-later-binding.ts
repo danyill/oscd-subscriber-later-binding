@@ -12,6 +12,7 @@ import { newEditEventV2 } from '@openscd/oscd-api/utils.js';
 import { oscdPaletteMd3 } from './theme.js';
 import type { EditV2 } from '@openscd/oscd-api';
 
+import { HelpButton } from './components/help-button.js';
 import { FcdaList } from './components/fcda-list.js';
 import { PublisherExtRefList } from './components/publisher-extref-list.js';
 import { SubscriberExtRefList } from './components/subscriber-extref-list.js';
@@ -59,6 +60,7 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
     'fcda-list': FcdaList,
     'publisher-extref-list': PublisherExtRefList,
     'subscriber-extref-list': SubscriberExtRefList,
+    'help-button': HelpButton,
     'oscd-icon': OscdIcon,
     'oscd-outlined-segmented-button': OscdOutlinedSegmentedButton,
     'oscd-outlined-segmented-button-set': OscdOutlinedSegmentedButtonSet
@@ -352,6 +354,7 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
           <oscd-icon slot="icon">input</oscd-icon>
         </oscd-outlined-segmented-button>
       </oscd-outlined-segmented-button-set>
+      <help-button class="help"></help-button>
     </header>`;
   }
 
@@ -471,6 +474,10 @@ export default class SubscriberLaterBinding extends ScopedElementsMixin(
       --md-outlined-segmented-button-selected-pressed-icon-color: var(
         --md-sys-color-on-primary
       );
+    }
+
+    .help {
+      margin-inline-start: auto;
     }
 
     .switch oscd-outlined-segmented-button {
