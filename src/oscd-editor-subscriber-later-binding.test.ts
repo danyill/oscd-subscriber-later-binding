@@ -2,6 +2,7 @@ import { expect } from '@open-wc/testing';
 import { setViewport } from '@web/test-runner-commands';
 import { visualDiff } from '@web/test-runner-visual-regression';
 
+import { newCompanionAnnounceEvent } from './foundation/companion-protocol.js';
 import { PluginDriver } from './testing/driver.js';
 import { deepQueryAll } from './testing/dom.js';
 import { mountPlugin } from './testing/plugin.js';
@@ -99,8 +100,23 @@ describe('oscd-editor-subscriber-later-binding screenshots', () => {
     it('with a filter which differs from the default', async () => {
       await mount('GOOSE-2007B4-LGOS.scd');
       // hide the subscribed FCDAs, so the filter icon is shown as off-nominal
-      await driver.chooseMenuItems('filterFcdaMenu', [1, 2, 3]);
+      await driver.chooseMenuItems('filterFcdaMenu', [1, 2, 3], true);
       await shot('publisher with an off-nominal filter');
+    });
+
+    it('with active companion plugins', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      // the count of active companions is shown as a badge on the settings
+      for (const [identity, name] of [
+        ['test.sel', 'SEL'],
+        ['test.nr', 'NR Electric']
+      ]) {
+        window.dispatchEvent(
+          newCompanionAnnounceEvent({ identity, name, enabled: true })
+        );
+      }
+      await mounted.settle();
+      await shot('publisher with active companion plugins');
     });
 
     it('with a search which matches', async () => {

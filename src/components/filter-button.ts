@@ -122,12 +122,14 @@ export class FilterButton extends OscdSelectionList {
       position: relative;
     }
 
-    /* the count is information, so it is not in the error colour Material
-       badges have by default */
+    /* A Material badge places itself from the centre of the top edge of its
+       box, so its box is the top centre of the icon, which puts it over the
+       icon's top corner inside the button. The count is information, so it is
+       not in the error colour Material badges have by default. */
     .badge {
       position: absolute;
-      top: 2px;
-      inset-inline-end: 2px;
+      top: calc(50% - var(--md-icon-size, 24px) / 2);
+      inset-inline-start: 50%;
       cursor: pointer;
       --md-badge-color: var(--md-sys-color-secondary);
       --md-badge-large-color: var(--md-sys-color-secondary);
