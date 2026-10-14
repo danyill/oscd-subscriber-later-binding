@@ -31,6 +31,21 @@ export const plugins = {
       icon: 'save',
       requireDoc: true,
       tagName: 'oscd-menu-save'
+    },
+    {
+      name: 'LB Siemens',
+      icon: 'autorenew',
+      src: 'https://danyill.github.io/oscd-subscriber-lb-siemens/oscd-subscriber-lb-siemens.js'
+    },
+    {
+      name: 'LB SEL',
+      icon: 'autorenew',
+      src: 'https://danyill.github.io/oscd-subscriber-lb-sel/oscd-subscriber-lb-sel.js'
+    },
+    {
+      name: 'LB NR Electric',
+      icon: 'autorenew',
+      src: 'https://danyill.github.io/oscd-subscriber-lb-nr/oscd-subscriber-lb-nr.js'
     }
   ],
   editor: [
