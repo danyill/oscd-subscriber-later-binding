@@ -5,6 +5,8 @@ import { loadFixture } from '../testing/fixtures.js';
 import { mustQuery } from '../testing/scl.js';
 import { SubscriptionModel } from './model.js';
 import {
+  preferredAttributesText,
+  unknownPreferredTypeText,
   buildFcdaRows,
   buildPublisherExtRefRows,
   buildSubscriberRows,
@@ -333,6 +335,15 @@ describe('rows', () => {
       [fcda] = model.fcdasOf(control);
     });
 
+    it('shows the preferred attributes of an ExtRef in its tooltip', () => {
+      const rows = extRefRows(buildPublisherExtRefRows(model, settings, control, fcda));
+      const restricted = rows.find(row => row.extRef.hasAttribute('pDO'))!;
+      expect(restricted.tooltip.split('\n')[0]).to.equal(
+        preferredAttributesText(restricted.extRef)
+      );
+      expect(restricted.tooltip).to.contain('pDO: Pos');
+    });
+
     it('has a heading and a group for subscribed and available ExtRefs', () => {
       const rows = buildPublisherExtRefRows(model, settings, control, fcda);
       expect(
@@ -510,6 +521,15 @@ describe('rows', () => {
 
     const extRefsOf = (rows: ReturnType<typeof buildSubscriberRows>) =>
       rows.filter((row): row is SubscriberExtRefRow => row.type === 'extref');
+
+    it('shows the preferred attributes of an ExtRef in its tooltip', () => {
+      const restricted = extRefsOf(buildSubscriberRows(model, settings)).find(row =>
+        row.extRef.hasAttribute('pDO')
+      )!;
+      expect(restricted.tooltip.split('\n')[0]).to.equal(
+        'pServT: GOOSE, pLN: CSWI, pDO: Pos, pDA: stVal'
+      );
+    });
 
     it('lists IEDs with inputs, in name order, each followed by its ExtRefs', () => {
       const rows = buildSubscriberRows(model, settings);
@@ -751,5 +771,73 @@ describe('rows', () => {
       const early = mustQuery(doc, 'IED[name="GOOSE_Subscriber"] LN0 ExtRef');
       expect(isExtRefViewable(early, model, false)).to.equal(false);
     });
+  });
+
+  describe('preferredAttributesText', () => {
+    const extRef = (attributes: Record<string, string>): Element => {
+      const element = new DOMParser()
+        .parseFromString('<ExtRef/>', 'application/xml')
+        .documentElement;
+      Object.entries(attributes).forEach(([name, value]) =>
+        element.setAttribute(name, value)
+      );
+      return element;
+    };
+
+    it('lists the preferred attributes in a fixed order', () => {
+      expect(
+        preferredAttributesText(
+          extRef({ pDA: 'stVal', pDO: 'Ind', pLN: 'GGIO', pServT: 'GOOSE' })
+        )
+      ).to.equal('pServT: GOOSE, pLN: GGIO, pDO: Ind, pDA: stVal');
+    });
+
+    it('lists only those present', () => {
+      expect(preferredAttributesText(extRef({ pDO: 'Ind' }))).to.equal('pDO: Ind');
+    });
+
+    it('is empty without any', () => {
+      expect(preferredAttributesText(extRef({ intAddr: 'x' }))).to.equal('');
+    });
+  });
+
+  describe('unknownPreferredTypeText', () => {
+    const extRef = (attributes: Record<string, string>): Element => {
+      const element = new DOMParser()
+        .parseFromString('<ExtRef/>', 'application/xml')
+        .documentElement;
+      Object.entries(attributes).forEach(([name, value]) =>
+        element.setAttribute(name, value)
+      );
+      return element;
+    };
+
+    it('explains a preferred data object whose type is not known', () => {
+      expect(
+        unknownPreferredTypeText(extRef({ pDO: 'NotAnObject' }), undefined)
+      ).to.equal(
+        'The data type of the preferred attributes cannot be determined, so nothing can be subscribed to this input.'
+      );
+    });
+
+    it('is empty when the type is known or nothing is preferred', () => {
+      expect(
+        unknownPreferredTypeText(extRef({ pDO: 'Pos' }), { cdc: 'DPC' })
+      ).to.equal('');
+      expect(unknownPreferredTypeText(extRef({ intAddr: 'x' }), undefined)).to.equal('');
+    });
+  });
+
+  it('notes in the tooltip of an ExtRef that its preferred type is unknown', async () => {
+    const doc = await loadFixture('GOOSE-2007B4-LGOS.scd');
+    doc
+      .querySelectorAll('ExtRef[pDO="Pos"]')
+      .forEach(element => element.setAttribute('pDO', 'NotAnObject'));
+    const model = new SubscriptionModel(doc, 'GSEControl');
+    const unknown = buildSubscriberRows(model, settings).find(
+      (row): row is SubscriberExtRefRow =>
+        row.type === 'extref' && row.extRef.getAttribute('pDO') === 'NotAnObject'
+    )!;
+    expect(unknown.tooltip).to.contain('cannot be determined');
   });
 });

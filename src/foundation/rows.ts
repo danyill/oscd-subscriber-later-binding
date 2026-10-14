@@ -45,6 +45,39 @@ function missingMappingText(missing: boolean): string {
     : '';
 }
 
+/**
+ * The preferred attributes of an ExtRef (`pServT`, `pLN`, `pDO` and `pDA`),
+ * which restrict what it can be subscribed to, or an empty string without them.
+ * They are shown even where the data type they name cannot be worked out.
+ */
+export function preferredAttributesText(extRef: Element): string {
+  return ['pServT', 'pLN', 'pDO', 'pDA']
+    .filter(name => extRef.hasAttribute(name))
+    .map(name => `${name}: ${extRef.getAttribute(name)}`)
+    .join(', ');
+}
+
+/**
+ * Explains why an ExtRef cannot be subscribed when it has preferred attributes
+ * whose data type cannot be worked out, e.g. a `pDO` which is not a data object
+ * of IEC 61850-7-4 or a `pDA` which is not an attribute of it. Every FCDA then
+ * fails the check of the preferred attributes.
+ * @param extRef - the ExtRef.
+ * @param spec - the data type worked out for its preferred attributes.
+ * @returns the explanation, or an empty string.
+ */
+export function unknownPreferredTypeText(
+  extRef: Element,
+  spec: { cdc: string; bType?: string | undefined } | undefined
+): string {
+  if (!extRef.hasAttribute('pDO') || spec) {
+    return '';
+  }
+  return msg(
+    'The data type of the preferred attributes cannot be determined, so nothing can be subscribed to this input.'
+  );
+}
+
 /** The tooltip describing a data type, or an empty string without a type. */
 function specTitle(
   spec: { cdc: string; bType?: string | undefined } | undefined,
@@ -336,6 +369,8 @@ export function buildPublisherExtRefRows(
           checkOnlyBType: settings.checkOnlyPreferredBasicType
         }),
       tooltip: [
+        preferredAttributesText(extRef),
+        unknownPreferredTypeText(extRef, model.extRefInfo(extRef).spec),
         specTitle(model.extRefInfo(extRef).spec),
         supervisionId ? `${msg('Supervision')}: ${supervisionId}` : '',
         !subscribed && isPartiallyConfigured(extRef) ? msg('Invalid Mapping') : '',
@@ -533,6 +568,8 @@ function toSubscriberRow(
     supervised: supervision !== undefined,
     bound,
     tooltip: [
+      preferredAttributesText(extRef),
+      unknownPreferredTypeText(extRef, specExtRef),
       specExtRefText,
       specFcdaText,
       supervision ? `${msg('Supervision')}: ${model.identityOf(supervision)}` : '',
