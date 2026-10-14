@@ -31,6 +31,8 @@ export interface OptionButton {
   active?: boolean;
   /** A count shown on the button, e.g. of active companion plugins. */
   badge?: string;
+  /** The tooltip of the count, which explains it. */
+  badgeTitle?: string;
   /** Called with the items as chosen when the dialog is applied. */
   onApply: (items: SelectItem[]) => void;
   /**
@@ -74,6 +76,7 @@ export function renderOptionButton(option: OptionButton): TemplateResult {
     .items=${option.items}
     ?multiselect=${option.multiselect}
     .badge=${option.badge}
+    .badgeTitle=${option.badgeTitle}
     @filter-button-dialog-close=${onClose}
   >
     <oscd-icon slot="icon">${option.icon}</oscd-icon>

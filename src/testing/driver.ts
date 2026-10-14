@@ -340,9 +340,24 @@ export class PluginDriver {
     );
   }
 
+  /** The badge on the button of a menu, if any. */
+  menuBadgeElement(menuId: string): Element | undefined {
+    return this.filterButton(menuId).shadowRoot?.querySelector('oscd-badge') ?? undefined;
+  }
+
+  /** The tooltip of the button of a menu. */
+  menuTitle(menuId: string): string {
+    return this.filterButton(menuId).title;
+  }
+
+  /** The tooltip of the count shown on the button of a menu, if any. */
+  menuBadgeTitle(menuId: string): string | undefined {
+    return this.menuBadgeElement(menuId)?.getAttribute('title') ?? undefined;
+  }
+
   /** The count shown on the button of a menu, if any. */
   menuBadge(menuId: string): string | undefined {
-    const badge = this.filterButton(menuId).shadowRoot?.querySelector('oscd-badge');
+    const badge = this.menuBadgeElement(menuId);
     return badge ? (badge as Element & { value: string }).value : undefined;
   }
 

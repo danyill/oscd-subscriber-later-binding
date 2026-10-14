@@ -47,6 +47,9 @@ export class FilterButton extends OscdSelectionList {
   /** A count shown on the button, or none if not set. */
   @property({ attribute: false }) badge?: string;
 
+  /** The tooltip of the count, which explains it. */
+  @property({ attribute: false }) badgeTitle?: string;
+
   @query('oscd-dialog') private dialog!: OscdDialog;
 
   @queryAssignedNodes({ slot: 'icon' }) private iconNodes?: Node[];
@@ -86,7 +89,13 @@ export class FilterButton extends OscdSelectionList {
       </oscd-icon-button>
       ${this.badge === undefined
         ? nothing
-        : html`<oscd-badge class="badge" .value=${this.badge}></oscd-badge>`}
+        : html`<oscd-badge
+            class="badge"
+            .value=${this.badge}
+            title=${this.badgeTitle ?? ''}
+            aria-label=${this.badgeTitle ?? this.badge}
+            @click=${() => this.dialog.show()}
+          ></oscd-badge>`}
       <oscd-dialog @close="${() => this.onClose()}">
         <div slot="headline">${this.header}</div>
         <form slot="content" id="form-id" method="dialog">
@@ -113,11 +122,16 @@ export class FilterButton extends OscdSelectionList {
       position: relative;
     }
 
+    /* the count is information, so it is not in the error colour Material
+       badges have by default */
     .badge {
       position: absolute;
       top: 2px;
       inset-inline-end: 2px;
-      pointer-events: none;
+      cursor: pointer;
+      --md-badge-color: var(--md-sys-color-secondary);
+      --md-badge-large-color: var(--md-sys-color-secondary);
+      --md-badge-large-label-text-color: var(--md-sys-color-on-secondary);
     }
 
     oscd-dialog {

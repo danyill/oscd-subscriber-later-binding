@@ -28,6 +28,7 @@ import { renderOptionButton } from './menu-button.js';
 import type { OptionItem } from './menu-button.js';
 import {
   companionsBadge,
+  companionsBadgeTitle,
   companionsText,
   newExtRefSelectEvent,
   newSettingsChangeEvent,
@@ -304,6 +305,7 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
       badge: settings.allowExternalPlugins
         ? companionsBadge(this.companionNames)
         : undefined,
+      badgeTitle: companionsBadgeTitle(this.companionNames),
       header: msg('Settings'),
       icon: 'settings',
       title: msg('Settings'),

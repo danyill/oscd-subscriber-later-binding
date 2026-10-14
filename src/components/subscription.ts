@@ -82,6 +82,17 @@ export function companionsBadge(names: string[]): string | undefined {
   return names.length > 0 ? `${names.length}` : undefined;
 }
 
+/**
+ * The tooltip of the count of active companion plugins, which explains it.
+ * @param names - the names of the active companion plugins.
+ */
+export function companionsBadgeTitle(names: string[]): string {
+  const list = names.join(', ');
+  return msg(
+    str`Active companion plugins, which subscribe further inputs for some manufacturers: ${list}`
+  );
+}
+
 export const sharedStyles = css`
   :host {
     display: block;

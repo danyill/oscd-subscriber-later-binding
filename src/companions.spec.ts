@@ -252,6 +252,45 @@ describe('companion plugins', () => {
       expect(badge()).to.equal('2');
     });
 
+    it('explains the count in its tooltip', async () => {
+      announce('test.sel', 'SEL');
+      announce('test.nr', 'NR Electric');
+      await mounted.settle();
+      expect(driver.menuBadgeTitle(settingsMenu)).to.equal(
+        'Active companion plugins, which subscribe further inputs for some manufacturers: NR Electric, SEL'
+      );
+      expect(driver.menuTitle(settingsMenu)).to.equal('Settings');
+    });
+
+    it('opens the settings when the count is clicked', async () => {
+      announce('test.sel', 'SEL');
+      await mounted.settle();
+      (driver.menuBadgeElement(settingsMenu) as HTMLElement).click();
+      await mounted.settle();
+      const dialog = driver
+        .menuBadgeElement(settingsMenu)!
+        .getRootNode() as ShadowRoot;
+      expect(
+        (dialog.querySelector('oscd-dialog') as HTMLElement & { open: boolean }).open
+      ).to.equal(true);
+    });
+
+    it('shows the count in the informative colour, not the error colour', async () => {
+      announce('test.sel', 'SEL');
+      await mounted.settle();
+      const badgeElement = driver.menuBadgeElement(settingsMenu)!;
+      const color = getComputedStyle(badgeElement)
+        .getPropertyValue('--md-badge-large-color')
+        .trim();
+      expect(color).to.not.equal('');
+      expect(color).to.equal(
+        getComputedStyle(mounted.plugin).getPropertyValue('--md-sys-color-secondary').trim()
+      );
+      expect(color).to.not.equal(
+        getComputedStyle(mounted.plugin).getPropertyValue('--md-sys-color-error').trim()
+      );
+    });
+
     it('follows a companion which is turned off', async () => {
       announce('test.sel', 'SEL');
       announce('test.sel', 'SEL', false);
