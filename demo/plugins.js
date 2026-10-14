@@ -1,6 +1,5 @@
 import OscdMenuOpen from '@omicronenergy/oscd-menu-open';
 import OscdMenuSave from '@omicronenergy/oscd-menu-save';
-import OscdBackgroundEditV1 from '@omicronenergy/oscd-background-editv1';
 
 // built from src/ by `tsc --watch` when serving from source and by `npm run
 // bundle` before the demo is bundled
@@ -13,8 +12,44 @@ import OscdEditorSubscriberLaterBinding from '../dist/oscd-editor-subscriber-lat
 export function definePlugins(registry) {
   registry.define('oscd-menu-open', OscdMenuOpen);
   registry.define('oscd-menu-save', OscdMenuSave);
-  registry.define('oscd-background-editv1', OscdBackgroundEditV1);
   registry.define('oscd-editor-subscriber-later-binding', OscdEditorSubscriberLaterBinding);
+}
+
+/** The companion plugins, which are background plugins. */
+const companions = [
+  { name: 'SEL', vendor: 'sel' },
+  { name: 'Siemens', vendor: 'siemens' },
+  { name: 'NR Electric', vendor: 'nr' }
+];
+
+const linkedCompanions = await Promise.all(
+  companions.map(async ({ vendor }) => {
+    if (!['localhost', '127.0.0.1'].includes(document.location.hostname)) {
+      return false;
+    }
+    try {
+      const response = await fetch(linkedCompanion(vendor), { method: 'HEAD' });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  })
+);
+
+/** A build of a local checkout, after `npm link ../oscd-background-subscriber-lb-<vendor>`. */
+function linkedCompanion(vendor) {
+  return `/node_modules/@openpowershift/oscd-background-subscriber-lb-${vendor}/dist/oscd-background-subscriber-lb-${vendor}.js`;
+}
+
+/**
+ * Where a companion plugin is loaded from: a linked local build when serving
+ * locally, else its deployed bundle.
+ */
+function companionSrc(vendor) {
+  const index = companions.findIndex(companion => companion.vendor === vendor);
+  return linkedCompanions[index]
+    ? linkedCompanion(vendor)
+    : `https://openpowershift.github.io/oscd-background-subscriber-lb-${vendor}/oscd-background-subscriber-lb-${vendor}.js`;
 }
 
 export const plugins = {
@@ -31,21 +66,6 @@ export const plugins = {
       icon: 'save',
       requireDoc: true,
       tagName: 'oscd-menu-save'
-    },
-    {
-      name: 'LB Siemens',
-      icon: 'autorenew',
-      src: 'https://danyill.github.io/oscd-subscriber-lb-siemens/oscd-subscriber-lb-siemens.js'
-    },
-    {
-      name: 'LB SEL',
-      icon: 'autorenew',
-      src: 'https://danyill.github.io/oscd-subscriber-lb-sel/oscd-subscriber-lb-sel.js'
-    },
-    {
-      name: 'LB NR Electric',
-      icon: 'autorenew',
-      src: 'https://danyill.github.io/oscd-subscriber-lb-nr/oscd-subscriber-lb-nr.js'
     }
   ],
   editor: [
@@ -60,12 +80,10 @@ export const plugins = {
       tagName: 'oscd-editor-subscriber-later-binding'
     }
   ],
-  background: [
-    {
-      name: 'EditV1 Events Listener',
-      icon: 'none',
-      requireDoc: true,
-      tagName: 'oscd-background-editv1'
-    }
-  ]
+  background: companions.map(({ name, vendor }) => ({
+    name: `Subscriber Later Binding - ${name}`,
+    icon: 'none',
+    requireDoc: true,
+    src: companionSrc(vendor)
+  }))
 };

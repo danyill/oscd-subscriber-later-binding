@@ -258,7 +258,8 @@ describe('publisher-extref-list', () => {
         ignoreSupervision: true,
         allowExternalPlugins: true,
         checkOnlyPreferredBasicType: false,
-        readOnlyView: true
+        readOnlyView: true,
+        disabledCompanions: []
       });
     });
   });

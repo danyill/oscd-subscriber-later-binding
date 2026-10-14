@@ -21,15 +21,19 @@ import type {
   SubscriberExtRefRow,
   SubscriberListRow
 } from '../foundation/rows.js';
+import { activeCompanionNames } from '../foundation/companions.js';
+import type { CompanionEntry } from '../foundation/companions.js';
 import type { SubscriberSettings } from '../foundation/settings.js';
 import { ExtRefSortOrder } from '../foundation/sort.js';
 import { FilterButton } from './filter-button.js';
 import { renderOptionButton } from './menu-button.js';
 import type { OptionItem } from './menu-button.js';
 import {
+  companionItems,
   companionsBadge,
   companionsBadgeTitle,
   companionsText,
+  disabledCompanionsAfter,
   newExtRefSelectEvent,
   newSettingsChangeEvent,
   sharedStyles
@@ -55,9 +59,9 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
   @property({ attribute: false })
   settings!: SubscriberSettings;
 
-  /** Names of the companion plugins which are active. */
+  /** The companion plugins which have announced themselves. */
   @property({ attribute: false })
-  companionNames: string[] = [];
+  companions: CompanionEntry[] = [];
 
   /** The ExtRef chosen to be subscribed, shown as selected. */
   @property({ attribute: false })
@@ -271,7 +275,11 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
   }
 
   private renderSettingsButton(): TemplateResult {
-    const { settings } = this;
+    const { settings, companions } = this;
+    const companionNames = activeCompanionNames(
+      companions,
+      settings.disabledCompanions
+    );
     const items: OptionItem[] = [
       {
         headline: msg('Auto-increment'),
@@ -285,7 +293,7 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
       },
       {
         headline: msg('Allow External Plugins'),
-        supportingText: companionsText(this.companionNames),
+        supportingText: companionsText(companionNames),
         selected: settings.allowExternalPlugins,
         defaultSelected: true
       },
@@ -298,14 +306,15 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
         headline: msg('Read-only view'),
         selected: settings.readOnlyView,
         defaultSelected: false
-      }
+      },
+      ...companionItems(companions, settings.disabledCompanions)
     ];
     return renderOptionButton({
       id: 'settingsExtRefSubscriberMenu',
       badge: settings.allowExternalPlugins
-        ? companionsBadge(this.companionNames)
+        ? companionsBadge(companionNames)
         : undefined,
-      badgeTitle: companionsBadgeTitle(this.companionNames),
+      badgeTitle: companionsBadgeTitle(companionNames),
       header: msg('Settings'),
       icon: 'settings',
       title: msg('Settings'),
@@ -317,7 +326,12 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
           ignoreSupervision: !chosen[1].selected,
           allowExternalPlugins: chosen[2].selected,
           checkOnlyPreferredBasicType: chosen[3].selected,
-          readOnlyView: chosen[4].selected
+          readOnlyView: chosen[4].selected,
+          disabledCompanions: disabledCompanionsAfter(
+            companions,
+            chosen.slice(5),
+            settings.disabledCompanions
+          )
         }),
       host: this
     });

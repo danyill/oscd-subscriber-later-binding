@@ -42,6 +42,8 @@ export interface SubscriberSettings {
   allowExternalPlugins: boolean;
   checkOnlyPreferredBasicType: boolean;
   readOnlyView: boolean;
+  /** Identities of the companion plugins the user has turned off. */
+  disabledCompanions: string[];
 
   sortFcda: FcdaSortOrder;
   sortExtRefPublisher: ExtRefSortOrder;
@@ -70,6 +72,7 @@ export const defaultSettings: Readonly<SubscriberSettings> = {
   allowExternalPlugins: true,
   checkOnlyPreferredBasicType: false,
   readOnlyView: false,
+  disabledCompanions: [],
 
   sortFcda: FcdaSortOrder.DataModel,
   sortExtRefPublisher: ExtRefSortOrder.DataModel,
@@ -90,6 +93,9 @@ const sortOrderCounts: Partial<Record<keyof SubscriberSettings, number>> = {
 function isValidSetting(key: keyof SubscriberSettings, value: unknown): boolean {
   if (key === 'controlTag') {
     return isControlTag(value);
+  }
+  if (key === 'disabledCompanions') {
+    return Array.isArray(value) && value.every(item => typeof item === 'string');
   }
   if (key === 'subscriberSplit') {
     return (

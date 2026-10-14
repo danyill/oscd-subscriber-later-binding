@@ -48,6 +48,11 @@ export interface SubscriptionChangeDetail {
   controlBlock?: Element;
   settings: CompanionSettings;
   /**
+   * The identities of the companions the user has turned on in this plugin's
+   * settings. A companion responds only if it is listed.
+   */
+  enabledCompanions: string[];
+  /**
    * Applies edits as part of the same user action. They are dispatched at once,
    * so the document is up to date when the call returns.
    */
@@ -60,15 +65,23 @@ export interface CompanionRequestDetail {
 }
 
 /**
- * Sent by a companion when it is connected, when asked, and when it is enabled
- * or disabled.
+ * Sent by a companion when it is connected and when asked. This plugin lists
+ * each companion in its settings, where the user turns it on or off.
  */
 export interface CompanionAnnounceDetail {
   version: number;
   identity: string;
   /** A short name to show the user, e.g. "SEL". */
   name: string;
-  enabled: boolean;
+  /** What the companion does, e.g. "Subscribes further inputs of SEL relays". */
+  description?: string;
+  /** The things it subscribes, e.g. "Sampled values: the other phases". */
+  features?: string[];
+  /**
+   * Only for a companion with its own switch: whether it is on. Such a
+   * companion is active only if it is on here too.
+   */
+  enabled?: boolean;
 }
 
 /** Sent by a companion when it is disconnected. */

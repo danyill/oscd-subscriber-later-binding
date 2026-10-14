@@ -50,7 +50,6 @@
   "devDependencies": {
     "@fontsource/material-symbols-outlined": "^5.3.9",
     "@fontsource/roboto": "^5.3.0",
-    "@omicronenergy/oscd-background-editv1": "^0.0.7",
     "@omicronenergy/oscd-menu-open": "^0.0.6",
     "@omicronenergy/oscd-menu-save": "^0.0.2",
     "@omicronenergy/oscd-shell": "^0.0.18",

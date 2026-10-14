@@ -2,6 +2,9 @@ import { expect } from '@open-wc/testing';
 
 import {
   activeCompanionNames,
+  companionEntries,
+  enabledCompanionIdentities,
+  isCompanionActive,
   withAnnounced,
   withWithdrawn
 } from './companions.js';
@@ -52,17 +55,43 @@ describe('companions', () => {
     });
   });
 
-  describe('activeCompanionNames', () => {
-    it('lists the enabled companions by name', () => {
-      const companions = [
-        announced('s', 'SEL'),
-        announced('n', 'NR Electric'),
-        announced('x', 'Siemens', false)
-      ].reduce(withAnnounced, none);
-      expect(activeCompanionNames(companions)).to.deep.equal([
-        'NR Electric',
+  describe('with settings', () => {
+    const companions = [
+      announced('s', 'SEL'),
+      announced('n', 'NR Electric'),
+      announced('x', 'Siemens', false),
+      { version: 1, identity: 'b', name: 'Background', description: 'Does things' }
+    ].reduce(withAnnounced, none);
+
+    it('lists the companions by name with their identities and descriptions', () => {
+      expect(companionEntries(companions).map(entry => entry.identity)).to.deep.equal([
+        'b',
+        'n',
+        's',
+        'x'
+      ]);
+      expect(companionEntries(companions)[0]).to.deep.equal({
+        identity: 'b',
+        name: 'Background',
+        description: 'Does things'
+      });
+    });
+
+    it('names the companions which are on in the settings and by their own switch', () => {
+      expect(activeCompanionNames(companionEntries(companions), ['n'])).to.deep.equal([
+        'Background',
         'SEL'
       ]);
+    });
+
+    it('takes a companion without its own switch to be on', () => {
+      const [background] = companionEntries(companions);
+      expect(isCompanionActive(background, [])).to.equal(true);
+      expect(isCompanionActive(background, ['b'])).to.equal(false);
+    });
+
+    it('gives the identities of the companions not turned off in the settings', () => {
+      expect(enabledCompanionIdentities(companions, ['n'])).to.deep.equal(['b', 's', 'x']);
     });
   });
 });

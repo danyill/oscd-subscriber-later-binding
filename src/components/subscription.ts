@@ -1,7 +1,9 @@
 import { css } from 'lit';
 import { msg, str } from '@lit/localize';
 
+import type { CompanionEntry } from '../foundation/companions.js';
 import type { SubscriberSettings } from '../foundation/settings.js';
+import type { OptionItem, SelectItem } from './menu-button.js';
 
 /** An FCDA, with its control block, was chosen in the list. */
 export interface FcdaSelectDetail {
@@ -91,6 +93,47 @@ export function companionsBadgeTitle(names: string[]): string {
   return msg(
     str`Active companion plugins, which subscribe further inputs for some manufacturers: ${list}`
   );
+}
+
+/**
+ * The settings items to turn each companion plugin on or off, which explain
+ * what it does.
+ * @param companions - the companion plugins.
+ * @param disabledCompanions - the identities turned off in the settings.
+ */
+export function companionItems(
+  companions: CompanionEntry[],
+  disabledCompanions: readonly string[]
+): OptionItem[] {
+  return companions.map(({ identity, name, description, features }) => ({
+    headline: msg(str`${name} companion plugin`),
+    supportingText: [description, ...(features ?? [])]
+      .filter(text => text !== undefined && text !== '')
+      .join('. '),
+    selected: !disabledCompanions.includes(identity),
+    defaultSelected: true
+  }));
+}
+
+/**
+ * The companion plugins turned off once the settings are applied. Companions
+ * which are not loaded now keep their setting.
+ * @param companions - the companion plugins listed in the settings.
+ * @param chosen - the settings items of the companions as applied.
+ * @param disabledCompanions - the identities turned off before.
+ */
+export function disabledCompanionsAfter(
+  companions: CompanionEntry[],
+  chosen: SelectItem[],
+  disabledCompanions: readonly string[]
+): string[] {
+  const listed = companions.map(({ identity }) => identity);
+  return [
+    ...disabledCompanions.filter(identity => !listed.includes(identity)),
+    ...companions
+      .filter((_, index) => !chosen[index]?.selected)
+      .map(({ identity }) => identity)
+  ];
 }
 
 export const sharedStyles = css`

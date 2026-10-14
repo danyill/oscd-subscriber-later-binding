@@ -312,6 +312,71 @@ describe('companion plugins', () => {
       expect(badge()).to.equal(undefined);
     });
 
+    it('lists each companion in the settings with what it does', async () => {
+      window.dispatchEvent(
+        newCompanionAnnounceEvent({
+          identity: 'test.sel',
+          name: 'SEL',
+          description: 'Subscribes further inputs of SEL relays',
+          features: ['Sampled values: the other phases']
+        })
+      );
+      await mounted.settle();
+      expect(driver.menuLabels(settingsMenu).at(-1)).to.equal('SEL companion plugin');
+      expect(driver.menuExplanations(settingsMenu).at(-1)).to.equal(
+        'Subscribes further inputs of SEL relays. Sampled values: the other phases'
+      );
+      expect(driver.menuSelection(settingsMenu)).to.include(
+        driver.menuLabels(settingsMenu).length - 1
+      );
+    });
+
+    it('turns a companion off and on from the settings', async () => {
+      window.dispatchEvent(
+        newCompanionAnnounceEvent({ identity: 'test.sel', name: 'SEL' })
+      );
+      await mounted.settle();
+      const last = driver.menuLabels(settingsMenu).length - 1;
+      const others = driver.menuSelection(settingsMenu).filter(i => i !== last);
+
+      await driver.chooseMenuItems(settingsMenu, others);
+      expect(mounted.plugin.disabledCompanions).to.deep.equal(['test.sel']);
+      expect(externalPluginsText()).to.equal('No active companion plugins');
+      expect(badge()).to.equal(undefined);
+
+      await driver.selectExtRef(SUB1_CILO_STVAL, 'subscriber');
+      await driver.selectFcda(GOOSE1, GOOSE1_QB1_STVAL);
+      expect(seen.at(-1)?.enabledCompanions).to.deep.equal([]);
+
+      await driver.chooseMenuItems(settingsMenu, [...others, last]);
+      expect(mounted.plugin.disabledCompanions).to.deep.equal([]);
+      expect(badge()).to.equal('1');
+    });
+
+    it('keeps companions turned off which are not loaded', async () => {
+      mounted.plugin.disabledCompanions = ['test.siemens'];
+      window.dispatchEvent(
+        newCompanionAnnounceEvent({ identity: 'test.sel', name: 'SEL' })
+      );
+      await mounted.settle();
+      await driver.chooseMenuItems(settingsMenu, driver.menuSelection(settingsMenu));
+      expect(mounted.plugin.disabledCompanions).to.deep.equal(['test.siemens']);
+    });
+
+    it('tells companions which of them are turned on', async () => {
+      window.dispatchEvent(
+        newCompanionAnnounceEvent({ identity: 'test.sel', name: 'SEL' })
+      );
+      window.dispatchEvent(
+        newCompanionAnnounceEvent({ identity: 'test.nr', name: 'NR Electric' })
+      );
+      mounted.plugin.disabledCompanions = ['test.nr'];
+      await mounted.settle();
+      await driver.selectExtRef(SUB1_CILO_STVAL, 'subscriber');
+      await driver.selectFcda(GOOSE1, GOOSE1_QB1_STVAL);
+      expect(seen.at(-1)?.enabledCompanions).to.deep.equal(['test.sel']);
+    });
+
     it('shows the companions in the publisher view too', async () => {
       announce('test.sel', 'SEL');
       await driver.switchView();

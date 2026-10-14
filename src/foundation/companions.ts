@@ -6,7 +6,15 @@ import type {
 /** What a companion plugin has told this plugin about itself. */
 export interface Companion {
   name: string;
-  enabled: boolean;
+  description?: string;
+  features?: string[];
+  /** Only for a companion with its own switch: whether it is on. */
+  enabled?: boolean;
+}
+
+/** A companion with its identity, as listed in the settings. */
+export interface CompanionEntry extends Companion {
+  identity: string;
 }
 
 /** Companion plugins by their identity. */
@@ -20,9 +28,19 @@ export type Companions = ReadonlyMap<string, Companion>;
  */
 export function withAnnounced(
   companions: Companions,
-  { identity, name, enabled }: CompanionAnnounceDetail
+  { identity, name, description, features, enabled }: CompanionAnnounceDetail
 ): Companions {
-  return new Map(companions).set(identity, { name, enabled });
+  const companion: Companion = { name };
+  if (description !== undefined) {
+    companion.description = description;
+  }
+  if (features !== undefined) {
+    companion.features = features;
+  }
+  if (enabled !== undefined) {
+    companion.enabled = enabled;
+  }
+  return new Map(companions).set(identity, companion);
 }
 
 /**
@@ -40,10 +58,43 @@ export function withWithdrawn(
   return next;
 }
 
-/** The names of the enabled companions, sorted. */
-export function activeCompanionNames(companions: Companions): string[] {
-  return Array.from(companions.values())
-    .filter(companion => companion.enabled)
-    .map(companion => companion.name)
-    .sort((a, b) => a.localeCompare(b));
+/** The companions with their identities, sorted by name. */
+export function companionEntries(companions: Companions): CompanionEntry[] {
+  return Array.from(companions, ([identity, companion]) => ({
+    identity,
+    ...companion
+  })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Whether a companion is active: not turned off in the settings, nor by its
+ * own switch if it has one.
+ * @param entry - the companion.
+ * @param disabledCompanions - the identities turned off in the settings.
+ */
+export function isCompanionActive(
+  entry: CompanionEntry,
+  disabledCompanions: readonly string[]
+): boolean {
+  return entry.enabled !== false && !disabledCompanions.includes(entry.identity);
+}
+
+/** The identities of the companions which are not turned off in the settings. */
+export function enabledCompanionIdentities(
+  companions: Companions,
+  disabledCompanions: readonly string[]
+): string[] {
+  return companionEntries(companions)
+    .filter(({ identity }) => !disabledCompanions.includes(identity))
+    .map(({ identity }) => identity);
+}
+
+/** The names of the active companions, sorted. */
+export function activeCompanionNames(
+  entries: CompanionEntry[],
+  disabledCompanions: readonly string[]
+): string[] {
+  return entries
+    .filter(entry => isCompanionActive(entry, disabledCompanions))
+    .map(entry => entry.name);
 }

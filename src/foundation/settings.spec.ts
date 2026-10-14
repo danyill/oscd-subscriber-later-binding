@@ -50,7 +50,7 @@ describe('settings', () => {
 
     it('lists every setting once', () => {
       expect(settingsKeys).to.have.length(new Set(settingsKeys).size);
-      expect(settingsKeys).to.have.length(21);
+      expect(settingsKeys).to.have.length(22);
     });
 
     it('share the subscriber width evenly', () => {
@@ -101,11 +101,24 @@ describe('settings', () => {
         allowExternalPlugins: false,
         checkOnlyPreferredBasicType: true,
         readOnlyView: true,
+        disabledCompanions: ['openpowershift.oscd-background-subscriber-lb-sel'],
         sortFcda: 4,
         sortExtRefPublisher: 2,
         sortExtRefSubscriber: 3
       };
       expect(parseSettings(JSON.stringify(stored))).to.deep.equal(stored);
+    });
+
+    it('reads only a list of identities for the companions turned off', () => {
+      [42, 'sel', [1], { sel: true }].forEach(value =>
+        expect(
+          parseSettings(JSON.stringify({ disabledCompanions: value })).disabledCompanions,
+          JSON.stringify(value)
+        ).to.deep.equal([])
+      );
+      expect(
+        parseSettings('{"disabledCompanions":["a","b"]}').disabledCompanions
+      ).to.deep.equal(['a', 'b']);
     });
 
     it('fills in settings which are missing', () => {

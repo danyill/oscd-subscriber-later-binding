@@ -249,7 +249,8 @@ describe('subscriber-extref-list', () => {
         ignoreSupervision: false,
         allowExternalPlugins: true,
         checkOnlyPreferredBasicType: false,
-        readOnlyView: false
+        readOnlyView: false,
+        disabledCompanions: []
       });
     });
   });

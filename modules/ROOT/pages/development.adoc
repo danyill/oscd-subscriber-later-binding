@@ -64,28 +64,25 @@ For example, it can map the other two phases of a sampled value stream, or the q
 |===
 |Plugin |Manufacturer (`IED/@manufacturer`) |What it does
 
-|https://github.com/OpenPowerShift/oscd-menu-subscriber-lb-sel[Subscriber LB - SEL]
+|https://github.com/OpenPowerShift/oscd-background-subscriber-lb-sel[Subscriber LB - SEL]
 |`SEL`
 a|* Double position values (CDC `DPC`, basic type `Dbpos`): subscribes the next input to the same data, for the open (B contact) indication.
 * Multi-phase sampled values: subscribes the B and C phase inputs (e.g. `IAS`, `IBS`, `ICS`) to the matching `TCTR` or `TVTR` data.
 
-|https://github.com/danyill/oscd-subscriber-lb-siemens[Subscriber LB - Siemens]
+|https://github.com/OpenPowerShift/oscd-background-subscriber-lb-siemens[Subscriber LB - Siemens]
 |`SIEMENS`
 a|* Quality: subscribes the matching quality input (`…/q`) to the quality of the published data.
 * Multi-phase sampled values (SIPROTEC 5).
 
-|https://github.com/danyill/oscd-subscriber-lb-nr[Subscriber LB - NR Electric]
+|https://github.com/OpenPowerShift/oscd-background-subscriber-lb-nr[Subscriber LB - NR Electric]
 |`NRR`
 a|* Quality: subscribes the next input to the quality of the published data.
 |===
 
-Each one is a menu plugin.
-Its menu item opens a dialog where the user can turn it on or off.
+Each one is a background plugin with no user interface of its own.
+It tells this plugin what it does, and this plugin lists it in its settings, where the user turns it on or off.
 It acts only on inputs of IEDs from its manufacturer.
 
-NOTE: The SEL plugin uses the protocol below.
-The Siemens and NR Electric plugins are still being upgraded to it.
-Until then they do not work with this version.
 
 === How companions work
 
@@ -106,7 +103,7 @@ Each companion keeps an identical copy until the file is published as a package.
 |`oscd-lb-subscription-change`
 |this plugin
 |After it has subscribed or unsubscribed an input, only if _Allow External Plugins_ is on
-|`version`, `action` (`subscribe` or `unsubscribe`), `extRef`, `fcda` and `controlBlock` (for an unsubscription, what the input _was_ subscribed to), `settings` (`ignoreSupervision`, `checkOnlyPreferredBasicType`), and `apply(edits, { title })`
+|`version`, `action` (`subscribe` or `unsubscribe`), `extRef`, `fcda` and `controlBlock` (for an unsubscription, what the input _was_ subscribed to), `settings` (`ignoreSupervision`, `checkOnlyPreferredBasicType`), `enabledCompanions` (the identities of the companions turned on in the settings), and `apply(edits, { title })`
 
 |`oscd-lb-companion-request`
 |this plugin
@@ -115,8 +112,8 @@ Each companion keeps an identical copy until the file is published as a package.
 
 |`oscd-lb-companion-announce`
 |companion
-|When connected, when requested, and when turned on or off
-|`version`, `identity`, `name`, `enabled`
+|When connected and when requested
+|`version`, `identity`, `name`, `description` and `features` (shown in the settings), and `enabled` only for a companion with its own switch
 
 |`oscd-lb-companion-withdraw`
 |companion
@@ -142,13 +139,22 @@ Companions run after the edit has been applied because `subscribe` and `unsubscr
 Whether a supervision (`LGOS`/`LSVS`) is added or removed depends on the other inputs from the same control block.
 That is only correct once the user's edit is in place.
 
-The settings menus show the active companions under _Allow External Plugins_, e.g. "2 active: NR Electric, SEL".
-The count is also shown on the settings button.
+==== Settings
+
+The settings menus of both views list each companion that has announced itself, e.g. _SEL companion plugin_, with its description and features.
+Unticking it turns the companion off: it is left out of `enabledCompanions`.
+The choice is kept with the other settings, also for companions that are not loaded at the time.
+Companions are on unless turned off.
+
+_Allow External Plugins_ turns all companions off at once: no `oscd-lb-subscription-change` is sent.
+It lists the active companions, e.g. "2 active: NR Electric, SEL".
+The settings button shows their count, whose tooltip explains it.
 
 ==== Writing a companion
 
 * Listen for `oscd-lb-subscription-change` on `window` in `connectedCallback`, and remove the listener in `disconnectedCallback`.
-* Ignore changes whose `version` you do not support, when you are turned off, or when `extRef.closest('IED')` is not from your manufacturer.
+* Make it a background plugin without a user interface or settings of its own.
+* Ignore changes whose `version` you do not support, when your identity is not in `enabledCompanions`, or when `extRef.closest('IED')` is not from your manufacturer.
 * Never overwrite: skip inputs that already have a subscription.
 Only unsubscribe inputs that are subscribed to the data you would have subscribed them to.
 * Make the edits for one change with a single `subscribe([...])` and a single `unsubscribe([...])` call.
@@ -156,7 +162,8 @@ Pass on `settings.ignoreSupervision` and `settings.checkOnlyPreferredBasicType`.
 Call `apply` once.
 * Do not dispatch edit events yourself.
 This plugin does not send changes for edits made through `apply`, so companions cannot set each other off.
-* Announce yourself with `oscd-lb-companion-announce` when connected, when you get `oscd-lb-companion-request`, and when you are turned on or off.
+* Announce yourself with `oscd-lb-companion-announce` when connected and when you get `oscd-lb-companion-request`.
+Give a short `name`, a `description` of what you do and the `features` you subscribe, in the user's language.
 Withdraw when disconnected.
 * Undo and redo send no events.
 

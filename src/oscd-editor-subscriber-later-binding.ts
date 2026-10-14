@@ -40,7 +40,8 @@ import type {
   SubscriptionChangeDetail
 } from './foundation/companion-protocol.js';
 import {
-  activeCompanionNames,
+  companionEntries,
+  enabledCompanionIdentities,
   withAnnounced,
   withWithdrawn
 } from './foundation/companions.js';
@@ -109,6 +110,10 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
 
   // Settings which are kept between sessions, see `foundation/settings.ts`.
   @property({ type: Boolean }) readOnlyView = defaultSettings.readOnlyView;
+
+  /** Identities of the companion plugins the user has turned off. */
+  @property({ type: Array })
+  disabledCompanions: string[] = [...defaultSettings.disabledCompanions];
 
   @property({ type: String }) controlTag: ControlTag = defaultSettings.controlTag;
 
@@ -283,6 +288,10 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
       newSubscriptionChangeEvent({
         ...change,
         settings: { ignoreSupervision, checkOnlyPreferredBasicType },
+        enabledCompanions: enabledCompanionIdentities(
+          this.companions,
+          this.disabledCompanions
+        ),
         apply: (edits: EditV2[], options?: ApplyOptions): void => {
           if (edits.length > 0) {
             this.dispatchEvent(
@@ -548,7 +557,7 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
                 class="column subscriber-column"
                 .model=${this.model}
                 .settings=${this.settings}
-                .companionNames=${activeCompanionNames(this.companions)}
+                .companions=${companionEntries(this.companions)}
                 .selectedExtRef=${this.selectedExtRef}
                 @extref-select=${(event: ExtRefSelectEvent) =>
                   this.handleExtRefSelect(event)}
@@ -561,7 +570,7 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
                 class="column"
                 .model=${this.model}
                 .settings=${this.settings}
-                .companionNames=${activeCompanionNames(this.companions)}
+                .companions=${companionEntries(this.companions)}
                 .selectedControl=${this.selectedControl}
                 .selectedFcda=${this.selectedFCDA}
                 @extref-select=${(event: ExtRefSelectEvent) =>
