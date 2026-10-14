@@ -6,7 +6,6 @@
 :imagesdir: docs/media
 :icons: font
 :experimental:
-:uri-openwc: https://github.com/open-wc/open-wc
 :uri-docs: https://openpowershift.github.io/tpnz-openscd-docs
 :uri-openscd-core-plugin-demo: https://openpowershift.github.io/{plugin-name}/index.deploy.html
 // badges
