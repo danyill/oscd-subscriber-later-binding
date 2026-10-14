@@ -41,11 +41,13 @@ The plugin is not targeted for IEC 61850 Ed 1 devices and does not currently sup
 == Add On Plugins
 
 This plugin works with several other plugins which provide manufacturer-specific functionality.
+When you subscribe or unsubscribe an input, they subscribe or unsubscribe the inputs that belong with it, as part of the same action, so one undo reverses everything.
 
-* Subscriber LB - NR Electric
-// TODO: Add xref
-* Subscriber LB - Siemens
-// TODO: Add xref
-* Subscriber LB - SEL
-// TODO: Add xref
+* https://github.com/OpenPowerShift/oscd-menu-subscriber-lb-sel[Subscriber LB - SEL]: double position values (open and closed indications) and multi-phase sampled values.
+* https://github.com/danyill/oscd-subscriber-lb-siemens[Subscriber LB - Siemens]: quality attributes and multi-phase sampled values for SIPROTEC 5.
+* https://github.com/danyill/oscd-subscriber-lb-nr[Subscriber LB - NR Electric]: quality attributes.
+
+They need _Allow External Plugins_ to be on (the default).
+The settings menu shows which ones are active under that option, and the settings button shows how many.
+See xref:development.adoc#companionPlugins[companion plugins] for how they work.
 

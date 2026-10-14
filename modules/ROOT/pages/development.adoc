@@ -51,6 +51,115 @@ Start up a demo server
 
 Now open in your browser locally to http://localhost:8000/demo/ to use the plugin.
 
+[#companionPlugins]
+== Companion plugins
+
+Companion plugins (also called add-on plugins) add manufacturer-specific behaviour.
+When this plugin subscribes or unsubscribes an input, a companion can subscribe or unsubscribe more inputs that belong with it.
+For example, it can map the other two phases of a sampled value stream, or the quality attribute that goes with a value.
+
+=== Available companion plugins
+
+[cols="1,1,3"]
+|===
+|Plugin |Manufacturer (`IED/@manufacturer`) |What it does
+
+|https://github.com/OpenPowerShift/oscd-menu-subscriber-lb-sel[Subscriber LB - SEL]
+|`SEL`
+a|* Double position values (CDC `DPC`, basic type `Dbpos`): subscribes the next input to the same data, for the open (B contact) indication.
+* Multi-phase sampled values: subscribes the B and C phase inputs (e.g. `IAS`, `IBS`, `ICS`) to the matching `TCTR` or `TVTR` data.
+
+|https://github.com/danyill/oscd-subscriber-lb-siemens[Subscriber LB - Siemens]
+|`SIEMENS`
+a|* Quality: subscribes the matching quality input (`…/q`) to the quality of the published data.
+* Multi-phase sampled values (SIPROTEC 5).
+
+|https://github.com/danyill/oscd-subscriber-lb-nr[Subscriber LB - NR Electric]
+|`NRR`
+a|* Quality: subscribes the next input to the quality of the published data.
+|===
+
+Each one is a menu plugin.
+Its menu item opens a dialog where the user can turn it on or off.
+It acts only on inputs of IEDs from its manufacturer.
+
+NOTE: The SEL plugin uses the protocol below.
+The Siemens and NR Electric plugins are still being upgraded to it.
+Until then they do not work with this version.
+
+=== How companions work
+
+Companions do not watch the host's edit events.
+Instead, this plugin tells them what it did, and dispatches the edits they make on their behalf.
+Only this plugin depends on the host's edit API, so companions are not affected if it changes.
+Every edit is part of one undoable action.
+
+All events are `CustomEvent`s dispatched on `window`.
+The plugins can be anywhere in the host, and either can load first.
+The event names and types are in `src/foundation/companion-protocol.ts`.
+Each companion keeps an identical copy until the file is published as a package.
+
+[cols="2,1,2,3"]
+|===
+|Event |Sent by |When |`detail`
+
+|`oscd-lb-subscription-change`
+|this plugin
+|After it has subscribed or unsubscribed an input, only if _Allow External Plugins_ is on
+|`version`, `action` (`subscribe` or `unsubscribe`), `extRef`, `fcda` and `controlBlock` (for an unsubscription, what the input _was_ subscribed to), `settings` (`ignoreSupervision`, `checkOnlyPreferredBasicType`), and `apply(edits, { title })`
+
+|`oscd-lb-companion-request`
+|this plugin
+|When it is connected
+|`version`
+
+|`oscd-lb-companion-announce`
+|companion
+|When connected, when requested, and when turned on or off
+|`version`, `identity`, `name`, `enabled`
+
+|`oscd-lb-companion-withdraw`
+|companion
+|When disconnected
+|`version`, `identity`
+|===
+
+What happens when a user subscribes an input:
+
+. This plugin dispatches its edit, and the host applies it.
+. This plugin dispatches `oscd-lb-subscription-change` on `window`.
+. A companion for the input's manufacturer works out its edits from the document as it is now, using `@openscd/scl-lib`.
+It then calls `apply(edits, { title })`.
+. `apply` dispatches the edits at once with `squash: true`.
+They join the same undoable action, so one undo or redo covers everything.
+The document is up to date when `apply` returns.
+. If auto-increment is on and the next input is now subscribed (for example, by a companion), auto-increment stops.
+It never removes a subscription.
+
+Re-subscribing an input sends an `unsubscribe` change and then a `subscribe` change.
+
+Companions run after the edit has been applied because `subscribe` and `unsubscribe` in `@openscd/scl-lib` compare against the live document.
+Whether a supervision (`LGOS`/`LSVS`) is added or removed depends on the other inputs from the same control block.
+That is only correct once the user's edit is in place.
+
+The settings menus show the active companions under _Allow External Plugins_, e.g. "2 active: NR Electric, SEL".
+The count is also shown on the settings button.
+
+==== Writing a companion
+
+* Listen for `oscd-lb-subscription-change` on `window` in `connectedCallback`, and remove the listener in `disconnectedCallback`.
+* Ignore changes whose `version` you do not support, when you are turned off, or when `extRef.closest('IED')` is not from your manufacturer.
+* Never overwrite: skip inputs that already have a subscription.
+Only unsubscribe inputs that are subscribed to the data you would have subscribed them to.
+* Make the edits for one change with a single `subscribe([...])` and a single `unsubscribe([...])` call.
+Pass on `settings.ignoreSupervision` and `settings.checkOnlyPreferredBasicType`.
+Call `apply` once.
+* Do not dispatch edit events yourself.
+This plugin does not send changes for edits made through `apply`, so companions cannot set each other off.
+* Announce yourself with `oscd-lb-companion-announce` when connected, when you get `oscd-lb-companion-request`, and when you are turned on or off.
+Withdraw when disconnected.
+* Undo and redo send no events.
+
 == Linting and formatting
 
 To scan the project for linting and formatting errors, run
