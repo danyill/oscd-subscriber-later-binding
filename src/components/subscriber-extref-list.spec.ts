@@ -1,4 +1,4 @@
-import { expect } from '@open-wc/testing';
+import { expect, nextFrame } from '@open-wc/testing';
 import * as sinon from 'sinon';
 
 import { SubscriptionModel } from '../foundation/model.js';
@@ -74,6 +74,29 @@ describe('subscriber-extref-list', () => {
       expect(row.secondary).to.contain('SpiderLegs');
       expect(row.secondary).to.contain('QB2_Disconnector / LLN0 GOOSE2');
       expect(row.meta).to.equal('monitor_heart');
+    });
+
+    it('keeps what an ExtRef is subscribed to within its row when it is narrow', async () => {
+      const list = await mount();
+      list.parentElement!.style.width = '280px';
+      await nextFrame();
+      await nextFrame();
+      const sources = deepQueryAll(list.shadowRoot!, '.source') as HTMLElement[];
+      expect(sources.length).to.be.greaterThan(0);
+      sources.forEach((source) => {
+        const box = source.getBoundingClientRect();
+        const text = source.closest('div[slot]')!.getBoundingClientRect();
+        expect(box.left).to.be.at.least(text.left - 0.5);
+        expect(box.right).to.be.at.most(text.right + 0.5);
+      });
+      const fontSize = (source: HTMLElement) =>
+        parseFloat(getComputedStyle(source).fontSize);
+      expect(
+        sources.some(
+          source => source.getBoundingClientRect().height > 2 * fontSize(source)
+        ),
+        'a reference longer than a line wraps within itself'
+      ).to.equal(true);
     });
 
     it('shows an ExtRef which is not subscribed without a subscription', async () => {

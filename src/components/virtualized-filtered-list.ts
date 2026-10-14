@@ -223,6 +223,26 @@ export class VirtualizedFilteredList extends ScopedElementsMixin(LitElement) {
       --md-sys-color-on-surface: var(--md-sys-color-on-surface-variant);
     }
 
+    /*
+     * What an input takes from the publisher, tinted from the text colour so it
+     * reads as separate from the input itself in any row state. It moves to the
+     * next line whole when it does not fit, and wraps within itself only when
+     * it is longer than a line.
+     */
+    .source {
+      display: inline-block;
+      max-inline-size: 100%;
+      box-sizing: border-box;
+      padding: 0 6px 0 2px;
+      border-radius: 4px;
+      background-color: color-mix(in srgb, currentColor 8%, transparent);
+      overflow-wrap: anywhere;
+    }
+
+    .source.invalid {
+      font-style: italic;
+    }
+
     oscd-icon.arrow {
       --md-icon-size: 18px;
       vertical-align: middle;

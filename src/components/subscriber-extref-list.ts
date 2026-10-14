@@ -139,7 +139,7 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
 
   private renderExtRef(row: SubscriberExtRefRow): TemplateResult {
     const selected = this.selectedExtRef === row.extRef;
-    const { subscribed, invalidMapping, missingMapping } = row;
+    const { bound, invalidMapping, missingMapping, subscribed } = row;
     const showData = row.description && row.dataDescription !== '';
     const source = row.description && row.source !== '' ? `(${row.source})` : row.source;
     return html`<oscd-list-item
@@ -152,16 +152,22 @@ export class SubscriberExtRefList extends ScopedElementsMixin(LitElement) {
       <oscd-icon slot="start">${subscribed ? 'link' : 'link_off'}</oscd-icon>
       <div slot="headline">
         ${row.title}
-        ${subscribed || invalidMapping
-          ? html`<oscd-icon class="arrow">arrow_back</oscd-icon> ${row.mapping}`
+        ${bound
+          ? html`<span class="source ${invalidMapping ? 'invalid' : ''}"
+              ><oscd-icon class="arrow">arrow_back</oscd-icon> ${row.mapping}</span
+            >`
           : nothing}
       </div>
       <div slot="supporting-text">
         ${row.description}
-        ${showData
-          ? html`<oscd-icon class="arrow">arrow_left</oscd-icon>${row.dataDescription}`
+        ${showData || source !== ''
+          ? html`<span class="source"
+              >${showData
+                ? html`<oscd-icon class="arrow">arrow_left</oscd-icon>${row.dataDescription}`
+                : nothing}
+              ${source}</span
+            >`
           : nothing}
-        ${source}
       </div>
       ${row.supervised
         ? html`<oscd-icon slot="end">monitor_heart</oscd-icon>`
