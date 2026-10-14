@@ -24,8 +24,27 @@ import type {
 import {
   needsUnsubscribe,
   subscribeEdits,
+  subscriptionSource,
   unsubscribeEdits
 } from './foundation/actions.js';
+import {
+  companionAnnounceEventName,
+  companionWithdrawEventName,
+  newCompanionRequestEvent,
+  newSubscriptionChangeEvent
+} from './foundation/companion-protocol.js';
+import type {
+  ApplyOptions,
+  CompanionAnnounceEvent,
+  CompanionWithdrawEvent,
+  SubscriptionChangeDetail
+} from './foundation/companion-protocol.js';
+import {
+  activeCompanionNames,
+  withAnnounced,
+  withWithdrawn
+} from './foundation/companions.js';
+import type { Companions } from './foundation/companions.js';
 import { controlIconNames } from './foundation/control-tag.js';
 import type { ControlTag } from './foundation/control-tag.js';
 import { findFCDAs } from './foundation/foundation.js';
@@ -143,6 +162,9 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
 
   @state() private model = new SubscriptionModel(undefined, 'GSEControl');
 
+  /** Companion plugins which have announced themselves. */
+  @state() private companions: Companions = new Map();
+
   /** Data types worked out for the document, kept as it is edited. */
   private typeCache = new TypeInfoCache();
 
@@ -163,6 +185,16 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
       this,
       parseSettings(localStorage.getItem(settingsStorageKey))
     );
+    window.addEventListener(companionAnnounceEventName, this.handleCompanionAnnounce);
+    window.addEventListener(companionWithdrawEventName, this.handleCompanionWithdraw);
+    // companions loaded before this plugin announce themselves again
+    window.dispatchEvent(newCompanionRequestEvent());
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.removeEventListener(companionAnnounceEventName, this.handleCompanionAnnounce);
+    window.removeEventListener(companionWithdrawEventName, this.handleCompanionWithdraw);
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
@@ -209,6 +241,14 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
     }
   }
 
+  private handleCompanionAnnounce = (event: CompanionAnnounceEvent): void => {
+    this.companions = withAnnounced(this.companions, event.detail);
+  };
+
+  private handleCompanionWithdraw = (event: CompanionWithdrawEvent): void => {
+    this.companions = withWithdrawn(this.companions, event.detail);
+  };
+
   private clearSelection(): void {
     this.selectedControl = undefined;
     this.selectedFCDA = undefined;
@@ -224,12 +264,45 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
     this.dispatchEvent(newEditEventV2(edits, { title, squash }));
   }
 
+  /**
+   * Tells companion plugins of a subscription or unsubscription which has been
+   * applied. The edits they make are squashed into the same undoable edit.
+   * @param change - what was done.
+   */
+  private notifyCompanions(
+    change: Pick<
+      SubscriptionChangeDetail,
+      'action' | 'extRef' | 'fcda' | 'controlBlock'
+    >
+  ): void {
+    if (!this.allowExternalPlugins) {
+      return;
+    }
+    const { ignoreSupervision, checkOnlyPreferredBasicType } = this;
+    window.dispatchEvent(
+      newSubscriptionChangeEvent({
+        ...change,
+        settings: { ignoreSupervision, checkOnlyPreferredBasicType },
+        apply: (edits: EditV2[], options?: ApplyOptions): void => {
+          if (edits.length > 0) {
+            this.dispatchEvent(
+              newEditEventV2(edits, { title: options?.title, squash: true })
+            );
+          }
+        }
+      })
+    );
+  }
+
   private unsubscribe(extRef: Element, squash = false): void {
+    // what it was subscribed to can only be found before the edit
+    const source = subscriptionSource(extRef);
     this.dispatchEdits(
       unsubscribeEdits(extRef, this.settings),
       msg('Unsubscribe'),
       squash
     );
+    this.notifyCompanions({ action: 'unsubscribe', extRef, ...source });
   }
 
   private subscribe(extRef: Element, control: Element, fcda: Element): void {
@@ -245,6 +318,12 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
       msg('Subscribe'),
       removedOldSubscription
     );
+    this.notifyCompanions({
+      action: 'subscribe',
+      extRef,
+      fcda,
+      controlBlock: control
+    });
   }
 
   private handleSettingsChange(event: SettingsChangeEvent): void {
@@ -277,9 +356,10 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
     }
 
     this.selectedExtRef = undefined;
-    if (next) {
-      // moving to the next input is part of the same user action
-      this.chooseSubscriberExtRef(next, true);
+    // Auto-increment never removes a subscription. If the next ExtRef was
+    // subscribed meanwhile, e.g. by a companion plugin, it stops.
+    if (next && !needsUnsubscribe(next)) {
+      this.selectedExtRef = next;
     }
   }
 
@@ -316,14 +396,13 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
    * Choosing one which is subscribed removes the subscription so that it can be
    * subscribed again.
    * @param extRef - the ExtRef which was chosen.
-   * @param squash - whether the edits belong to the previous user action.
    */
-  private chooseSubscriberExtRef(extRef: Element, squash = false): void {
+  private chooseSubscriberExtRef(extRef: Element): void {
     if (
       !this.readOnlyView &&
       (isSubscribed(extRef) || isPartiallyConfigured(extRef))
     ) {
-      this.unsubscribe(extRef, squash);
+      this.unsubscribe(extRef);
     }
     this.selectedControl = undefined;
     this.selectedFCDA = undefined;
@@ -469,6 +548,7 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
                 class="column subscriber-column"
                 .model=${this.model}
                 .settings=${this.settings}
+                .companionNames=${activeCompanionNames(this.companions)}
                 .selectedExtRef=${this.selectedExtRef}
                 @extref-select=${(event: ExtRefSelectEvent) =>
                   this.handleExtRefSelect(event)}
@@ -481,6 +561,7 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
                 class="column"
                 .model=${this.model}
                 .settings=${this.settings}
+                .companionNames=${activeCompanionNames(this.companions)}
                 .selectedControl=${this.selectedControl}
                 .selectedFcda=${this.selectedFCDA}
                 @extref-select=${(event: ExtRefSelectEvent) =>

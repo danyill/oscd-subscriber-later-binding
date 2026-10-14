@@ -12,6 +12,7 @@ import {
 import {
   needsUnsubscribe,
   subscribeEdits,
+  subscriptionSource,
   unsubscribeEdits
 } from './actions.js';
 
@@ -138,6 +139,40 @@ describe('actions', () => {
           extRef('GOOSE_Subscriber1>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]')
         )
       ).to.equal(false);
+    });
+  });
+
+  describe('subscriptionSource', () => {
+    const BOUND = 'GOOSE_Subscriber>>Earth_Switch> CSWI 1>Pos;CSWI1/Pos/stVal[0]';
+
+    it('finds the FCDA and control block an ExtRef subscribes to', () => {
+      const { fcda, controlBlock } = subscriptionSource(extRefById(doc, BOUND));
+      expect(fcda?.getAttribute('daName')).to.equal('stVal');
+      expect(controlBlock?.getAttribute('datSet')).to.equal(
+        fcda?.parentElement?.getAttribute('name')
+      );
+    });
+
+    it('finds the control block from the data set without srcCBName', () => {
+      const extRef = extRefById(doc, BOUND);
+      const expected = subscriptionSource(extRef).controlBlock;
+      ['srcCBName', 'srcLDInst', 'srcLNClass', 'srcLNInst', 'srcPrefix'].forEach(
+        name => extRef.removeAttribute(name)
+      );
+      expect(subscriptionSource(extRef).controlBlock?.getAttribute('datSet')).to.equal(
+        expected?.getAttribute('datSet')
+      );
+    });
+
+    it('finds nothing for an ExtRef which is not subscribed', () => {
+      const id = 'GOOSE_Subscriber1>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]';
+      expect(subscriptionSource(extRefById(doc, id))).to.deep.equal({});
+    });
+
+    it('finds the control block of any type without a service type', () => {
+      const extRef = extRefById(doc, BOUND);
+      ['srcCBName', 'serviceType'].forEach(name => extRef.removeAttribute(name));
+      expect(subscriptionSource(extRef).controlBlock?.tagName).to.equal('GSEControl');
     });
   });
 });

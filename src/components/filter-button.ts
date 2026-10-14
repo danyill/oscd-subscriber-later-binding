@@ -9,6 +9,7 @@ import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
 import { OscdOutlinedButton } from '@omicronenergy/oscd-ui/button/OscdOutlinedButton.js';
 import { OscdTextButton } from '@omicronenergy/oscd-ui/button/OscdTextButton.js';
+import { OscdBadge } from '@omicronenergy/oscd-ui/labs/badge/OscdBadge.js';
 
 import type { OptionItem } from './menu-button.js';
 
@@ -29,7 +30,8 @@ export class FilterButton extends OscdSelectionList {
     'oscd-icon': OscdIcon,
     'oscd-filled-button': OscdFilledButton,
     'oscd-outlined-button': OscdOutlinedButton,
-    'oscd-text-button': OscdTextButton
+    'oscd-text-button': OscdTextButton,
+    'oscd-badge': OscdBadge
   };
 
   @property() header = 'Filter';
@@ -41,6 +43,9 @@ export class FilterButton extends OscdSelectionList {
   @property() resetButtonLabel = 'Reset';
 
   @property({ type: Boolean }) disabled = false;
+
+  /** A count shown on the button, or none if not set. */
+  @property({ attribute: false }) badge?: string;
 
   @query('oscd-dialog') private dialog!: OscdDialog;
 
@@ -79,6 +84,9 @@ export class FilterButton extends OscdSelectionList {
           ? html`<oscd-icon class="default-icon">filter_list</oscd-icon>`
           : nothing}
       </oscd-icon-button>
+      ${this.badge === undefined
+        ? nothing
+        : html`<oscd-badge class="badge" .value=${this.badge}></oscd-badge>`}
       <oscd-dialog @close="${() => this.onClose()}">
         <div slot="headline">${this.header}</div>
         <form slot="content" id="form-id" method="dialog">
@@ -101,6 +109,17 @@ export class FilterButton extends OscdSelectionList {
 
   static styles = css`
     ${OscdSelectionList.styles}
+    :host {
+      position: relative;
+    }
+
+    .badge {
+      position: absolute;
+      top: 2px;
+      inset-inline-end: 2px;
+      pointer-events: none;
+    }
+
     oscd-dialog {
       max-height: calc(100vh - 150px);
     }

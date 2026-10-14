@@ -29,6 +29,8 @@ export interface OptionButton {
   multiselect: boolean;
   /** The option differs from the default, which the button shows. */
   active?: boolean;
+  /** A count shown on the button, e.g. of active companion plugins. */
+  badge?: string;
   /** Called with the items as chosen when the dialog is applied. */
   onApply: (items: SelectItem[]) => void;
   /**
@@ -71,6 +73,7 @@ export function renderOptionButton(option: OptionButton): TemplateResult {
     resetButtonLabel=${msg('Reset')}
     .items=${option.items}
     ?multiselect=${option.multiselect}
+    .badge=${option.badge}
     @filter-button-dialog-close=${onClose}
   >
     <oscd-icon slot="icon">${option.icon}</oscd-icon>

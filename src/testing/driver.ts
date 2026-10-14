@@ -340,6 +340,12 @@ export class PluginDriver {
     );
   }
 
+  /** The count shown on the button of a menu, if any. */
+  menuBadge(menuId: string): string | undefined {
+    const badge = this.filterButton(menuId).shadowRoot?.querySelector('oscd-badge');
+    return badge ? (badge as Element & { value: string }).value : undefined;
+  }
+
   /** Whether the button of a menu shows that its option differs from default. */
   menuActive(menuId: string): boolean {
     return this.filterButton(menuId).classList.contains('filter-off');

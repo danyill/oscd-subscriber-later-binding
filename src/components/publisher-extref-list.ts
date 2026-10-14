@@ -18,6 +18,8 @@ import { FilterButton } from './filter-button.js';
 import { renderOptionButton } from './menu-button.js';
 import type { OptionItem } from './menu-button.js';
 import {
+  companionsBadge,
+  companionsText,
   newExtRefSelectEvent,
   newSettingsChangeEvent,
   sharedStyles
@@ -41,6 +43,10 @@ export class PublisherExtRefList extends ScopedElementsMixin(LitElement) {
 
   @property({ attribute: false })
   settings!: SubscriberSettings;
+
+  /** Names of the companion plugins which are active. */
+  @property({ attribute: false })
+  companionNames: string[] = [];
 
   @property({ attribute: false })
   selectedControl?: Element;
@@ -208,6 +214,7 @@ export class PublisherExtRefList extends ScopedElementsMixin(LitElement) {
       },
       {
         headline: msg('Allow External Plugins'),
+        supportingText: companionsText(this.companionNames),
         selected: settings.allowExternalPlugins,
         defaultSelected: true
       },
@@ -224,6 +231,9 @@ export class PublisherExtRefList extends ScopedElementsMixin(LitElement) {
     ];
     return renderOptionButton({
       id: 'settingsExtRefPublisherMenu',
+      badge: settings.allowExternalPlugins
+        ? companionsBadge(this.companionNames)
+        : undefined,
       header: msg('Settings'),
       icon: 'settings',
       title: msg('Settings'),

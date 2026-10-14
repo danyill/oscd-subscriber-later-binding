@@ -1,4 +1,5 @@
 import { css } from 'lit';
+import { msg, str } from '@lit/localize';
 
 import type { SubscriberSettings } from '../foundation/settings.js';
 
@@ -59,6 +60,28 @@ declare global {
 }
 
 /** Styles shared by the lists: the title bar with its buttons, and messages. */
+/**
+ * Explains which companion plugins are active, shown under the setting which
+ * allows external plugins.
+ * @param names - the names of the active companion plugins.
+ */
+export function companionsText(names: string[]): string {
+  if (names.length === 0) {
+    return msg('No active companion plugins');
+  }
+  const list = names.join(', ');
+  return msg(str`${names.length} active: ${list}`);
+}
+
+/**
+ * The count of active companion plugins shown on the settings button, or
+ * nothing if there are none.
+ * @param names - the names of the active companion plugins.
+ */
+export function companionsBadge(names: string[]): string | undefined {
+  return names.length > 0 ? `${names.length}` : undefined;
+}
+
 export const sharedStyles = css`
   :host {
     display: block;

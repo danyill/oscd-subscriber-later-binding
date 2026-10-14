@@ -1,6 +1,7 @@
-import { subscribe, unsubscribe } from '@openscd/scl-lib';
+import { sourceControlBlock, subscribe, unsubscribe } from '@openscd/scl-lib';
 import type { EditV2 } from '@openscd/oscd-api';
 
+import { findFCDAs } from './foundation.js';
 import type { SubscriberSettings } from './settings.js';
 import {
   isPartiallyConfigured,
@@ -59,4 +60,68 @@ export function subscribeEdits(
       checkOnlyBType: settings.checkOnlyPreferredBasicType
     }
   );
+}
+
+/** Control block tags which can carry an ExtRef's `serviceType`. */
+const controlTagsOfServiceType: Record<string, string[]> = {
+  GOOSE: ['GSEControl'],
+  SMV: ['SampledValueControl'],
+  Report: ['ReportControl']
+};
+
+/**
+ * The control block publishing an FCDA, for an ExtRef which does not name it
+ * with `srcCBName`: the first one of the right type using the FCDA's data set.
+ * @param fcda - the FCDA subscribed to.
+ * @param serviceType - the `serviceType` of the ExtRef, if it has one.
+ */
+function controlBlockOfFcda(
+  fcda: Element,
+  serviceType: string | null
+): Element | undefined {
+  const dataSet = fcda.parentElement;
+  const anyLn = dataSet?.parentElement;
+  if (!dataSet || !anyLn) {
+    return undefined;
+  }
+  const tags = serviceType
+    ? controlTagsOfServiceType[serviceType] ?? []
+    : Object.values(controlTagsOfServiceType).flat();
+  return Array.from(anyLn.children).find(
+    child =>
+      tags.includes(child.tagName) &&
+      child.getAttribute('datSet') === dataSet.getAttribute('name')
+  );
+}
+
+/**
+ * What an ExtRef is subscribed to, worked out before it is unsubscribed so that
+ * companion plugins can be told.
+ * @param extRef - a subscribed ExtRef.
+ * @returns the FCDA and its control block, where they can be found.
+ */
+export function subscriptionSource(extRef: Element): {
+  fcda?: Element;
+  controlBlock?: Element;
+} {
+  const fcdas = findFCDAs(extRef);
+  const named = sourceControlBlock(extRef);
+  if (named) {
+    const dataSet = named.getAttribute('datSet');
+    const fcda = fcdas.find(
+      candidate =>
+        candidate.parentElement?.getAttribute('name') === dataSet &&
+        candidate.parentElement?.parentElement === named.parentElement
+    );
+    return { fcda, controlBlock: named };
+  }
+
+  const [fcda] = fcdas;
+  if (!fcda) {
+    return {};
+  }
+  return {
+    fcda,
+    controlBlock: controlBlockOfFcda(fcda, extRef.getAttribute('serviceType'))
+  };
 }
