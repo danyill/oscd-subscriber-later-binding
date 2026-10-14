@@ -1,4 +1,4 @@
-name: Release
+name: Release and deploy
 
 # Automated releases with release-please. Pushing Conventional-Commit changes
 # to main maintains a "release PR" that bumps the version and updates the
@@ -6,8 +6,10 @@ name: Release
 # Release, and — via the gated job below — publishes to npm with Trusted
 # Publishing (OIDC), no stored token.
 #
+# The demo on GitHub Pages follows main.
+#
 # Every push to main runs the full test suite (test.yml) first, and nothing is
-# tagged, released or published unless it passes.
+# tagged, released, published or deployed unless it passes.
 #
 # Secret to configure once:
 #   * RELEASE_PLEASE_TOKEN: a fine-grained personal access token for this repo
@@ -18,7 +20,7 @@ name: Release
 # Trusted publisher to configure once, keyed to THIS workflow file:
 #   * npm: repo + workflow `release.yml`
 # npm requires the package to already exist before a trusted publisher can be
-# configured, so publish the first version (0.8.0) by hand once, then configure
+# configured, so publish the first version by hand once, then configure
 # the trusted publisher for later releases.
 
 on:
@@ -77,3 +79,35 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --access public
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: 'true'
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configure git
+        run: |
+          git config user.name "GitHubActions"
+          git config user.email "<deploy@actions.openscd.github.io>"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bundle
+        run: npm run-script bundle
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
