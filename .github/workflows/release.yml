@@ -6,6 +6,15 @@ name: Release
 # Release, and — via the gated job below — publishes to npm with Trusted
 # Publishing (OIDC), no stored token.
 #
+# Every push to main runs the full test suite (test.yml) first, and nothing is
+# tagged, released or published unless it passes.
+#
+# Secret to configure once:
+#   * RELEASE_PLEASE_TOKEN: a fine-grained personal access token for this repo
+#     with Contents, Pull requests and Issues read/write. release-please opens
+#     the release PR with it, because a PR opened with the default GITHUB_TOKEN
+#     does not trigger test.yml and would get no checks.
+#
 # Trusted publisher to configure once, keyed to THIS workflow file:
 #   * npm: repo + workflow `release.yml`
 # npm requires the package to already exist before a trusted publisher can be
@@ -18,7 +27,13 @@ on:
       - main
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    with:
+      visual: true
+
   release-please:
+    needs: test
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
@@ -31,10 +46,8 @@ jobs:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          # Uses the default GITHUB_TOKEN. Swap for a PAT/App token if the test
-          # workflows need to run on the release PR (GITHUB_TOKEN does not
-          # trigger other workflows).
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Not GITHUB_TOKEN, so the release PR triggers test.yml
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
