@@ -65,17 +65,28 @@ export async function resetFilterButton(button: FilterButton): Promise<void> {
  * Closes an open dialog with one of its buttons and waits for it to close.
  * @param button - the filter button.
  * @param action - which button to press.
+ * @param animated - whether to wait for the dialog to finish fading out, which
+ * only a screenshot needs.
  */
 export async function closeFilterButton(
   button: FilterButton,
-  action: 'apply' | 'cancel'
+  action: 'apply' | 'cancel',
+  animated = false
 ): Promise<void> {
   const closed = new Promise<void>((resolve) => {
     button.addEventListener('filter-button-dialog-close', () => resolve(), {
       once: true
     });
   });
+  const faded = new Promise<void>((resolve) => {
+    dialogOf(button).addEventListener('closed', () => resolve(), {
+      once: true
+    });
+  });
   const tag = action === 'apply' ? 'oscd-filled-button' : 'oscd-outlined-button';
   button.shadowRoot!.querySelector<HTMLElement>(tag)!.click();
   await closed;
+  if (animated) {
+    await faded;
+  }
 }

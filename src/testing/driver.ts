@@ -266,8 +266,14 @@ export class PluginDriver {
    * options are ticked and applying them.
    * @param menuId - id of the menu.
    * @param selected - positions of the items which should be selected.
+   * @param animated - whether to wait for the menu to finish fading out, which
+   * only a screenshot needs.
    */
-  async chooseMenuItems(menuId: string, selected: number[]): Promise<void> {
+  async chooseMenuItems(
+    menuId: string,
+    selected: number[],
+    animated = false
+  ): Promise<void> {
     const button = this.filterButton(menuId);
     await openFilterButton(button);
     const toggles = button.items
@@ -277,7 +283,7 @@ export class PluginDriver {
        
       await clickFilterButtonItem(button, index);
     }
-    await closeFilterButton(button, 'apply');
+    await closeFilterButton(button, 'apply', animated);
     await this.mounted.settle();
   }
 
