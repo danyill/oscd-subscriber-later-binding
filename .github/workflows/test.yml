@@ -33,6 +33,17 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # A documentation image which links to a missing screenshot baseline
+      # stops the whole documentation site from building.
+      - name: Check the documentation images
+        run: |
+          broken=$(find docs -xtype l)
+          if [ -n "$broken" ]; then
+            echo "::error::These documentation images link to screenshot baselines which do not exist. Add the 'update-visual-baselines' label to make them."
+            echo "$broken"
+            exit 1
+          fi
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
