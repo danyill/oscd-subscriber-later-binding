@@ -1,0 +1,52 @@
+= Get the plugin
+include::partial$base.adoc[]
+
+== Try the plugin online
+
+Open the {url-demo}[online demo].
+The demo opens a sample SCL file.
+It also loads the three companion plugins.
+For more information, refer to xref:companion_plugins.adoc[].
+
+The demo shows the latest version of the `main` branch.
+
+== Add the plugin to an OpenSCD distribution
+
+The plugin is an editor plugin.
+It uses the OpenSCD plugin API, which `oscd-shell` and the newer OpenSCD distributions use.
+
+To add the plugin, add this entry to the `editor` plugins of the distribution:
+
+[source,json,subs=+attributes]
+----
+{
+  "name": "{plugin-title}",
+  "translations": {
+    "de": "Späte Bindung des Abonnenten",
+    "pt": "Associação Tardia de Assinante"
+  },
+  "icon": "link",
+  "requireDoc": true,
+  "src": "{url-bundle}"
+}
+----
+
+The `src` URL is the bundle that CI builds from the `main` branch.
+To use a release, install the {url-npm}[npm package] and set `src` to its bundle.
+
+== Add the companion plugins
+
+The companion plugins are background plugins.
+Add them to the `background` plugins of the distribution.
+
+[source,json]
+----
+{
+  "name": "Subscriber Later Binding - SEL",
+  "icon": "none",
+  "requireDoc": true,
+  "src": "https://openpowershift.github.io/oscd-background-subscriber-lb-sel/oscd-background-subscriber-lb-sel.js"
+}
+----
+
+To add the NR Electric or Siemens companion, replace `sel` with `nr` or `siemens` in the `src` URL.

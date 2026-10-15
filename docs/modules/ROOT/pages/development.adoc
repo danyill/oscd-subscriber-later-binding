@@ -1,0 +1,255 @@
+= Development
+include::partial$base.adoc[]
+:uri-nvm: https://github.com/creationix/nvm
+:uri-nvm-install: {uri-nvm}#installation
+:uri-openwc: https://github.com/open-wc/open-wc
+
+== License
+
+* This plugin is a web component and follows the  {uri-openwc}[open-wc] recommendations.
+
+* This plugin uses the Apache License and is intended for you to use, study, share and improve.
+
+== Prerequisites
+
+This plugin uses Node.js and the npm package ecosystem and is verified to work on Linux.
+
+For development, you'll need Node.js (including npm, which is bundled with Node.js) on your system.
+
+To check whether you have Node.js installed, and which version, open a terminal and type:
+
+ $ node -v
+
+A good way to install Node.js is to use {uri-nvm}[nvm] (Node Version Manager), however system-wide installations may also work.
+
+If you're using Linux or macOS, follow {uri-nvm-install}[the nvm installation instructions] to set up nvm on your machine.
+
+Once you've installed nvm, open a *new* terminal and install the active Node.js LTS release using:
+
+ $ nvm install --lts
+
+Now that you have Node.js installed, you can install this plugin.
+
+== Cloning and Demo Server
+
+Clone this repository using:
+
+[subs=+attributes]
+$ git clone {url-repo}
+
+Now, install dependencies
+
+ $ npm i
+
+Start up a demo server
+
+ $ npm run start
+
+Now open in your browser locally to http://localhost:8000/demo/ to use the plugin.
+
+[#documentation]
+== Documentation
+
+The user documentation is an https://antora.org[Antora] component in `docs/`.
+The pages are in `docs/modules/ROOT/pages`, and `docs/antora.yml` describes the component.
+The Markdown files in `docs/` are notes for developers, and Antora does not use them.
+
+The screenshots in the documentation are the screenshot test baselines.
+Each image in `docs/modules/ROOT/images` is a relative symbolic link to a file in `test/screenshots/baseline`.
+When CI updates a baseline, the documentation shows the new image.
+
+To add a screenshot to the documentation:
+
+. Add a screenshot test for the state, see <<screenshot-tests>>.
+. Add the `update-visual-baselines` label to the pull request, so that CI makes the baseline.
+. Link the baseline into the documentation:
++
+ $ cd docs/modules/ROOT/images
+ $ ln -s "../../../../test/screenshots/baseline/<test name>-Chromium.png" <short-name>.png
+
+The baselines are normal Git files, not Git LFS files.
+Antora reads the repository with Git, and it cannot get Git LFS files.
+
+The documentation site is built by the `sysconex-docs` playbook, which collects the components of several plugins.
+
+[#companionPlugins]
+== Companion plugins
+
+Companion plugins (also called add-on plugins) add manufacturer-specific behaviour.
+When this plugin subscribes or unsubscribes an input, a companion can subscribe or unsubscribe more inputs that belong with it.
+For example, it can map the other two phases of a sampled value stream, or the quality attribute that goes with a value.
+
+=== Available companion plugins
+
+[cols="1,1,3"]
+|===
+|Plugin |Manufacturer (`IED/@manufacturer`) |What it does
+
+|https://github.com/OpenPowerShift/oscd-background-subscriber-lb-sel[Subscriber LB - SEL]
+|`SEL`
+a|* Double position values (CDC `DPC`, basic type `Dbpos`): subscribes the next input to the same data, for the open (B contact) indication.
+* Multi-phase sampled values: subscribes the B and C phase inputs (e.g. `IAS`, `IBS`, `ICS`) to the matching `TCTR` or `TVTR` data.
+
+|https://github.com/OpenPowerShift/oscd-background-subscriber-lb-siemens[Subscriber LB - Siemens]
+|`SIEMENS`
+a|* Quality: subscribes the matching quality input (`…/q`) to the quality of the published data.
+* Multi-phase sampled values (SIPROTEC 5).
+
+|https://github.com/OpenPowerShift/oscd-background-subscriber-lb-nr[Subscriber LB - NR Electric]
+|`NRR`
+a|* Quality: subscribes the next input to the quality of the published data.
+|===
+
+Each one is a background plugin with no user interface of its own.
+It tells this plugin what it does, and this plugin lists it in its settings, where the user turns it on or off.
+It acts only on inputs of IEDs from its manufacturer.
+
+
+=== How companions work
+
+Companions do not watch the host's edit events.
+Instead, this plugin tells them what it did, and dispatches the edits they make on their behalf.
+Only this plugin depends on the host's edit API, so companions are not affected if it changes.
+Every edit is part of one undoable action.
+
+All events are `CustomEvent`s dispatched on `window`.
+The plugins can be anywhere in the host, and either can load first.
+The event names and types are in `src/foundation/companion-protocol.ts`.
+Each companion keeps an identical copy until the file is published as a package.
+
+[cols="2,1,2,3"]
+|===
+|Event |Sent by |When |`detail`
+
+|`oscd-lb-subscription-change`
+|this plugin
+|After it has subscribed or unsubscribed an input, only if _Allow External Plugins_ is on
+|`version`, `action` (`subscribe` or `unsubscribe`), `extRef`, `fcda` and `controlBlock` (for an unsubscription, what the input _was_ subscribed to), `settings` (`ignoreSupervision`, `checkOnlyPreferredBasicType`), `enabledCompanions` (the identities of the companions turned on in the settings), and `apply(edits, { title })`
+
+|`oscd-lb-companion-request`
+|this plugin
+|When it is connected
+|`version`
+
+|`oscd-lb-companion-announce`
+|companion
+|When connected and when requested
+|`version`, `identity`, `name`, `description` and `features` (shown in the settings), and `enabled` only for a companion with its own switch
+
+|`oscd-lb-companion-withdraw`
+|companion
+|When disconnected
+|`version`, `identity`
+|===
+
+What happens when a user subscribes an input:
+
+. This plugin dispatches its edit, and the host applies it.
+. This plugin dispatches `oscd-lb-subscription-change` on `window`.
+. A companion for the input's manufacturer works out its edits from the document as it is now, using `@openscd/scl-lib`.
+It then calls `apply(edits, { title })`.
+. `apply` dispatches the edits at once with `squash: true`.
+They join the same undoable action, so one undo or redo covers everything.
+The document is up to date when `apply` returns.
+. If auto-increment is on and the next input is now subscribed (for example, by a companion), auto-increment stops.
+It never removes a subscription.
+
+Re-subscribing an input sends an `unsubscribe` change and then a `subscribe` change.
+
+Companions run after the edit has been applied because `subscribe` and `unsubscribe` in `@openscd/scl-lib` compare against the live document.
+Whether a supervision (`LGOS`/`LSVS`) is added or removed depends on the other inputs from the same control block.
+That is only correct once the user's edit is in place.
+
+==== Settings
+
+The settings menus of both views list each companion that has announced itself, e.g. _SEL companion plugin_, with its description and features.
+Unticking it turns the companion off: it is left out of `enabledCompanions`.
+The choice is kept with the other settings, also for companions that are not loaded at the time.
+Companions are on unless turned off.
+
+_Allow External Plugins_ turns all companions off at once: no `oscd-lb-subscription-change` is sent.
+It lists the active companions, e.g. "2 active: NR Electric, SEL".
+The settings button shows their count, whose tooltip explains it.
+
+==== Writing a companion
+
+* Listen for `oscd-lb-subscription-change` on `window` in `connectedCallback`, and remove the listener in `disconnectedCallback`.
+* Make it a background plugin without a user interface or settings of its own.
+* Ignore changes whose `version` you do not support, when your identity is not in `enabledCompanions`, or when `extRef.closest('IED')` is not from your manufacturer.
+* Never overwrite: skip inputs that already have a subscription.
+Only unsubscribe inputs that are subscribed to the data you would have subscribed them to.
+* Make the edits for one change with a single `subscribe([...])` and a single `unsubscribe([...])` call.
+Pass on `settings.ignoreSupervision` and `settings.checkOnlyPreferredBasicType`.
+Call `apply` once.
+* Do not dispatch edit events yourself.
+This plugin does not send changes for edits made through `apply`, so companions cannot set each other off.
+* Announce yourself with `oscd-lb-companion-announce` when connected and when you get `oscd-lb-companion-request`.
+Give a short `name`, a `description` of what you do and the `features` you subscribe, in the user's language.
+Withdraw when disconnected.
+* Undo and redo send no events.
+
+== Linting and formatting
+
+To scan the project for linting and formatting errors, run
+
+ $ npm run lint
+
+To automatically fix linting and formatting errors, run
+
+ $ npm run format
+
+== Tooling
+
+Build, lint, test and bundling are provided by the shared `oscd` command from `@omicronenergy/oscd-tooling`.
+The npm scripts in `package.json` call it, for example `npm run build` and `npm run bundle`.
+Formatting is done by the shared ESLint configuration, Prettier is not used.
+
+The shared `oscd clean` command does not remove anything on Linux, so `npm run build`, `npm test` and `npm run bundle` run their own `npm run clean` first.
+
+== Testing
+
+Tests use https://modern-web.dev/docs/test-runner/overview/[Web Test Runner] with Chromium.
+There are two kinds:
+
+`*.spec.ts`:: Fast unit and component tests, which are what `npm test` runs.
+`*.test.ts`:: A small set of screenshot tests, which are run with `npm run test:visual`.
+
+To execute the unit tests, with coverage:
+
+ $ npm test
+
+Coverage thresholds are enforced, the run fails if coverage falls below them (see `web-test-runner.config.js`).
+A coverage report is written to `coverage/lcov-report/index.html`.
+
+To run a single spec after building:
+
+ $ SPEC=dist/filters.spec.js npm test
+
+To run the tests in interactive watch mode run:
+
+ $ npm run test:watch
+
+The tests are laid out as follows:
+
+`src/foundation/**/*.spec.ts`:: Unit tests for functions which work on SCL, search expressions, sorting and so on.
+`src/*.spec.ts`:: Component tests. These mount the plugin on its own, interact with it as a user does and check the edits it dispatches and the SCL document which results.
+`src/testing/`:: Helpers shared by specs. `plugin.ts` mounts the plugin and applies the edits it dispatches as the host would, `driver.ts` is the only place which knows how the plugin's DOM is built.
+`test/fixtures/`:: SCL files used by the specs.
+
+Specs should not use fixed waits or pixel coordinates.
+See `docs/test_plan.md` for the reasoning and the remaining work.
+
+[#screenshot-tests]
+=== Screenshot tests
+
+`src/oscd-editor-subscriber-later-binding.test.ts` takes screenshots of the plugin's main visual states (both views, selection, open menus, empty states, read-only and sampled values) and compares them with baselines in `test/screenshots/baseline`.
+Fonts come from `node_modules`, not the network.
+
+ $ npm run test:visual
+
+Rendering differs between operating systems, so the baselines are owned by CI.
+Do not create, update or commit them locally.
+When you add a screenshot test or change how the plugin looks on purpose, add the `update-visual-baselines` label to your pull request, which runs the `Update visual baselines` workflow and commits the images, and review them.
+The workflow can also be run by hand from the Actions tab once it is on the default branch.
+A screenshot without a baseline fails the run.
+Failures leave the new screenshot and a diff in `test/screenshots/failed`, which you can use to see what changed.

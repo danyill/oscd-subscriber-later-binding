@@ -1,0 +1,63 @@
+= Companion plugins
+include::partial$base.adoc[]
+
+Companion plugins subscribe more inputs for some manufacturers.
+When you subscribe or unsubscribe an input, a companion plugin can subscribe or unsubscribe the inputs that go with it.
+
+== The companion plugins
+
+[cols="1,1,3"]
+|===
+|Plugin |Manufacturer |What it subscribes
+
+|{url-companion-sel}[SEL]
+|SEL
+a|* Double position values (CDC `DPC`, basic type `Dbpos`): the next input of the pair.
+* Sampled values: the other phases.
+
+|{url-companion-siemens}[Siemens]
+|Siemens SIPROTEC 5
+a|* Values: the input for their quality.
+* Sampled values: the other phases and the neutral.
+
+|{url-companion-nr}[NR Electric]
+|NR Electric
+a|* Values: the input for their quality.
+|===
+
+A companion plugin changes only the inputs of IEDs from its manufacturer.
+It does not change an input that is already subscribed.
+It unsubscribes an input only when the input subscribes to the data that the companion plugin expects.
+
+== How to use them
+
+Load the companion plugins with this plugin.
+For more information, refer to xref:installation.adoc#add-the-companion-plugins[Add the companion plugins].
+
+The companion plugins have no screen.
+They show in the settings of this plugin:
+
+* The btn:[Settings] button shows the number of active companion plugins.
+* *Allow External Plugins* shows which companion plugins are active.
+* Each companion plugin has an item that tells what it does.
+
+.The number of active companion plugins on the btn:[Settings] button
+image::publisher-companions-badge.png[The publisher view. The Settings button above the inputs has a badge with the number 3.]
+
+.The companion plugins in the settings, with NR Electric turned off
+image::subscriber-companions-settings.png[The Settings menu. Allow External Plugins shows 2 active: SEL, Siemens. The NR Electric companion plugin is cleared and the SEL companion plugin is selected.]
+
+== Turn a companion plugin on or off
+
+. Click btn:[Settings].
+. Select or clear the item of the companion plugin.
+. Click btn:[Apply].
+
+To turn all the companion plugins off, clear *Allow External Plugins*.
+
+The plugin keeps your choice, also for a companion plugin that is not loaded.
+
+== Undo
+
+The changes of the companion plugins are part of your subscription.
+One undo removes your change and the changes of the companion plugins.
