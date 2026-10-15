@@ -54,6 +54,46 @@ describe('oscd-editor-subscriber-later-binding screenshots', () => {
   const shot = (name: string) => visualDiff(mounted.plugin, name);
 
   /**
+   * The companion plugins announce themselves as the real ones do, as they
+   * have no view of their own and show only in this plugin's settings.
+   */
+  async function announceCompanions(): Promise<void> {
+    [
+      {
+        identity: 'test.sel',
+        name: 'SEL',
+        description: 'Subscribes and unsubscribes further inputs of SEL relays',
+        features: [
+          'Double position values (DPC, Dbpos): the next input of the pair',
+          'Sampled values: the other phases'
+        ]
+      },
+      {
+        identity: 'test.nr',
+        name: 'NR Electric',
+        description:
+          'Subscribes and unsubscribes further inputs of NR Electric devices',
+        features: ['Values: the input for their quality']
+      },
+      {
+        identity: 'test.siemens',
+        name: 'Siemens',
+        description:
+          'Subscribes and unsubscribes further inputs of Siemens SIPROTEC 5 relays',
+        features: [
+          'Values: the input for their quality',
+          'Sampled values: the other phases and the neutral'
+        ]
+      }
+    ].forEach(companion =>
+      window.dispatchEvent(
+        newCompanionAnnounceEvent({ ...companion, enabled: true })
+      )
+    );
+    await mounted.settle();
+  }
+
+  /**
    * A screenshot of a selection is of no use if the selected item is scrolled
    * out of the captured area, so fail rather than record that.
    */
@@ -107,15 +147,7 @@ describe('oscd-editor-subscriber-later-binding screenshots', () => {
     it('with active companion plugins', async () => {
       await mount('GOOSE-2007B4-LGOS.scd');
       // the count of active companions is shown as a badge on the settings
-      for (const [identity, name] of [
-        ['test.sel', 'SEL'],
-        ['test.nr', 'NR Electric']
-      ]) {
-        window.dispatchEvent(
-          newCompanionAnnounceEvent({ identity, name, enabled: true })
-        );
-      }
-      await mounted.settle();
+      await announceCompanions();
       await shot('publisher with active companion plugins');
     });
 
@@ -161,6 +193,18 @@ describe('oscd-editor-subscriber-later-binding screenshots', () => {
       await mount('GOOSE-2007B4-LGOS.scd', { subscriberView: true });
       await driver.showMenu('settingsExtRefSubscriberMenu');
       await shot('subscriber with the settings menu open');
+    });
+
+    it('with companion plugins in the settings menu', async () => {
+      // the companions can be turned off one by one, here NR Electric, which is
+      // listed first so that it is in view
+      await mount('GOOSE-2007B4-LGOS.scd', {
+        subscriberView: true,
+        disabledCompanions: ['test.nr']
+      });
+      await announceCompanions();
+      await driver.showMenu('settingsExtRefSubscriberMenu');
+      await shot('subscriber with companion plugins in the settings menu');
     });
 
     it('with the filter menu open', async () => {
