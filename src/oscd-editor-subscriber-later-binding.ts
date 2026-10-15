@@ -608,8 +608,14 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
       --oscd-icon-font: var(--oscd-theme-icon-font, 'Material Symbols Outlined');
     }
 
+    /* The plugin fills the height its host gives it, or a height set with
+       --oscd-editor-subscriber-later-binding-height, and the lists take what
+       the header leaves, so the plugin never overflows its host. */
     :host {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      height: var(--oscd-editor-subscriber-later-binding-height, 100%);
       container-type: inline-size;
       background-color: var(--md-sys-color-surface-container);
       font-family: var(--oscd-text-font), sans-serif;
@@ -617,6 +623,7 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
     }
 
     .header {
+      flex: none;
       display: flex;
       align-items: center;
       gap: 16px;
@@ -665,8 +672,9 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
 
     .container {
       display: flex;
+      flex: 1 1 auto;
+      min-height: 0;
       padding: 8px 6px 16px;
-      height: var(--oscd-editor-subscriber-later-binding-height, calc(100vh - 136px));
       gap: 12px;
       background-color: var(--md-sys-color-surface-container);
     }
@@ -711,9 +719,10 @@ export default class OscdEditorSubscriberLaterBinding extends ScopedElementsMixi
     }
 
     @container (max-width: 900px) {
+      /* the stacked lists take the height they need, and the host scrolls */
       .container {
+        flex: none;
         flex-direction: column;
-        height: auto;
       }
 
       .column {

@@ -28,6 +28,28 @@ describe('oscd-editor-subscriber-later-binding', () => {
     mounted.unmount();
   });
 
+  // A host gives the plugin its editor area, and a plugin taller than that
+  // makes the host scroll by however much it is over.
+  describe('sizing', () => {
+    it('fills the height of its host and does not overflow it', async () => {
+      mounted = await mountPlugin({ layout: 'fit' });
+      const host = mounted.plugin.parentElement!;
+      host.style.height = '600px';
+      await mounted.settle();
+      expect(mounted.plugin.getBoundingClientRect().height).to.equal(600);
+      expect(host.scrollHeight).to.equal(host.clientHeight);
+    });
+
+    it('fills the height of its host in the subscriber view', async () => {
+      mounted = await mountPlugin({ layout: 'fit', settings: { subscriberView: true } });
+      const host = mounted.plugin.parentElement!;
+      host.style.height = '600px';
+      await mounted.settle();
+      expect(mounted.plugin.getBoundingClientRect().height).to.equal(600);
+      expect(host.scrollHeight).to.equal(host.clientHeight);
+    });
+  });
+
   // Components only know the elements registered for them, so a tag which is
   // used without being registered shows nothing, and without an error.
   it('registers every custom element it renders, in the publisher view', async () => {

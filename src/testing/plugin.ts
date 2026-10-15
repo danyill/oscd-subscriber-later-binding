@@ -159,7 +159,11 @@ export async function mountPlugin(
   const container = document.createElement('div');
   // wide enough for the lists to be side by side, as on a desktop
   container.style.width = '1280px';
-  if (options.layout !== 'fit') {
+  // the plugin fills its host's height, so the container is the window's height
+  // as a host's editor area would be, or tall enough to draw every row
+  if (options.layout === 'fit') {
+    container.style.height = '100vh';
+  } else {
     container.style.setProperty(
       '--oscd-editor-subscriber-later-binding-height',
       '11000px'
