@@ -293,6 +293,92 @@ describe('subscriber view', () => {
     });
   });
 
+  describe('resizing the lists', () => {
+    const container = (): HTMLElement =>
+      mounted.plugin.shadowRoot!.querySelector('.container') as HTMLElement;
+
+    const divider = (): HTMLElement =>
+      mounted.plugin.shadowRoot!.querySelector('.divider') as HTMLElement;
+
+    const paneShare = (): string =>
+      container().style.getPropertyValue('--subscriber-pane');
+
+    async function dragTo(clientX: number): Promise<void> {
+      const { left, width } = container().getBoundingClientRect();
+      divider().dispatchEvent(
+        new PointerEvent('pointerdown', {
+          clientX: left + width / 2,
+          bubbles: true
+        })
+      );
+      window.dispatchEvent(new PointerEvent('pointermove', { clientX }));
+      window.dispatchEvent(new PointerEvent('pointerup'));
+      await mounted.settle();
+    }
+
+    it('starts with the two lists sharing the width', () => {
+      expect(paneShare()).to.equal('50%');
+    });
+
+    it('widens the left list when the divider is dragged right', async () => {
+      const { left, width } = container().getBoundingClientRect();
+      await dragTo(left + width * 0.7);
+      expect(paneShare()).to.equal('70%');
+    });
+
+    it('keeps each list at least a fifth of the width', async () => {
+      const { left, width } = container().getBoundingClientRect();
+      await dragTo(left - 100);
+      expect(paneShare()).to.equal('20%');
+      await dragTo(left + width + 100);
+      expect(paneShare()).to.equal('80%');
+    });
+
+    it('can be moved with the arrow keys', async () => {
+      divider().dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })
+      );
+      await mounted.settle();
+      expect(paneShare()).to.equal('48%');
+    });
+
+    it('is not offered in the publisher view', async () => {
+      await driver.switchView();
+      expect(mounted.plugin.shadowRoot!.querySelector('.divider')).to.equal(null);
+    });
+  });
+
+  describe('undoable edits', () => {
+    // One user action must be one undoable edit, so that undo and redo move a
+    // whole subscription rather than part of one.
+    const undoDepth = (): number => mounted.editor.past.length;
+
+    it('selecting a subscribed ExtRef unsubscribes in one undoable edit', async () => {
+      const before = undoDepth();
+      await driver.selectExtRef(BOUND, 'subscriber');
+      expect(undoDepth() - before).to.equal(1);
+    });
+
+    it('subscribing the selected ExtRef adds one undoable edit', async () => {
+      mounted.plugin.autoIncrement = false;
+      await mounted.settle();
+      await driver.selectExtRef(SUB1_CILO_STVAL, 'subscriber');
+      const before = undoDepth();
+      await driver.selectFcda(GOOSE1, GOOSE1_QB1_STVAL);
+      expect(undoDepth() - before).to.equal(1);
+    });
+
+    it('auto-incrementing after a subscription adds one undoable edit', async () => {
+      await driver.selectExtRef(SUB1_CILO_STVAL, 'subscriber');
+      const before = undoDepth();
+      await driver.selectFcda(GOOSE1, GOOSE1_QB1_STVAL);
+      expect(undoDepth() - before).to.equal(1);
+      expect(mounted.plugin.selectedExtRef?.getAttribute('intAddr')).to.equal(
+        'Pos;CSWI1/Pos/q'
+      );
+    });
+  });
+
   describe('supervisions when subscribing', () => {
     // GOOSE_Subscriber1 has three supervision logical nodes, all in use. Free
     // one so that a new control block can be supervised.

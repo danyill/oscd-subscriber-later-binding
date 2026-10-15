@@ -10,15 +10,10 @@ const FIXTURE = 'GOOSE-2007B4-LGOS-sorting.scd';
 /** The FCDA labels of a control block, e.g. `GOOSE_Publisher > GOOSE2`. */
 function fcdasOf(driver: PluginDriver, controlTitle: string): string[] {
   const control = driver.controls().find(c => c.label === controlTitle)!;
-  const result: string[] = [];
-  let next = control.element.nextElementSibling;
-  while (next !== null && next.classList.contains('fcda')) {
-    result.push(
-      `${next.querySelector('span:not([slot])')!.textContent!.trim()}`
-    );
-    next = next.nextElementSibling;
-  }
-  return result;
+  return driver
+    .fcdas()
+    .filter(f => f.element.dataset.control === control.id)
+    .map(f => f.label);
 }
 
 /** `intAddr` of a listed ExtRef: the last part of its identity. */

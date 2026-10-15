@@ -23,6 +23,9 @@ const BOUND_NO_SUPERVISION =
   'GOOSE_Subscriber>>Earth_Switch> CSWI 1>Pos;CSWI1/Pos/stVal[0]';
 const BOUND_WITH_SUPERVISION =
   'GOOSE_Subscriber1>>Earth_Switch> CSWI 1>Pos;CSWI1/Pos/stVal[0]';
+// Subscribed, but to a publishing IED which is not in the document.
+const BROKEN_SUBSCRIPTION =
+  'GOOSE_Subscriber>>Earth_Switch> CILO 1>Pos;CSWI1/Pos/stVal[0]';
 
 describe('publisher view', () => {
   let mounted: MountedPlugin;
@@ -290,6 +293,35 @@ describe('publisher view', () => {
       expect(supervisionReferences(mounted.doc, 'GOOSE_Subscriber3')).to.deep.equal(
         before
       );
+    });
+  });
+
+  describe('undoable edits', () => {
+    // A user action may need several edits, e.g. removing an old subscription
+    // before adding a new one. Those edits must undo and redo together.
+    const undoDepth = (): number => mounted.editor.past.length;
+
+    beforeEach(async () => {
+      await driver.selectFcda(GOOSE2, GOOSE2_STVAL);
+    });
+
+    it('subscribing an ExtRef adds one undoable edit', async () => {
+      const before = undoDepth();
+      await driver.selectExtRef(UNBOUND_NO_SUPERVISION, 'publisher');
+      expect(undoDepth() - before).to.equal(1);
+    });
+
+    it('unsubscribing an ExtRef adds one undoable edit', async () => {
+      const before = undoDepth();
+      await driver.selectExtRef(BOUND_NO_SUPERVISION, 'publisher');
+      expect(undoDepth() - before).to.equal(1);
+    });
+
+    it('replacing a broken subscription adds one undoable edit', async () => {
+      await driver.selectFcda(GOOSE1, GOOSE1_QB1_STVAL);
+      const before = undoDepth();
+      await driver.selectExtRef(BROKEN_SUBSCRIPTION, 'publisher');
+      expect(undoDepth() - before).to.equal(1);
     });
   });
 });

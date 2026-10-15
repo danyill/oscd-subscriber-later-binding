@@ -1,7 +1,14 @@
 import { expect } from '@open-wc/testing';
 
+import { loadFixture } from '../testing/fixtures.js';
 import { parseScl } from '../testing/scl.js';
-import { ExtRefSortOrder, FcdaSortOrder, sortExtRefItems } from './sort.js';
+import { SubscriptionModel } from './model.js';
+import {
+  ExtRefSortOrder,
+  FcdaSortOrder,
+  compareFcdas,
+  sortExtRefItems
+} from './sort.js';
 
 const extRef = (attrs: string): Element =>
   parseScl(`<ExtRef ${attrs}/>`).querySelector('ExtRef')!;
@@ -123,6 +130,77 @@ describe('sort', () => {
           'z'
         ]);
       });
+    });
+  });
+
+  describe('compareFcdas', () => {
+    let model: SubscriptionModel;
+    let fcdas: Element[];
+
+    // GOOSE_Publisher GOOSE2 of the sorting fixture lists, in this order:
+    // CSWI stVal, CSWI q, CILO EnaOpn.stVal, CILO EnaCls.q
+    beforeEach(async () => {
+      const doc = await loadFixture('GOOSE-2007B4-LGOS-sorting.scd');
+      model = new SubscriptionModel(doc, 'GSEControl');
+      fcdas = model.fcdasOf(model.controls[0]);
+    });
+
+    const sortedNames = (order: FcdaSortOrder, items = fcdas) =>
+      [...items]
+        .sort((a, b) => compareFcdas(order, a, b, model))
+        .map(f => `${f.getAttribute('lnClass')} ${f.getAttribute('doName')}.${f.getAttribute('daName')}`);
+
+    it('keeps data model order', () => {
+      expect(compareFcdas(FcdaSortOrder.DataModel, fcdas[1], fcdas[0], model)).to.equal(0);
+    });
+
+    it('sorts by object reference', () => {
+      expect(sortedNames(FcdaSortOrder.Path)).to.deep.equal([
+        'CILO EnaCls.q',
+        'CILO EnaOpn.stVal',
+        'CSWI Pos.q',
+        'CSWI Pos.stVal'
+      ]);
+    });
+
+    it('sorts by full description, which is alphabetical', () => {
+      expect(sortedNames(FcdaSortOrder.FullDescription).slice(0, 2)).to.deep.equal([
+        'CSWI Pos.q',
+        'CSWI Pos.stVal'
+      ]);
+    });
+
+    it('sorts by data attribute description', () => {
+      expect(sortedNames(FcdaSortOrder.DADescription).slice(0, 2)).to.deep.equal([
+        'CSWI Pos.q',
+        'CSWI Pos.stVal'
+      ]);
+    });
+
+    [
+      FcdaSortOrder.FullDescription,
+      FcdaSortOrder.DODescription,
+      FcdaSortOrder.DADescription
+    ].forEach((order) => {
+      it(`puts FCDAs without a description last for ${FcdaSortOrder[order]}`, () => {
+        const undescribed = fcdas[0].cloneNode() as Element;
+        undescribed.setAttribute('lnClass', 'XSWI');
+        undescribed.setAttribute('lnInst', '9');
+        fcdas[0].parentElement!.insertBefore(undescribed, fcdas[0]);
+        const withUndescribed = [undescribed, ...fcdas];
+        const sorted = [...withUndescribed].sort((a, b) =>
+          compareFcdas(order, a, b, model)
+        );
+        expect(sorted.indexOf(undescribed)).to.be.greaterThan(
+          sorted.findIndex(f => f.getAttribute('lnClass') === 'CSWI')
+        );
+      });
+    });
+
+    it('treats FCDAs with the same description as equal', () => {
+      expect(
+        compareFcdas(FcdaSortOrder.FullDescription, fcdas[2], fcdas[3], model)
+      ).to.equal(0);
     });
   });
 });

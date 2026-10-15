@@ -2,9 +2,7 @@ import { expect } from '@open-wc/testing';
 
 import { mustQuery, parseScl } from '../../testing/scl.js';
 import {
-  findFCDA,
   getCbReference,
-  getExistingSupervision,
   getExtRefControlBlockPath,
   getExtRefElements,
   getFcdaElements,
@@ -60,7 +58,7 @@ const doc = parseScl(`
     </Server></AccessPoint>
   </IED>`);
 
-const [lateGoose, lateUnmatched, lateEmpty] = Array.from(
+const [lateGoose, , lateEmpty] = Array.from(
   doc.querySelectorAll('ExtRef[intAddr]')
 );
 const noIntAddr = doc.querySelectorAll('ExtRef:not([intAddr])');
@@ -186,28 +184,6 @@ describe('subscription foundation', () => {
     });
   });
 
-  describe('getExistingSupervision', () => {
-    it('returns null for a null ExtRef', () => {
-      expect(getExistingSupervision(null) === null).to.equal(true);
-    });
-
-    it('finds the LGOS for a GOOSE ExtRef', () => {
-      const ln = getExistingSupervision(lateGoose);
-      expect(ln?.getAttribute('lnClass')).to.equal('LGOS');
-      expect(ln?.getAttribute('inst')).to.equal('1');
-    });
-
-    it('finds the LSVS for a non-GOOSE ExtRef', () => {
-      const smv = doc.querySelector('ExtRef[serviceType="SMV"]')!;
-      const ln = getExistingSupervision(smv);
-      expect(ln?.getAttribute('lnClass')).to.equal('LSVS');
-    });
-
-    it('returns null when no supervision references the control block', () => {
-      expect(getExistingSupervision(lateUnmatched) === null).to.equal(true);
-    });
-  });
-
   describe('isSubscribed / isPartiallyConfigured', () => {
     it('detects a complete subscription', () => {
       expect(isSubscribed(lateGoose)).to.equal(true);
@@ -299,41 +275,4 @@ describe('subscription foundation', () => {
     });
   });
 
-  describe('findFCDA', () => {
-    it('finds the FCDA in the control block data set', () => {
-      expect(findFCDA(lateGoose, gse) === fcdaStVal).to.equal(true);
-    });
-
-    it('does not find an FCDA in another data set', () => {
-      const other = mustQuery(doc, 'DataSet[name="other"] > FCDA');
-      expect(findFCDA(lateGoose, gse) === other).to.equal(false);
-    });
-
-    it('returns null when the FCDA is not in the control block data set', () => {
-      const otherGse = gse.cloneNode() as Element;
-      otherGse.setAttribute('datSet', 'other');
-      expect(findFCDA(lateUnmatched, otherGse) === null).to.equal(true);
-    });
-
-    it('returns null for a missing IED', () => {
-      const missing = lateGoose.cloneNode() as Element;
-      missing.setAttribute('iedName', 'Nope');
-      lateGoose.parentElement!.appendChild(missing);
-      expect(findFCDA(missing, gse) === null).to.equal(true);
-      missing.remove();
-    });
-
-    it('returns null for non ExtRef elements', () => {
-      expect(findFCDA(gse, gse) === null).to.equal(true);
-    });
-
-    it('returns null for ExtRefs in Private elements', () => {
-      const priv = doc.createElement('Private');
-      const clone = lateGoose.cloneNode() as Element;
-      priv.appendChild(clone);
-      lateGoose.parentElement!.appendChild(priv);
-      expect(findFCDA(clone, gse) === null).to.equal(true);
-      priv.remove();
-    });
-  });
 });

@@ -1,7 +1,0 @@
-:plugin-name: oscd-subscriber-later-binding
-:plugin-title: Subscriber Later Binding
-:url-repo: https://github.com/danyill/oscd-subscriber-later-binding
-:url-issues: https://github.com/danyill/oscd-subscriber-later-binding/issues
-:url-chat: https://openscd.zulipchat.com/
-:sectnums:
-:experimental:

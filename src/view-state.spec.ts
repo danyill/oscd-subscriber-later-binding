@@ -121,7 +121,7 @@ describe('view state', () => {
       await driver.selectFcda(GOOSE2, GOOSE2_STVAL);
       await driver.switchView();
       expect(
-        driver.fcdas().filter(f => f.element.hasAttribute('activated'))
+        driver.fcdas().filter(f => f.selected)
       ).to.have.length(0);
     });
 
@@ -169,7 +169,7 @@ describe('view state', () => {
     it('does not keep the FCDA selected, so it can be chosen again', async () => {
       await driver.selectFcda(GOOSE2, GOOSE2_STVAL);
       expect(
-        driver.fcdas().filter(f => f.element.hasAttribute('selected'))
+        driver.fcdas().filter(f => f.selected)
       ).to.have.length(0);
     });
 
@@ -196,7 +196,7 @@ describe('view state', () => {
       ).to.equal('GOOSE2');
       expect(mounted.plugin.selectedExtRef).to.equal(undefined);
       expect(
-        driver.subscriberExtRefs().filter(e => e.element.hasAttribute('activated'))
+        driver.subscriberExtRefs().filter(e => e.selected)
       ).to.have.length(0);
     });
   });

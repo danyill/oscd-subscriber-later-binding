@@ -85,7 +85,7 @@ The slowness comes from the test design, not from the test runner:
 
 ### 2.4 Code structure obstacles to unit testing
 
-- `oscd-subscriber-later-binding.ts` is a single 3,433-line `LitElement`.
+- `oscd-editor-subscriber-later-binding.ts` is a single 3,433-line `LitElement`.
   It contains many pure functions that are module-private and so cannot be
   imported by tests: `trimIdentityParent`, `sortExtRefItems`,
   `objectReferenceInIed`, `doesExtRefpDAIncludeQ/T`, `getSearchRegex`,
@@ -122,9 +122,9 @@ under `src/`, as the reference plugin does:
 
 ```
 src/
-  oscd-subscriber-later-binding.ts
-  oscd-subscriber-later-binding.spec.ts      # component behaviour
-  oscd-subscriber-later-binding.test.ts      # curated visual set
+  oscd-editor-subscriber-later-binding.ts
+  oscd-editor-subscriber-later-binding.spec.ts      # component behaviour
+  oscd-editor-subscriber-later-binding.test.ts      # curated visual set
   foundation/
     search.ts            search.spec.ts
     sort.ts              sort.spec.ts
@@ -194,7 +194,7 @@ first), or extend the default by importing from
 
 These replace most of the 152 screenshot tests.
 
-- **Mount the plugin on its own** with `fixture(html\`<oscd-subscriber-later-binding …>\`)`.
+- **Mount the plugin on its own** with `fixture(html\`<oscd-editor-subscriber-later-binding …>\`)`.
   Set `doc`, `docName` and `editCount` directly. No `open-scd` shell, no
   `<script>` injection, no `customElements.define` patch.
 - **No fixed sleeps.** Wait on real signals: `await el.updateComplete`,
@@ -394,6 +394,10 @@ replacement.
 
 ### Phase 4: Start the refactor
 
+Status: done except baselines (see `docs/migration.md`). Only the driver and
+the harness changed for the UI and library moves, apart from the intentional
+behaviour changes listed there.
+
 - When `mwc-*` is replaced with `oscd-ui` components, update **the driver
   only**. A test body should change only when behaviour changes on purpose.
 - Rebaseline the curated visual suite once per deliberate visual change, in a
@@ -450,9 +454,9 @@ here and remove the workaround when it is fixed.
 | `@omicronenergy/oscd-tooling` 0.0.6 | The shared ESLint rule `import-x/no-extraneous-dependencies` allows devDependencies only in `*.spec.ts`, so shared test helpers (for example `src/testing/`) fail lint when they import `@open-wc/testing`. | Local `eslint.config.js` override for `src/testing/**` |
 | `@omicronenergy/oscd-tooling` 0.0.6 | The shared WTR `visual` group has no Chromium flags for stable fonts and no way to set the screenshot directory or baseline names. | Legacy visual group overrides browsers, plugin and runner page locally |
 | Playwright | `playwright install` fails on Ubuntu 26.04 (`does not support chromium on ubuntu26.04-x64`). | `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64 npx playwright install chromium` |
-| `oscd-subscriber-later-binding` | Settings persistence is inconsistent: `storeSettings` writes `filterOutNotSubscribed` and `filterOutPreconfiguredUnmatched`, but `restoreSettings` reads `filterOutUnsubscribed` and `filterOutPreconfiguredNotMatching`, and `storedProperties` lists the latter names, so changing those two filters does not save settings and they are never restored. | Skipped specs in `src/settings.spec.ts` until it is fixed |
-| `oscd-subscriber-later-binding` | Invalid JSON in the stored settings makes `restoreSettings` throw in `connectedCallback`, so the plugin fails to load at all. It should fall back to defaults. | Skipped spec in `src/settings.spec.ts` |
-| `oscd-subscriber-later-binding` | The menu `closed` handlers registered in `updateView()` and `firstUpdated()` read `@query` elements without a null check. If the view is switched within a few frames of a menu closing, MDC emits a late event for a removed menu and the handler throws `Cannot read properties of null (reading 'index')`. Handlers are also added again each time the view is toggled. | The test driver waits for menus to settle |
+| `oscd-editor-subscriber-later-binding` | Settings persistence is inconsistent: `storeSettings` writes `filterOutNotSubscribed` and `filterOutPreconfiguredUnmatched`, but `restoreSettings` reads `filterOutUnsubscribed` and `filterOutPreconfiguredNotMatching`, and `storedProperties` lists the latter names, so changing those two filters does not save settings and they are never restored. | Skipped specs in `src/settings.spec.ts` until it is fixed |
+| `oscd-editor-subscriber-later-binding` | Invalid JSON in the stored settings makes `restoreSettings` throw in `connectedCallback`, so the plugin fails to load at all. It should fall back to defaults. | Skipped spec in `src/settings.spec.ts` |
+| `oscd-editor-subscriber-later-binding` | The menu `closed` handlers registered in `updateView()` and `firstUpdated()` read `@query` elements without a null check. If the view is switched within a few frames of a menu closing, MDC emits a late event for a removed menu and the handler throws `Cannot read properties of null (reading 'index')`. Handlers are also added again each time the view is toggled. | The test driver waits for menus to settle |
 | `@openenergytools/scl-lib` | `isBasicTypeEqual` is copied into this plugin because it is not exported (see the comment above it). | Local copy in `src/foundation/extref.ts`, now unit tested |
 | `@openscd/open-scd-core` | The host reuses the same document object when the same file is opened twice, so a plugin cannot detect a re-opened document (see the TODO in `updated()`, issue openscd/open-scd-core#92). | None needed yet |
 
@@ -477,7 +481,7 @@ files in parallel (done) halved it.
 ### What was done
 
 * Phase 3: the 152 legacy screenshot tests and 145 baselines were deleted. 15
-  curated screenshots in `src/oscd-subscriber-later-binding.test.ts` cover both
+  curated screenshots in `src/oscd-editor-subscriber-later-binding.test.ts` cover both
   views, selection, the open filter, sort and settings menus, search, empty
   states, read-only and sampled values. Fonts (Roboto, Material Icons) are served
   from `node_modules` instead of Google Fonts.
@@ -537,7 +541,7 @@ files in parallel (done) halved it.
 * Fixed: the plugin used `<mwc-icon-button>` without importing it and relied on the
   `open-scd` host to define it. Mounted on its own, the filter, sort, settings and
   copy buttons had no icons. Found by looking at the first screenshots, and now
-  guarded by `src/oscd-subscriber-later-binding.spec.ts`. It is also a reminder
+  guarded by `src/oscd-editor-subscriber-later-binding.spec.ts`. It is also a reminder
   that screenshots need to be looked at when they are created.
 
 * Settings persistence defects and corrupt-settings crash are captured as skipped

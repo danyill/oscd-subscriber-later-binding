@@ -1,7 +1,7 @@
 import {
   matchDataAttributes,
   matchSrcAttributes
-} from '@openenergytools/scl-lib';
+} from '@openscd/scl-lib';
 import { compareNames } from '../foundation.js';
 import { fcdaDesc } from '../tDataSet/getFcdaInstDesc.js';
 
@@ -49,7 +49,7 @@ export function getExtRefElements(
  * @param fcda    - The FCDA Element to check against.
  * @param extRef  - The Ext Ref Element to check.
  */
-function isSubscribedTo(
+export function isSubscribedTo(
   control: Element | undefined,
   fcda: Element | undefined,
   extRef: Element
@@ -92,36 +92,6 @@ export function getCbReference(extRef: Element): string {
   const srcLNClass = extRef.getAttribute('srcLNClass') ?? 'LLN0';
 
   return `${srcIedName}${srcPrefix}${srcLDInst}/${srcLNClass}.${srcCBName}`;
-}
-
-/** Returns the subscriber's supervision LN for a given control block and extRef element
- *
- * @param extRef - The extRef SCL element in the subscribing IED.
- * @returns The supervision LN instance or null if not found
- */
-export function getExistingSupervision(extRef: Element | null): Element | null {
-  if (extRef === null) {
-    return null;
-  }
-
-  // TODO: This seems inadequate. ServiceType may not be defined but we could search
-  // both LGOS and LSVS instances.
-  const supervisionType =
-    extRef.getAttribute('serviceType') === 'GOOSE' ? 'LGOS' : 'LSVS';
-  const refSelector =
-    supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
-
-  const iedName = extRef.closest('IED')?.getAttribute('name');
-
-  const candidates = Array.from(
-    extRef.ownerDocument
-      .querySelector(`IED[name="${iedName}"]`)!
-      .querySelectorAll(
-        `:root > IED > AccessPoint > Server > LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
-      )
-  ).find(val => val.textContent === getCbReference(extRef));
-
-  return candidates !== undefined ? candidates.closest('LN')! : null;
 }
 
 /**
@@ -229,51 +199,3 @@ export function getFcdaElements(controlElement: Element): Element[] {
   return [];
 }
 
-/**
- * Given an ExtRef SCL element, will locate the FCDA within the correct dataset the subscription comes from.
- * @param extRef - SCL ExtRef Element.
- * @param controlBlock - SCL GSEControl or SampledValueControl associated with the ExtRef.
- * @returns - SCL FCDA element
- */
-export function findFCDA(
-  extRef: Element,
-  controlBlock: Element
-): Element | null {
-  if (extRef.tagName !== 'ExtRef' || extRef.closest('Private')) {
-    return null;
-  }
-
-  const [iedName, ldInst, prefix, lnClass, lnInst, doName, daName] = [
-    'iedName',
-    'ldInst',
-    'prefix',
-    'lnClass',
-    'lnInst',
-    'doName',
-    'daName'
-  ].map(name => extRef.getAttribute(name));
-  const ied = Array.from(extRef.ownerDocument.getElementsByTagName('IED')).find(
-    element =>
-      element.getAttribute('name') === iedName && !element.closest('Private')
-  );
-  if (!ied) {
-    return null;
-  }
-
-  const dataSetRef = controlBlock.getAttribute('datSet');
-
-  const candidateFCDAs = Array.from(ied.getElementsByTagName('FCDA'))
-    .filter(item => !item.closest('Private'))
-    .filter(
-      fcda =>
-        (fcda.getAttribute('ldInst') ?? '') === (ldInst ?? '') &&
-        (fcda.getAttribute('prefix') ?? '') === (prefix ?? '') &&
-        (fcda.getAttribute('lnClass') ?? '') === (lnClass ?? '') &&
-        (fcda.getAttribute('lnInst') ?? '') === (lnInst ?? '') &&
-        (fcda.getAttribute('doName') ?? '') === (doName ?? '') &&
-        (fcda.getAttribute('daName') ?? '') === (daName ?? '') &&
-        fcda.parentElement?.getAttribute('name') === dataSetRef
-    );
-
-  return candidateFCDAs[0] ?? null;
-}

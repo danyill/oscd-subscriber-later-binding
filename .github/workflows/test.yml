@@ -1,7 +1,17 @@
 name: Test
 on:
+  # main is tested by release.yml, which calls this workflow and only releases
+  # when it passes
   push:
+    branches-ignore:
+      - main
   pull_request:
+  workflow_call:
+    inputs:
+      visual:
+        description: Also run the visual regression tests
+        type: boolean
+        default: false
 
 jobs:
   unit:
@@ -22,6 +32,17 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      # A documentation image which links to a missing screenshot baseline
+      # stops the whole documentation site from building.
+      - name: Check the documentation images
+        run: |
+          broken=$(find docs -xtype l)
+          if [ -n "$broken" ]; then
+            echo "::error::These documentation images link to screenshot baselines which do not exist. Add the 'update-visual-baselines' label to make them."
+            echo "$broken"
+            exit 1
+          fi
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -44,11 +65,12 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # Screenshot tests run for pull requests only. A missing baseline fails the
-  # run. Baselines are owned by CI and are not updated locally.
+  # Screenshot tests run for pull requests and before a release. A missing
+  # baseline fails the run. Baselines are owned by CI and are not updated
+  # locally.
   visual:
     name: Visual regression tests
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || inputs.visual
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout

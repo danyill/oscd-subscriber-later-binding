@@ -1,0 +1,164 @@
+= Filter, sort and copy the lists
+include::partial$base.adoc[]
+
+== Use a filter or a sort
+
+. Click btn:[Filter] or btn:[Sort] above the list.
+. Select or clear the items.
+For a sort, select one order.
+. Click btn:[Apply].
+
+To go back to the default items, click btn:[Reset], then btn:[Apply].
+To close the menu without a change, click btn:[Cancel].
+
+A filter hides the items that you clear.
+When a filter or a sort is not the default, its button shows in colour.
+
+.The filter menu of the published data
+image::publisher-filter-menu.png[The Filter menu with four items: Subscribed, Not Subscribed, Data Objects and Quality. All are selected.]
+
+== Filters for the published data
+
+[cols="1,3,1"]
+|===
+|Item |When selected, the list shows |Default
+
+|Subscribed
+|Data that one or more inputs subscribe to.
+|Selected
+
+|Not Subscribed
+|Data that no input subscribes to.
+|Selected
+
+|Data Objects
+|Data objects, not only data attributes.
+|Selected
+
+|Quality
+|Quality attributes (`q`).
+|Selected
+
+|Non-Matching Preconfigured
+|Data that the selected input cannot subscribe to, because of its preconfigured attributes.
+This item is in the subscriber view only.
+|Selected
+|===
+
+TIP: Clear *Subscribed* while you subscribe inputs.
+Each data item goes from the list when an input subscribes to it.
+
+TIP: A companion plugin can subscribe the quality attributes for you.
+Then you can clear *Quality*.
+Do this only when you know that the companion plugin subscribes the quality of each value correctly.
+
+== Filters for the inputs
+
+[cols="1,3,1,1"]
+|===
+|Item |When selected, the list shows |View |Default
+
+|Subscribed
+|Inputs that subscribe to data.
+|Subscriber
+|Selected
+
+|Not Subscribed
+|Inputs that do not subscribe to data.
+|Subscriber
+|Selected
+
+|Unspecified Service Types
+|Inputs that do not tell if they are for GOOSE or for sampled values.
+An input tells this with the `serviceType` or `pServT` attribute.
+When you clear this item, the list shows only the inputs for the selected type of control block.
+|Both
+|Selected
+
+|Preconfigured Quality Attribute
+|Inputs that are preconfigured for a quality attribute.
+|Subscriber
+|Selected
+
+|Preconfigured Time Attribute
+|Inputs that are preconfigured for a time attribute.
+|Subscriber
+|Selected
+
+|Non-Matching Preconfigured
+|Inputs that cannot subscribe to the selected data, because of their preconfigured attributes.
+These inputs show in grey.
+|Publisher
+|Selected
+|===
+
+== Sort orders for the published data
+
+[cols="1,3"]
+|===
+|Order |The list shows the data
+
+|Data Model (default)
+|In the order of the SCL file.
+
+|Object Reference
+|By the reference of the data.
+
+|Full Description
+|By all the descriptions of the data, from the logical device to the data attribute.
+
+|Data Object and Attribute Description
+|By the descriptions of the data object and the data attribute.
+
+|Data Attribute Description
+|By the description of the data attribute.
+|===
+
+.The sort menu of the published data
+image::publisher-sort-menu.png[The Sort menu with five sort orders. Data Model is selected.]
+
+== Sort orders for the inputs
+
+[cols="1,3,1"]
+|===
+|Order |The list shows the inputs |View
+
+|Data Model (default)
+|In the order of the SCL file.
+|Both
+
+|Internal Address
+|By the internal address (`intAddr`) of the input.
+|Both
+
+|Description
+|By the description (`desc`) of the input.
+|Both
+
+|Mapped Reference
+|By the reference of the published data that the input subscribes to.
+If you sort the published data by *Object Reference*, you can compare the two lists line by line.
+|Subscriber
+|===
+
+[#copy]
+== Copy a list
+
+Click btn:[Copy to Clipboard as Markdown] above the list.
+The plugin copies the items that the list shows to the clipboard, as Markdown.
+The filters and the search apply.
+
+You can paste the Markdown into a document, a test record or a spreadsheet.
+
+This button is on the list of published data in both views, and on the list of inputs in the subscriber view.
+
+For example, a copy of the inputs looks like this:
+
+[source,markdown]
+----
+* 📦 XAT_2242_MU1
+  MERGING UNIT - TP version: 2.0.0 - NRR - PCS-221S
+
+  * 🔗 MUGO / LLN0: 1-A:MUGO/GOINGGIO1.SPCSO1.stVal ⬅ XAT_T1_P1 > ANN / PSV GGIO 1 Ind60.stVal
+    Bay Trip - 3 Pole ⬅ Annunciation > MV/LV CB Trip (CFG / LLN0 Ctl, 💓 LD0 >  LGOS 1)
+----

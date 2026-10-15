@@ -1,0 +1,54 @@
+= Search
+include::partial$base.adoc[]
+
+Each list has a search field.
+The list shows only the items that match all the terms that you type.
+
+.A search in the published data
+image::publisher-search.png[The publisher view with the text Birch in the search field. The list shows only the data with Birch in its description.]
+
+== Search rules
+
+* The search is not case sensitive.
+`pos` finds `Pos` and `POS`.
+* A space separates two terms.
+An item must match all the terms.
+The order of the terms is not important.
+For example, `pos stval` finds `CSWI 1 Pos.stVal`.
+* Quotes (`"` or `'`) keep a phrase together, with its spaces.
+For example, `"Earth Switch"` finds `Earth Switch 1`, but not `Earth_Switch` or `Switch Earth`.
+* `*` matches any text.
+For example, `Bay*Close` finds `Bay 1 CB Close`.
+* `?` matches one character.
+For example, `VB0?` finds `VB01` and `VB02`.
+
+== What the search looks at
+
+The search looks at more than the text that the list shows.
+
+For published data, the search looks at:
+
+* The IED, the control block and its description.
+* The reference of the data.
+* The descriptions of the logical device, the logical node, the data object and the data attribute.
+* The common data class (CDC), for example `SPS` or `DPC`.
+* The basic type, for example `Quality` or `Dbpos`.
+
+For inputs, the search looks at:
+
+* The IED, the logical node, the internal address (`intAddr`) and the description of the input.
+* The supervision of the subscription.
+
+In the subscriber view, the search also looks at:
+
+* The description, the manufacturer and the type of the IED.
+* The published data that the input subscribes to, with its descriptions, its control block, its CDC and its basic type.
+
+A control block or an IED stays in the list when one of its items matches.
+
+== Clear a search
+
+Delete the text in the search field.
+The list shows all the items again.
+
+When you open a different file or change the type of control block, the plugin clears the search.

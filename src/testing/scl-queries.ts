@@ -1,4 +1,4 @@
-import { find } from '@openenergytools/scl-lib';
+import { find } from '@openscd/scl-lib';
 
 /**
  * Finds an ExtRef by the identity used in the plugin's list items.

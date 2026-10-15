@@ -1,0 +1,13 @@
+:plugin-name: oscd-editor-subscriber-later-binding
+:plugin-title: Subscriber Later Binding
+:url-repo: https://github.com/OpenPowerShift/oscd-editor-subscriber-later-binding
+:url-issues: https://github.com/OpenPowerShift/oscd-editor-subscriber-later-binding/issues
+:url-chat: https://openscd.zulipchat.com/
+:url-demo: https://openpowershift.github.io/oscd-editor-subscriber-later-binding/demo/
+:url-bundle: https://openpowershift.github.io/oscd-editor-subscriber-later-binding/oscd-editor-subscriber-later-binding.js
+:url-npm: https://www.npmjs.com/package/@openpowershift/oscd-editor-subscriber-later-binding
+:url-companion-sel: https://github.com/OpenPowerShift/oscd-background-subscriber-lb-sel
+:url-companion-siemens: https://github.com/OpenPowerShift/oscd-background-subscriber-lb-siemens
+:url-companion-nr: https://github.com/OpenPowerShift/oscd-background-subscriber-lb-nr
+:sectnums:
+:experimental:

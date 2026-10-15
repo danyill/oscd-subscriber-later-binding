@@ -370,4 +370,100 @@ describe('filters', () => {
       );
     });
   });
+
+  describe('explaining every option', () => {
+    it('explains each FCDA filter and sort option', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      expect(
+        driver.menuExplanations('filterFcdaMenu').every(text => text !== '')
+      ).to.equal(true);
+      expect(
+        driver.menuExplanations('sortFcdaMenu').every(text => text !== '')
+      ).to.equal(true);
+    });
+
+    it('explains each ExtRef filter and sort option', async () => {
+      await mount('GOOSE-2007B4-filter-test.scd', true);
+      expect(
+        driver
+          .menuExplanations('filterExtRefMenuSubscriber')
+          .every(text => text !== '')
+      ).to.equal(true);
+      expect(
+        driver
+          .menuExplanations('sortExtRefSubscriberMenu')
+          .every(text => text !== '')
+      ).to.equal(true);
+    });
+  });
+
+  describe('showing and resetting off-nominal options', () => {
+    it('does not mark a filter or sort which is at its default', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      expect(driver.menuActive('filterFcdaMenu')).to.equal(false);
+      expect(driver.menuActive('sortFcdaMenu')).to.equal(false);
+    });
+
+    it('marks a filter which differs from its default', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      await driver.chooseMenuItems('filterFcdaMenu', [DATA_OBJECTS]);
+      expect(driver.menuActive('filterFcdaMenu')).to.equal(true);
+    });
+
+    it('marks a sort which differs from its default', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      await driver.chooseMenuItem('sortFcdaMenu', 1);
+      expect(driver.menuActive('sortFcdaMenu')).to.equal(true);
+    });
+
+    it('returns the FCDA filter to its defaults', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      await driver.chooseMenuItems('filterFcdaMenu', [DATA_OBJECTS]);
+      await driver.resetMenu('filterFcdaMenu');
+      expect(driver.menuSelection('filterFcdaMenu')).to.deep.equal([
+        SUBSCRIBED,
+        NOT_SUBSCRIBED,
+        DATA_OBJECTS,
+        QUALITY
+      ]);
+      expect(driver.menuActive('filterFcdaMenu')).to.equal(false);
+      expect(shown(driver.fcdas())).to.have.length(8);
+    });
+
+    it('returns the subscriber ExtRef filter to its defaults', async () => {
+      await mount('GOOSE-2007B4-filter-test.scd', true);
+      await driver.chooseMenuItems('filterExtRefMenuSubscriber', [0, 1, 2, 3]);
+      expect(mounted.plugin.filterOutpDAt).to.equal(true);
+      await driver.resetMenu('filterExtRefMenuSubscriber');
+      expect(driver.menuSelection('filterExtRefMenuSubscriber')).to.deep.equal([
+        0, 1, 2, 3, 4
+      ]);
+      expect(mounted.plugin.filterOutpDAt).to.equal(false);
+      expect(driver.menuActive('filterExtRefMenuSubscriber')).to.equal(false);
+    });
+
+    it('returns the publisher ExtRef filter to its defaults', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      await driver.selectFcda(
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2',
+        'GOOSE_Publisher>>QB2_Disconnector>GOOSE2sDataSet>QB2_Disconnector/ CSWI 1.Pos stVal (ST)'
+      );
+      await driver.chooseMenuItems('filterExtRefMenuPublisher', [1]);
+      await driver.resetMenu('filterExtRefMenuPublisher');
+      expect(driver.menuSelection('filterExtRefMenuPublisher')).to.deep.equal([
+        0, 1
+      ]);
+      expect(driver.menuActive('filterExtRefMenuPublisher')).to.equal(false);
+    });
+
+    it('returns the sort order to its default', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      await driver.chooseMenuItem('sortFcdaMenu', 2);
+      expect(mounted.plugin.sortFcda).to.equal(2);
+      await driver.resetMenu('sortFcdaMenu');
+      expect(driver.menuSelection('sortFcdaMenu')).to.deep.equal([0]);
+      expect(mounted.plugin.sortFcda).to.equal(0);
+      expect(driver.menuActive('sortFcdaMenu')).to.equal(false);
+    });
+  });
 });

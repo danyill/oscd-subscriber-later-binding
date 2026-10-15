@@ -91,7 +91,7 @@ describe('settings', () => {
     it('identifies the plugin', async () => {
       await mount();
       expect(mounted.plugin.getAttribute('identity')).to.equal(
-        'danyill.oscd-subscriber-later-binding'
+        'openpowershift.oscd-editor-subscriber-later-binding'
       );
     });
 
@@ -129,6 +129,7 @@ describe('settings', () => {
   describe('persistence', () => {
     const roundTripped: [string, unknown][] = [
       ['subscriberView', true],
+      ['subscriberSplit', 65],
       ['filterOutSubscribed', true],
       ['filterOutDataObjects', true],
       ['filterOutQuality', true],
@@ -199,20 +200,20 @@ describe('settings', () => {
       expect(mounted.plugin.autoIncrement).to.equal(true);
     });
 
-    // Known defects, see "Upstream issues to file" in docs/test_plan.md.
-    // The names written when storing differ from the names read when restoring
-    // and the list of stored properties.
-    it.skip('restores the filter for FCDAs which are not subscribed', async () => {
+    // These were stored under one name and read under another, and corrupt
+    // stored settings stopped the plugin loading.
+    it('restores the filter for FCDAs which are not subscribed', async () => {
       await mount();
       mounted.plugin.filterOutNotSubscribed = true;
       await mounted.settle();
-      expect(storedSettings().filterOutNotSubscribed).to.equal(true);
+      const stored = storedSettings();
+      expect(stored.filterOutNotSubscribed).to.equal(true);
       mounted.unmount();
-      await mount(storedSettings());
+      await mount(stored);
       expect(mounted.plugin.filterOutNotSubscribed).to.equal(true);
     });
 
-    it.skip('restores the filter for non-matching preconfigured FCDAs', async () => {
+    it('restores the filter for non-matching preconfigured FCDAs', async () => {
       await mount();
       mounted.plugin.filterOutPreconfiguredUnmatched = true;
       await mounted.settle();
@@ -222,12 +223,71 @@ describe('settings', () => {
       expect(mounted.plugin.filterOutPreconfiguredUnmatched).to.equal(true);
     });
 
-    it.skip('falls back to defaults when the stored settings are not valid JSON', async () => {
+    it('falls back to defaults when the stored settings are not valid JSON', async () => {
       mounted = await mountPlugin({
         fixture: 'GOOSE-2007B4-LGOS.scd',
         rawSettings: '{not json'
       });
       expect(mounted.plugin.autoIncrement).to.equal(true);
+    });
+
+    const container = (): HTMLElement =>
+      mounted.plugin.shadowRoot!.querySelector('.container') as HTMLElement;
+    const divider = (): HTMLElement =>
+      mounted.plugin.shadowRoot!.querySelector('.divider') as HTMLElement;
+
+    it('applies a restored subscriber split to the divider', async () => {
+      await mount({ subscriberView: true, subscriberSplit: 70 });
+      expect(container().style.getPropertyValue('--subscriber-pane')).to.equal(
+        '70%'
+      );
+    });
+
+    it('falls back to an even split when the stored split is out of range', async () => {
+      await mount({ subscriberView: true, subscriberSplit: 5 });
+      expect(container().style.getPropertyValue('--subscriber-pane')).to.equal(
+        '50%'
+      );
+    });
+
+    it('remembers the subscriber split once the divider is moved', async () => {
+      await mount({ subscriberView: true });
+      const { left, width } = container().getBoundingClientRect();
+      divider().dispatchEvent(
+        new PointerEvent('pointerdown', {
+          clientX: left + width / 2,
+          bubbles: true
+        })
+      );
+      window.dispatchEvent(
+        new PointerEvent('pointermove', { clientX: left + width * 0.65 })
+      );
+      window.dispatchEvent(new PointerEvent('pointerup'));
+      await mounted.settle();
+      expect(storedSettings().subscriberSplit).to.equal(65);
+    });
+
+    it('moves the divider to the restored split after a remount', async () => {
+      await mount({ subscriberView: true });
+      const { left, width } = container().getBoundingClientRect();
+      divider().dispatchEvent(
+        new PointerEvent('pointerdown', {
+          clientX: left + width / 2,
+          bubbles: true
+        })
+      );
+      window.dispatchEvent(
+        new PointerEvent('pointermove', { clientX: left + width * 0.7 })
+      );
+      window.dispatchEvent(new PointerEvent('pointerup'));
+      await mounted.settle();
+
+      const stored = storedSettings();
+      mounted.unmount();
+      await mount(stored);
+      expect(container().style.getPropertyValue('--subscriber-pane')).to.equal(
+        '70%'
+      );
     });
   });
 

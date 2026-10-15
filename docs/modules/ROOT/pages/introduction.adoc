@@ -1,0 +1,48 @@
+= Introduction
+include::partial$base.adoc[]
+:sectnums!:
+
+The {plugin-title} plugin connects the inputs of subscribing IEDs to the data that other IEDs publish.
+It does this for GOOSE and for sampled values (SV), in an SCL file that uses later binding.
+
+An input is an `ExtRef` element with an internal address (`intAddr`).
+The plugin does not show `ExtRef` elements without an internal address.
+The published data is an `FCDA` element in the data set of a control block.
+When you subscribe an input, the plugin writes the source of the data into the `ExtRef`.
+
+== What the plugin does
+
+* It subscribes and unsubscribes inputs for GOOSE and SV.
+* It adds and removes the supervision logical nodes (`LGOS` and `LSVS`) for each control block.
+* It checks the data type before it subscribes an input.
+It uses the preconfigured attributes of IEC 61850-6 Edition 2.1 when they are available.
+* It shows the common data class (CDC) and the basic type of the data.
+* It has a fast search and filters for each list.
+* It copies a list as Markdown, for reports and test records.
+* It works with companion plugins, which subscribe more inputs for some manufacturers.
+
+== Two views
+
+You can work from the publisher or from the subscriber.
+The two views show the same subscriptions.
+
+Publisher view:: You select published data, then you click the inputs that subscribe to it.
+Use this view to send the same data to many IEDs.
+
+Subscriber view:: You select an input, then you click the published data for it.
+Use this view to configure all the inputs of one IED.
+
+.The publisher view, with published data selected
+image::publisher-fcda-selected.png[The publisher view. The published data is on the left. The inputs that subscribe to the selected data are on the right.]
+
+.The subscriber view
+image::subscriber-initially.png[The subscriber view. The inputs of each IED are on the left. The published data is on the right.]
+
+For more information, refer to xref:publisher_view.adoc[] and xref:subscriber_view.adoc[].
+
+== Limits
+
+* The plugin subscribes data attributes only.
+You cannot subscribe an input to a data object.
+* The plugin is for IEC 61850 Edition 2 and later.
+It does not support Edition 1 devices.

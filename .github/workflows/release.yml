@@ -1,0 +1,113 @@
+name: Release and deploy
+
+# Automated releases with release-please. Pushing Conventional-Commit changes
+# to main maintains a "release PR" that bumps the version and updates the
+# changelog. Merging that PR tags the release (vX.Y.Z), creates the GitHub
+# Release, and — via the gated job below — publishes to npm with Trusted
+# Publishing (OIDC), no stored token.
+#
+# The demo on GitHub Pages follows main.
+#
+# Every push to main runs the full test suite (test.yml) first, and nothing is
+# tagged, released, published or deployed unless it passes.
+#
+# Secret to configure once:
+#   * RELEASE_PLEASE_TOKEN: a fine-grained personal access token for this repo
+#     with Contents, Pull requests and Issues read/write. release-please opens
+#     the release PR with it, because a PR opened with the default GITHUB_TOKEN
+#     does not trigger test.yml and would get no checks.
+#
+# Trusted publisher to configure once, keyed to THIS workflow file:
+#   * npm: repo + workflow `release.yml`
+# npm requires the package to already exist before a trusted publisher can be
+# configured, so publish the first version by hand once, then configure
+# the trusted publisher for later releases.
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    with:
+      visual: true
+
+  release-please:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # Not GITHUB_TOKEN, so the release PR triggers test.yml
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  npm-publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the package
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: 'true'
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configure git
+        run: |
+          git config user.name "GitHubActions"
+          git config user.email "<deploy@actions.openscd.github.io>"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bundle
+        run: npm run-script bundle
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist

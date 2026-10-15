@@ -1,0 +1,61 @@
+= Icons and tooltips
+include::partial$base.adoc[]
+
+== Icons in the lists
+
+[cols="1,3"]
+|===
+|Icon |Meaning
+
+|Chain (`link`)
+|The input is subscribed.
+
+|Broken chain (`link_off`)
+|The input is not subscribed.
+
+|Heart monitor (`monitor_heart`)
+|A supervision logical node supervises the subscription.
+The tooltip of the input shows the supervision.
+
+|Yellow triangle (`warning`)
+|The input is subscribed, but the file does not have the published data.
+Check that the IED, the control block and the data set are correct.
+
+|Red circle with an exclamation mark (`error`)
+|The subscription of the input is not complete.
+Some of its attributes are missing.
+The plugin shows this as *Invalid Mapping*.
+
+|Padlock (`lock`)
+|The read-only view is on.
+For more information, refer to xref:settings.adoc#read-only[Read-only view].
+|===
+
+.Inputs with a missing subscription and an invalid subscription
+image::publisher-fcda-selected.png[The publisher view. Under Available to subscribe, one input has a yellow triangle and one input has a red circle.]
+
+== Why a subscription is missing or not valid
+
+A file can have missing or incomplete subscriptions for these reasons:
+
+* The file is not the full substation configuration, for example an ICD or a CID file.
+Then the file does not have the publishing IED.
+* Some manufacturers use the `ExtRef` element for their own data.
+For example, SEL uses it for its message quality mapping.
+
+== Tooltips
+
+Hold the pointer on an item to see its tooltip.
+
+Published data:: The common data class (CDC) and the basic type of the data, for example `CDC: DPC` and `Basic Type: Dbpos`.
+
+Inputs:: These items, when they apply:
+* The preconfigured attributes of the input (`pServT`, `pLN`, `pDO` and `pDA`).
+* The CDC and the basic type of the preconfigured attributes.
+* The supervision of the subscription.
+* Why the subscription is missing or not valid.
+
+The plugin can show the CDC and the basic type of an input only when the input has preconfigured attributes.
+
+When the plugin cannot find the data type of the preconfigured attributes, the tooltip tells you.
+Then you cannot subscribe the input.
