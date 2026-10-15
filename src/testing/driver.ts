@@ -314,6 +314,24 @@ export class PluginDriver {
   }
 
   /**
+   * Opens the help and waits for it to finish fading in, e.g. to take a
+   * screenshot of it.
+   */
+  async showHelp(): Promise<void> {
+    const help = this.first('help-button');
+    const dialog = help?.shadowRoot?.querySelector('oscd-dialog');
+    if (!help || !dialog) {
+      throw new Error('The help is not displayed');
+    }
+    const opened = new Promise<void>((resolve) => {
+      dialog.addEventListener('opened', () => resolve(), { once: true });
+    });
+    help.shadowRoot!.querySelector<HTMLElement>('#help')!.click();
+    await opened;
+    await this.mounted.settle();
+  }
+
+  /**
    * Opens a menu and leaves it open, e.g. to take a screenshot of it.
    * @param menuId - id of the menu.
    */

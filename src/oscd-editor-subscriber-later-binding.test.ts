@@ -229,6 +229,14 @@ describe('oscd-editor-subscriber-later-binding screenshots', () => {
     });
   });
 
+  describe('help', () => {
+    it('explains how to subscribe and search', async () => {
+      await mount('GOOSE-2007B4-LGOS.scd');
+      await driver.showHelp();
+      await shot('help');
+    });
+  });
+
   describe('sampled values', () => {
     it('in the publisher view with an FCDA selected', async () => {
       await mount('SMV-2007B4-LSVS.scd', { controlTag: 'SampledValueControl' });
