@@ -1,1 +1,3 @@
-test/**/*.png filter=lfs diff=lfs diff=image merge=lfs -text
+# Screenshot baselines are normal Git files, not Git LFS files, so that the
+# documentation can link to them and Antora can read them from the repository.
+test/**/*.png binary
